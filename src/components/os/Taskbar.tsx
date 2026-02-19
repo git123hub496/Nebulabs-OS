@@ -12,7 +12,7 @@ export const Taskbar: React.FC = () => {
   const [time, setTime] = useState<Date | null>(null);
 
   useEffect(() => {
-    // These will only run on the client, after initial hydration
+    // Only run on client after hydration to avoid mismatches
     setTime(new Date());
     const timer = setInterval(() => setTime(new Date()), 1000);
     return () => clearInterval(timer);
@@ -65,16 +65,16 @@ export const Taskbar: React.FC = () => {
           <Wifi size={14} />
           <Volume2 size={14} />
         </div>
-        <div className="flex flex-col items-end leading-none min-w-[65px]">
+        <div className="flex flex-col items-end leading-none min-w-[75px]">
           {time ? (
             <>
-              <span className="text-[11px] font-medium">{formatTime(time)}</span>
-              <span className="text-[10px] opacity-60">{formatDate(time)}</span>
+              <span className="text-[11px] font-medium whitespace-nowrap">{formatTime(time)}</span>
+              <span className="text-[10px] opacity-60 whitespace-nowrap">{formatDate(time)}</span>
             </>
           ) : (
             <div className="animate-pulse flex flex-col items-end gap-1">
+              <div className="h-2 w-12 bg-white/10 rounded" />
               <div className="h-2 w-10 bg-white/10 rounded" />
-              <div className="h-2 w-8 bg-white/10 rounded" />
             </div>
           )}
         </div>

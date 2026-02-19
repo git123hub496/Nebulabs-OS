@@ -1,6 +1,6 @@
 "use client"
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useOS, AppId } from '@/context/os-context';
 import { Window } from './Window';
 import { Taskbar } from './Taskbar';
@@ -40,6 +40,19 @@ const DESKTOP_SHORTCUTS: { id: AppId; label: string; icon: any }[] = [
 
 export const Desktop: React.FC = () => {
   const { wallpaper, openWindows, openApp } = useOS();
+  const [bootVisible, setBootVisible] = useState(true);
+  const [bootOpacity, setBootOpacity] = useState(1);
+
+  useEffect(() => {
+    // Start fading out boot screen after a short delay
+    const fadeTimer = setTimeout(() => setBootOpacity(0), 1500);
+    // Remove it from the DOM completely after the transition finishes
+    const removeTimer = setTimeout(() => setBootVisible(false), 2600);
+    return () => {
+      clearTimeout(fadeTimer);
+      clearTimeout(removeTimer);
+    };
+  }, []);
 
   return (
     <div 
@@ -82,15 +95,20 @@ export const Desktop: React.FC = () => {
       <Taskbar />
 
       {/* Boot overlay simulation */}
-      <div className="fixed inset-0 bg-background z-[10000] flex flex-col items-center justify-center animate-out fade-out duration-1000 pointer-events-none delay-500">
-        <div className="w-24 h-24 bg-accent/20 rounded-3xl flex items-center justify-center mb-8 animate-pulse">
-          <div className="w-12 h-12 bg-accent rounded-full" />
+      {bootVisible && (
+        <div 
+          className="fixed inset-0 bg-background z-[10000] flex flex-col items-center justify-center transition-opacity duration-1000 pointer-events-none"
+          style={{ opacity: bootOpacity }}
+        >
+          <div className="w-24 h-24 bg-accent/20 rounded-3xl flex items-center justify-center mb-8 animate-pulse">
+            <div className="w-12 h-12 bg-accent rounded-full" />
+          </div>
+          <h1 className="text-2xl font-bold tracking-widest text-white/40 uppercase">Nebulabs WebOS</h1>
+          <div className="mt-8 w-48 h-1 bg-white/10 rounded-full overflow-hidden">
+            <div className="h-full bg-accent animate-[loading_2s_ease-in-out_infinite]" />
+          </div>
         </div>
-        <h1 className="text-2xl font-bold tracking-widest text-white/40 uppercase">Nebulabs WebOS</h1>
-        <div className="mt-8 w-48 h-1 bg-white/10 rounded-full overflow-hidden">
-          <div className="h-full bg-accent animate-[loading_2s_ease-in-out_infinite]" />
-        </div>
-      </div>
+      )}
       
       <style jsx global>{`
         @keyframes loading {
