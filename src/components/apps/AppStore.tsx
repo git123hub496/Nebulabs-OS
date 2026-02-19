@@ -2,23 +2,24 @@
 
 import React from 'react';
 import { useOS, AppId } from '@/context/os-context';
-import { ShoppingBag, Star, Download, CheckCircle2 } from 'lucide-react';
+import { ShoppingBag, Star, Download, CheckCircle2, FileText, Calculator, Terminal, Cloud, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 
-const STORE_APPS: { id: AppId; name: string; description: string; category: string; rating: number }[] = [
-  { id: 'google-drive', name: 'Google Drive', description: 'Cloud storage and file sync.', category: 'Productivity', rating: 4.8 },
-  { id: 'google-slides', name: 'Google Slides', description: 'Create and edit presentations.', category: 'Productivity', rating: 4.5 },
-  { id: 'google-docs', name: 'Google Docs', description: 'Word processing online.', category: 'Productivity', rating: 4.9 },
-  { id: 'google-sheets', name: 'Google Sheets', description: 'Online spreadsheets.', category: 'Productivity', rating: 4.7 },
-  { id: 'assistant', name: 'Nebula AI', description: 'Smart assistant for your OS.', category: 'Utilities', rating: 5.0 },
+const STORE_APPS: { id: AppId; name: string; description: string; category: string; rating: number; icon: any }[] = [
+  { id: 'google-drive', name: 'Google Drive', description: 'Cloud storage and file sync.', category: 'Productivity', rating: 4.8, icon: Cloud },
+  { id: 'notes', name: 'Nebula Notes', description: 'Lightweight text editor.', category: 'Productivity', rating: 4.6, icon: FileText },
+  { id: 'calc', name: 'Calculator', description: 'Standard system calculator.', category: 'Utilities', rating: 4.4, icon: Calculator },
+  { id: 'terminal', name: 'Terminal', icon: Terminal, description: 'Direct access to system shell.', category: 'Utilities', rating: 4.9 },
+  { id: 'assistant', name: 'Nebula AI', description: 'Smart assistant for your OS.', category: 'AI', rating: 5.0, icon: MessageSquare },
 ];
 
 export const AppStore: React.FC = () => {
   const { installedApps, installApp } = useOS();
 
   return (
-    <div className="flex flex-col h-full bg-background">
+    <div className="flex flex-col h-full bg-[#161d25]">
       <div className="p-8 bg-gradient-to-br from-accent/20 to-primary/40 shrink-0">
         <div className="flex items-center gap-4 mb-2">
           <ShoppingBag className="text-accent" size={32} />
@@ -34,7 +35,7 @@ export const AppStore: React.FC = () => {
             <div key={app.id} className="bg-white/5 border border-white/10 rounded-2xl p-6 flex flex-col gap-4 hover:border-accent/40 transition-colors">
               <div className="flex justify-between items-start">
                 <div className="w-14 h-14 bg-accent/20 rounded-xl flex items-center justify-center">
-                  <ShoppingBag size={28} className="text-accent" />
+                  <app.icon size={28} className="text-accent" />
                 </div>
                 <Badge variant="secondary" className="bg-white/10 text-white/60">
                   {app.category}
@@ -76,5 +77,3 @@ export const AppStore: React.FC = () => {
     </div>
   );
 };
-
-import { cn } from '@/lib/utils';

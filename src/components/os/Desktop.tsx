@@ -10,15 +10,18 @@ import {
   Settings as SettingsIcon, 
   MessageSquare,
   FileText,
-  Table,
-  Presentation,
-  Cloud
+  Calculator as CalcIcon,
+  Terminal as TermIcon,
+  FileCode
 } from 'lucide-react';
 import { FileExplorer } from '../apps/FileExplorer';
 import { AppStore } from '../apps/AppStore';
 import { Settings } from '../apps/Settings';
 import { AIAssistant } from '../apps/AIAssistant';
 import { GoogleAppPlaceholder } from '../apps/GoogleAppPlaceholder';
+import { Notes } from '../apps/Notes';
+import { Calculator } from '../apps/Calculator';
+import { Terminal } from '../apps/Terminal';
 
 const APP_COMPONENTS: Record<AppId, React.ReactNode> = {
   'store': <AppStore />,
@@ -29,12 +32,17 @@ const APP_COMPONENTS: Record<AppId, React.ReactNode> = {
   'google-sheets': <GoogleAppPlaceholder type="sheets" />,
   'google-slides': <GoogleAppPlaceholder type="slides" />,
   'google-drive': <GoogleAppPlaceholder type="drive" />,
+  'notes': <Notes />,
+  'calc': <Calculator />,
+  'terminal': <Terminal />,
 };
 
 const DESKTOP_SHORTCUTS: { id: AppId; label: string; icon: any }[] = [
   { id: 'files', label: 'File Explorer', icon: FolderOpen },
   { id: 'store', label: 'App Store', icon: ShoppingBag },
   { id: 'assistant', label: 'AI Assistant', icon: MessageSquare },
+  { id: 'notes', label: 'Notes', icon: FileText },
+  { id: 'terminal', label: 'Terminal', icon: TermIcon },
   { id: 'settings', label: 'Settings', icon: SettingsIcon },
 ];
 
@@ -44,9 +52,7 @@ export const Desktop: React.FC = () => {
   const [bootOpacity, setBootOpacity] = useState(1);
 
   useEffect(() => {
-    // Start fading out boot screen after a short delay
     const fadeTimer = setTimeout(() => setBootOpacity(0), 1500);
-    // Remove it from the DOM completely after the transition finishes
     const removeTimer = setTimeout(() => setBootVisible(false), 2600);
     return () => {
       clearTimeout(fadeTimer);

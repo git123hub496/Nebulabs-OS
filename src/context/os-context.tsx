@@ -1,8 +1,8 @@
 "use client"
 
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 
-export type AppId = 'store' | 'files' | 'settings' | 'assistant' | 'google-docs' | 'google-sheets' | 'google-slides' | 'google-drive';
+export type AppId = 'store' | 'files' | 'settings' | 'assistant' | 'google-docs' | 'google-sheets' | 'google-slides' | 'google-drive' | 'notes' | 'calc' | 'terminal';
 
 export interface WindowInstance {
   id: string;
@@ -26,6 +26,7 @@ interface OSContextType {
   installedApps: AppId[];
   fileSystem: FileSystemItem[];
   wallpaper: string;
+  notes: string;
   
   openApp: (appId: AppId, title: string) => void;
   closeWindow: (windowId: string) => void;
@@ -34,6 +35,7 @@ interface OSContextType {
   focusWindow: (windowId: string) => void;
   installApp: (appId: AppId) => void;
   updateWallpaper: (url: string) => void;
+  setNotes: (content: string) => void;
   
   createFolder: (name: string, parentId: string | null) => void;
   deleteItem: (id: string) => void;
@@ -44,10 +46,10 @@ const OSContext = createContext<OSContextType | undefined>(undefined);
 const INITIAL_FILES: FileSystemItem[] = [
   { id: '1', name: 'Documents', type: 'folder', parentId: null },
   { id: '2', name: 'Pictures', type: 'folder', parentId: null },
-  { id: '3', name: 'Project Plans.pdf', type: 'file', parentId: '1' },
+  { id: '3', name: 'README.md', type: 'file', parentId: null },
 ];
 
-const INITIAL_APPS: AppId[] = ['store', 'files', 'settings', 'assistant', 'google-docs', 'google-sheets'];
+const INITIAL_APPS: AppId[] = ['store', 'files', 'settings', 'assistant', 'notes', 'calc', 'terminal'];
 
 export const OSProvider = ({ children }: { children: ReactNode }) => {
   const [openWindows, setOpenWindows] = useState<WindowInstance[]>([]);
@@ -55,10 +57,21 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   const [installedApps, setInstalledApps] = useState<AppId[]>(INITIAL_APPS);
   const [fileSystem, setFileSystem] = useState<FileSystemItem[]>(INITIAL_FILES);
   const [wallpaper, setWallpaper] = useState("https://picsum.photos/seed/nebula1/1920/1080");
+  const [notes, setNotesState] = useState("");
   const [nextZIndex, setNextZIndex] = useState(10);
 
+  // Load notes from localStorage on mount
+  useEffect(() => {
+    const saved = localStorage.getItem('nebula_notes');
+    if (saved) setNotesState(saved);
+  }, []);
+
+  const setNotes = (content: string) => {
+    setNotesState(content);
+    localStorage.setItem('nebula_notes', content);
+  };
+
   const openApp = (appId: AppId, title: string) => {
-    // Check if app window already exists
     const existing = openWindows.find(w => w.appId === appId);
     if (existing) {
       focusWindow(existing.id);
@@ -134,6 +147,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       installedApps,
       fileSystem,
       wallpaper,
+      notes,
       openApp,
       closeWindow,
       minimizeWindow,
@@ -141,6 +155,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       focusWindow,
       installApp,
       updateWallpaper,
+      setNotes,
       createFolder,
       deleteItem
     }}>

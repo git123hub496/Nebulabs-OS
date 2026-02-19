@@ -13,7 +13,8 @@ import {
   Table as TableIcon,
   Presentation,
   Info,
-  User
+  Calculator as CalcIcon,
+  Terminal as TermIcon
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -30,7 +31,10 @@ const APP_INFO: Record<AppId, { icon: any; label: string }> = {
   'google-docs': { icon: FileText, label: 'Google Docs' },
   'google-sheets': { icon: TableIcon, label: 'Google Sheets' },
   'google-slides': { icon: Presentation, label: 'Google Slides' },
-  'google-drive': { icon: Cloud, label: 'Google Drive' }
+  'google-drive': { icon: Cloud, label: 'Google Drive' },
+  'notes': { icon: FileText, label: 'Nebula Notes' },
+  'calc': { icon: CalcIcon, label: 'Calculator' },
+  'terminal': { icon: TermIcon, label: 'Terminal' }
 };
 
 export const StartMenu: React.FC<StartMenuProps> = ({ onClose }) => {
@@ -57,6 +61,7 @@ export const StartMenu: React.FC<StartMenuProps> = ({ onClose }) => {
           <div className="grid grid-cols-4 gap-4">
             {installedApps.map(appId => {
               const info = APP_INFO[appId];
+              if (!info) return null;
               const Icon = info.icon;
               return (
                 <button
@@ -97,11 +102,11 @@ export const StartMenu: React.FC<StartMenuProps> = ({ onClose }) => {
       <div className="border-t border-white/10 pt-4 flex items-center justify-between">
         <div className="flex items-center gap-3 overflow-hidden">
           <Avatar className="w-9 h-9 border border-accent/20">
-            <AvatarFallback className="bg-accent text-primary font-bold">U</AvatarFallback>
+            <AvatarFallback className="bg-accent text-primary font-bold">G</AvatarFallback>
           </Avatar>
           <div className="flex flex-col overflow-hidden">
-            <span className="text-sm font-bold text-white/90 truncate">Local User</span>
-            <span className="text-[10px] text-white/40 truncate">No account signed in</span>
+            <span className="text-sm font-bold text-white/90 truncate">Guest User</span>
+            <span className="text-[10px] text-white/40 truncate">Nebula Cloud Sync Active</span>
           </div>
         </div>
         <button 
