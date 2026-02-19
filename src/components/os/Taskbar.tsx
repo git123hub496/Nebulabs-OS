@@ -1,17 +1,19 @@
 "use client"
 
 import React, { useState, useEffect } from 'react';
-import { useOS, AppId } from '@/context/os-context';
-import { Grid, Monitor, Search, LayoutGrid, Clock, Wifi, Volume2 } from 'lucide-react';
+import { useOS } from '@/context/os-context';
+import { Monitor, Wifi, Volume2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { StartMenu } from './StartMenu';
 
 export const Taskbar: React.FC = () => {
-  const { openWindows, activeWindowId, focusWindow, openApp } = useOS();
+  const { openWindows, activeWindowId, focusWindow } = useOS();
   const [isStartOpen, setIsStartOpen] = useState(false);
-  const [time, setTime] = useState(new Date());
+  const [time, setTime] = useState<Date | null>(null);
 
   useEffect(() => {
+    // These will only run on the client, after initial hydration
+    setTime(new Date());
     const timer = setInterval(() => setTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
@@ -63,9 +65,18 @@ export const Taskbar: React.FC = () => {
           <Wifi size={14} />
           <Volume2 size={14} />
         </div>
-        <div className="flex flex-col items-end leading-none">
-          <span className="text-[11px] font-medium">{formatTime(time)}</span>
-          <span className="text-[10px] opacity-60">{formatDate(time)}</span>
+        <div className="flex flex-col items-end leading-none min-w-[65px]">
+          {time ? (
+            <>
+              <span className="text-[11px] font-medium">{formatTime(time)}</span>
+              <span className="text-[10px] opacity-60">{formatDate(time)}</span>
+            </>
+          ) : (
+            <div className="animate-pulse flex flex-col items-end gap-1">
+              <div className="h-2 w-10 bg-white/10 rounded" />
+              <div className="h-2 w-8 bg-white/10 rounded" />
+            </div>
+          )}
         </div>
       </div>
     </div>
