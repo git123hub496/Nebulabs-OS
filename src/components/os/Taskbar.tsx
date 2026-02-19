@@ -1,19 +1,25 @@
 "use client"
 
 import React, { useState, useEffect } from 'react';
-import { useOS } from '@/context/os-context';
-import { Monitor, Wifi, Volume2 } from 'lucide-react';
+import { useOS, AppId } from '@/context/os-context';
+import { Monitor, Wifi, Volume2, FolderOpen, ShoppingBag, MessageSquare, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { StartMenu } from './StartMenu';
 
+const QUICK_LAUNCH: { id: AppId; icon: any; label: string }[] = [
+  { id: 'files', icon: FolderOpen, label: 'File Explorer' },
+  { id: 'store', icon: ShoppingBag, label: 'App Store' },
+  { id: 'assistant', icon: MessageSquare, label: 'AI Assistant' },
+  { id: 'settings', icon: Settings, label: 'Settings' },
+];
+
 export const Taskbar: React.FC = () => {
-  const { openWindows, activeWindowId, focusWindow } = useOS();
+  const { openWindows, activeWindowId, focusWindow, openApp } = useOS();
   const [isStartOpen, setIsStartOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [time, setTime] = useState<Date | null>(null);
 
   useEffect(() => {
-    // Defer rendering of time to client-side only
     setMounted(true);
     setTime(new Date());
     const timer = setInterval(() => setTime(new Date()), 1000);
@@ -43,27 +49,43 @@ export const Taskbar: React.FC = () => {
         {isStartOpen && <StartMenu onClose={() => setIsStartOpen(false)} />}
       </div>
 
-      <div className="flex-1 flex items-center justify-center gap-1 mx-4">
+      <div className="flex items-center gap-1 mx-2 border-r border-white/10 pr-2">
+        {QUICK_LAUNCH.map(item => {
+          const Icon = item.icon;
+          return (
+            <button
+              key={item.id}
+              onClick={() => openApp(item.id, item.label)}
+              className="p-1.5 rounded-md hover:bg-white/10 transition-colors text-white/60 hover:text-accent"
+              title={item.label}
+            >
+              <Icon size={18} />
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="flex-1 flex items-center justify-start gap-1 mx-2 overflow-hidden">
         {openWindows.map(window => (
           <button
             key={window.id}
             onClick={() => focusWindow(window.id)}
             className={cn(
-              "h-9 px-3 rounded-md flex items-center gap-2 transition-all border border-transparent",
-              activeWindowId === window.id ? "bg-white/10 border-white/20 w-40" : "hover:bg-white/5 w-10 overflow-hidden"
+              "h-9 px-3 rounded-md flex items-center gap-2 transition-all border border-transparent min-w-[40px] max-w-[160px]",
+              activeWindowId === window.id ? "bg-white/10 border-white/20 flex-1" : "hover:bg-white/5"
             )}
             title={window.title}
           >
-            <div className="shrink-0 w-4 h-4 bg-accent/20 rounded-sm" />
+            <div className="shrink-0 w-3 h-3 bg-accent/40 rounded-sm" />
             {activeWindowId === window.id && (
-              <span className="text-xs font-medium truncate text-white/80">{window.title}</span>
+              <span className="text-[11px] font-medium truncate text-white/80">{window.title}</span>
             )}
           </button>
         ))}
       </div>
 
       <div className="flex items-center gap-3 px-3 text-white/70">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 opacity-60">
           <Wifi size={14} />
           <Volume2 size={14} />
         </div>
@@ -71,7 +93,7 @@ export const Taskbar: React.FC = () => {
           {mounted && time ? (
             <>
               <span className="text-[11px] font-medium whitespace-nowrap">{formatTime(time)}</span>
-              <span className="text-[10px] opacity-60 whitespace-nowrap">{formatDate(time)}</span>
+              <span className="text-[10px] opacity-40 whitespace-nowrap">{formatDate(time)}</span>
             </>
           ) : (
             <div className="animate-pulse flex flex-col items-end gap-1">

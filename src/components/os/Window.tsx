@@ -10,19 +10,19 @@ interface WindowProps {
   children: React.ReactNode;
 }
 
-export const Window: React.FC<WindowProps> = ({ window: windowInstance, children }) => {
+export const Window: React.FC<WindowProps> = ({ window: win, children }) => {
   const { closeWindow, minimizeWindow, maximizeWindow, focusWindow, activeWindowId } = useOS();
-  const [position, setPosition] = useState({ x: 100 + (windowInstance.zIndex * 2), y: 50 + (windowInstance.zIndex * 2) });
+  const [position, setPosition] = useState({ x: 100 + (win.zIndex * 2), y: 50 + (win.zIndex * 2) });
   const [size, setSize] = useState({ width: 800, height: 600 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const windowRef = useRef<HTMLDivElement>(null);
 
-  const isActive = activeWindowId === windowInstance.id;
+  const isActive = activeWindowId === win.id;
 
   const handleMouseDown = (e: React.MouseEvent) => {
-    focusWindow(windowInstance.id);
-    if (windowInstance.isMaximized) return;
+    focusWindow(win.id);
+    if (win.isMaximized) return;
     
     setIsDragging(true);
     const rect = windowRef.current?.getBoundingClientRect();
@@ -49,17 +49,17 @@ export const Window: React.FC<WindowProps> = ({ window: windowInstance, children
     };
 
     if (isDragging) {
-      globalThis.window.addEventListener('mousemove', handleMouseMove);
-      globalThis.window.addEventListener('mouseup', handleMouseUp);
+      window.addEventListener('mousemove', handleMouseMove);
+      window.addEventListener('mouseup', handleMouseUp);
     }
 
     return () => {
-      globalThis.window.removeEventListener('mousemove', handleMouseMove);
-      globalThis.window.removeEventListener('mouseup', handleMouseUp);
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
     };
   }, [isDragging, dragOffset]);
 
-  if (windowInstance.isMinimized) return null;
+  if (win.isMinimized) return null;
 
   return (
     <div
@@ -67,39 +67,39 @@ export const Window: React.FC<WindowProps> = ({ window: windowInstance, children
       className={cn(
         "fixed flex flex-col glass rounded-xl border overflow-hidden window-shadow transition-[box-shadow,transform]",
         isActive ? "z-[100] border-accent/40 ring-1 ring-accent/20" : "z-10 opacity-90",
-        windowInstance.isMaximized ? "inset-0 w-full h-full rounded-none" : ""
+        win.isMaximized ? "inset-0 w-full h-full rounded-none" : ""
       )}
       style={{
-        left: windowInstance.isMaximized ? 0 : position.x,
-        top: windowInstance.isMaximized ? 0 : position.y,
-        width: windowInstance.isMaximized ? '100%' : size.width,
-        height: windowInstance.isMaximized ? 'calc(100% - 48px)' : size.height,
-        zIndex: windowInstance.zIndex
+        left: win.isMaximized ? 0 : position.x,
+        top: win.isMaximized ? 0 : position.y,
+        width: win.isMaximized ? '100%' : size.width,
+        height: win.isMaximized ? 'calc(100% - 48px)' : size.height,
+        zIndex: win.zIndex
       }}
-      onClick={() => focusWindow(windowInstance.id)}
+      onClick={() => focusWindow(win.id)}
     >
       <div
         className="h-10 bg-white/5 flex items-center justify-between px-3 cursor-default select-none shrink-0"
         onMouseDown={handleMouseDown}
       >
         <div className="flex items-center gap-2">
-          <span className="text-sm font-medium text-white/80">{windowInstance.title}</span>
+          <span className="text-sm font-medium text-white/80">{win.title}</span>
         </div>
         <div className="flex items-center gap-1">
           <button 
-            onClick={(e) => { e.stopPropagation(); minimizeWindow(windowInstance.id); }}
+            onClick={(e) => { e.stopPropagation(); minimizeWindow(win.id); }}
             className="p-1.5 hover:bg-white/10 rounded-md transition-colors"
           >
             <Minus size={14} className="text-white/60" />
           </button>
           <button 
-            onClick={(e) => { e.stopPropagation(); maximizeWindow(windowInstance.id); }}
+            onClick={(e) => { e.stopPropagation(); maximizeWindow(win.id); }}
             className="p-1.5 hover:bg-white/10 rounded-md transition-colors"
           >
             <Square size={12} className="text-white/60" />
           </button>
           <button 
-            onClick={(e) => { e.stopPropagation(); closeWindow(windowInstance.id); }}
+            onClick={(e) => { e.stopPropagation(); closeWindow(win.id); }}
             className="p-1.5 hover:bg-destructive/80 group rounded-md transition-colors"
           >
             <X size={14} className="text-white/60 group-hover:text-white" />
