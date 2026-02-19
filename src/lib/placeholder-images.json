@@ -1,3 +1,34 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "wallpaper-default",
+      "description": "Default Nebulabs Desktop Wallpaper",
+      "imageUrl": "https://images.unsplash.com/photo-1599625803125-6efff06c9c37?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHxuZWJ1bGElMjBnYWxheHl8ZW58MHx8fHwxNzcxNTQ0Mjk0fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "nebula galaxy"
+    },
+    {
+      "id": "app-icon-store",
+      "description": "App Store Icon",
+      "imageUrl": "https://images.unsplash.com/photo-1575081838238-d06e716afa28?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxzdG9yZSUyMHNob3BwaW5nfGVufDB8fHx8MTc3MTU0NDI5NHww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "store shopping"
+    },
+    {
+      "id": "app-icon-files",
+      "description": "File Explorer Icon",
+      "imageUrl": "https://images.unsplash.com/photo-1762427354605-ac241af2b102?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxmb2xkZXIlMjBkb2N1bWVudHxlbnwwfHx8fDE3NzE1NDQyOTV8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "folder document"
+    },
+    {
+      "id": "app-icon-assistant",
+      "description": "AI Assistant Icon",
+      "imageUrl": "https://images.unsplash.com/photo-1763788427851-e329a047356b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8cm9ib3QlMjBpbnRlbGxpZ2VuY2V8ZW58MHx8fHwxNzcxNTQ0Mjk0fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "robot intelligence"
+    },
+    {
+      "id": "app-icon-settings",
+      "description": "Settings Icon",
+      "imageUrl": "https://images.unsplash.com/photo-1546710237-057a5519a3d1?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxnZWFycyUyMGNvZ3xlbnwwfHx8fDE3NzE1NDQyOTR8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "gears cog"
+    }
+  ]
 }
