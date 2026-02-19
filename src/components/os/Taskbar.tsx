@@ -9,10 +9,12 @@ import { StartMenu } from './StartMenu';
 export const Taskbar: React.FC = () => {
   const { openWindows, activeWindowId, focusWindow } = useOS();
   const [isStartOpen, setIsStartOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const [time, setTime] = useState<Date | null>(null);
 
   useEffect(() => {
-    // Only run on client after hydration to avoid mismatches
+    // Defer rendering of time to client-side only
+    setMounted(true);
     setTime(new Date());
     const timer = setInterval(() => setTime(new Date()), 1000);
     return () => clearInterval(timer);
@@ -66,7 +68,7 @@ export const Taskbar: React.FC = () => {
           <Volume2 size={14} />
         </div>
         <div className="flex flex-col items-end leading-none min-w-[75px]">
-          {time ? (
+          {mounted && time ? (
             <>
               <span className="text-[11px] font-medium whitespace-nowrap">{formatTime(time)}</span>
               <span className="text-[10px] opacity-60 whitespace-nowrap">{formatDate(time)}</span>
