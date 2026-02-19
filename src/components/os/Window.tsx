@@ -49,13 +49,13 @@ export const Window: React.FC<WindowProps> = ({ window: windowInstance, children
     };
 
     if (isDragging) {
-      window.addEventListener('mousemove', handleMouseMove);
-      window.addEventListener('mouseup', handleMouseUp);
+      globalThis.window.addEventListener('mousemove', handleMouseMove);
+      globalThis.window.addEventListener('mouseup', handleMouseUp);
     }
 
     return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseup', handleMouseUp);
+      globalThis.window.removeEventListener('mousemove', handleMouseMove);
+      globalThis.window.removeEventListener('mouseup', handleMouseUp);
     };
   }, [isDragging, dragOffset]);
 
@@ -78,7 +78,6 @@ export const Window: React.FC<WindowProps> = ({ window: windowInstance, children
       }}
       onClick={() => focusWindow(windowInstance.id)}
     >
-      {/* Title Bar */}
       <div
         className="h-10 bg-white/5 flex items-center justify-between px-3 cursor-default select-none shrink-0"
         onMouseDown={handleMouseDown}
@@ -108,8 +107,7 @@ export const Window: React.FC<WindowProps> = ({ window: windowInstance, children
         </div>
       </div>
 
-      {/* Content */}
-      <div className="flex-1 bg-background/40 overflow-auto">
+      <div className="flex-1 bg-background/40 overflow-hidden">
         {children}
       </div>
     </div>
