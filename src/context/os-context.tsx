@@ -8,6 +8,7 @@ export type ThemeMode = 'dark' | 'light';
 export type PowerStatus = 'on' | 'off' | 'booting';
 export type TaskbarPosition = 'top' | 'bottom' | 'left' | 'right';
 export type AccentColor = 'default' | 'blue' | 'purple' | 'rose' | 'orange' | 'green';
+export type CursorColor = 'black' | 'white' | 'accent';
 
 export interface LocalUser {
   id: string;
@@ -44,6 +45,9 @@ interface OSContextType {
   notes: string;
   theme: ThemeMode;
   accentColor: AccentColor;
+  cursorColor: CursorColor;
+  isInverted: boolean;
+  glassEnabled: boolean;
   powerStatus: PowerStatus;
   taskbarPosition: TaskbarPosition;
   currentWifi: string;
@@ -64,6 +68,9 @@ interface OSContextType {
   setNotes: (content: string) => void;
   setTheme: (theme: ThemeMode) => void;
   setAccentColor: (color: AccentColor) => void;
+  setCursorColor: (color: CursorColor) => void;
+  setInverted: (inverted: boolean) => void;
+  setGlassEnabled: (enabled: boolean) => void;
   setTaskbarPosition: (position: TaskbarPosition) => void;
   connectToWifi: (ssid: string) => void;
   setVolume: (v: number) => void;
@@ -100,6 +107,9 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   const [notes, setNotesState] = useState("");
   const [theme, setThemeState] = useState<ThemeMode>('dark');
   const [accentColor, setAccentColorState] = useState<AccentColor>('purple');
+  const [cursorColor, setCursorColorState] = useState<CursorColor>('black');
+  const [isInverted, setIsInvertedState] = useState(false);
+  const [glassEnabled, setGlassEnabledState] = useState(true);
   const [powerStatus, setPowerStatus] = useState<PowerStatus>('booting');
   const [taskbarPosition, setTaskbarPositionState] = useState<TaskbarPosition>('bottom');
   const [currentWifi, setCurrentWifi] = useState("Nebula_Secure_5G");
@@ -133,27 +143,26 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     if (!currentUser) return;
 
     const uid = currentUser.id;
-    const savedNotes = localStorage.getItem(`nebula_${uid}_notes`);
-    setNotesState(savedNotes || "");
+    const load = (key: string, def: any) => {
+      const val = localStorage.getItem(`nebula_${uid}_${key}`);
+      return val !== null ? (typeof def === 'boolean' ? val === 'true' : val) : def;
+    };
+
+    setNotesState(load('notes', ""));
+    setThemeState(load('theme', 'dark') as ThemeMode);
+    setAccentColorState(load('accent', 'purple') as AccentColor);
+    setCursorColorState(load('cursor', 'black') as CursorColor);
+    setIsInvertedState(load('inverted', false));
+    setGlassEnabledState(load('glass', true));
+    setTaskbarPositionState(load('taskbar_pos', 'bottom') as TaskbarPosition);
+    setWallpaper(load('wallpaper', "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=1920"));
     
-    const savedTheme = localStorage.getItem(`nebula_${uid}_theme`) as ThemeMode;
-    setThemeState(savedTheme || 'dark');
-
-    const savedAccent = localStorage.getItem(`nebula_${uid}_accent`) as AccentColor;
-    setAccentColorState(savedAccent || 'purple');
-
-    const savedPosition = localStorage.getItem(`nebula_${uid}_taskbar_pos`) as TaskbarPosition;
-    setTaskbarPositionState(savedPosition || 'bottom');
-
-    const savedWallpaper = localStorage.getItem(`nebula_${uid}_wallpaper`);
-    setWallpaper(savedWallpaper || "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=1920");
-
-    const savedWifi = localStorage.getItem(`nebula_${uid}_wifi`);
-    setCurrentWifi(savedWifi || "Nebula_Secure_5G");
+    const savedWifi = load('wifi', "Nebula_Secure_5G");
+    setCurrentWifi(savedWifi);
     setIsOnline(savedWifi !== OFFLINE_WIFI);
 
-    const savedVol = localStorage.getItem(`nebula_${uid}_volume`);
-    setVolumeState(savedVol ? parseInt(savedVol) : 75);
+    const savedVol = load('volume', "75");
+    setVolumeState(parseInt(savedVol));
 
   }, [currentUser]);
 
@@ -185,7 +194,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const setNotes = (content: string) => {
-    if (!isOnline) return; // Prevent "saving" when offline
+    if (!isOnline) return;
     setNotesState(content);
     if (currentUser) localStorage.setItem(`nebula_${currentUser.id}_notes`, content);
   };
@@ -198,6 +207,21 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   const setAccentColor = (color: AccentColor) => {
     setAccentColorState(color);
     if (currentUser) localStorage.setItem(`nebula_${currentUser.id}_accent`, color);
+  };
+
+  const setCursorColor = (color: CursorColor) => {
+    setCursorColorState(color);
+    if (currentUser) localStorage.setItem(`nebula_${currentUser.id}_cursor`, color);
+  };
+
+  const setInverted = (inverted: boolean) => {
+    setIsInvertedState(inverted);
+    if (currentUser) localStorage.setItem(`nebula_${currentUser.id}_inverted`, String(inverted));
+  };
+
+  const setGlassEnabled = (enabled: boolean) => {
+    setGlassEnabledState(enabled);
+    if (currentUser) localStorage.setItem(`nebula_${currentUser.id}_glass`, String(enabled));
   };
 
   const setTaskbarPosition = (position: TaskbarPosition) => {
@@ -341,6 +365,9 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       notes,
       theme,
       accentColor,
+      cursorColor,
+      isInverted,
+      glassEnabled,
       powerStatus,
       taskbarPosition,
       currentWifi,
@@ -360,6 +387,9 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       setNotes,
       setTheme,
       setAccentColor,
+      setCursorColor,
+      setInverted,
+      setGlassEnabled,
       setTaskbarPosition,
       connectToWifi,
       setVolume,

@@ -53,7 +53,11 @@ const DESKTOP_SHORTCUTS: { id: AppId; label: string; icon: any }[] = [
 ];
 
 export const Desktop: React.FC = () => {
-  const { wallpaper, openWindows, openApp, theme, accentColor, powerStatus, powerOn, taskbarPosition, currentUser } = useOS();
+  const { 
+    wallpaper, openWindows, openApp, theme, accentColor, 
+    powerStatus, powerOn, taskbarPosition, currentUser,
+    cursorColor, isInverted, glassEnabled
+  } = useOS();
   const [bootOpacity, setBootOpacity] = useState(1);
   const [shouldRenderBoot, setShouldRenderBoot] = useState(true);
   const [contextMenu, setContextMenu] = useState<{ x: number, y: number } | null>(null);
@@ -94,7 +98,6 @@ export const Desktop: React.FC = () => {
     );
   }
 
-  // If powered on but no user logged in, show login screen
   if (powerStatus === 'on' && !currentUser && !shouldRenderBoot) {
     return <LoginScreen />;
   }
@@ -107,19 +110,35 @@ export const Desktop: React.FC = () => {
   };
 
   const accentClass = accentColor !== 'default' ? `accent-${accentColor}` : '';
+  
+  // Dynamic Cursor Logic
+  const getCursorVariable = () => {
+    if (cursorColor === 'black') return 'var(--cursor-black)';
+    if (cursorColor === 'white') return 'var(--cursor-white)';
+    // For accent cursor, we use a custom SVG with the accent color
+    const accentHex = accentColor === 'blue' ? '%233b82f6' : 
+                      accentColor === 'rose' ? '%23e11d48' : 
+                      accentColor === 'orange' ? '%23f97316' : 
+                      accentColor === 'green' ? '%2316a34a' : '%239333ea';
+    return `url("data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cGF0aCBkPSJNIDQgMyBMIDQgMjEgTCA4LjUgMTYuNSBMIDExLjUgMjMgTCAxNC41IDIyIEwgMTEuNSAxNS41IEwgMTggMTUuNSBMIDQgMyBaIiBmaWxsPSJ${accentHex.replace('%23', '')}\"IHN0cm9rZT0id2hpdGUiIHN0cm9rZS13aWR0aD0iMC44IiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+Cjwvc3ZnPg==")`;
+  };
 
   return (
     <div 
       className={cn(
-        "fixed inset-0 overflow-hidden select-none transition-opacity duration-1000",
+        "fixed inset-0 overflow-hidden select-none transition-all duration-1000",
         theme === 'light' ? "light" : "",
         accentClass,
+        isInverted ? "system-inverted" : "",
+        !glassEnabled ? "glass-disabled" : "",
         powerStatus === 'booting' ? "opacity-0" : "opacity-100"
       )}
       style={{
         backgroundImage: `url(${wallpaper})`,
         backgroundSize: 'cover',
-        backgroundPosition: 'center'
+        backgroundPosition: 'center',
+        // @ts-ignore
+        '--cursor-url': getCursorVariable()
       }}
       onContextMenu={handleContextMenu}
       onClick={() => setContextMenu(null)}
@@ -181,14 +200,6 @@ export const Desktop: React.FC = () => {
           </div>
         </div>
       )}
-      
-      <style jsx global>{`
-        @keyframes loading {
-          0% { width: 0; transform: translateX(-100%); }
-          50% { width: 100%; transform: translateX(0); }
-          100% { width: 0; transform: translateX(100%); }
-        }
-      `}</style>
     </div>
   );
 };

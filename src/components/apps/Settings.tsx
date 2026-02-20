@@ -1,8 +1,13 @@
+
 "use client"
 
 import React, { useRef } from 'react';
-import { useOS, TaskbarPosition, AccentColor } from '@/context/os-context';
-import { Monitor, Palette, User, Shield, Bell, HelpCircle, Upload, Image as ImageIcon, Sun, Moon, Layout, Check } from 'lucide-react';
+import { useOS, TaskbarPosition, AccentColor, CursorColor } from '@/context/os-context';
+import { 
+  Monitor, Palette, User, Shield, Bell, HelpCircle, Upload, 
+  Image as ImageIcon, Sun, Moon, Layout, Check, MousePointer2, 
+  Eye, Zap, Layers 
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
@@ -14,6 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Separator } from '@/components/ui/separator';
 
 const WALLPAPERS = [
   "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=1920",
@@ -31,8 +37,18 @@ const ACCENT_COLORS: { id: AccentColor; class: string; label: string }[] = [
   { id: 'default', class: 'bg-[#94a3b8]', label: 'Nebula' },
 ];
 
+const CURSOR_THEMES: { id: CursorColor; label: string; class: string }[] = [
+  { id: 'black', label: 'Classic Black', class: 'bg-black border-white' },
+  { id: 'white', label: 'Modern White', class: 'bg-white border-black' },
+  { id: 'accent', label: 'System Accent', class: 'bg-accent border-white/20' },
+];
+
 export const Settings: React.FC = () => {
-  const { wallpaper, updateWallpaper, theme, setTheme, taskbarPosition, setTaskbarPosition, accentColor, setAccentColor } = useOS();
+  const { 
+    wallpaper, updateWallpaper, theme, setTheme, taskbarPosition, setTaskbarPosition, 
+    accentColor, setAccentColor, cursorColor, setCursorColor, isInverted, setInverted,
+    glassEnabled, setGlassEnabled 
+  } = useOS();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -49,141 +65,184 @@ export const Settings: React.FC = () => {
 
   return (
     <div className="flex h-full bg-background text-foreground">
-      <div className="w-64 border-r border-border bg-black/5 flex flex-col p-4 gap-2">
-        <h2 className="px-4 py-2 text-xs font-bold text-accent uppercase tracking-widest mb-2">System</h2>
-        <Button variant="ghost" className="justify-start gap-3 bg-accent/10 text-accent"><Palette size={18} /> Personalization</Button>
-        <Button variant="ghost" className="justify-start gap-3 opacity-60"><Monitor size={18} /> Display</Button>
-        <Button variant="ghost" className="justify-start gap-3 opacity-60"><Bell size={18} /> Notifications</Button>
-        <div className="my-4 border-t border-border" />
-        <Button variant="ghost" className="justify-start gap-3 opacity-60"><User size={18} /> Accounts</Button>
-        <Button variant="ghost" className="justify-start gap-3 opacity-60"><Shield size={18} /> Security</Button>
-        <Button variant="ghost" className="justify-start gap-3 opacity-60"><HelpCircle size={18} /> About</Button>
+      {/* Sidebar Navigation */}
+      <div className="w-64 border-r border-border bg-black/5 flex flex-col p-4 gap-2 shrink-0">
+        <h2 className="px-4 py-2 text-[10px] font-bold text-accent uppercase tracking-widest mb-2">System Settings</h2>
+        <Button variant="ghost" className="justify-start gap-3 bg-accent/10 text-accent font-bold"><Palette size={16} /> Personalization</Button>
+        <Button variant="ghost" className="justify-start gap-3 opacity-60"><Monitor size={16} /> Display</Button>
+        <Button variant="ghost" className="justify-start gap-3 opacity-60"><Eye size={16} /> Accessibility</Button>
+        <Button variant="ghost" className="justify-start gap-3 opacity-60"><Bell size={16} /> Notifications</Button>
+        <Separator className="my-4 opacity-10" />
+        <Button variant="ghost" className="justify-start gap-3 opacity-60"><User size={16} /> Accounts</Button>
+        <Button variant="ghost" className="justify-start gap-3 opacity-60"><Shield size={16} /> Security</Button>
+        <Button variant="ghost" className="justify-start gap-3 opacity-60"><HelpCircle size={16} /> About</Button>
       </div>
 
-      <div className="flex-1 p-8 overflow-auto">
-        <div className="max-w-2xl mx-auto">
-          <h1 className="text-2xl font-bold mb-8">Personalization</h1>
+      {/* Main Content Area */}
+      <div className="flex-1 p-10 overflow-auto">
+        <div className="max-w-2xl mx-auto space-y-12">
           
-          <section className="mb-10">
-            <h3 className="text-sm font-semibold mb-4 opacity-80">Theme Mode</h3>
-            <div className="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-border">
-              <div className="flex items-center gap-4">
-                <div className={cn("p-2 rounded-lg bg-black/20 text-accent")}>
-                  {theme === 'light' ? <Sun size={20} /> : <Moon size={20} />}
+          {/* Section: Themes & Accent */}
+          <section>
+            <div className="flex items-center gap-2 mb-6">
+              <Zap size={18} className="text-accent" />
+              <h2 className="text-lg font-bold">Quick Customization</h2>
+            </div>
+            
+            <div className="space-y-6">
+              <div className="flex items-center justify-between p-5 bg-white/5 rounded-2xl border border-border/50">
+                <div className="flex items-center gap-4">
+                  <div className="p-2.5 rounded-xl bg-accent/10 text-accent">
+                    {theme === 'light' ? <Sun size={20} /> : <Moon size={20} />}
+                  </div>
+                  <div className="space-y-0.5">
+                    <Label className="text-sm font-bold">Interface Theme</Label>
+                    <p className="text-[11px] opacity-40">Switch between light and dark modes</p>
+                  </div>
                 </div>
-                <div className="space-y-0.5">
-                  <Label className="text-sm font-bold">Appearance</Label>
-                  <p className="text-xs opacity-50">Choose between light or dark interface</p>
+                <div className="flex items-center gap-3">
+                  <span className="text-[10px] font-bold opacity-30 uppercase tracking-widest">Dark</span>
+                  <Switch 
+                    checked={theme === 'light'} 
+                    onCheckedChange={(checked) => setTheme(checked ? 'light' : 'dark')}
+                  />
+                  <span className="text-[10px] font-bold opacity-30 uppercase tracking-widest">Light</span>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-medium opacity-50 uppercase tracking-tighter">Dark</span>
-                <Switch 
-                  checked={theme === 'light'} 
-                  onCheckedChange={(checked) => setTheme(checked ? 'light' : 'dark')}
-                />
-                <span className="text-xs font-medium opacity-50 uppercase tracking-tighter">Light</span>
+
+              <div className="space-y-4">
+                <Label className="text-xs font-bold uppercase tracking-widest opacity-40">System Accent Color</Label>
+                <div className="grid grid-cols-6 gap-4">
+                  {ACCENT_COLORS.map((color) => (
+                    <button
+                      key={color.id}
+                      onClick={() => setAccentColor(color.id)}
+                      className={cn(
+                        "group relative aspect-square rounded-2xl flex items-center justify-center border-2 transition-all",
+                        color.class,
+                        accentColor === color.id ? "border-white scale-110 shadow-xl shadow-black/30" : "border-transparent opacity-80 hover:opacity-100"
+                      )}
+                    >
+                      {accentColor === color.id && <Check size={20} className="text-white drop-shadow-md" />}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
           </section>
 
-          <section className="mb-10">
-            <h3 className="text-sm font-semibold mb-4 opacity-80">Accent Color</h3>
-            <div className="grid grid-cols-6 gap-3">
-              {ACCENT_COLORS.map((color) => (
+          {/* Section: Mouse & Cursor */}
+          <section>
+            <div className="flex items-center gap-2 mb-6">
+              <MousePointer2 size={18} className="text-accent" />
+              <h2 className="text-lg font-bold">Pointer Customization</h2>
+            </div>
+            <div className="grid grid-cols-3 gap-4">
+              {CURSOR_THEMES.map((c) => (
                 <button
-                  key={color.id}
-                  onClick={() => setAccentColor(color.id)}
+                  key={c.id}
+                  onClick={() => setCursorColor(c.id)}
                   className={cn(
-                    "group relative aspect-square rounded-full flex items-center justify-center border-2 transition-all",
-                    color.class,
-                    accentColor === color.id ? "border-white scale-110 shadow-lg shadow-black/20" : "border-transparent opacity-80 hover:opacity-100"
+                    "flex flex-col items-center gap-3 p-4 rounded-2xl border transition-all",
+                    cursorColor === c.id ? "bg-accent/10 border-accent" : "bg-white/5 border-transparent hover:bg-white/10"
                   )}
-                  title={color.label}
                 >
-                  {accentColor === color.id && <Check size={20} className="text-white drop-shadow-md" />}
+                  <div className={cn("w-10 h-10 rounded-full border-2 flex items-center justify-center", c.class)}>
+                    <MousePointer2 size={16} className={c.id === 'white' ? 'text-black' : 'text-white'} />
+                  </div>
+                  <span className="text-[11px] font-bold uppercase tracking-tighter">{c.label}</span>
                 </button>
               ))}
             </div>
-            <p className="mt-3 text-[11px] opacity-40 italic">This color will be used for buttons, links, and system highlights.</p>
           </section>
 
-          <section className="mb-10">
-            <h3 className="text-sm font-semibold mb-4 opacity-80">Desktop Layout</h3>
-            <div className="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-border">
-              <div className="flex items-center gap-4">
-                <div className="p-2 rounded-lg bg-black/20 text-accent">
-                  <Layout size={20} />
+          {/* Section: Advanced Visuals */}
+          <section>
+            <div className="flex items-center gap-2 mb-6">
+              <Layers size={18} className="text-accent" />
+              <h2 className="text-lg font-bold">Advanced Visuals</h2>
+            </div>
+            
+            <div className="grid gap-4">
+              <div className="flex items-center justify-between p-5 bg-white/5 rounded-2xl border border-border/50">
+                <div className="space-y-0.5">
+                  <Label className="text-sm font-bold">Liquid Glass Effects</Label>
+                  <p className="text-[11px] opacity-40">Enable sophisticated backdrop blurs and glassmorphism</p>
                 </div>
+                <Switch 
+                  checked={glassEnabled} 
+                  onCheckedChange={setGlassEnabled}
+                />
+              </div>
+
+              <div className="flex items-center justify-between p-5 bg-white/5 rounded-2xl border border-border/50">
+                <div className="space-y-0.5">
+                  <Label className="text-sm font-bold">Invert System Colors</Label>
+                  <p className="text-[11px] opacity-40">A high-contrast accessibility mode that flips all colors</p>
+                </div>
+                <Switch 
+                  checked={isInverted} 
+                  onCheckedChange={setInverted}
+                />
+              </div>
+
+              <div className="flex items-center justify-between p-5 bg-white/5 rounded-2xl border border-border/50">
                 <div className="space-y-0.5">
                   <Label className="text-sm font-bold">Taskbar Position</Label>
-                  <p className="text-xs opacity-50">Move the bar to your preferred edge</p>
+                  <p className="text-[11px] opacity-40">Move the system bar to any screen edge</p>
                 </div>
+                <Select value={taskbarPosition} onValueChange={(v) => setTaskbarPosition(v as TaskbarPosition)}>
+                  <SelectTrigger className="w-[120px] bg-black/20 border-white/10 text-xs">
+                    <SelectValue placeholder="Position" />
+                  </SelectTrigger>
+                  <SelectContent className="glass border-white/10">
+                    <SelectItem value="top">Top</SelectItem>
+                    <SelectItem value="bottom">Bottom</SelectItem>
+                    <SelectItem value="left">Left</SelectItem>
+                    <SelectItem value="right">Right</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
-              <Select value={taskbarPosition} onValueChange={(v) => setTaskbarPosition(v as TaskbarPosition)}>
-                <SelectTrigger className="w-[120px] bg-black/20 border-white/10 text-xs">
-                  <SelectValue placeholder="Position" />
-                </SelectTrigger>
-                <SelectContent className="bg-[#1e2731] border-white/10 text-white">
-                  <SelectItem value="top">Top</SelectItem>
-                  <SelectItem value="bottom">Bottom</SelectItem>
-                  <SelectItem value="left">Left</SelectItem>
-                  <SelectItem value="right">Right</SelectItem>
-                </SelectContent>
-              </Select>
             </div>
           </section>
 
-          <section className="mb-10">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-semibold opacity-80">Desktop Wallpaper</h3>
+          {/* Section: Wallpaper */}
+          <section className="pb-10">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-2">
+                <ImageIcon size={18} className="text-accent" />
+                <h2 className="text-lg font-bold">Desktop Wallpaper</h2>
+              </div>
               <Button 
                 variant="outline" 
                 size="sm" 
-                className="gap-2 border-border hover:bg-accent hover:text-white transition-all"
+                className="gap-2 border-accent/20 hover:bg-accent hover:text-white transition-all rounded-xl"
                 onClick={() => fileInputRef.current?.click()}
               >
                 <Upload size={14} />
-                Upload Image
+                Custom Image
               </Button>
-              <input 
-                type="file" 
-                ref={fileInputRef} 
-                onChange={handleFileUpload} 
-                accept="image/*" 
-                className="hidden" 
-              />
+              <input type="file" ref={fileInputRef} onChange={handleFileUpload} accept="image/*" className="hidden" />
             </div>
             
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-6">
               {WALLPAPERS.map((url, i) => (
                 <div 
                   key={i} 
                   className={cn(
-                    "relative aspect-video rounded-xl overflow-hidden cursor-pointer border-2 transition-all group",
-                    wallpaper === url ? "border-accent scale-[1.02] shadow-lg shadow-accent/10" : "border-transparent opacity-60 hover:opacity-100"
+                    "relative aspect-video rounded-2xl overflow-hidden cursor-pointer border-2 transition-all group",
+                    wallpaper === url ? "border-accent scale-[1.02] shadow-2xl shadow-accent/20" : "border-transparent opacity-60 hover:opacity-100"
                   )}
                   onClick={() => updateWallpaper(url)}
                 >
                   <img src={url} alt="Wallpaper" className="w-full h-full object-cover" />
                   {wallpaper === url && (
-                    <div className="absolute inset-0 bg-accent/10 flex items-center justify-center">
-                      <ImageIcon className="text-accent" size={24} />
+                    <div className="absolute inset-0 bg-accent/20 flex items-center justify-center">
+                      <Check className="text-white drop-shadow-xl" size={32} />
                     </div>
                   )}
                 </div>
               ))}
-            </div>
-          </section>
-
-          <section className="space-y-6">
-            <h3 className="text-sm font-semibold mb-4 opacity-80">System Preferences</h3>
-            <div className="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-border">
-              <div className="space-y-0.5">
-                <Label className="text-sm">Transparency Effects</Label>
-                <p className="text-xs opacity-40">Enable glassmorphism UI elements</p>
-              </div>
-              <Switch checked={true} />
             </div>
           </section>
         </div>
