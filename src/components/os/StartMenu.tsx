@@ -20,6 +20,7 @@ import {
   Pin,
   PinOff,
   Trash2,
+  Map as MapIcon,
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
