@@ -96,7 +96,8 @@
     @apply border-border;
   }
   html, body {
-    cursor: url("data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cGF0aCBkPSJNNS41IDMuNUwxOC41IDEzTDEzLjUgMTRMMTYuNSAxOS41TDE0LjUgMjAuNUwxMS41IDE1TDcuNSAxOC41VjMuNUg1LjVaIiBmaWxsPSIjMzMzMzMzIiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjEuNSIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPgo8L3N2Zz4=") 0 0, auto;
+    /* Sleek, high-fidelity grey macOS-style cursor */
+    cursor: url("data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cGF0aCBkPSJNIDQgMyBWIDIxLjE3IEwgOS4yMSAxNi4xNCBMIDEyLjI5IDIzLjUgTCAxNS4zOCAyMi4yMSBMIDEyLjM0IDE0Ljg0IEggMTkuMyBMIDQgMyBaIiBmaWxsPSIjMUExQTFBOCIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSIxLjIiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz4KPC9zdmc+") 0 0, auto;
   }
   body {
     @apply bg-background text-foreground overflow-hidden h-screen w-screen selection:bg-accent selection:text-accent-foreground transition-colors duration-500;
@@ -104,7 +105,7 @@
 }
 
 .glass {
-  @apply bg-background/50 backdrop-blur-2xl border-white/10;
+  @apply bg-background/50 backdrop-blur-2xl border-white/10 shadow-2xl;
 }
 
 .light .glass {
@@ -127,4 +128,9 @@
   0% { width: 0; transform: translateX(-100%); }
   50% { width: 100%; transform: translateX(0); }
   100% { width: 0; transform: translateX(100%); }
+}
+
+/* Ensure the cursor stays consistent even for clickable items */
+a, button, [role="button"], .cursor-pointer {
+  cursor: url("data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cGF0aCBkPSJNIDQgMyBWIDIxLjE3IEwgOS4yMSAxNi4xNCBMIDEyLjI5IDIzLjUgTCAxNS4zOCAyMi4yMSBMIDEyLjM0IDE0Ljg0IEggMTkuMyBMIDQgMyBaIiBmaWxsPSIjMUExQTFBOCIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSIxLjIiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz4KPC9zdmc+") 0 0, pointer;
 }

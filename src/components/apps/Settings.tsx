@@ -1,4 +1,3 @@
-
 "use client"
 
 import React, { useRef } from 'react';
@@ -23,13 +22,13 @@ const WALLPAPERS = [
   "https://picsum.photos/seed/nebula1/1920/1080",
 ];
 
-const ACCENT_COLORS: { id: AccentColor; class: string; label: string; color: string }[] = [
-  { id: 'purple', class: 'bg-[#9333ea]', label: 'Purple', color: '262.1 83.3% 57.8%' },
-  { id: 'blue', class: 'bg-[#3b82f6]', label: 'Blue', color: '217.2 91.2% 59.8%' },
-  { id: 'rose', class: 'bg-[#e11d48]', label: 'Rose', color: '346.8 77.2% 49.8%' },
-  { id: 'orange', class: 'bg-[#f97316]', label: 'Orange', color: '24.6 95% 53.1%' },
-  { id: 'green', class: 'bg-[#16a34a]', label: 'Green', color: '142.1 76.2% 36.3%' },
-  { id: 'default', class: 'bg-[#94a3b8]', label: 'Nebula', color: '125 31% 74%' },
+const ACCENT_COLORS: { id: AccentColor; class: string; label: string }[] = [
+  { id: 'purple', class: 'bg-[#9333ea]', label: 'Purple' },
+  { id: 'blue', class: 'bg-[#3b82f6]', label: 'Blue' },
+  { id: 'rose', class: 'bg-[#e11d48]', label: 'Rose' },
+  { id: 'orange', class: 'bg-[#f97316]', label: 'Orange' },
+  { id: 'green', class: 'bg-[#16a34a]', label: 'Green' },
+  { id: 'default', class: 'bg-[#94a3b8]', label: 'Nebula' },
 ];
 
 export const Settings: React.FC = () => {
@@ -106,7 +105,7 @@ export const Settings: React.FC = () => {
                 </button>
               ))}
             </div>
-            <p className="mt-3 text-[11px] opacity-40 italic">This color will be used for buttons, links, and highlights.</p>
+            <p className="mt-3 text-[11px] opacity-40 italic">This color will be used for buttons, links, and system highlights.</p>
           </section>
 
           <section className="mb-10">
