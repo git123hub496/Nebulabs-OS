@@ -12,8 +12,6 @@
     --popover-foreground: 0 0% 100%;
     --primary: 210 29% 29%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 210 25% 15%;
-    --secondary-foreground: 0 0% 100%;
     --muted: 210 25% 15%;
     --muted-foreground: 210 10% 70%;
     --accent: 210 29% 74%;
@@ -63,7 +61,6 @@
     --sidebar-border: 0 0% 85%;
   }
 
-  /* Accent Color Variants */
   .accent-blue {
     --accent: 217.2 91.2% 59.8%;
     --ring: 217.2 91.2% 59.8%;
@@ -96,7 +93,7 @@
     @apply border-border;
   }
   html, body {
-    /* Sleek, high-fidelity grey macOS-style cursor */
+    /* Sleek, high-fidelity black macOS-style cursor with white outline */
     cursor: url("data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cGF0aCBkPSJNIDQgMyBWIDIxLjE3IEwgOS4yMSAxNi4xNCBMIDEyLjI5IDIzLjUgTCAxNS4zOCAyMi4yMSBMIDEyLjM0IDE0Ljg0IEggMTkuMyBMIDQgMyBaIiBmaWxsPSIjMUExQTFBOCIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSIxLjIiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz4KPC9zdmc+") 0 0, auto;
   }
   body {
@@ -130,7 +127,6 @@
   100% { width: 0; transform: translateX(100%); }
 }
 
-/* Ensure the cursor stays consistent even for clickable items */
 a, button, [role="button"], .cursor-pointer {
   cursor: url("data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cGF0aCBkPSJNIDQgMyBWIDIxLjE3IEwgOS4yMSAxNi4xNCBMIDEyLjI5IDIzLjUgTCAxNS4zOCAyMi4yMSBMIDEyLjM0IDE0Ljg0IEggMTkuMyBMIDQgMyBaIiBmaWxsPSIjMUExQTFBOCIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSIxLjIiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz4KPC9zdmc+") 0 0, pointer;
 }
