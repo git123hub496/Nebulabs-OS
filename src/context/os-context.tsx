@@ -490,8 +490,13 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const toggleDesktopApp = (id: AppId) => {
+    // CRITICAL: Prevent removal of system-core apps from the desktop
+    const CORE_APPS: AppId[] = ['trash', 'files', 'store'];
+    
     const exists = desktopApps.find(app => app.id === id);
     if (exists) {
+      if (CORE_APPS.includes(id)) return; // Don't delete core apps
+      
       const updated = desktopApps.filter(app => app.id !== id);
       setDesktopApps(updated);
       saveSetting('desktop_apps', updated.map(({ icon, ...app }) => app));
