@@ -1,7 +1,7 @@
 
 "use client"
 
-import React, { useState } from 'react';
+import React from 'react';
 import { useOS, AppId } from '@/context/os-context';
 import { 
   Search, 
@@ -11,7 +11,6 @@ import {
   MessageSquare, 
   FolderOpen,
   Cloud,
-  Info,
   Calculator as CalcIcon,
   Terminal as TermIcon,
   Power,
@@ -54,16 +53,17 @@ export const StartMenu: React.FC<StartMenuProps> = ({ onClose }) => {
     onClose();
   };
 
+  // Improved positioning based on parent (Start Button)
   const positionClasses = {
-    bottom: 'bottom-14 left-0 animate-in slide-in-from-bottom-4',
-    top: 'top-14 left-0 animate-in slide-in-from-top-4',
-    left: 'left-14 bottom-0 animate-in slide-in-from-left-4',
-    right: 'right-14 bottom-0 animate-in slide-in-from-right-4',
+    bottom: 'bottom-12 left-0 animate-in slide-in-from-bottom-2 origin-bottom-left',
+    top: 'top-12 left-0 animate-in slide-in-from-top-2 origin-top-left',
+    left: 'left-12 top-0 animate-in slide-in-from-left-2 origin-top-left',
+    right: 'right-12 top-0 animate-in slide-in-from-right-2 origin-top-right',
   };
 
   return (
     <div className={cn(
-      "absolute w-96 h-[560px] glass rounded-xl border window-shadow p-6 flex flex-col gap-6 duration-300 z-[10000]",
+      "absolute w-[360px] h-[520px] glass rounded-xl border window-shadow p-6 flex flex-col gap-6 z-[10000]",
       positionClasses[taskbarPosition]
     )}>
       <div className="relative">
@@ -74,7 +74,7 @@ export const StartMenu: React.FC<StartMenuProps> = ({ onClose }) => {
         />
       </div>
 
-      <div className="flex-1 overflow-auto">
+      <div className="flex-1 overflow-auto pr-1">
         <div className="mb-6">
           <h3 className="text-[11px] font-bold text-accent uppercase tracking-wider mb-4 opacity-80">Pinned Apps</h3>
           <div className="grid grid-cols-4 gap-4">
@@ -117,7 +117,7 @@ export const StartMenu: React.FC<StartMenuProps> = ({ onClose }) => {
         </div>
       </div>
 
-      <div className="border-t border-white/10 pt-4 flex items-center justify-between">
+      <div className="border-t border-white/10 pt-4 mt-auto flex items-center justify-between">
         <div className="flex items-center gap-3 overflow-hidden">
           <Avatar className="w-9 h-9 border border-accent/20">
             <AvatarFallback className="bg-accent text-primary font-bold">G</AvatarFallback>
@@ -136,15 +136,15 @@ export const StartMenu: React.FC<StartMenuProps> = ({ onClose }) => {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-40 bg-[#1e2731] border-white/10 text-white">
-              <DropdownMenuItem onClick={restart} className="gap-2 cursor-pointer hover:bg-white/5">
+              <DropdownMenuItem onClick={restart} className="gap-2 cursor-pointer hover:bg-white/5 focus:bg-white/10">
                 <RefreshCw size={14} />
                 <span>Restart</span>
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={shutDown} className="gap-2 cursor-pointer hover:bg-white/5">
+              <DropdownMenuItem onClick={shutDown} className="gap-2 cursor-pointer hover:bg-white/5 focus:bg-white/10">
                 <Power size={14} />
                 <span>Shut Down</span>
               </DropdownMenuItem>
-              <DropdownMenuItem className="gap-2 cursor-pointer hover:bg-white/5 text-destructive">
+              <DropdownMenuItem className="gap-2 cursor-pointer hover:bg-white/5 focus:bg-white/10 text-destructive focus:text-destructive">
                 <LogOut size={14} />
                 <span>Log Out</span>
               </DropdownMenuItem>

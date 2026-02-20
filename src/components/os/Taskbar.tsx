@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useOS, AppId } from '@/context/os-context';
-import { Monitor, Wifi, Volume2, FolderOpen, ShoppingBag, MessageSquare, Settings } from 'lucide-react';
+import { Wifi, Volume2, FolderOpen, ShoppingBag, MessageSquare, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { StartMenu } from './StartMenu';
 
@@ -54,11 +54,11 @@ export const Taskbar: React.FC = () => {
         <button
           onClick={() => setIsStartOpen(!isStartOpen)}
           className={cn(
-            "p-2 rounded-md hover:bg-white/10 transition-all active:scale-95 group",
+            "p-2 rounded-md hover:bg-white/10 transition-all active:scale-95 group flex items-center justify-center min-w-[32px] min-h-[32px]",
             isStartOpen && "bg-white/10"
           )}
         >
-          <Monitor className="text-accent group-hover:scale-110 transition-transform" size={24} />
+          <span className="text-xl font-black text-accent font-headline tracking-tighter select-none leading-none">N</span>
         </button>
         {isStartOpen && <StartMenu onClose={() => setIsStartOpen(false)} />}
       </div>
