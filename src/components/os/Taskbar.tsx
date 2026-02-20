@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useOS, AppId } from '@/context/os-context';
-import { Wifi, Volume2, FolderOpen, ShoppingBag, MessageSquare, Settings, Lock, Check, Loader2, VolumeX, Volume1 } from 'lucide-react';
+import { Wifi, Volume2, FolderOpen, ShoppingBag, MessageSquare, Settings, Lock, Check, Loader2, VolumeX, Volume1, LayoutGrid } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { StartMenu } from './StartMenu';
 import {
@@ -27,7 +27,11 @@ const SIMULATED_NETWORKS = [
 ];
 
 export const Taskbar: React.FC = () => {
-  const { openWindows, activeWindowId, focusWindow, openApp, taskbarPosition, taskbarSize, currentWifi, isWifiConnecting, connectToWifi, volume, setVolume, isOnline } = useOS();
+  const { 
+    openWindows, activeWindowId, focusWindow, openApp, taskbarPosition, taskbarSize, 
+    currentWifi, isWifiConnecting, connectToWifi, volume, setVolume, isOnline,
+    isWidgetsOpen, setIsWidgetsOpen 
+  } = useOS();
   const [isStartOpen, setIsStartOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [time, setTime] = useState<Date | null>(null);
@@ -73,10 +77,13 @@ export const Taskbar: React.FC = () => {
       positionClasses[taskbarPosition],
       isVertical ? "flex-col py-2" : "items-center px-2"
     )}>
-      {/* Start Button */}
-      <div className="relative z-10">
+      {/* Start & Widgets Buttons */}
+      <div className={cn("flex", isVertical ? "flex-col gap-1" : "gap-1")}>
         <button
-          onClick={() => setIsStartOpen(!isStartOpen)}
+          onClick={() => {
+            setIsStartOpen(!isStartOpen);
+            setIsWidgetsOpen(false);
+          }}
           className={cn(
             "p-2 rounded-md hover:bg-white/10 transition-all active:scale-95 group flex items-center justify-center min-w-[32px] min-h-[32px]",
             isStartOpen && "bg-white/10"
@@ -84,6 +91,20 @@ export const Taskbar: React.FC = () => {
         >
           <span className={cn("font-black text-accent font-headline tracking-tighter select-none leading-none", logoSizeClass)}>N</span>
         </button>
+        
+        <button
+          onClick={() => {
+            setIsWidgetsOpen(!isWidgetsOpen);
+            setIsStartOpen(false);
+          }}
+          className={cn(
+            "p-2 rounded-md hover:bg-white/10 transition-all active:scale-95 group flex items-center justify-center min-w-[32px] min-h-[32px]",
+            isWidgetsOpen && "bg-accent/20 text-accent"
+          )}
+        >
+          <LayoutGrid size={iconSize} className={isWidgetsOpen ? "text-accent" : "text-white/60 group-hover:text-white"} />
+        </button>
+        
         {isStartOpen && <StartMenu onClose={() => setIsStartOpen(false)} />}
       </div>
 
@@ -92,7 +113,6 @@ export const Taskbar: React.FC = () => {
         "flex-1 flex gap-2 overflow-hidden",
         isVertical ? "flex-col items-center justify-center" : "items-center justify-center"
       )}>
-        {/* Quick Launch Apps */}
         {QUICK_LAUNCH.map(item => {
           const Icon = item.icon;
           const isAppOpen = openWindows.some(w => w.appId === item.id);
@@ -122,7 +142,6 @@ export const Taskbar: React.FC = () => {
           );
         })}
 
-        {/* Dynamically Opened Apps (that aren't in Quick Launch) */}
         {openWindows.filter(w => !QUICK_LAUNCH.some(ql => ql.id === w.appId)).map(window => {
           const isActive = activeWindowId === window.id;
           return (

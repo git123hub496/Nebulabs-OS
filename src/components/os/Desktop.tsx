@@ -6,6 +6,7 @@ import { Window } from './Window';
 import { Taskbar } from './Taskbar';
 import { ContextMenu } from './ContextMenu';
 import { LoginScreen } from './LoginScreen';
+import { WidgetsPanel } from './WidgetsPanel';
 import { 
   ShoppingBag, 
   FolderOpen, 
@@ -17,6 +18,7 @@ import {
   Globe,
   Power,
   Trash2,
+  Newspaper,
 } from 'lucide-react';
 import { FileExplorer } from '../apps/FileExplorer';
 import { AppStore } from '../apps/AppStore';
@@ -28,6 +30,7 @@ import { Calculator } from '../apps/Calculator';
 import { Terminal } from '../apps/Terminal';
 import { NebulaBrowser } from '../apps/NebulaBrowser';
 import { RecyclingBin } from '../apps/RecyclingBin';
+import { NebulaNews } from '../apps/NebulaNews';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 
@@ -42,20 +45,21 @@ const APP_COMPONENTS: Record<AppId, React.ReactNode> = {
   'terminal': <Terminal />,
   'browser': <NebulaBrowser />,
   'trash': <RecyclingBin />,
+  'news': <NebulaNews />,
 };
 
 export const Desktop: React.FC = () => {
   const { 
     wallpaper, openWindows, openApp, theme, accentColor, customAccentHex,
     powerStatus, powerOn, taskbarPosition, iconSize, currentUser,
-    cursorColor, isInverted, glassEnabled, desktopApps, updateDesktopAppPosition, toggleDesktopApp
+    cursorColor, isInverted, glassEnabled, desktopApps, updateDesktopAppPosition, toggleDesktopApp,
+    isWidgetsOpen, setIsWidgetsOpen
   } = useOS();
   
   const [bootOpacity, setBootOpacity] = useState(1);
   const [shouldRenderBoot, setShouldRenderBoot] = useState(true);
   const [contextMenu, setContextMenu] = useState<{ x: number, y: number } | null>(null);
   
-  // Dragging State
   const [draggingAppId, setDraggingAppId] = useState<AppId | null>(null);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [currentDragPos, setCurrentDragPos] = useState({ x: 0, y: 0 });
@@ -81,7 +85,6 @@ export const Desktop: React.FC = () => {
   };
 
   const handleMouseDown = (e: React.MouseEvent, appId: AppId) => {
-    // If we click the delete button specifically, don't start a drag
     if ((e.target as HTMLElement).closest('.delete-shortcut-btn')) return;
     
     e.stopPropagation();
@@ -191,10 +194,21 @@ export const Desktop: React.FC = () => {
         ...customStyle
       }}
       onContextMenu={handleContextMenu}
-      onClick={() => setContextMenu(null)}
+      onClick={() => {
+        setContextMenu(null);
+        setIsWidgetsOpen(false);
+      }}
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
     >
+      {/* Widgets Overlay Background */}
+      {isWidgetsOpen && (
+        <div className="absolute inset-0 bg-black/20 backdrop-blur-sm z-[9997]" />
+      )}
+
+      {/* Widgets Panel */}
+      <WidgetsPanel />
+
       {/* Desktop Icons */}
       {desktopApps.map(shortcut => {
         const Icon = shortcut.icon;
@@ -225,7 +239,6 @@ export const Desktop: React.FC = () => {
             <div className="w-14 h-14 glass rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform mb-1 shadow-lg border-white/20 relative">
               <Icon size={28} className="text-accent" />
               
-              {/* Only show delete button if it's not a core system app like Recycling Bin */}
               {shortcut.id !== 'trash' && shortcut.id !== 'files' && shortcut.id !== 'store' && (
                 <button 
                   className="delete-shortcut-btn absolute -top-1.5 -right-1.5 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 hover:scale-110 transition-all z-10 border-2 border-white shadow-md flex items-center justify-center"

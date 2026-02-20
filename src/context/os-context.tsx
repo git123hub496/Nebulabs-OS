@@ -11,9 +11,10 @@ import {
   Terminal as TermIcon,
   Globe,
   Trash2,
+  Newspaper,
 } from 'lucide-react';
 
-export type AppId = 'store' | 'files' | 'settings' | 'assistant' | 'google-drive' | 'notes' | 'calc' | 'terminal' | 'browser' | 'trash';
+export type AppId = 'store' | 'files' | 'settings' | 'assistant' | 'google-drive' | 'notes' | 'calc' | 'terminal' | 'browser' | 'trash' | 'news';
 export type ThemeMode = 'dark' | 'light';
 export type PowerStatus = 'on' | 'off' | 'booting';
 export type TaskbarPosition = 'top' | 'bottom' | 'left' | 'right';
@@ -79,6 +80,7 @@ interface OSContextType {
   isWifiConnecting: boolean;
   isOnline: boolean;
   volume: number;
+  isWidgetsOpen: boolean;
   
   login: (userId: string) => void;
   logout: () => void;
@@ -102,6 +104,7 @@ interface OSContextType {
   setIconSize: (size: DesktopIconSize) => void;
   connectToWifi: (ssid: string) => void;
   setVolume: (v: number) => void;
+  setIsWidgetsOpen: (isOpen: boolean) => void;
   restart: () => void;
   shutDown: () => void;
   powerOn: () => void;
@@ -118,7 +121,6 @@ interface OSContextType {
 
 const OSContext = createContext<OSContextType | undefined>(undefined);
 
-// Grid configuration for desktop icons
 const GRID_X = 100;
 const GRID_Y = 110;
 const PADDING = 20;
@@ -140,18 +142,18 @@ const APP_INFO: Record<AppId, { icon: any; label: string }> = {
   'calc': { icon: CalcIcon, label: 'Calculator' },
   'google-drive': { icon: TermIcon, label: 'Google Drive' },
   'trash': { icon: Trash2, label: 'Recycling Bin' },
+  'news': { icon: Newspaper, label: 'Nebula News' },
 };
 
 const INITIAL_DESKTOP: DesktopShortcut[] = [
   { id: 'browser', label: 'Nebula Browser', icon: Globe, x: PADDING, y: PADDING },
   { id: 'files', label: 'File Explorer', icon: FolderOpen, x: PADDING, y: PADDING + GRID_Y },
   { id: 'store', label: 'App Store', icon: ShoppingBag, x: PADDING, y: PADDING + (GRID_Y * 2) },
-  { id: 'assistant', label: 'AI Assistant', icon: MessageSquare, x: PADDING, y: PADDING + (GRID_Y * 3) },
-  { id: 'notes', label: 'Notes', icon: FileText, x: PADDING, y: PADDING + (GRID_Y * 4) },
-  { id: 'trash', label: 'Recycling Bin', icon: Trash2, x: PADDING, y: PADDING + (GRID_Y * 5) },
+  { id: 'news', label: 'Nebula News', icon: Newspaper, x: PADDING, y: PADDING + (GRID_Y * 3) },
+  { id: 'trash', label: 'Recycling Bin', icon: Trash2, x: PADDING, y: PADDING + (GRID_Y * 4) },
 ];
 
-const INITIAL_APPS: AppId[] = ['store', 'files', 'settings', 'assistant', 'notes', 'calc', 'terminal', 'browser', 'trash'];
+const INITIAL_APPS: AppId[] = ['store', 'files', 'settings', 'assistant', 'notes', 'calc', 'terminal', 'browser', 'trash', 'news'];
 
 const AVATAR_COLORS = ['#9333ea', '#3b82f6', '#e11d48', '#f97316', '#16a34a'];
 
@@ -182,6 +184,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   const [isWifiConnecting, setIsWifiConnecting] = useState(false);
   const [isOnline, setIsOnline] = useState(true);
   const [volume, setVolumeState] = useState(75);
+  const [isWidgetsOpen, setIsWidgetsOpen] = useState(false);
   const [nextZIndex, setNextZIndex] = useState(10);
 
   useEffect(() => {
@@ -389,6 +392,9 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     } else if (appId === 'trash') {
       initialWidth = 600;
       initialHeight = 400;
+    } else if (appId === 'news') {
+      initialWidth = 900;
+      initialHeight = 700;
     }
 
     const newId = `${appId}-${Date.now()}`;
@@ -492,13 +498,9 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     const snappedX = Math.round((x - PADDING) / GRID_X) * GRID_X + PADDING;
     const snappedY = Math.round((y - PADDING) / GRID_Y) * GRID_Y + PADDING;
     
-    // Check for collision: prevent placing an icon on top of another existing icon
     const isOccupied = desktopApps.some(app => app.id !== id && app.x === snappedX && app.y === snappedY);
     
-    if (isOccupied) {
-      // If occupied, do nothing. The icon will snap back in Desktop.tsx logic
-      return;
-    }
+    if (isOccupied) return;
 
     const updated = desktopApps.map(app => 
       app.id === id ? { ...app, x: snappedX, y: snappedY } : app
@@ -509,20 +511,17 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const toggleDesktopApp = (id: AppId) => {
-    // CRITICAL: Prevent removal of system-core apps from the desktop
     const CORE_APPS: AppId[] = ['trash', 'files', 'store'];
     
     const exists = desktopApps.find(app => app.id === id);
     if (exists) {
-      if (CORE_APPS.includes(id)) return; // Don't delete core apps
+      if (CORE_APPS.includes(id)) return;
       
       const updated = desktopApps.filter(app => app.id !== id);
       setDesktopApps(updated);
       saveSetting('desktop_apps', updated.map(({ icon, ...app }) => app));
     } else {
       const info = APP_INFO[id];
-      
-      // Find the first empty spot in a grid (column by column)
       let foundX = PADDING;
       let foundY = PADDING;
       let col = 0;
@@ -535,7 +534,6 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
         isOccupied = desktopApps.some(app => app.x === foundX && app.y === foundY);
         if (isOccupied) {
           row++;
-          // Basic grid wrapping logic
           if (row > 6) { 
             row = 0;
             col++;
@@ -582,6 +580,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       isWifiConnecting,
       isOnline,
       volume,
+      isWidgetsOpen,
       login,
       logout,
       createAccount,
@@ -604,6 +603,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       setIconSize,
       connectToWifi,
       setVolume,
+      setIsWidgetsOpen,
       restart,
       shutDown,
       powerOn,

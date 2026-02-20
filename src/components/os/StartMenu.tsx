@@ -16,6 +16,7 @@ import {
   RefreshCw,
   LogOut,
   Globe,
+  Newspaper,
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -43,8 +44,11 @@ const APP_INFO: Record<AppId, { icon: any; label: string }> = {
   'calc': { icon: CalcIcon, label: 'Calculator' },
   'terminal': { icon: TermIcon, label: 'Terminal' },
   'browser': { icon: Globe, label: 'Nebula Browser' },
-  'trash': { icon: CalcIcon, label: 'Recycling Bin' } // Fallback for context
+  'news': { icon: Newspaper, label: 'Nebula News' },
+  'trash': { icon: Trash2, label: 'Recycling Bin' } // Using Newspaper icon for context check, but actually trash
 };
+
+import { Trash2 } from 'lucide-react';
 
 export const StartMenu: React.FC<StartMenuProps> = ({ onClose }) => {
   const { installedApps, openApp, restart, shutDown, taskbarPosition, accentColor, currentUser, logout } = useOS();
@@ -101,9 +105,9 @@ export const StartMenu: React.FC<StartMenuProps> = ({ onClose }) => {
         <div>
           <h3 className="text-[11px] font-bold text-accent uppercase tracking-widest mb-4 opacity-80">Quick Links</h3>
           <div className="space-y-1">
-            <button className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-accent/10 text-sm text-white/80 transition-colors group">
-              <FolderOpen size={16} className="text-accent group-hover:scale-110 transition-transform" />
-              <span className="group-hover:text-accent">Personal Documents</span>
+            <button className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-accent/10 text-sm text-white/80 transition-colors group" onClick={() => handleAppClick('news')}>
+              <Newspaper size={16} className="text-accent group-hover:scale-110 transition-transform" />
+              <span className="group-hover:text-accent">Nebula Local News</span>
             </button>
             <button className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-accent/10 text-sm text-white/80 transition-colors group">
               <ShoppingBag size={16} className="text-accent group-hover:scale-110 transition-transform" />
