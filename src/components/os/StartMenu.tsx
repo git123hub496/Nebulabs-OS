@@ -1,4 +1,3 @@
-
 "use client"
 
 import React from 'react';
@@ -53,7 +52,6 @@ export const StartMenu: React.FC<StartMenuProps> = ({ onClose }) => {
     onClose();
   };
 
-  // Improved positioning based on parent (Start Button)
   const positionClasses = {
     bottom: 'bottom-12 left-0 animate-in slide-in-from-bottom-2 origin-bottom-left',
     top: 'top-12 left-0 animate-in slide-in-from-top-2 origin-top-left',
@@ -63,20 +61,20 @@ export const StartMenu: React.FC<StartMenuProps> = ({ onClose }) => {
 
   return (
     <div className={cn(
-      "absolute w-[360px] h-[520px] glass rounded-xl border window-shadow p-6 flex flex-col gap-6 z-[10000]",
+      "absolute w-[360px] h-[520px] glass rounded-2xl border window-shadow p-6 flex flex-col gap-6 z-[10000] shadow-2xl backdrop-blur-3xl",
       positionClasses[taskbarPosition]
     )}>
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40" size={16} />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-accent/60" size={16} />
         <Input 
           placeholder="Search apps, settings, and files" 
-          className="pl-10 bg-white/5 border-white/10 text-white placeholder:text-white/30 h-10"
+          className="pl-10 bg-white/5 border-white/10 text-white placeholder:text-white/30 h-10 rounded-xl focus-visible:ring-accent"
         />
       </div>
 
       <div className="flex-1 overflow-auto pr-1">
         <div className="mb-6">
-          <h3 className="text-[11px] font-bold text-accent uppercase tracking-wider mb-4 opacity-80">Pinned Apps</h3>
+          <h3 className="text-[11px] font-bold text-accent uppercase tracking-widest mb-4 opacity-80">Pinned Apps</h3>
           <div className="grid grid-cols-4 gap-4">
             {installedApps.map(appId => {
               const info = APP_INFO[appId];
@@ -86,9 +84,9 @@ export const StartMenu: React.FC<StartMenuProps> = ({ onClose }) => {
                 <button
                   key={appId}
                   onClick={() => handleAppClick(appId)}
-                  className="flex flex-col items-center gap-2 group"
+                  className="flex flex-col items-center gap-2 group transition-all"
                 >
-                  <div className="w-12 h-12 bg-white/5 rounded-xl flex items-center justify-center group-hover:bg-accent/20 group-hover:scale-105 transition-all">
+                  <div className="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center group-hover:bg-accent/20 group-hover:scale-105 transition-all border border-white/5 group-hover:border-accent/20">
                     <Icon className="text-white/80 group-hover:text-accent transition-colors" size={24} />
                   </div>
                   <span className="text-[10px] text-white/70 font-medium text-center truncate w-full">{info.label}</span>
@@ -99,18 +97,18 @@ export const StartMenu: React.FC<StartMenuProps> = ({ onClose }) => {
         </div>
 
         <div>
-          <h3 className="text-[11px] font-bold text-accent uppercase tracking-wider mb-4 opacity-80">Quick Links</h3>
+          <h3 className="text-[11px] font-bold text-accent uppercase tracking-widest mb-4 opacity-80">Quick Links</h3>
           <div className="space-y-1">
-            <button className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 text-sm text-white/70 transition-colors">
-              <FolderOpen size={16} className="text-accent" />
+            <button className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-accent/10 text-sm text-white/80 transition-colors group">
+              <FolderOpen size={16} className="text-accent group-hover:scale-110 transition-transform" />
               <span>Personal Documents</span>
             </button>
-            <button className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 text-sm text-white/70 transition-colors">
-              <ShoppingBag size={16} className="text-accent" />
+            <button className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-accent/10 text-sm text-white/80 transition-colors group">
+              <ShoppingBag size={16} className="text-accent group-hover:scale-110 transition-transform" />
               <span>Nebula Cloud Store</span>
             </button>
-            <button className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 text-sm text-white/70 transition-colors">
-              <Globe size={16} className="text-accent" />
+            <button className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-accent/10 text-sm text-white/80 transition-colors group">
+              <Globe size={16} className="text-accent group-hover:scale-110 transition-transform" />
               <span>Nebula Browser</span>
             </button>
           </div>
@@ -119,33 +117,34 @@ export const StartMenu: React.FC<StartMenuProps> = ({ onClose }) => {
 
       <div className="border-t border-white/10 pt-4 mt-auto flex items-center justify-between">
         <div className="flex items-center gap-3 overflow-hidden">
-          <Avatar className="w-9 h-9 border border-accent/20">
+          <Avatar className="w-10 h-10 border-2 border-accent/20">
             <AvatarFallback className="bg-accent text-primary font-bold">G</AvatarFallback>
           </Avatar>
           <div className="flex flex-col overflow-hidden">
             <span className="text-sm font-bold text-white/90 truncate">Guest User</span>
-            <span className="text-[10px] text-white/40 truncate">Nebula Cloud Sync Active</span>
+            <span className="text-[10px] text-accent/60 truncate font-medium uppercase tracking-tighter">System Administrator</span>
           </div>
         </div>
         
         <div className="flex items-center gap-1">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-9 w-9 text-white/40 hover:text-white hover:bg-white/5">
-                <Power size={18} />
+              <Button variant="ghost" size="icon" className="h-10 w-10 text-white/40 hover:text-accent hover:bg-accent/10 rounded-xl">
+                <Power size={20} />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-40 bg-[#1e2731] border-white/10 text-white">
-              <DropdownMenuItem onClick={restart} className="gap-2 cursor-pointer hover:bg-white/5 focus:bg-white/10">
-                <RefreshCw size={14} />
-                <span>Restart</span>
+            <DropdownMenuContent align="end" className="w-48 glass border-white/10 text-white p-2 rounded-xl">
+              <DropdownMenuItem onClick={restart} className="gap-3 cursor-pointer p-3 rounded-lg hover:bg-accent/10 focus:bg-accent/20">
+                <RefreshCw size={16} className="text-accent" />
+                <span className="font-medium">Restart</span>
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={shutDown} className="gap-2 cursor-pointer hover:bg-white/5 focus:bg-white/10">
-                <Power size={14} />
-                <span>Shut Down</span>
+              <DropdownMenuItem onClick={shutDown} className="gap-3 cursor-pointer p-3 rounded-lg hover:bg-accent/10 focus:bg-accent/20">
+                <Power size={16} className="text-accent" />
+                <span className="font-medium">Shut Down</span>
               </DropdownMenuItem>
-              <DropdownMenuItem className="gap-2 cursor-pointer hover:bg-white/5 focus:bg-white/10 text-destructive focus:text-destructive">
-                <LogOut size={14} />
+              <DropdownMenuSeparator className="bg-white/10" />
+              <DropdownMenuItem className="gap-3 cursor-pointer p-3 rounded-lg hover:bg-destructive/10 focus:bg-destructive/20 text-destructive font-medium">
+                <LogOut size={16} />
                 <span>Log Out</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
