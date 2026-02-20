@@ -12,9 +12,10 @@ import {
   Globe,
   Trash2,
   Newspaper,
+  Map as MapIcon,
 } from 'lucide-react';
 
-export type AppId = 'store' | 'files' | 'settings' | 'assistant' | 'google-drive' | 'notes' | 'calc' | 'terminal' | 'browser' | 'trash' | 'news';
+export type AppId = 'store' | 'files' | 'settings' | 'assistant' | 'google-drive' | 'notes' | 'calc' | 'terminal' | 'browser' | 'trash' | 'news' | 'maps';
 export type ThemeMode = 'dark' | 'light';
 export type PowerStatus = 'on' | 'off' | 'booting';
 export type TaskbarPosition = 'top' | 'bottom' | 'left' | 'right';
@@ -143,6 +144,7 @@ const APP_INFO: Record<AppId, { icon: any; label: string }> = {
   'google-drive': { icon: TermIcon, label: 'Google Drive' },
   'trash': { icon: Trash2, label: 'Recycling Bin' },
   'news': { icon: Newspaper, label: 'Nebula News' },
+  'maps': { icon: MapIcon, label: 'Nebula Maps' },
 };
 
 const INITIAL_DESKTOP: DesktopShortcut[] = [
@@ -153,7 +155,7 @@ const INITIAL_DESKTOP: DesktopShortcut[] = [
   { id: 'trash', label: 'Recycling Bin', icon: Trash2, x: PADDING, y: PADDING + (GRID_Y * 4) },
 ];
 
-const INITIAL_APPS: AppId[] = ['store', 'files', 'settings', 'assistant', 'notes', 'calc', 'terminal', 'browser', 'trash', 'news'];
+const INITIAL_APPS: AppId[] = ['store', 'files', 'settings', 'assistant', 'notes', 'calc', 'terminal', 'browser', 'trash', 'news', 'maps'];
 
 const AVATAR_COLORS = ['#9333ea', '#3b82f6', '#e11d48', '#f97316', '#16a34a'];
 
@@ -395,6 +397,9 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     } else if (appId === 'news') {
       initialWidth = 900;
       initialHeight = 700;
+    } else if (appId === 'maps') {
+      initialWidth = 950;
+      initialHeight = 650;
     }
 
     const newId = `${appId}-${Date.now()}`;

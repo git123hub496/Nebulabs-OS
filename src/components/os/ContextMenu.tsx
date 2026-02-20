@@ -1,4 +1,3 @@
-
 "use client"
 
 import React, { useEffect, useRef } from 'react';
@@ -16,6 +15,7 @@ import {
   Calculator,
   MessageSquare,
   Globe,
+  Map as MapIcon,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -50,6 +50,7 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({ x, y, onClose }) => {
     { id: 'calc', label: 'Calculator', icon: Calculator },
     { id: 'assistant', label: 'AI', icon: MessageSquare },
     { id: 'terminal', label: 'Terminal', icon: Terminal },
+    { id: 'maps', label: 'Maps', icon: MapIcon },
     { id: 'settings', label: 'Settings', icon: Settings },
   ];
 

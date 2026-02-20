@@ -19,6 +19,7 @@ import {
   Power,
   Trash2,
   Newspaper,
+  Map as MapIcon,
 } from 'lucide-react';
 import { FileExplorer } from '../apps/FileExplorer';
 import { AppStore } from '../apps/AppStore';
@@ -31,6 +32,7 @@ import { Terminal } from '../apps/Terminal';
 import { NebulaBrowser } from '../apps/NebulaBrowser';
 import { RecyclingBin } from '../apps/RecyclingBin';
 import { NebulaNews } from '../apps/NebulaNews';
+import { NebulaMaps } from '../apps/NebulaMaps';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 
@@ -46,6 +48,7 @@ const APP_COMPONENTS: Record<AppId, React.ReactNode> = {
   'browser': <NebulaBrowser />,
   'trash': <RecyclingBin />,
   'news': <NebulaNews />,
+  'maps': <NebulaMaps />,
 };
 
 export const Desktop: React.FC = () => {
@@ -196,14 +199,20 @@ export const Desktop: React.FC = () => {
       onContextMenu={handleContextMenu}
       onClick={() => {
         setContextMenu(null);
-        setIsWidgetsOpen(false);
+        if (isWidgetsOpen) setIsWidgetsOpen(false);
       }}
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
     >
-      {/* Widgets Overlay Background */}
+      {/* Widgets Focus Overlay */}
       {isWidgetsOpen && (
-        <div className="absolute inset-0 bg-black/20 backdrop-blur-sm z-[9997]" />
+        <div 
+          className="absolute inset-0 bg-black/20 backdrop-blur-sm z-[9997] animate-in fade-in duration-300" 
+          onClick={(e) => {
+            e.stopPropagation();
+            setIsWidgetsOpen(false);
+          }}
+        />
       )}
 
       {/* Widgets Panel */}
