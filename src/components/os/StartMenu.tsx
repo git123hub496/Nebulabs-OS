@@ -24,6 +24,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -45,7 +46,7 @@ const APP_INFO: Record<AppId, { icon: any; label: string }> = {
 };
 
 export const StartMenu: React.FC<StartMenuProps> = ({ onClose }) => {
-  const { installedApps, openApp, restart, shutDown, taskbarPosition } = useOS();
+  const { installedApps, openApp, restart, shutDown, taskbarPosition, accentColor } = useOS();
 
   const handleAppClick = (appId: AppId) => {
     openApp(appId, APP_INFO[appId].label);
@@ -89,7 +90,7 @@ export const StartMenu: React.FC<StartMenuProps> = ({ onClose }) => {
                   <div className="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center group-hover:bg-accent/20 group-hover:scale-105 transition-all border border-white/5 group-hover:border-accent/20">
                     <Icon className="text-white/80 group-hover:text-accent transition-colors" size={24} />
                   </div>
-                  <span className="text-[10px] text-white/70 font-medium text-center truncate w-full">{info.label}</span>
+                  <span className="text-[10px] text-white/70 font-medium text-center truncate w-full group-hover:text-accent transition-colors">{info.label}</span>
                 </button>
               );
             })}
@@ -101,15 +102,15 @@ export const StartMenu: React.FC<StartMenuProps> = ({ onClose }) => {
           <div className="space-y-1">
             <button className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-accent/10 text-sm text-white/80 transition-colors group">
               <FolderOpen size={16} className="text-accent group-hover:scale-110 transition-transform" />
-              <span>Personal Documents</span>
+              <span className="group-hover:text-accent">Personal Documents</span>
             </button>
             <button className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-accent/10 text-sm text-white/80 transition-colors group">
               <ShoppingBag size={16} className="text-accent group-hover:scale-110 transition-transform" />
-              <span>Nebula Cloud Store</span>
+              <span className="group-hover:text-accent">Nebula Cloud Store</span>
             </button>
             <button className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-accent/10 text-sm text-white/80 transition-colors group">
               <Globe size={16} className="text-accent group-hover:scale-110 transition-transform" />
-              <span>Nebula Browser</span>
+              <span className="group-hover:text-accent">Nebula Browser</span>
             </button>
           </div>
         </div>
@@ -133,7 +134,7 @@ export const StartMenu: React.FC<StartMenuProps> = ({ onClose }) => {
                 <Power size={20} />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48 glass border-white/10 text-white p-2 rounded-xl">
+            <DropdownMenuContent align="end" className="w-48 glass border-white/10 text-white p-2 rounded-xl backdrop-blur-3xl shadow-2xl">
               <DropdownMenuItem onClick={restart} className="gap-3 cursor-pointer p-3 rounded-lg hover:bg-accent/10 focus:bg-accent/20">
                 <RefreshCw size={16} className="text-accent" />
                 <span className="font-medium">Restart</span>
