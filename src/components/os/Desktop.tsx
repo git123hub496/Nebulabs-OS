@@ -1,8 +1,8 @@
 
 "use client"
 
-import React, { useState, useEffect } from 'react';
-import { useOS, AppId } from '@/context/os-context';
+import React, { useState, useEffect, useRef } from 'react';
+import { useOS, AppId, DesktopShortcut } from '@/context/os-context';
 import { Window } from './Window';
 import { Taskbar } from './Taskbar';
 import { ContextMenu } from './ContextMenu';
@@ -17,6 +17,7 @@ import {
   Terminal as TermIcon,
   Globe,
   Power,
+  Trash2,
 } from 'lucide-react';
 import { FileExplorer } from '../apps/FileExplorer';
 import { AppStore } from '../apps/AppStore';
@@ -42,25 +43,21 @@ const APP_COMPONENTS: Record<AppId, React.ReactNode> = {
   'browser': <NebulaBrowser />,
 };
 
-const DESKTOP_SHORTCUTS: { id: AppId; label: string; icon: any }[] = [
-  { id: 'browser', label: 'Nebula Browser', icon: Globe },
-  { id: 'files', label: 'File Explorer', icon: FolderOpen },
-  { id: 'store', label: 'App Store', icon: ShoppingBag },
-  { id: 'assistant', label: 'AI Assistant', icon: MessageSquare },
-  { id: 'notes', label: 'Notes', icon: FileText },
-  { id: 'terminal', label: 'Terminal', icon: TermIcon },
-  { id: 'settings', label: 'Settings', icon: SettingsIcon },
-];
-
 export const Desktop: React.FC = () => {
   const { 
     wallpaper, openWindows, openApp, theme, accentColor, customAccentHex,
     powerStatus, powerOn, taskbarPosition, currentUser,
-    cursorColor, isInverted, glassEnabled
+    cursorColor, isInverted, glassEnabled, desktopApps, updateDesktopAppPosition, toggleDesktopApp
   } = useOS();
+  
   const [bootOpacity, setBootOpacity] = useState(1);
   const [shouldRenderBoot, setShouldRenderBoot] = useState(true);
   const [contextMenu, setContextMenu] = useState<{ x: number, y: number } | null>(null);
+  
+  // Dragging State
+  const [draggingAppId, setDraggingAppId] = useState<AppId | null>(null);
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const desktopRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (powerStatus === 'on') {
@@ -81,6 +78,30 @@ export const Desktop: React.FC = () => {
     setContextMenu({ x: e.clientX, y: e.clientY });
   };
 
+  const handleMouseDown = (e: React.MouseEvent, appId: AppId) => {
+    e.stopPropagation();
+    const app = desktopApps.find(a => a.id === appId);
+    if (app) {
+      setDraggingAppId(appId);
+      setDragOffset({
+        x: e.clientX - app.x,
+        y: e.clientY - app.y
+      });
+    }
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (draggingAppId) {
+      const newX = e.clientX - dragOffset.x;
+      const newY = e.clientY - dragOffset.y;
+      updateDesktopAppPosition(draggingAppId, newX, newY);
+    }
+  };
+
+  const handleMouseUp = () => {
+    setDraggingAppId(null);
+  };
+
   if (powerStatus === 'off') {
     return (
       <div className="fixed inset-0 bg-black flex flex-col items-center justify-center gap-8 animate-in fade-in duration-1000">
@@ -93,7 +114,6 @@ export const Desktop: React.FC = () => {
         >
           <Power size={32} className="group-hover:scale-110 transition-transform" />
         </Button>
-        <div className="text-white/20 text-xs italic">Click to power on</div>
       </div>
     );
   }
@@ -102,34 +122,17 @@ export const Desktop: React.FC = () => {
     return <LoginScreen />;
   }
 
-  const paddingClasses = {
-    bottom: 'pb-16 pt-4 px-4',
-    top: 'pt-16 pb-4 px-4',
-    left: 'pl-16 pr-4 py-4',
-    right: 'pr-16 pl-4 py-4',
-  };
-
   const accentClass = accentColor !== 'default' && accentColor !== 'custom' ? `accent-${accentColor}` : '';
   
-  // Dynamic Cursor Logic
   const getCursorVariable = () => {
     if (cursorColor === 'black') return 'var(--cursor-black)';
     if (cursorColor === 'white') return 'var(--cursor-white)';
-    
-    // Resolve hex for accent cursor
     let hex = customAccentHex;
-    if (accentColor === 'blue') hex = '#3b82f6';
-    else if (accentColor === 'rose') hex = '#e11d48';
-    else if (accentColor === 'orange') hex = '#f97316';
-    else if (accentColor === 'green') hex = '#16a34a';
-    else if (accentColor === 'purple') hex = '#9333ea';
-    else if (accentColor === 'grey') hex = '#64748b';
-    else if (accentColor === 'default') hex = '#9333ea';
-
+    const accentHexes: Record<string, string> = { blue: '#3b82f6', rose: '#e11d48', orange: '#f97316', green: '#16a34a', purple: '#9333ea', grey: '#64748b', default: '#9333ea' };
+    if (accentColor !== 'custom') hex = accentHexes[accentColor];
     return `url("data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cGF0aCBkPSJNIDQgMyBMIDQgMjEgTCA4LjUgMTYuNSBMIDExLjUgMjMgTCAxNC41IDIyIEwgMTEuNSAxNS41IEwgMTggMTUuNSBMIDQgMyBaIiBmaWxsPSI${hex.replace('#', '')}\"IHN0cm9rZT0id2hpdGUiIHN0cm9rZS13aWR0aD0iMC44IiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+Cjwvc3ZnPg==")`;
   };
 
-  // Convert hex to HSL for CSS variable override when using custom color
   const hexToHslString = (hex: string) => {
     const r = parseInt(hex.slice(1, 3), 16) / 255;
     const g = parseInt(hex.slice(3, 5), 16) / 255;
@@ -158,6 +161,7 @@ export const Desktop: React.FC = () => {
 
   return (
     <div 
+      ref={desktopRef}
       className={cn(
         "fixed inset-0 overflow-hidden select-none transition-all duration-1000",
         theme === 'light' ? "light" : "",
@@ -176,33 +180,46 @@ export const Desktop: React.FC = () => {
       }}
       onContextMenu={handleContextMenu}
       onClick={() => setContextMenu(null)}
+      onMouseMove={handleMouseMove}
+      onMouseUp={handleMouseUp}
     >
-      <div className={cn(
-        "absolute inset-0 flex flex-col flex-wrap gap-4 content-start transition-all duration-300",
-        paddingClasses[taskbarPosition]
-      )}>
-        {DESKTOP_SHORTCUTS.map(shortcut => {
-          const Icon = shortcut.icon;
-          return (
-            <div 
-              key={shortcut.id}
-              className="desktop-icon group"
-              onDoubleClick={(e) => {
-                e.stopPropagation();
-                openApp(shortcut.id, shortcut.label);
-              }}
-              onContextMenu={(e) => e.stopPropagation()}
-            >
-              <div className="w-14 h-14 glass rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform mb-1 shadow-lg border-white/20">
-                <Icon size={28} className="text-accent" />
-              </div>
-              <span className="text-white text-[11px] font-medium drop-shadow-md text-center line-clamp-2 px-1">
-                {shortcut.label}
-              </span>
+      {/* Desktop Icons */}
+      {desktopApps.map(shortcut => {
+        const Icon = shortcut.icon;
+        return (
+          <div 
+            key={shortcut.id}
+            className={cn(
+              "absolute desktop-icon group transition-shadow",
+              draggingAppId === shortcut.id ? "z-50 opacity-50 scale-105 pointer-events-none" : ""
+            )}
+            style={{ left: shortcut.x, top: shortcut.y }}
+            onMouseDown={(e) => handleMouseDown(e, shortcut.id)}
+            onDoubleClick={(e) => {
+              e.stopPropagation();
+              openApp(shortcut.id, shortcut.label);
+            }}
+            onContextMenu={(e) => {
+              e.stopPropagation();
+              // Prevent default desktop context menu and show custom icon menu if desired
+              // For now we'll just let the desktop context menu handle global actions
+            }}
+          >
+            <div className="w-14 h-14 glass rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform mb-1 shadow-lg border-white/20 relative">
+              <Icon size={28} className="text-accent" />
+              <button 
+                className="absolute -top-1 -right-1 bg-destructive/80 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 hover:bg-destructive transition-all"
+                onClick={(e) => { e.stopPropagation(); toggleDesktopApp(shortcut.id); }}
+              >
+                <Trash2 size={10} />
+              </button>
             </div>
-          );
-        })}
-      </div>
+            <span className="text-white text-[11px] font-medium drop-shadow-md text-center line-clamp-2 px-1">
+              {shortcut.label}
+            </span>
+          </div>
+        );
+      })}
 
       {openWindows.map(window => (
         <Window key={window.id} window={window}>

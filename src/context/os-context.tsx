@@ -2,6 +2,16 @@
 "use client"
 
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import { 
+  ShoppingBag, 
+  FolderOpen, 
+  Settings as SettingsIcon, 
+  MessageSquare,
+  FileText,
+  Calculator as CalcIcon,
+  Terminal as TermIcon,
+  Globe,
+} from 'lucide-react';
 
 export type AppId = 'store' | 'files' | 'settings' | 'assistant' | 'google-drive' | 'notes' | 'calc' | 'terminal' | 'browser';
 export type ThemeMode = 'dark' | 'light';
@@ -34,6 +44,14 @@ export interface FileSystemItem {
   parentId: string | null;
 }
 
+export interface DesktopShortcut {
+  id: AppId;
+  label: string;
+  icon: any;
+  x: number;
+  y: number;
+}
+
 interface OSContextType {
   currentUser: LocalUser | null;
   accounts: LocalUser[];
@@ -41,6 +59,7 @@ interface OSContextType {
   activeWindowId: string | null;
   installedApps: AppId[];
   fileSystem: FileSystemItem[];
+  desktopApps: DesktopShortcut[];
   wallpaper: string;
   notes: string;
   theme: ThemeMode;
@@ -82,6 +101,9 @@ interface OSContextType {
   
   createFolder: (name: string, parentId: string | null) => void;
   deleteItem: (id: string) => void;
+  
+  updateDesktopAppPosition: (id: AppId, x: number, y: number) => void;
+  toggleDesktopApp: (id: AppId) => void;
 }
 
 const OSContext = createContext<OSContextType | undefined>(undefined);
@@ -90,6 +112,26 @@ const INITIAL_FILES: FileSystemItem[] = [
   { id: '1', name: 'Documents', type: 'folder', parentId: null },
   { id: '2', name: 'Pictures', type: 'folder', parentId: null },
   { id: '3', name: 'README.md', type: 'file', parentId: null },
+];
+
+const APP_INFO: Record<AppId, { icon: any; label: string }> = {
+  'browser': { icon: Globe, label: 'Nebula Browser' },
+  'files': { icon: FolderOpen, label: 'File Explorer' },
+  'store': { icon: ShoppingBag, label: 'App Store' },
+  'assistant': { icon: MessageSquare, label: 'AI Assistant' },
+  'notes': { icon: FileText, label: 'Notes' },
+  'terminal': { icon: TermIcon, label: 'Terminal' },
+  'settings': { icon: SettingsIcon, label: 'Settings' },
+  'calc': { icon: CalcIcon, label: 'Calculator' },
+  'google-drive': { icon: TermIcon, label: 'Google Drive' }, // Fallback icon
+};
+
+const INITIAL_DESKTOP: DesktopShortcut[] = [
+  { id: 'browser', label: 'Nebula Browser', icon: Globe, x: 20, y: 20 },
+  { id: 'files', label: 'File Explorer', icon: FolderOpen, x: 20, y: 130 },
+  { id: 'store', label: 'App Store', icon: ShoppingBag, x: 20, y: 240 },
+  { id: 'assistant', label: 'AI Assistant', icon: MessageSquare, x: 20, y: 350 },
+  { id: 'notes', label: 'Notes', icon: FileText, x: 20, y: 460 },
 ];
 
 const INITIAL_APPS: AppId[] = ['store', 'files', 'settings', 'assistant', 'notes', 'calc', 'terminal', 'browser'];
@@ -105,6 +147,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   const [activeWindowId, setActiveWindowId] = useState<string | null>(null);
   const [installedApps, setInstalledApps] = useState<AppId[]>(INITIAL_APPS);
   const [fileSystem, setFileSystem] = useState<FileSystemItem[]>(INITIAL_FILES);
+  const [desktopApps, setDesktopApps] = useState<DesktopShortcut[]>(INITIAL_DESKTOP);
   const [wallpaper, setWallpaper] = useState("https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=1920");
   const [notes, setNotesState] = useState("");
   const [theme, setThemeState] = useState<ThemeMode>('dark');
@@ -148,7 +191,12 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     const uid = currentUser.id;
     const load = (key: string, def: any) => {
       const val = localStorage.getItem(`nebula_${uid}_${key}`);
-      return val !== null ? (typeof def === 'boolean' ? val === 'true' : val) : def;
+      if (val === null) return def;
+      try {
+        return typeof def === 'boolean' ? val === 'true' : (typeof def === 'object' ? JSON.parse(val) : val);
+      } catch {
+        return val;
+      }
     };
 
     setNotesState(load('notes', ""));
@@ -160,6 +208,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     setGlassEnabledState(load('glass', true));
     setTaskbarPositionState(load('taskbar_pos', 'bottom') as TaskbarPosition);
     setWallpaper(load('wallpaper', "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=1920"));
+    setDesktopApps(load('desktop_apps', INITIAL_DESKTOP).map((app: any) => ({ ...app, icon: APP_INFO[app.id as AppId]?.icon || Globe })));
     
     const savedWifi = load('wifi', "Nebula_Secure_5G");
     setCurrentWifi(savedWifi);
@@ -169,6 +218,13 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     setVolumeState(parseInt(savedVol));
 
   }, [currentUser]);
+
+  const saveSetting = (key: string, value: any) => {
+    if (currentUser) {
+      const strValue = typeof value === 'object' ? JSON.stringify(value) : String(value);
+      localStorage.setItem(`nebula_${currentUser.id}_${key}`, strValue);
+    }
+  };
 
   const login = (userId: string) => {
     const user = accounts.find(a => a.id === userId);
@@ -200,42 +256,42 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   const setNotes = (content: string) => {
     if (!isOnline) return;
     setNotesState(content);
-    if (currentUser) localStorage.setItem(`nebula_${currentUser.id}_notes`, content);
+    saveSetting('notes', content);
   };
 
   const setTheme = (newTheme: ThemeMode) => {
     setThemeState(newTheme);
-    if (currentUser) localStorage.setItem(`nebula_${currentUser.id}_theme`, newTheme);
+    saveSetting('theme', newTheme);
   };
 
   const setAccentColor = (color: AccentColor) => {
     setAccentColorState(color);
-    if (currentUser) localStorage.setItem(`nebula_${currentUser.id}_accent`, color);
+    saveSetting('accent', color);
   };
 
   const setCustomAccentHex = (hex: string) => {
     setCustomAccentHexState(hex);
-    if (currentUser) localStorage.setItem(`nebula_${currentUser.id}_custom_accent`, hex);
+    saveSetting('custom_accent', hex);
   };
 
   const setCursorColor = (color: CursorColor) => {
     setCursorColorState(color);
-    if (currentUser) localStorage.setItem(`nebula_${currentUser.id}_cursor`, color);
+    saveSetting('cursor', color);
   };
 
   const setInverted = (inverted: boolean) => {
     setIsInvertedState(inverted);
-    if (currentUser) localStorage.setItem(`nebula_${currentUser.id}_inverted`, String(inverted));
+    saveSetting('inverted', inverted);
   };
 
   const setGlassEnabled = (enabled: boolean) => {
     setGlassEnabledState(enabled);
-    if (currentUser) localStorage.setItem(`nebula_${currentUser.id}_glass`, String(enabled));
+    saveSetting('glass', enabled);
   };
 
   const setTaskbarPosition = (position: TaskbarPosition) => {
     setTaskbarPositionState(position);
-    if (currentUser) localStorage.setItem(`nebula_${currentUser.id}_taskbar_pos`, position);
+    saveSetting('taskbar_pos', position);
   };
 
   const connectToWifi = (ssid: string) => {
@@ -244,13 +300,13 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       setCurrentWifi(ssid);
       setIsOnline(ssid !== OFFLINE_WIFI);
       setIsWifiConnecting(false);
-      if (currentUser) localStorage.setItem(`nebula_${currentUser.id}_wifi`, ssid);
+      saveSetting('wifi', ssid);
     }, 2000);
   };
 
   const setVolume = (v: number) => {
     setVolumeState(v);
-    if (currentUser) localStorage.setItem(`nebula_${currentUser.id}_volume`, String(v));
+    saveSetting('volume', v);
   };
 
   const powerOn = () => {
@@ -345,7 +401,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
 
   const updateWallpaper = (url: string) => {
     setWallpaper(url);
-    if (currentUser) localStorage.setItem(`nebula_${currentUser.id}_wallpaper`, url);
+    saveSetting('wallpaper', url);
   };
 
   const createFolder = (name: string, parentId: string | null) => {
@@ -362,6 +418,35 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     setFileSystem(prev => prev.filter(item => item.id !== id));
   };
 
+  const updateDesktopAppPosition = (id: AppId, x: number, y: number) => {
+    const updated = desktopApps.map(app => app.id === id ? { ...app, x, y } : app);
+    setDesktopApps(updated);
+    // Sanitize for storage (remove icon components)
+    const stored = updated.map(({ icon, ...app }) => app);
+    saveSetting('desktop_apps', stored);
+  };
+
+  const toggleDesktopApp = (id: AppId) => {
+    const exists = desktopApps.find(app => app.id === id);
+    if (exists) {
+      const updated = desktopApps.filter(app => app.id !== id);
+      setDesktopApps(updated);
+      saveSetting('desktop_apps', updated.map(({ icon, ...app }) => app));
+    } else {
+      const info = APP_INFO[id];
+      const newApp = { 
+        id, 
+        label: info.label, 
+        icon: info.icon, 
+        x: 20, 
+        y: 20 + (desktopApps.length * 110) 
+      };
+      const updated = [...desktopApps, newApp];
+      setDesktopApps(updated);
+      saveSetting('desktop_apps', updated.map(({ icon, ...app }) => app));
+    }
+  };
+
   return (
     <OSContext.Provider value={{
       currentUser,
@@ -370,6 +455,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       activeWindowId,
       installedApps,
       fileSystem,
+      desktopApps,
       wallpaper,
       notes,
       theme,
@@ -408,7 +494,9 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       shutDown,
       powerOn,
       createFolder,
-      deleteItem
+      deleteItem,
+      updateDesktopAppPosition,
+      toggleDesktopApp
     }}>
       {children}
     </OSContext.Provider>

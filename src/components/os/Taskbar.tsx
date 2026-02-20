@@ -65,7 +65,8 @@ export const Taskbar: React.FC = () => {
       positionClasses[taskbarPosition],
       isVertical ? "flex-col py-2" : "items-center px-2"
     )}>
-      <div className="relative">
+      {/* Start Button */}
+      <div className="relative z-10">
         <button
           onClick={() => setIsStartOpen(!isStartOpen)}
           className={cn(
@@ -78,53 +79,70 @@ export const Taskbar: React.FC = () => {
         {isStartOpen && <StartMenu onClose={() => setIsStartOpen(false)} />}
       </div>
 
+      {/* Centered App Container */}
       <div className={cn(
-        "flex gap-1 mx-2 overflow-hidden",
-        isVertical ? "flex-col my-4 border-b border-white/10 pb-2" : "items-center border-r border-white/10 pr-2"
+        "flex-1 flex gap-2 overflow-hidden",
+        isVertical ? "flex-col items-center justify-center" : "items-center justify-center"
       )}>
+        {/* Quick Launch Apps */}
         {QUICK_LAUNCH.map(item => {
           const Icon = item.icon;
+          const isAppOpen = openWindows.some(w => w.appId === item.id);
+          const isActive = openWindows.some(w => w.appId === item.id && w.id === activeWindowId);
+          
           return (
-            <button
-              key={item.id}
-              onClick={() => openApp(item.id, item.label)}
-              className="p-1.5 rounded-md hover:bg-white/10 transition-colors text-white/60 hover:text-accent"
-              title={item.label}
-            >
-              <Icon size={18} />
-            </button>
+            <div key={item.id} className="relative group">
+              <button
+                onClick={() => openApp(item.id, item.label)}
+                className={cn(
+                  "p-2 rounded-md transition-all active:scale-90 flex items-center justify-center",
+                  isActive ? "bg-white/10" : "hover:bg-white/10 text-white/60 hover:text-accent"
+                )}
+                title={item.label}
+              >
+                <Icon size={18} />
+              </button>
+              {isAppOpen && (
+                <div className={cn(
+                  "absolute bg-accent rounded-full transition-all",
+                  isVertical 
+                    ? "w-1.5 h-6 -right-1 top-1/2 -translate-y-1/2" 
+                    : "h-1 w-6 -bottom-1 left-1/2 -translate-x-1/2"
+                )} />
+              )}
+            </div>
+          );
+        })}
+
+        {/* Dynamically Opened Apps (that aren't in Quick Launch) */}
+        {openWindows.filter(w => !QUICK_LAUNCH.some(ql => ql.id === w.appId)).map(window => {
+          const isActive = activeWindowId === window.id;
+          return (
+            <div key={window.id} className="relative group">
+              <button
+                onClick={() => focusWindow(window.id)}
+                className={cn(
+                  "p-2 rounded-md transition-all active:scale-90 flex items-center justify-center",
+                  isActive ? "bg-white/10" : "hover:bg-white/10"
+                )}
+                title={window.title}
+              >
+                <div className="w-5 h-5 bg-accent/20 rounded-md border border-accent/40" />
+              </button>
+              <div className={cn(
+                "absolute bg-accent rounded-full transition-all",
+                isVertical 
+                  ? "w-1.5 h-6 -right-1 top-1/2 -translate-y-1/2" 
+                  : "h-1 w-6 -bottom-1 left-1/2 -translate-x-1/2"
+              )} />
+            </div>
           );
         })}
       </div>
 
+      {/* System Tray (Right Side) */}
       <div className={cn(
-        "flex flex-1 gap-1 mx-2 overflow-hidden",
-        isVertical ? "flex-col items-center justify-start pt-2" : "items-center justify-start"
-      )}>
-        {openWindows.map(window => (
-          <button
-            key={window.id}
-            onClick={() => focusWindow(window.id)}
-            className={cn(
-              "rounded-md flex items-center gap-2 transition-all border border-transparent",
-              isVertical ? "w-8 h-8 justify-center" : "h-9 px-3 min-w-[40px] max-w-[160px]",
-              activeWindowId === window.id ? "bg-white/10 border-white/20" : "hover:bg-white/5"
-            )}
-            title={window.title}
-          >
-            <div className={cn(
-              "shrink-0 bg-accent/40 rounded-sm",
-              isVertical ? "w-2 h-2" : "w-3 h-3"
-            )} />
-            {!isVertical && activeWindowId === window.id && (
-              <span className="text-[11px] font-medium truncate text-white/80">{window.title}</span>
-            )}
-          </button>
-        ))}
-      </div>
-
-      <div className={cn(
-        "flex gap-3 text-white/70",
+        "flex gap-3 text-white/70 z-10",
         isVertical ? "flex-col items-center pb-2" : "items-center px-3"
       )}>
         {!isVertical && (
@@ -165,13 +183,6 @@ export const Taskbar: React.FC = () => {
                     </button>
                   ))}
                 </div>
-                {currentWifi && (
-                  <div className="mt-2 p-2 pt-2 border-t border-white/5">
-                    <p className={cn("text-[9px] italic", isOnline ? "text-white/40" : "text-destructive/60")}>
-                      {isOnline ? `Connected to ${currentWifi}` : `Connected to ${currentWifi} (No Internet)`}
-                    </p>
-                  </div>
-                )}
               </PopoverContent>
             </Popover>
             
@@ -209,7 +220,6 @@ export const Taskbar: React.FC = () => {
           ) : (
             <div className="animate-pulse flex flex-col items-end gap-1">
               <div className="h-2 w-12 bg-white/10 rounded" />
-              {!isVertical && <div className="h-2 w-10 bg-white/10 rounded" />}
             </div>
           )}
         </div>

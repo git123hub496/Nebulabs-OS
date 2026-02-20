@@ -1,7 +1,8 @@
+
 "use client"
 
 import React, { useEffect, useRef } from 'react';
-import { useOS } from '@/context/os-context';
+import { useOS, AppId } from '@/context/os-context';
 import { 
   RefreshCw, 
   Settings, 
@@ -10,6 +11,11 @@ import {
   Terminal,
   ChevronRight,
   Layout,
+  PlusCircle,
+  FileText,
+  Calculator,
+  MessageSquare,
+  Globe,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -20,7 +26,7 @@ interface ContextMenuProps {
 }
 
 export const ContextMenu: React.FC<ContextMenuProps> = ({ x, y, onClose }) => {
-  const { restart, openApp, createFolder, setTaskbarPosition, taskbarPosition } = useOS();
+  const { restart, openApp, createFolder, setTaskbarPosition, taskbarPosition, toggleDesktopApp, desktopApps } = useOS();
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -37,6 +43,15 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({ x, y, onClose }) => {
     action();
     onClose();
   };
+
+  const ADDABLE_APPS: { id: AppId; label: string; icon: any }[] = [
+    { id: 'browser', label: 'Browser', icon: Globe },
+    { id: 'notes', label: 'Notes', icon: FileText },
+    { id: 'calc', label: 'Calculator', icon: Calculator },
+    { id: 'assistant', label: 'AI', icon: MessageSquare },
+    { id: 'terminal', label: 'Terminal', icon: Terminal },
+    { id: 'settings', label: 'Settings', icon: Settings },
+  ];
 
   return (
     <div 
@@ -67,6 +82,38 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({ x, y, onClose }) => {
 
       <div className="my-1 border-t border-white/5 mx-2" />
 
+      {/* Add Shortcut Submenu */}
+      <div className="relative group/sub">
+        <button 
+          className="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-accent/20 text-xs font-medium text-white/80 hover:text-accent transition-colors group"
+        >
+          <div className="flex items-center gap-3">
+            <PlusCircle size={14} className="text-accent/60 group-hover:text-accent" />
+            <span>Add Shortcut</span>
+          </div>
+          <ChevronRight size={12} className="opacity-40" />
+        </button>
+        
+        <div className="absolute left-full top-0 ml-1 hidden group-hover/sub:flex flex-col glass rounded-xl border border-white/10 shadow-2xl backdrop-blur-3xl p-1.5 w-40 gap-0.5">
+          {ADDABLE_APPS.map((app) => (
+            <button 
+              key={app.id}
+              onClick={() => handleAction(() => toggleDesktopApp(app.id))}
+              className={cn(
+                "w-full flex items-center justify-between px-3 py-2 rounded-lg text-[10px] font-bold uppercase tracking-wider text-left transition-colors",
+                desktopApps.some(a => a.id === app.id) ? "bg-accent/20 text-accent" : "hover:bg-accent/10 text-white/60 hover:text-white"
+              )}
+            >
+              <div className="flex items-center gap-2">
+                <app.icon size={12} />
+                <span>{app.label}</span>
+              </div>
+              {desktopApps.some(a => a.id === app.id) && <RefreshCw size={10} className="animate-spin-slow" />}
+            </button>
+          ))}
+        </div>
+      </div>
+
       <div className="relative group/sub">
         <button 
           className="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-accent/20 text-xs font-medium text-white/80 hover:text-accent transition-colors group"
@@ -93,16 +140,6 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({ x, y, onClose }) => {
           ))}
         </div>
       </div>
-
-      <button 
-        onClick={() => handleAction(() => openApp('terminal', 'Terminal'))}
-        className="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-accent/20 text-xs font-medium text-white/80 hover:text-accent transition-colors group"
-      >
-        <div className="flex items-center gap-3">
-          <Terminal size={14} className="text-accent/60 group-hover:text-accent" />
-          <span>Open in Terminal</span>
-        </div>
-      </button>
 
       <div className="my-1 border-t border-white/5 mx-2" />
 
