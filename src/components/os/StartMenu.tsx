@@ -1,7 +1,7 @@
 "use client"
 
 import React from 'react';
-import { useOS, AppId } from '@/context/os-context';
+import { useOS, AppId, APP_INFO } from '@/context/os-context';
 import { 
   Search, 
   Settings, 
@@ -17,6 +17,9 @@ import {
   LogOut,
   Globe,
   Newspaper,
+  Pin,
+  PinOff,
+  Trash2,
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -34,24 +37,11 @@ interface StartMenuProps {
   onClose: () => void;
 }
 
-const APP_INFO: Record<AppId, { icon: any; label: string }> = {
-  'store': { icon: ShoppingBag, label: 'App Store' },
-  'files': { icon: FolderOpen, label: 'File Explorer' },
-  'settings': { icon: Settings, label: 'Settings' },
-  'assistant': { icon: MessageSquare, label: 'Nebula Assistant' },
-  'google-drive': { icon: Cloud, label: 'Google Drive' },
-  'notes': { icon: FileText, label: 'Nebula Notes' },
-  'calc': { icon: CalcIcon, label: 'Calculator' },
-  'terminal': { icon: TermIcon, label: 'Terminal' },
-  'browser': { icon: Globe, label: 'Nebula Browser' },
-  'news': { icon: Newspaper, label: 'Nebula News' },
-  'trash': { icon: Trash2, label: 'Recycling Bin' } // Using Newspaper icon for context check, but actually trash
-};
-
-import { Trash2 } from 'lucide-react';
-
 export const StartMenu: React.FC<StartMenuProps> = ({ onClose }) => {
-  const { installedApps, openApp, restart, shutDown, taskbarPosition, accentColor, currentUser, logout } = useOS();
+  const { 
+    installedApps, openApp, restart, shutDown, taskbarPosition, 
+    currentUser, logout, pinnedApps, togglePinApp 
+  } = useOS();
 
   const handleAppClick = (appId: AppId) => {
     openApp(appId, APP_INFO[appId]?.label || appId);
@@ -80,23 +70,38 @@ export const StartMenu: React.FC<StartMenuProps> = ({ onClose }) => {
 
       <div className="flex-1 overflow-auto pr-1">
         <div className="mb-6">
-          <h3 className="text-[11px] font-bold text-accent uppercase tracking-widest mb-4 opacity-80">Pinned Apps</h3>
+          <h3 className="text-[11px] font-bold text-accent uppercase tracking-widest mb-4 opacity-80">All Applications</h3>
           <div className="grid grid-cols-4 gap-4">
             {installedApps.map(appId => {
               const info = APP_INFO[appId];
               if (!info) return null;
               const Icon = info.icon;
+              const isPinned = pinnedApps.includes(appId);
+
               return (
-                <button
-                  key={appId}
-                  onClick={() => handleAppClick(appId)}
-                  className="flex flex-col items-center gap-2 group transition-all"
-                >
-                  <div className="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center group-hover:bg-accent/20 group-hover:scale-105 transition-all border border-white/5 group-hover:border-accent/20">
-                    <Icon className="text-white/80 group-hover:text-accent transition-colors" size={24} />
-                  </div>
-                  <span className="text-[10px] text-white/70 font-medium text-center truncate w-full group-hover:text-accent transition-colors">{info.label}</span>
-                </button>
+                <DropdownMenu key={appId}>
+                  <DropdownMenuTrigger asChild>
+                    <button
+                      className="flex flex-col items-center gap-2 group transition-all"
+                      onClick={() => handleAppClick(appId)}
+                      onContextMenu={(e) => e.preventDefault()}
+                    >
+                      <div className="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center group-hover:bg-accent/20 group-hover:scale-105 transition-all border border-white/5 group-hover:border-accent/20">
+                        <Icon className="text-white/80 group-hover:text-accent transition-colors" size={24} />
+                      </div>
+                      <span className="text-[10px] text-white/70 font-medium text-center truncate w-full group-hover:text-accent transition-colors">{info.label}</span>
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="glass border-white/10 w-48 backdrop-blur-3xl">
+                    <DropdownMenuItem onClick={() => handleAppClick(appId)} className="gap-2">
+                      <div className="w-4" /> Open
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => togglePinApp(appId)} className="gap-2">
+                      {isPinned ? <PinOff size={14} className="text-accent" /> : <Pin size={14} className="text-accent" />}
+                      {isPinned ? 'Unpin from Taskbar' : 'Pin to Taskbar'}
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               );
             })}
           </div>
@@ -109,11 +114,11 @@ export const StartMenu: React.FC<StartMenuProps> = ({ onClose }) => {
               <Newspaper size={16} className="text-accent group-hover:scale-110 transition-transform" />
               <span className="group-hover:text-accent">Nebula Local News</span>
             </button>
-            <button className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-accent/10 text-sm text-white/80 transition-colors group">
-              <ShoppingBag size={16} className="text-accent group-hover:scale-110 transition-transform" />
-              <span className="group-hover:text-accent">Nebula Cloud Store</span>
+            <button className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-accent/10 text-sm text-white/80 transition-colors group" onClick={() => handleAppClick('maps')}>
+              <MapIcon size={16} className="text-accent group-hover:scale-110 transition-transform" />
+              <span className="group-hover:text-accent">Nebula Maps</span>
             </button>
-            <button className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-accent/10 text-sm text-white/80 transition-colors group">
+            <button className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-accent/10 text-sm text-white/80 transition-colors group" onClick={() => handleAppClick('browser')}>
               <Globe size={16} className="text-accent group-hover:scale-110 transition-transform" />
               <span className="group-hover:text-accent">Nebula Browser</span>
             </button>

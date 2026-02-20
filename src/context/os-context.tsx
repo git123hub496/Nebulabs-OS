@@ -13,6 +13,7 @@ import {
   Trash2,
   Newspaper,
   Map as MapIcon,
+  Cloud,
 } from 'lucide-react';
 
 export type AppId = 'store' | 'files' | 'settings' | 'assistant' | 'google-drive' | 'notes' | 'calc' | 'terminal' | 'browser' | 'trash' | 'news' | 'maps';
@@ -62,6 +63,7 @@ interface OSContextType {
   openWindows: WindowInstance[];
   activeWindowId: string | null;
   installedApps: AppId[];
+  pinnedApps: AppId[];
   fileSystem: FileSystemItem[];
   trash: FileSystemItem[];
   desktopApps: DesktopShortcut[];
@@ -118,6 +120,8 @@ interface OSContextType {
   
   updateDesktopAppPosition: (id: AppId, x: number, y: number) => void;
   toggleDesktopApp: (id: AppId) => void;
+  togglePinApp: (id: AppId) => void;
+  reorderPinnedApps: (newOrder: AppId[]) => void;
 }
 
 const OSContext = createContext<OSContextType | undefined>(undefined);
@@ -132,7 +136,7 @@ const INITIAL_FILES: FileSystemItem[] = [
   { id: '3', name: 'README.md', type: 'file', parentId: null },
 ];
 
-const APP_INFO: Record<AppId, { icon: any; label: string }> = {
+export const APP_INFO: Record<AppId, { icon: any; label: string }> = {
   'browser': { icon: Globe, label: 'Nebula Browser' },
   'files': { icon: FolderOpen, label: 'File Explorer' },
   'store': { icon: ShoppingBag, label: 'App Store' },
@@ -141,7 +145,7 @@ const APP_INFO: Record<AppId, { icon: any; label: string }> = {
   'terminal': { icon: TermIcon, label: 'Terminal' },
   'settings': { icon: SettingsIcon, label: 'Settings' },
   'calc': { icon: CalcIcon, label: 'Calculator' },
-  'google-drive': { icon: TermIcon, label: 'Google Drive' },
+  'google-drive': { icon: Cloud, label: 'Google Drive' },
   'trash': { icon: Trash2, label: 'Recycling Bin' },
   'news': { icon: Newspaper, label: 'Nebula News' },
   'maps': { icon: MapIcon, label: 'Nebula Maps' },
@@ -156,6 +160,7 @@ const INITIAL_DESKTOP: DesktopShortcut[] = [
 ];
 
 const INITIAL_APPS: AppId[] = ['store', 'files', 'settings', 'assistant', 'notes', 'calc', 'terminal', 'browser', 'trash', 'news', 'maps'];
+const INITIAL_PINNED: AppId[] = ['files', 'store', 'assistant', 'browser', 'settings'];
 
 const AVATAR_COLORS = ['#9333ea', '#3b82f6', '#e11d48', '#f97316', '#16a34a'];
 
@@ -167,6 +172,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   const [openWindows, setOpenWindows] = useState<WindowInstance[]>([]);
   const [activeWindowId, setActiveWindowId] = useState<string | null>(null);
   const [installedApps, setInstalledApps] = useState<AppId[]>(INITIAL_APPS);
+  const [pinnedApps, setPinnedApps] = useState<AppId[]>(INITIAL_PINNED);
   const [fileSystem, setFileSystem] = useState<FileSystemItem[]>(INITIAL_FILES);
   const [trash, setTrash] = useState<FileSystemItem[]>([]);
   const [desktopApps, setDesktopApps] = useState<DesktopShortcut[]>(INITIAL_DESKTOP);
@@ -236,6 +242,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     setIconSizeState(load('icon_size', 'md') as DesktopIconSize);
     setWallpaper(load('wallpaper', "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=1920"));
     setDesktopApps(load('desktop_apps', INITIAL_DESKTOP).map((app: any) => ({ ...app, icon: APP_INFO[app.id as AppId]?.icon || Globe })));
+    setPinnedApps(load('pinned_apps', INITIAL_PINNED));
     setFileSystem(load('file_system', INITIAL_FILES));
     setTrash(load('trash_items', []));
     
@@ -559,6 +566,20 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const togglePinApp = (id: AppId) => {
+    const isPinned = pinnedApps.includes(id);
+    const updated = isPinned 
+      ? pinnedApps.filter(appId => appId !== id)
+      : [...pinnedApps, id];
+    setPinnedApps(updated);
+    saveSetting('pinned_apps', updated);
+  };
+
+  const reorderPinnedApps = (newOrder: AppId[]) => {
+    setPinnedApps(newOrder);
+    saveSetting('pinned_apps', newOrder);
+  };
+
   return (
     <OSContext.Provider value={{
       currentUser,
@@ -566,6 +587,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       openWindows,
       activeWindowId,
       installedApps,
+      pinnedApps,
       fileSystem,
       trash,
       desktopApps,
@@ -618,7 +640,9 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       emptyTrash,
       deleteItemPermanently,
       updateDesktopAppPosition,
-      toggleDesktopApp
+      toggleDesktopApp,
+      togglePinApp,
+      reorderPinnedApps
     }}>
       {children}
     </OSContext.Provider>

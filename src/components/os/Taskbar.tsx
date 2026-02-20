@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { useOS, AppId } from '@/context/os-context';
+import React, { useState, useEffect, useRef } from 'react';
+import { useOS, AppId, APP_INFO } from '@/context/os-context';
 import { Wifi, Volume2, FolderOpen, ShoppingBag, MessageSquare, Settings, Lock, Check, Loader2, VolumeX, Volume1, LayoutGrid } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { StartMenu } from './StartMenu';
@@ -11,13 +11,6 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Slider } from "@/components/ui/slider";
-
-const QUICK_LAUNCH: { id: AppId; icon: any; label: string }[] = [
-  { id: 'files', icon: FolderOpen, label: 'File Explorer' },
-  { id: 'store', icon: ShoppingBag, label: 'App Store' },
-  { id: 'assistant', icon: MessageSquare, label: 'AI Assistant' },
-  { id: 'settings', icon: Settings, label: 'Settings' },
-];
 
 const SIMULATED_NETWORKS = [
   { ssid: 'Nebula_Secure_5G', secure: true, strength: 4 },
@@ -30,11 +23,15 @@ export const Taskbar: React.FC = () => {
   const { 
     openWindows, activeWindowId, focusWindow, openApp, taskbarPosition, taskbarSize, 
     currentWifi, isWifiConnecting, connectToWifi, volume, setVolume, isOnline,
-    isWidgetsOpen, setIsWidgetsOpen 
+    isWidgetsOpen, setIsWidgetsOpen, pinnedApps, reorderPinnedApps
   } = useOS();
+  
   const [isStartOpen, setIsStartOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [time, setTime] = useState<Date | null>(null);
+  const [draggingAppId, setDraggingAppId] = useState<AppId | null>(null);
+  const [dragIndex, setDragIndex] = useState<number | null>(null);
+  const [targetIndex, setTargetIndex] = useState<number | null>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -70,6 +67,31 @@ export const Taskbar: React.FC = () => {
   const logoSizeClass = taskbarSize === 'sm' ? 'text-lg' : taskbarSize === 'lg' ? 'text-2xl' : 'text-xl';
 
   const VolumeIcon = volume === 0 ? VolumeX : volume < 50 ? Volume1 : Volume2;
+
+  // Drag handlers for taskbar reordering
+  const handleDragStart = (id: AppId, index: number) => {
+    setDraggingAppId(id);
+    setDragIndex(index);
+  };
+
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    if (dragIndex !== null && dragIndex !== index) {
+      setTargetIndex(index);
+    }
+  };
+
+  const handleDragEnd = () => {
+    if (dragIndex !== null && targetIndex !== null) {
+      const newOrder = [...pinnedApps];
+      const [removed] = newOrder.splice(dragIndex, 1);
+      newOrder.splice(targetIndex, 0, removed);
+      reorderPinnedApps(newOrder);
+    }
+    setDraggingAppId(null);
+    setDragIndex(null);
+    setTargetIndex(null);
+  };
 
   return (
     <div className={cn(
@@ -113,20 +135,35 @@ export const Taskbar: React.FC = () => {
         "flex-1 flex gap-2 overflow-hidden",
         isVertical ? "flex-col items-center justify-center" : "items-center justify-center"
       )}>
-        {QUICK_LAUNCH.map(item => {
-          const Icon = item.icon;
-          const isAppOpen = openWindows.some(w => w.appId === item.id);
-          const isActive = openWindows.some(w => w.appId === item.id && w.id === activeWindowId);
+        {pinnedApps.map((appId, index) => {
+          const info = APP_INFO[appId];
+          if (!info) return null;
+          const Icon = info.icon;
+          const isAppOpen = openWindows.some(w => w.appId === appId);
+          const isActive = openWindows.some(w => w.appId === appId && w.id === activeWindowId);
+          const isTarget = targetIndex === index;
+          const isDragging = draggingAppId === appId;
           
           return (
-            <div key={item.id} className="relative group">
+            <div 
+              key={appId} 
+              className={cn(
+                "relative group transition-all duration-200",
+                isTarget && (index > (dragIndex ?? 0) ? "translate-x-2" : "-translate-x-2"),
+                isDragging && "opacity-20 scale-75"
+              )}
+              draggable
+              onDragStart={() => handleDragStart(appId, index)}
+              onDragOver={(e) => handleDragOver(e, index)}
+              onDragEnd={handleDragEnd}
+            >
               <button
-                onClick={() => openApp(item.id, item.label)}
+                onClick={() => openApp(appId, info.label)}
                 className={cn(
                   "p-2 rounded-md transition-all active:scale-90 flex items-center justify-center",
                   isActive ? "bg-white/10" : "hover:bg-white/10 text-white/60 hover:text-accent"
                 )}
-                title={item.label}
+                title={info.label}
               >
                 <Icon size={iconSize} />
               </button>
@@ -142,19 +179,23 @@ export const Taskbar: React.FC = () => {
           );
         })}
 
-        {openWindows.filter(w => !QUICK_LAUNCH.some(ql => ql.id === w.appId)).map(window => {
+        {/* Temporary items for open but unpinned apps */}
+        {openWindows.filter(w => !pinnedApps.includes(w.appId)).map(window => {
           const isActive = activeWindowId === window.id;
+          const info = APP_INFO[window.appId];
+          const Icon = info?.icon || FolderOpen;
+
           return (
             <div key={window.id} className="relative group">
               <button
                 onClick={() => focusWindow(window.id)}
                 className={cn(
                   "p-2 rounded-md transition-all active:scale-90 flex items-center justify-center",
-                  isActive ? "bg-white/10" : "hover:bg-white/10"
+                  isActive ? "bg-white/10 text-accent" : "hover:bg-white/10 text-white/40"
                 )}
                 title={window.title}
               >
-                <div className={cn("bg-accent/20 rounded-md border border-accent/40", taskbarSize === 'sm' ? 'w-3 h-3' : taskbarSize === 'lg' ? 'w-6 h-6' : 'w-5 h-5')} />
+                <Icon size={iconSize} />
               </button>
               <div className={cn(
                 "absolute bg-accent rounded-full transition-all",
