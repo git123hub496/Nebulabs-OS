@@ -1,5 +1,5 @@
 
-"use client"
+'use client';
 
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { 
@@ -11,9 +11,10 @@ import {
   Calculator as CalcIcon,
   Terminal as TermIcon,
   Globe,
+  Trash2,
 } from 'lucide-react';
 
-export type AppId = 'store' | 'files' | 'settings' | 'assistant' | 'google-drive' | 'notes' | 'calc' | 'terminal' | 'browser';
+export type AppId = 'store' | 'files' | 'settings' | 'assistant' | 'google-drive' | 'notes' | 'calc' | 'terminal' | 'browser' | 'trash';
 export type ThemeMode = 'dark' | 'light';
 export type PowerStatus = 'on' | 'off' | 'booting';
 export type TaskbarPosition = 'top' | 'bottom' | 'left' | 'right';
@@ -59,6 +60,7 @@ interface OSContextType {
   activeWindowId: string | null;
   installedApps: AppId[];
   fileSystem: FileSystemItem[];
+  trash: FileSystemItem[];
   desktopApps: DesktopShortcut[];
   wallpaper: string;
   notes: string;
@@ -100,7 +102,10 @@ interface OSContextType {
   powerOn: () => void;
   
   createFolder: (name: string, parentId: string | null) => void;
-  deleteItem: (id: string) => void;
+  moveToTrash: (id: string) => void;
+  restoreFromTrash: (id: string) => void;
+  emptyTrash: () => void;
+  deleteItemPermanently: (id: string) => void;
   
   updateDesktopAppPosition: (id: AppId, x: number, y: number) => void;
   toggleDesktopApp: (id: AppId) => void;
@@ -123,7 +128,8 @@ const APP_INFO: Record<AppId, { icon: any; label: string }> = {
   'terminal': { icon: TermIcon, label: 'Terminal' },
   'settings': { icon: SettingsIcon, label: 'Settings' },
   'calc': { icon: CalcIcon, label: 'Calculator' },
-  'google-drive': { icon: TermIcon, label: 'Google Drive' }, // Fallback icon
+  'google-drive': { icon: TermIcon, label: 'Google Drive' },
+  'trash': { icon: Trash2, label: 'Recycling Bin' },
 };
 
 const INITIAL_DESKTOP: DesktopShortcut[] = [
@@ -132,9 +138,10 @@ const INITIAL_DESKTOP: DesktopShortcut[] = [
   { id: 'store', label: 'App Store', icon: ShoppingBag, x: 20, y: 240 },
   { id: 'assistant', label: 'AI Assistant', icon: MessageSquare, x: 20, y: 350 },
   { id: 'notes', label: 'Notes', icon: FileText, x: 20, y: 460 },
+  { id: 'trash', label: 'Recycling Bin', icon: Trash2, x: 20, y: 570 },
 ];
 
-const INITIAL_APPS: AppId[] = ['store', 'files', 'settings', 'assistant', 'notes', 'calc', 'terminal', 'browser'];
+const INITIAL_APPS: AppId[] = ['store', 'files', 'settings', 'assistant', 'notes', 'calc', 'terminal', 'browser', 'trash'];
 
 const AVATAR_COLORS = ['#9333ea', '#3b82f6', '#e11d48', '#f97316', '#16a34a'];
 
@@ -147,6 +154,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   const [activeWindowId, setActiveWindowId] = useState<string | null>(null);
   const [installedApps, setInstalledApps] = useState<AppId[]>(INITIAL_APPS);
   const [fileSystem, setFileSystem] = useState<FileSystemItem[]>(INITIAL_FILES);
+  const [trash, setTrash] = useState<FileSystemItem[]>([]);
   const [desktopApps, setDesktopApps] = useState<DesktopShortcut[]>(INITIAL_DESKTOP);
   const [wallpaper, setWallpaper] = useState("https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=1920");
   const [notes, setNotesState] = useState("");
@@ -209,6 +217,8 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     setTaskbarPositionState(load('taskbar_pos', 'bottom') as TaskbarPosition);
     setWallpaper(load('wallpaper', "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=1920"));
     setDesktopApps(load('desktop_apps', INITIAL_DESKTOP).map((app: any) => ({ ...app, icon: APP_INFO[app.id as AppId]?.icon || Globe })));
+    setFileSystem(load('file_system', INITIAL_FILES));
+    setTrash(load('trash_items', []));
     
     const savedWifi = load('wifi', "Nebula_Secure_5G");
     setCurrentWifi(savedWifi);
@@ -352,6 +362,9 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     } else if (appId === 'assistant') {
       initialWidth = 400;
       initialHeight = 650;
+    } else if (appId === 'trash') {
+      initialWidth = 600;
+      initialHeight = 400;
     }
 
     const newId = `${appId}-${Date.now()}`;
@@ -411,17 +424,49 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       type: 'folder',
       parentId
     };
-    setFileSystem(prev => [...prev, newFolder]);
+    const updated = [...fileSystem, newFolder];
+    setFileSystem(updated);
+    saveSetting('file_system', updated);
   };
 
-  const deleteItem = (id: string) => {
-    setFileSystem(prev => prev.filter(item => item.id !== id));
+  const moveToTrash = (id: string) => {
+    const item = fileSystem.find(i => i.id === id);
+    if (item) {
+      const updatedFS = fileSystem.filter(i => i.id !== id);
+      const updatedTrash = [...trash, item];
+      setFileSystem(updatedFS);
+      setTrash(updatedTrash);
+      saveSetting('file_system', updatedFS);
+      saveSetting('trash_items', updatedTrash);
+    }
+  };
+
+  const restoreFromTrash = (id: string) => {
+    const item = trash.find(i => i.id === id);
+    if (item) {
+      const updatedTrash = trash.filter(i => i.id !== id);
+      const updatedFS = [...fileSystem, item];
+      setTrash(updatedTrash);
+      setFileSystem(updatedFS);
+      saveSetting('trash_items', updatedTrash);
+      saveSetting('file_system', updatedFS);
+    }
+  };
+
+  const emptyTrash = () => {
+    setTrash([]);
+    saveSetting('trash_items', []);
+  };
+
+  const deleteItemPermanently = (id: string) => {
+    const updatedTrash = trash.filter(item => item.id !== id);
+    setTrash(updatedTrash);
+    saveSetting('trash_items', updatedTrash);
   };
 
   const updateDesktopAppPosition = (id: AppId, x: number, y: number) => {
     const updated = desktopApps.map(app => app.id === id ? { ...app, x, y } : app);
     setDesktopApps(updated);
-    // Sanitize for storage (remove icon components)
     const stored = updated.map(({ icon, ...app }) => app);
     saveSetting('desktop_apps', stored);
   };
@@ -455,6 +500,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       activeWindowId,
       installedApps,
       fileSystem,
+      trash,
       desktopApps,
       wallpaper,
       notes,
@@ -494,7 +540,10 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       shutDown,
       powerOn,
       createFolder,
-      deleteItem,
+      moveToTrash,
+      restoreFromTrash,
+      emptyTrash,
+      deleteItemPermanently,
       updateDesktopAppPosition,
       toggleDesktopApp
     }}>

@@ -1,3 +1,4 @@
+
 "use client"
 
 import React, { useState } from 'react';
@@ -7,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
 export const FileExplorer: React.FC = () => {
-  const { fileSystem, createFolder, deleteItem } = useOS();
+  const { fileSystem, createFolder, moveToTrash } = useOS();
   const [currentFolderId, setCurrentFolderId] = useState<string | null>(null);
   const [newFolderName, setNewFolderName] = useState("");
 
@@ -81,8 +82,9 @@ export const FileExplorer: React.FC = () => {
               </div>
               <span className="text-xs text-white/80 text-center truncate w-full px-2">{item.name}</span>
               <button 
-                onClick={(e) => { e.stopPropagation(); deleteItem(item.id); }}
+                onClick={(e) => { e.stopPropagation(); moveToTrash(item.id); }}
                 className="absolute top-1 right-1 p-1 opacity-0 group-hover:opacity-100 text-destructive hover:scale-110 transition-all"
+                title="Move to Trash"
               >
                 <Trash2 size={14} />
               </button>

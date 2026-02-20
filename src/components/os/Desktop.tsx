@@ -28,6 +28,7 @@ import { Notes } from '../apps/Notes';
 import { Calculator } from '../apps/Calculator';
 import { Terminal } from '../apps/Terminal';
 import { NebulaBrowser } from '../apps/NebulaBrowser';
+import { RecyclingBin } from '../apps/RecyclingBin';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 
@@ -41,6 +42,7 @@ const APP_COMPONENTS: Record<AppId, React.ReactNode> = {
   'calc': <Calculator />,
   'terminal': <Terminal />,
   'browser': <NebulaBrowser />,
+  'trash': <RecyclingBin />,
 };
 
 export const Desktop: React.FC = () => {
@@ -201,8 +203,6 @@ export const Desktop: React.FC = () => {
             }}
             onContextMenu={(e) => {
               e.stopPropagation();
-              // Prevent default desktop context menu and show custom icon menu if desired
-              // For now we'll just let the desktop context menu handle global actions
             }}
           >
             <div className="w-14 h-14 glass rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform mb-1 shadow-lg border-white/20 relative">
