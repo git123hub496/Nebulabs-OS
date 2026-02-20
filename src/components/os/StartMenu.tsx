@@ -1,4 +1,3 @@
-
 "use client"
 
 import React from 'react';
@@ -43,14 +42,15 @@ const APP_INFO: Record<AppId, { icon: any; label: string }> = {
   'notes': { icon: FileText, label: 'Nebula Notes' },
   'calc': { icon: CalcIcon, label: 'Calculator' },
   'terminal': { icon: TermIcon, label: 'Terminal' },
-  'browser': { icon: Globe, label: 'Nebula Browser' }
+  'browser': { icon: Globe, label: 'Nebula Browser' },
+  'trash': { icon: CalcIcon, label: 'Recycling Bin' } // Fallback for context
 };
 
 export const StartMenu: React.FC<StartMenuProps> = ({ onClose }) => {
   const { installedApps, openApp, restart, shutDown, taskbarPosition, accentColor, currentUser, logout } = useOS();
 
   const handleAppClick = (appId: AppId) => {
-    openApp(appId, APP_INFO[appId].label);
+    openApp(appId, APP_INFO[appId]?.label || appId);
     onClose();
   };
 
@@ -63,14 +63,14 @@ export const StartMenu: React.FC<StartMenuProps> = ({ onClose }) => {
 
   return (
     <div className={cn(
-      "absolute w-[360px] h-[520px] glass rounded-2xl border window-shadow p-6 flex flex-col gap-6 z-[10000] shadow-2xl backdrop-blur-3xl",
+      "absolute w-[360px] h-[520px] glass rounded-2xl border window-shadow p-6 flex flex-col gap-6 z-[10000] shadow-2xl",
       positionClasses[taskbarPosition]
     )}>
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-accent/60" size={16} />
         <Input 
           placeholder="Search apps, settings, and files" 
-          className="pl-10 bg-white/5 border-white/10 text-white placeholder:text-white/30 h-10 rounded-xl focus-visible:ring-accent"
+          className="pl-10 bg-white/10 border-white/10 text-white placeholder:text-white/30 h-10 rounded-xl focus-visible:ring-accent"
         />
       </div>
 
