@@ -1,3 +1,4 @@
+
 "use client"
 
 import React, { useState, useEffect } from 'react';
@@ -12,6 +13,7 @@ import {
   FileText,
   Calculator as CalcIcon,
   Terminal as TermIcon,
+  Globe,
 } from 'lucide-react';
 import { FileExplorer } from '../apps/FileExplorer';
 import { AppStore } from '../apps/AppStore';
@@ -21,6 +23,7 @@ import { GoogleAppPlaceholder } from '../apps/GoogleAppPlaceholder';
 import { Notes } from '../apps/Notes';
 import { Calculator } from '../apps/Calculator';
 import { Terminal } from '../apps/Terminal';
+import { NebulaBrowser } from '../apps/NebulaBrowser';
 import { cn } from '@/lib/utils';
 
 const APP_COMPONENTS: Record<AppId, React.ReactNode> = {
@@ -32,9 +35,11 @@ const APP_COMPONENTS: Record<AppId, React.ReactNode> = {
   'notes': <Notes />,
   'calc': <Calculator />,
   'terminal': <Terminal />,
+  'browser': <NebulaBrowser />,
 };
 
 const DESKTOP_SHORTCUTS: { id: AppId; label: string; icon: any }[] = [
+  { id: 'browser', label: 'Nebula Browser', icon: Globe },
   { id: 'files', label: 'File Explorer', icon: FolderOpen },
   { id: 'store', label: 'App Store', icon: ShoppingBag },
   { id: 'assistant', label: 'AI Assistant', icon: MessageSquare },

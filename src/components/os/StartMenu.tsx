@@ -1,3 +1,4 @@
+
 "use client"
 
 import React, { useState } from 'react';
@@ -15,7 +16,8 @@ import {
   Terminal as TermIcon,
   Power,
   RefreshCw,
-  LogOut
+  LogOut,
+  Globe,
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -39,7 +41,8 @@ const APP_INFO: Record<AppId, { icon: any; label: string }> = {
   'google-drive': { icon: Cloud, label: 'Google Drive' },
   'notes': { icon: FileText, label: 'Nebula Notes' },
   'calc': { icon: CalcIcon, label: 'Calculator' },
-  'terminal': { icon: TermIcon, label: 'Terminal' }
+  'terminal': { icon: TermIcon, label: 'Terminal' },
+  'browser': { icon: Globe, label: 'Nebula Browser' }
 };
 
 export const StartMenu: React.FC<StartMenuProps> = ({ onClose }) => {
@@ -96,8 +99,8 @@ export const StartMenu: React.FC<StartMenuProps> = ({ onClose }) => {
               <span>Nebula Cloud Store</span>
             </button>
             <button className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 text-sm text-white/70 transition-colors">
-              <Info size={16} className="text-accent" />
-              <span>About Nebulabs OS</span>
+              <Globe size={16} className="text-accent" />
+              <span>Nebula Browser</span>
             </button>
           </div>
         </div>

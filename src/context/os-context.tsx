@@ -1,8 +1,9 @@
+
 "use client"
 
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 
-export type AppId = 'store' | 'files' | 'settings' | 'assistant' | 'google-drive' | 'notes' | 'calc' | 'terminal';
+export type AppId = 'store' | 'files' | 'settings' | 'assistant' | 'google-drive' | 'notes' | 'calc' | 'terminal' | 'browser';
 export type ThemeMode = 'dark' | 'light';
 
 export interface WindowInstance {
@@ -55,7 +56,7 @@ const INITIAL_FILES: FileSystemItem[] = [
   { id: '3', name: 'README.md', type: 'file', parentId: null },
 ];
 
-const INITIAL_APPS: AppId[] = ['store', 'files', 'settings', 'assistant', 'notes', 'calc', 'terminal'];
+const INITIAL_APPS: AppId[] = ['store', 'files', 'settings', 'assistant', 'notes', 'calc', 'terminal', 'browser'];
 
 export const OSProvider = ({ children }: { children: ReactNode }) => {
   const [openWindows, setOpenWindows] = useState<WindowInstance[]>([]);
@@ -100,8 +101,6 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     setOpenWindows([]);
     setActiveWindowId(null);
     setIsBooting(true);
-    // In a web app, "Shut Down" just stays on a black screen or shows boot logo indefinitely
-    // We'll treat it as a trigger for a long-term "off" state for this demo
   };
 
   const openApp = (appId: AppId, title: string) => {
