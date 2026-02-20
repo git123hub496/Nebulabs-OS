@@ -44,7 +44,9 @@ export interface WindowInstance {
   zIndex: number;
   initialWidth?: number;
   initialHeight?: number;
-  displayId?: string; // Target display for this window
+  displayId: string; // Target display for this window
+  x: number;
+  y: number;
 }
 
 export interface FileSystemItem {
@@ -60,6 +62,14 @@ export interface DesktopShortcut {
   icon: any;
   x: number;
   y: number;
+}
+
+export type DisplayDirection = 'left' | 'right' | 'top' | 'bottom';
+
+export interface DisplayLayout {
+  [displayId: string]: {
+    [direction in DisplayDirection]?: string; // Adjacent display ID
+  };
 }
 
 interface OSContextType {
@@ -93,6 +103,7 @@ interface OSContextType {
   isQuickSettingsOpen: boolean;
   systemStats: { cpu: number; ram: number; net: number };
   currentDisplayId: string;
+  displayLayout: DisplayLayout;
   
   login: (userId: string) => void;
   logout: () => void;
@@ -103,7 +114,9 @@ interface OSContextType {
   maximizeWindow: (windowId: string) => void;
   snapWindow: (windowId: string, side: 'left' | 'right' | null) => void;
   focusWindow: (windowId: string) => void;
+  updateWindowPosition: (windowId: string, x: number, y: number, displayId?: string) => void;
   moveWindowToDisplay: (windowId: string, displayId: string) => void;
+  updateDisplayLayout: (fromId: string, direction: DisplayDirection, toId: string) => void;
   installApp: (appId: AppId) => void;
   updateWallpaper: (url: string) => void;
   setNotes: (content: string) => void;
@@ -214,6 +227,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   const [nextZIndex, setNextZIndex] = useState(10);
   const [systemStats, setSystemStats] = useState({ cpu: 12, ram: 42, net: 2 });
   const [currentDisplayId, setDisplayIdState] = useState('1');
+  const [displayLayout, setDisplayLayoutState] = useState<DisplayLayout>({ '1': { right: '2' }, '2': { left: '1' } });
 
   // Handle Multi-Display Synchronization
   useEffect(() => {
@@ -236,6 +250,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
             case 'brightness': setBrightnessState(parseInt(val)); break;
             case 'volume': setVolumeState(parseInt(val)); break;
             case 'power': setPowerStatus(val as PowerStatus); break;
+            case 'display_layout': setDisplayLayoutState(JSON.parse(val)); break;
           }
         } catch (err) {
           console.error('Sync Error:', err);
@@ -311,6 +326,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     setTrash(load('trash_items', []));
     setOpenWindows(load('windows', []));
     setDisplayIdState(load('display_id', '1'));
+    setDisplayLayoutState(load('display_layout', { '1': { right: '2' }, '2': { left: '1' } }));
 
     const savedWifi = load('wifi', "Nebula_Secure_5G");
     setCurrentWifi(savedWifi);
@@ -434,6 +450,20 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     saveSetting('display_id', id);
   };
 
+  const updateDisplayLayout = (fromId: string, direction: DisplayDirection, toId: string) => {
+    const updated = { ...displayLayout };
+    if (!updated[fromId]) updated[fromId] = {};
+    updated[fromId][direction] = toId;
+    
+    // Auto-reverse for the other side
+    const reverseMap: Record<DisplayDirection, DisplayDirection> = { left: 'right', right: 'left', top: 'bottom', bottom: 'top' };
+    if (!updated[toId]) updated[toId] = {};
+    updated[toId][reverseMap[direction]] = fromId;
+    
+    setDisplayLayoutState(updated);
+    saveSetting('display_layout', updated);
+  };
+
   const powerOn = () => {
     setPowerStatus('booting');
     saveSetting('power', 'booting');
@@ -496,7 +526,9 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       zIndex: nextZIndex,
       initialWidth,
       initialHeight,
-      displayId: currentDisplayId
+      displayId: currentDisplayId,
+      x: 100 + (openWindows.length * 20),
+      y: 50 + (openWindows.length * 20)
     };
 
     const updated = [...openWindows, newWindow];
@@ -544,6 +576,14 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     setNextZIndex(prev => prev + 1);
     saveSetting('windows', updated);
     saveSetting('active_window', windowId);
+  };
+
+  const updateWindowPosition = (windowId: string, x: number, y: number, displayId?: string) => {
+    const updated = openWindows.map(w => 
+      w.id === windowId ? { ...w, x, y, displayId: displayId || w.displayId } : w
+    );
+    setOpenWindows(updated);
+    saveSetting('windows', updated);
   };
 
   const moveWindowToDisplay = (windowId: string, displayId: string) => {
@@ -663,9 +703,10 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       customAccentHex, cursorColor, isInverted, glassEnabled, powerStatus,
       taskbarPosition, taskbarSize, iconSize, currentWifi, isWifiConnecting,
       isOnline, volume, brightness, isWidgetsOpen, isQuickSettingsOpen, systemStats,
-      currentDisplayId,
+      currentDisplayId, displayLayout,
       login, logout, createAccount, openApp, closeWindow, minimizeWindow,
-      maximizeWindow, snapWindow, focusWindow, moveWindowToDisplay, installApp,
+      maximizeWindow, snapWindow, focusWindow, updateWindowPosition, moveWindowToDisplay,
+      updateDisplayLayout, installApp,
       updateWallpaper, setNotes, setTheme, setAccentColor, setCustomAccentHex,
       setCursorColor, setInverted, setGlassEnabled, setTaskbarPosition, setTaskbarSize,
       setIconSize, connectToWifi, setVolume, setBrightness, setIsWidgetsOpen,

@@ -7,6 +7,7 @@ import {
   Wifi, 
   WifiOff, 
   Volume2, 
+  Volume1,
   VolumeX, 
   Sun, 
   Moon, 
@@ -15,14 +16,12 @@ import {
   LogOut, 
   Bell, 
   BellOff, 
-  Zap, 
-  Shield, 
-  Bluetooth, 
   Monitor,
   Check,
   ChevronRight,
-  Maximize2,
-  Plus
+  Plus,
+  ArrowRightLeft,
+  Layout
 } from 'lucide-react';
 import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
@@ -34,6 +33,9 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSub,
+  DropdownMenuSubTrigger,
+  DropdownMenuSubContent,
 } from "@/components/ui/dropdown-menu";
 
 export const QuickSettings: React.FC = () => {
@@ -44,13 +46,13 @@ export const QuickSettings: React.FC = () => {
     brightness, setBrightness,
     currentWifi, isOnline, connectToWifi,
     currentUser, logout, shutDown, openApp,
-    taskbarPosition, accentColor, currentDisplayId, setCurrentDisplayId
+    taskbarPosition, currentDisplayId, setCurrentDisplayId,
+    displayLayout, updateDisplayLayout
   } = useOS();
 
   if (!isQuickSettingsOpen) return null;
 
   const [isDND, setIsDND] = React.useState(false);
-  const [isNightLight, setIsNightLight] = React.useState(false);
 
   const positionClasses = {
     bottom: 'bottom-14 right-4 animate-in slide-in-from-bottom-2 origin-bottom-right',
@@ -62,17 +64,15 @@ export const QuickSettings: React.FC = () => {
   const handleToggleTheme = () => setTheme(theme === 'dark' ? 'light' : 'dark');
 
   const addDisplay = () => {
-    // Determine next display ID based on current ID
-    const nextId = String(parseInt(currentDisplayId) + 1);
     window.open(window.location.href, '_blank', 'width=1280,height=720');
-    // Note: The new window will need to be manually identified as Display X 
-    // or we can pass it via URL params if we were using a more complex router.
   };
+
+  const VolumeIcon = volume === 0 ? VolumeX : volume < 50 ? Volume1 : Volume2;
 
   return (
     <div 
       className={cn(
-        "fixed w-[360px] glass rounded-2xl border border-white/10 shadow-2xl z-[9999] p-6 flex flex-col gap-6",
+        "fixed w-[380px] glass rounded-2xl border border-white/10 shadow-2xl z-[9999] p-6 flex flex-col gap-6",
         positionClasses[taskbarPosition]
       )}
       onClick={(e) => e.stopPropagation()}
@@ -142,8 +142,8 @@ export const QuickSettings: React.FC = () => {
               </div>
             </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent className="glass border-white/10 w-48">
-             <div className="px-2 py-1.5 text-[10px] font-black uppercase text-white/30 tracking-widest">Identify This Display</div>
+          <DropdownMenuContent className="glass border-white/10 w-56">
+             <div className="px-2 py-1.5 text-[10px] font-black uppercase text-white/30 tracking-widest">Identify This Screen</div>
              {['1', '2', '3'].map(id => (
                <DropdownMenuItem 
                  key={id} 
@@ -151,13 +151,49 @@ export const QuickSettings: React.FC = () => {
                  className="gap-2"
                >
                  <Monitor size={12} className={id === currentDisplayId ? "text-accent" : ""} />
-                 Display {id} {id === currentDisplayId ? '(Selected)' : ''}
+                 Display {id} {id === currentDisplayId ? '(This Tab)' : ''}
                </DropdownMenuItem>
              ))}
+             
+             <Separator className="my-1 bg-white/5" />
+             <div className="px-2 py-1.5 text-[10px] font-black uppercase text-white/30 tracking-widest">Physical Layout</div>
+             
+             <DropdownMenuSub>
+               <DropdownMenuSubTrigger className="gap-2 text-[11px]">
+                 <Layout size={12} />
+                 Arrange Displays
+               </DropdownMenuSubTrigger>
+               <DropdownMenuSubContent className="glass border-white/10 w-48">
+                 {['1', '2', '3'].map(fromId => (
+                   <DropdownMenuSub key={fromId}>
+                     <DropdownMenuSubTrigger className="text-[10px]">From Display {fromId}</DropdownMenuSubTrigger>
+                     <DropdownMenuSubContent className="glass border-white/10">
+                        {['left', 'right', 'top', 'bottom'].map(dir => (
+                          <DropdownMenuSub key={dir}>
+                            <DropdownMenuSubTrigger className="text-[10px]">{dir} is...</DropdownMenuSubTrigger>
+                            <DropdownMenuSubContent className="glass border-white/10">
+                              {['1', '2', '3'].filter(id => id !== fromId).map(toId => (
+                                <DropdownMenuItem 
+                                  key={toId} 
+                                  onClick={() => updateDisplayLayout(fromId, dir as any, toId)}
+                                  className="text-[10px]"
+                                >
+                                  Display {toId}
+                                </DropdownMenuItem>
+                              ))}
+                            </DropdownMenuSubContent>
+                          </DropdownMenuSub>
+                        ))}
+                     </DropdownMenuSubContent>
+                   </DropdownMenuSub>
+                 ))}
+               </DropdownMenuSubContent>
+             </DropdownMenuSub>
+
              <Separator className="my-1 bg-white/5" />
              <DropdownMenuItem onClick={addDisplay} className="gap-2 text-accent">
                <Plus size={12} />
-               Add Virtual Display
+               Connect New Display
              </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -214,7 +250,7 @@ export const QuickSettings: React.FC = () => {
         <div className="space-y-3">
           <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-widest text-white/30">
             <div className="flex items-center gap-2">
-              {volume === 0 ? <VolumeX size={12} className="text-accent" /> : <Volume1 size={12} className="text-accent" />}
+              <VolumeIcon size={12} className="text-accent" />
               <span>System Volume</span>
             </div>
             <span>{volume}%</span>
@@ -237,7 +273,7 @@ export const QuickSettings: React.FC = () => {
           <span className="text-xs font-bold text-white/80">
             {new Date().toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' })}
           </span>
-          <span className="text-[10px] text-white/40 uppercase tracking-widest font-bold">Nebula Kernel v1.0.4</span>
+          <span className="text-[10px] text-white/40 uppercase tracking-widest font-bold">Nebula Multi-Link Active</span>
         </div>
         <Button 
           variant="outline" 

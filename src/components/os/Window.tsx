@@ -18,15 +18,12 @@ interface WindowProps {
 }
 
 export const Window: React.FC<WindowProps> = ({ window: win, children }) => {
-  const { closeWindow, minimizeWindow, maximizeWindow, snapWindow, focusWindow, activeWindowId, taskbarPosition, moveWindowToDisplay, currentDisplayId } = useOS();
-  const [position, setPosition] = useState({ 
-    x: 100 + (win.zIndex * 2), 
-    y: 50 + (win.zIndex * 2) 
-  });
-  const [size, setSize] = useState({ 
-    width: win.initialWidth || 800, 
-    height: win.initialHeight || 600 
-  });
+  const { 
+    closeWindow, minimizeWindow, maximizeWindow, snapWindow, focusWindow, 
+    activeWindowId, taskbarPosition, moveWindowToDisplay, currentDisplayId, 
+    updateWindowPosition, displayLayout 
+  } = useOS();
+  
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const windowRef = useRef<HTMLDivElement>(null);
@@ -50,10 +47,40 @@ export const Window: React.FC<WindowProps> = ({ window: win, children }) => {
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       if (isDragging) {
-        setPosition({
-          x: e.clientX - dragOffset.x,
-          y: e.clientY - dragOffset.y
-        });
+        let newX = e.clientX - dragOffset.x;
+        let newY = e.clientY - dragOffset.y;
+        
+        const screenWidth = window.innerWidth;
+        const screenHeight = window.innerHeight;
+        const windowWidth = win.initialWidth || 800;
+        const windowHeight = win.initialHeight || 600;
+
+        // Edge detection for multi-display hopping
+        const currentLayout = displayLayout[currentDisplayId];
+        if (currentLayout) {
+          if (newX < -windowWidth / 2 && currentLayout.left) {
+            updateWindowPosition(win.id, screenWidth - windowWidth / 2, newY, currentLayout.left);
+            setIsDragging(false);
+            return;
+          }
+          if (newX > screenWidth - windowWidth / 2 && currentLayout.right) {
+            updateWindowPosition(win.id, -windowWidth / 2, newY, currentLayout.right);
+            setIsDragging(false);
+            return;
+          }
+          if (newY < -30 && currentLayout.top) {
+            updateWindowPosition(win.id, newX, screenHeight - 60, currentLayout.top);
+            setIsDragging(false);
+            return;
+          }
+          if (newY > screenHeight - 60 && currentLayout.bottom) {
+            updateWindowPosition(win.id, newX, -30, currentLayout.bottom);
+            setIsDragging(false);
+            return;
+          }
+        }
+
+        updateWindowPosition(win.id, newX, newY);
       }
     };
 
@@ -70,7 +97,7 @@ export const Window: React.FC<WindowProps> = ({ window: win, children }) => {
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleMouseUp);
     };
-  }, [isDragging, dragOffset]);
+  }, [isDragging, dragOffset, win.id, currentDisplayId, displayLayout, win.initialWidth, win.initialHeight, updateWindowPosition]);
 
   if (win.isMinimized) return null;
 
@@ -111,10 +138,10 @@ export const Window: React.FC<WindowProps> = ({ window: win, children }) => {
     }
 
     return {
-      left: position.x,
-      top: position.y,
-      width: size.width,
-      height: size.height,
+      left: win.x,
+      top: win.y,
+      width: win.initialWidth || 800,
+      height: win.initialHeight || 600,
     };
   };
 
