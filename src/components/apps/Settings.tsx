@@ -6,7 +6,7 @@ import { useOS, TaskbarPosition, AccentColor, CursorColor } from '@/context/os-c
 import { 
   Monitor, Palette, User, Shield, Bell, HelpCircle, Upload, 
   Image as ImageIcon, Sun, Moon, Layout, Check, MousePointer2, 
-  Eye, Zap, Layers 
+  Eye, Zap, Layers, Pipette 
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
@@ -20,6 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Separator } from '@/components/ui/separator';
+import { Input } from '@/components/ui/input';
 
 const WALLPAPERS = [
   "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=1920",
@@ -34,7 +35,8 @@ const ACCENT_COLORS: { id: AccentColor; class: string; label: string }[] = [
   { id: 'rose', class: 'bg-[#e11d48]', label: 'Rose' },
   { id: 'orange', class: 'bg-[#f97316]', label: 'Orange' },
   { id: 'green', class: 'bg-[#16a34a]', label: 'Green' },
-  { id: 'default', class: 'bg-[#94a3b8]', label: 'Nebula' },
+  { id: 'grey', class: 'bg-[#64748b]', label: 'Slate Grey' },
+  { id: 'default', class: 'bg-black/20 border-white/10', label: 'Nebula' },
 ];
 
 const CURSOR_THEMES: { id: CursorColor; label: string; class: string }[] = [
@@ -46,7 +48,8 @@ const CURSOR_THEMES: { id: CursorColor; label: string; class: string }[] = [
 export const Settings: React.FC = () => {
   const { 
     wallpaper, updateWallpaper, theme, setTheme, taskbarPosition, setTaskbarPosition, 
-    accentColor, setAccentColor, cursorColor, setCursorColor, isInverted, setInverted,
+    accentColor, setAccentColor, customAccentHex, setCustomAccentHex,
+    cursorColor, setCursorColor, isInverted, setInverted,
     glassEnabled, setGlassEnabled 
   } = useOS();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -111,8 +114,23 @@ export const Settings: React.FC = () => {
               </div>
 
               <div className="space-y-4">
-                <Label className="text-xs font-bold uppercase tracking-widest opacity-40">System Accent Color</Label>
-                <div className="grid grid-cols-6 gap-4">
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs font-bold uppercase tracking-widest opacity-40">System Accent Color</Label>
+                  <div className="flex items-center gap-2">
+                    <Pipette size={14} className="text-accent" />
+                    <button 
+                      onClick={() => setAccentColor('custom')}
+                      className={cn(
+                        "text-[10px] font-bold uppercase tracking-widest transition-colors",
+                        accentColor === 'custom' ? "text-accent" : "text-white/30 hover:text-white/60"
+                      )}
+                    >
+                      Use Custom
+                    </button>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-7 gap-4">
                   {ACCENT_COLORS.map((color) => (
                     <button
                       key={color.id}
@@ -126,7 +144,39 @@ export const Settings: React.FC = () => {
                       {accentColor === color.id && <Check size={20} className="text-white drop-shadow-md" />}
                     </button>
                   ))}
+                  
+                  <div className="flex flex-col gap-1 items-center justify-center">
+                    <button
+                      onClick={() => setAccentColor('custom')}
+                      className={cn(
+                        "aspect-square w-full rounded-2xl flex items-center justify-center border-2 transition-all overflow-hidden",
+                        accentColor === 'custom' ? "border-white scale-110 shadow-xl" : "border-transparent opacity-80"
+                      )}
+                      style={{ backgroundColor: customAccentHex }}
+                    >
+                      {accentColor === 'custom' && <Check size={20} className="text-white drop-shadow-md" />}
+                    </button>
+                  </div>
                 </div>
+
+                {accentColor === 'custom' && (
+                  <div className="flex items-center gap-4 p-4 bg-white/5 rounded-xl border border-white/5 animate-in slide-in-from-top-2">
+                    <Input 
+                      type="color" 
+                      value={customAccentHex} 
+                      onChange={(e) => setCustomAccentHex(e.target.value)}
+                      className="w-12 h-10 p-1 bg-transparent border-none cursor-pointer"
+                    />
+                    <div className="flex-1 space-y-1">
+                      <Label className="text-xs font-bold uppercase">Custom Hex Color</Label>
+                      <Input 
+                        value={customAccentHex} 
+                        onChange={(e) => setCustomAccentHex(e.target.value)}
+                        className="h-8 bg-black/20 border-white/10 font-mono text-xs"
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </section>

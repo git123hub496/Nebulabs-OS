@@ -7,7 +7,7 @@ export type AppId = 'store' | 'files' | 'settings' | 'assistant' | 'google-drive
 export type ThemeMode = 'dark' | 'light';
 export type PowerStatus = 'on' | 'off' | 'booting';
 export type TaskbarPosition = 'top' | 'bottom' | 'left' | 'right';
-export type AccentColor = 'default' | 'blue' | 'purple' | 'rose' | 'orange' | 'green';
+export type AccentColor = 'default' | 'blue' | 'purple' | 'rose' | 'orange' | 'green' | 'grey' | 'custom';
 export type CursorColor = 'black' | 'white' | 'accent';
 
 export interface LocalUser {
@@ -45,6 +45,7 @@ interface OSContextType {
   notes: string;
   theme: ThemeMode;
   accentColor: AccentColor;
+  customAccentHex: string;
   cursorColor: CursorColor;
   isInverted: boolean;
   glassEnabled: boolean;
@@ -68,6 +69,7 @@ interface OSContextType {
   setNotes: (content: string) => void;
   setTheme: (theme: ThemeMode) => void;
   setAccentColor: (color: AccentColor) => void;
+  setCustomAccentHex: (hex: string) => void;
   setCursorColor: (color: CursorColor) => void;
   setInverted: (inverted: boolean) => void;
   setGlassEnabled: (enabled: boolean) => void;
@@ -107,6 +109,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   const [notes, setNotesState] = useState("");
   const [theme, setThemeState] = useState<ThemeMode>('dark');
   const [accentColor, setAccentColorState] = useState<AccentColor>('purple');
+  const [customAccentHex, setCustomAccentHexState] = useState("#9333ea");
   const [cursorColor, setCursorColorState] = useState<CursorColor>('black');
   const [isInverted, setIsInvertedState] = useState(false);
   const [glassEnabled, setGlassEnabledState] = useState(true);
@@ -151,6 +154,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     setNotesState(load('notes', ""));
     setThemeState(load('theme', 'dark') as ThemeMode);
     setAccentColorState(load('accent', 'purple') as AccentColor);
+    setCustomAccentHexState(load('custom_accent', '#9333ea'));
     setCursorColorState(load('cursor', 'black') as CursorColor);
     setIsInvertedState(load('inverted', false));
     setGlassEnabledState(load('glass', true));
@@ -207,6 +211,11 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   const setAccentColor = (color: AccentColor) => {
     setAccentColorState(color);
     if (currentUser) localStorage.setItem(`nebula_${currentUser.id}_accent`, color);
+  };
+
+  const setCustomAccentHex = (hex: string) => {
+    setCustomAccentHexState(hex);
+    if (currentUser) localStorage.setItem(`nebula_${currentUser.id}_custom_accent`, hex);
   };
 
   const setCursorColor = (color: CursorColor) => {
@@ -365,6 +374,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       notes,
       theme,
       accentColor,
+      customAccentHex,
       cursorColor,
       isInverted,
       glassEnabled,
@@ -387,6 +397,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       setNotes,
       setTheme,
       setAccentColor,
+      setCustomAccentHex,
       setCursorColor,
       setInverted,
       setGlassEnabled,

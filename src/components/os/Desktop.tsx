@@ -54,7 +54,7 @@ const DESKTOP_SHORTCUTS: { id: AppId; label: string; icon: any }[] = [
 
 export const Desktop: React.FC = () => {
   const { 
-    wallpaper, openWindows, openApp, theme, accentColor, 
+    wallpaper, openWindows, openApp, theme, accentColor, customAccentHex,
     powerStatus, powerOn, taskbarPosition, currentUser,
     cursorColor, isInverted, glassEnabled
   } = useOS();
@@ -109,19 +109,52 @@ export const Desktop: React.FC = () => {
     right: 'pr-16 pl-4 py-4',
   };
 
-  const accentClass = accentColor !== 'default' ? `accent-${accentColor}` : '';
+  const accentClass = accentColor !== 'default' && accentColor !== 'custom' ? `accent-${accentColor}` : '';
   
   // Dynamic Cursor Logic
   const getCursorVariable = () => {
     if (cursorColor === 'black') return 'var(--cursor-black)';
     if (cursorColor === 'white') return 'var(--cursor-white)';
-    // For accent cursor, we use a custom SVG with the accent color
-    const accentHex = accentColor === 'blue' ? '%233b82f6' : 
-                      accentColor === 'rose' ? '%23e11d48' : 
-                      accentColor === 'orange' ? '%23f97316' : 
-                      accentColor === 'green' ? '%2316a34a' : '%239333ea';
-    return `url("data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cGF0aCBkPSJNIDQgMyBMIDQgMjEgTCA4LjUgMTYuNSBMIDExLjUgMjMgTCAxNC41IDIyIEwgMTEuNSAxNS41IEwgMTggMTUuNSBMIDQgMyBaIiBmaWxsPSJ${accentHex.replace('%23', '')}\"IHN0cm9rZT0id2hpdGUiIHN0cm9rZS13aWR0aD0iMC44IiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+Cjwvc3ZnPg==")`;
+    
+    // Resolve hex for accent cursor
+    let hex = customAccentHex;
+    if (accentColor === 'blue') hex = '#3b82f6';
+    else if (accentColor === 'rose') hex = '#e11d48';
+    else if (accentColor === 'orange') hex = '#f97316';
+    else if (accentColor === 'green') hex = '#16a34a';
+    else if (accentColor === 'purple') hex = '#9333ea';
+    else if (accentColor === 'grey') hex = '#64748b';
+    else if (accentColor === 'default') hex = '#9333ea';
+
+    return `url("data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cGF0aCBkPSJNIDQgMyBMIDQgMjEgTCA4LjUgMTYuNSBMIDExLjUgMjMgTCAxNC41IDIyIEwgMTEuNSAxNS41IEwgMTggMTUuNSBMIDQgMyBaIiBmaWxsPSI${hex.replace('#', '')}\"IHN0cm9rZT0id2hpdGUiIHN0cm9rZS13aWR0aD0iMC44IiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+Cjwvc3ZnPg==")`;
   };
+
+  // Convert hex to HSL for CSS variable override when using custom color
+  const hexToHslString = (hex: string) => {
+    const r = parseInt(hex.slice(1, 3), 16) / 255;
+    const g = parseInt(hex.slice(3, 5), 16) / 255;
+    const b = parseInt(hex.slice(5, 7), 16) / 255;
+    const max = Math.max(r, g, b), min = Math.min(r, g, b);
+    let h = 0, s, l = (max + min) / 2;
+    if (max === min) h = s = 0;
+    else {
+      const d = max - min;
+      s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+      switch (max) {
+        case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+        case g: h = (b - r) / d + 2; break;
+        case b: h = (r - g) / d + 4; break;
+      }
+      h /= 6;
+    }
+    return `${h * 360} ${s * 100}% ${l * 100}%`;
+  };
+
+  const customStyle = accentColor === 'custom' ? {
+    '--accent': hexToHslString(customAccentHex),
+    '--ring': hexToHslString(customAccentHex),
+    '--sidebar-accent': hexToHslString(customAccentHex),
+  } as React.CSSProperties : {};
 
   return (
     <div 
@@ -138,7 +171,8 @@ export const Desktop: React.FC = () => {
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         // @ts-ignore
-        '--cursor-url': getCursorVariable()
+        '--cursor-url': getCursorVariable(),
+        ...customStyle
       }}
       onContextMenu={handleContextMenu}
       onClick={() => setContextMenu(null)}

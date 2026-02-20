@@ -93,6 +93,11 @@
     --ring: 142.1 76.2% 36.3%;
     --sidebar-accent: 142.1 76.2% 36.3%;
   }
+  .accent-grey {
+    --accent: 210 20% 50%;
+    --ring: 210 20% 50%;
+    --sidebar-accent: 210 20% 50%;
+  }
 }
 
 @layer base {
