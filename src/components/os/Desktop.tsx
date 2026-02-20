@@ -14,6 +14,7 @@ import {
   Calculator as CalcIcon,
   Terminal as TermIcon,
   Globe,
+  Power,
 } from 'lucide-react';
 import { FileExplorer } from '../apps/FileExplorer';
 import { AppStore } from '../apps/AppStore';
@@ -25,6 +26,7 @@ import { Calculator } from '../apps/Calculator';
 import { Terminal } from '../apps/Terminal';
 import { NebulaBrowser } from '../apps/NebulaBrowser';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 
 const APP_COMPONENTS: Record<AppId, React.ReactNode> = {
   'store': <AppStore />,
@@ -49,26 +51,47 @@ const DESKTOP_SHORTCUTS: { id: AppId; label: string; icon: any }[] = [
 ];
 
 export const Desktop: React.FC = () => {
-  const { wallpaper, openWindows, openApp, theme, isBooting } = useOS();
+  const { wallpaper, openWindows, openApp, theme, powerStatus, powerOn } = useOS();
   const [bootOpacity, setBootOpacity] = useState(1);
   const [shouldRenderBoot, setShouldRenderBoot] = useState(true);
 
   useEffect(() => {
-    if (!isBooting) {
+    if (powerStatus === 'on') {
       setBootOpacity(0);
       const timer = setTimeout(() => setShouldRenderBoot(false), 1000);
       return () => clearTimeout(timer);
-    } else {
+    } else if (powerStatus === 'booting') {
       setShouldRenderBoot(true);
       setBootOpacity(1);
+    } else {
+      setShouldRenderBoot(false);
+      setBootOpacity(0);
     }
-  }, [isBooting]);
+  }, [powerStatus]);
+
+  if (powerStatus === 'off') {
+    return (
+      <div className="fixed inset-0 bg-black flex flex-col items-center justify-center gap-8 animate-in fade-in duration-1000">
+        <div className="text-white/10 text-[10px] uppercase tracking-[0.4em] font-bold">System Offline</div>
+        <Button 
+          variant="outline" 
+          size="icon" 
+          className="w-20 h-20 rounded-full border-white/5 bg-white/5 hover:bg-white/10 hover:border-accent hover:text-accent transition-all group"
+          onClick={powerOn}
+        >
+          <Power size={32} className="group-hover:scale-110 transition-transform" />
+        </Button>
+        <div className="text-white/20 text-xs italic">Click to power on</div>
+      </div>
+    );
+  }
 
   return (
     <div 
       className={cn(
-        "fixed inset-0 overflow-hidden select-none",
-        theme === 'light' ? "light" : ""
+        "fixed inset-0 overflow-hidden select-none transition-opacity duration-1000",
+        theme === 'light' ? "light" : "",
+        powerStatus === 'booting' ? "opacity-0" : "opacity-100"
       )}
       style={{
         backgroundImage: `url(${wallpaper})`,

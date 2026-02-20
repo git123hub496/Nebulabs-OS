@@ -5,6 +5,7 @@ import React, { createContext, useContext, useState, ReactNode, useEffect } from
 
 export type AppId = 'store' | 'files' | 'settings' | 'assistant' | 'google-drive' | 'notes' | 'calc' | 'terminal' | 'browser';
 export type ThemeMode = 'dark' | 'light';
+export type PowerStatus = 'on' | 'off' | 'booting';
 
 export interface WindowInstance {
   id: string;
@@ -30,7 +31,7 @@ interface OSContextType {
   wallpaper: string;
   notes: string;
   theme: ThemeMode;
-  isBooting: boolean;
+  powerStatus: PowerStatus;
   
   openApp: (appId: AppId, title: string) => void;
   closeWindow: (windowId: string) => void;
@@ -43,6 +44,7 @@ interface OSContextType {
   setTheme: (theme: ThemeMode) => void;
   restart: () => void;
   shutDown: () => void;
+  powerOn: () => void;
   
   createFolder: (name: string, parentId: string | null) => void;
   deleteItem: (id: string) => void;
@@ -66,7 +68,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   const [wallpaper, setWallpaper] = useState("https://picsum.photos/seed/nebula1/1920/1080");
   const [notes, setNotesState] = useState("");
   const [theme, setThemeState] = useState<ThemeMode>('dark');
-  const [isBooting, setIsBooting] = useState(true);
+  const [powerStatus, setPowerStatus] = useState<PowerStatus>('booting');
   const [nextZIndex, setNextZIndex] = useState(10);
 
   useEffect(() => {
@@ -76,7 +78,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     const savedTheme = localStorage.getItem('nebula_theme') as ThemeMode;
     if (savedTheme) setThemeState(savedTheme);
 
-    const bootTimer = setTimeout(() => setIsBooting(false), 2600);
+    const bootTimer = setTimeout(() => setPowerStatus('on'), 2600);
     return () => clearTimeout(bootTimer);
   }, []);
 
@@ -90,17 +92,22 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     localStorage.setItem('nebula_theme', newTheme);
   };
 
+  const powerOn = () => {
+    setPowerStatus('booting');
+    setTimeout(() => setPowerStatus('on'), 2600);
+  };
+
   const restart = () => {
     setOpenWindows([]);
     setActiveWindowId(null);
-    setIsBooting(true);
-    setTimeout(() => setIsBooting(false), 2600);
+    setPowerStatus('booting');
+    setTimeout(() => setPowerStatus('on'), 2600);
   };
 
   const shutDown = () => {
     setOpenWindows([]);
     setActiveWindowId(null);
-    setIsBooting(true);
+    setPowerStatus('off');
   };
 
   const openApp = (appId: AppId, title: string) => {
@@ -181,7 +188,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       wallpaper,
       notes,
       theme,
-      isBooting,
+      powerStatus,
       openApp,
       closeWindow,
       minimizeWindow,
@@ -193,6 +200,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       setTheme,
       restart,
       shutDown,
+      powerOn,
       createFolder,
       deleteItem
     }}>
