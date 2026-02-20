@@ -82,6 +82,9 @@ export const Desktop: React.FC = () => {
   };
 
   const handleMouseDown = (e: React.MouseEvent, appId: AppId) => {
+    // If we click the delete button specifically, don't start a drag
+    if ((e.target as HTMLElement).closest('.delete-shortcut-btn')) return;
+    
     e.stopPropagation();
     const app = desktopApps.find(a => a.id === appId);
     if (app) {
@@ -218,10 +221,14 @@ export const Desktop: React.FC = () => {
             <div className="w-14 h-14 glass rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform mb-1 shadow-lg border-white/20 relative">
               <Icon size={28} className="text-accent" />
               <button 
-                className="absolute -top-1 -right-1 bg-destructive/80 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 hover:bg-destructive transition-all"
-                onClick={(e) => { e.stopPropagation(); toggleDesktopApp(shortcut.id); }}
+                className="delete-shortcut-btn absolute -top-1.5 -right-1.5 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 hover:scale-110 transition-all z-10 border-2 border-white shadow-md flex items-center justify-center"
+                onMouseDown={(e) => e.stopPropagation()} // Prevent drag when clicking the delete button
+                onClick={(e) => { 
+                  e.stopPropagation(); 
+                  toggleDesktopApp(shortcut.id); 
+                }}
               >
-                <Trash2 size={10} />
+                <Trash2 size={10} strokeWidth={3} />
               </button>
             </div>
             <span className="text-white text-[11px] font-medium drop-shadow-md text-center line-clamp-2 px-1">
