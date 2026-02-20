@@ -3,9 +3,15 @@
 
 import React, { useState, useEffect } from 'react';
 import { useOS, AppId } from '@/context/os-context';
-import { Wifi, Volume2, FolderOpen, ShoppingBag, MessageSquare, Settings } from 'lucide-react';
+import { Wifi, Volume2, FolderOpen, ShoppingBag, MessageSquare, Settings, Lock, Check, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { StartMenu } from './StartMenu';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Button } from '@/components/ui/button';
 
 const QUICK_LAUNCH: { id: AppId; icon: any; label: string }[] = [
   { id: 'files', icon: FolderOpen, label: 'File Explorer' },
@@ -14,8 +20,15 @@ const QUICK_LAUNCH: { id: AppId; icon: any; label: string }[] = [
   { id: 'settings', icon: Settings, label: 'Settings' },
 ];
 
+const SIMULATED_NETWORKS = [
+  { ssid: 'Nebula_Secure_5G', secure: true, strength: 4 },
+  { ssid: 'Hotel Guest', secure: false, strength: 3 },
+  { ssid: 'Starbucks_Free_WiFi', secure: false, strength: 2 },
+  { ssid: 'Dev_Network_Hidden', secure: true, strength: 1 },
+];
+
 export const Taskbar: React.FC = () => {
-  const { openWindows, activeWindowId, focusWindow, openApp, taskbarPosition } = useOS();
+  const { openWindows, activeWindowId, focusWindow, openApp, taskbarPosition, currentWifi, isWifiConnecting, connectToWifi } = useOS();
   const [isStartOpen, setIsStartOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [time, setTime] = useState<Date | null>(null);
@@ -113,9 +126,53 @@ export const Taskbar: React.FC = () => {
         isVertical ? "flex-col items-center pb-2" : "items-center px-3"
       )}>
         {!isVertical && (
-          <div className="flex items-center gap-2 opacity-60">
-            <Wifi size={14} />
-            <Volume2 size={14} />
+          <div className="flex items-center gap-2">
+            <Popover>
+              <PopoverTrigger asChild>
+                <button className="p-1.5 rounded-md hover:bg-white/10 transition-colors relative">
+                  {isWifiConnecting ? (
+                    <Loader2 size={14} className="animate-spin text-accent" />
+                  ) : (
+                    <Wifi size={14} className={cn(currentWifi ? "text-accent" : "opacity-40")} />
+                  )}
+                </button>
+              </PopoverTrigger>
+              <PopoverContent className="w-64 glass border-white/10 p-2 backdrop-blur-3xl rounded-xl shadow-2xl">
+                <div className="p-2 border-b border-white/5 mb-2">
+                  <h4 className="text-[10px] font-bold text-accent uppercase tracking-widest">Available Networks</h4>
+                </div>
+                <div className="space-y-1">
+                  {SIMULATED_NETWORKS.map(net => (
+                    <button
+                      key={net.ssid}
+                      onClick={() => connectToWifi(net.ssid)}
+                      disabled={isWifiConnecting || currentWifi === net.ssid}
+                      className={cn(
+                        "w-full flex items-center justify-between p-2 rounded-lg text-xs transition-all",
+                        currentWifi === net.ssid ? "bg-accent/20 text-accent" : "hover:bg-white/5 text-white/80"
+                      )}
+                    >
+                      <div className="flex items-center gap-2">
+                        <Wifi size={12} className={cn(currentWifi === net.ssid ? "text-accent" : "opacity-40")} />
+                        <span className="font-medium">{net.ssid}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {net.secure && <Lock size={10} className="opacity-40" />}
+                        {currentWifi === net.ssid && <Check size={12} className="text-accent" />}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+                {currentWifi && (
+                  <div className="mt-2 p-2 pt-2 border-t border-white/5">
+                    <p className="text-[9px] text-white/40 italic">Connected to {currentWifi}</p>
+                  </div>
+                )}
+              </PopoverContent>
+            </Popover>
+            <button className="p-1.5 rounded-md hover:bg-white/10 transition-colors">
+              <Volume2 size={14} className="opacity-60 hover:opacity-100" />
+            </button>
           </div>
         )}
         <div className={cn(

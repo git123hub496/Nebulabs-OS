@@ -46,6 +46,8 @@ interface OSContextType {
   accentColor: AccentColor;
   powerStatus: PowerStatus;
   taskbarPosition: TaskbarPosition;
+  currentWifi: string;
+  isWifiConnecting: boolean;
   
   login: (userId: string) => void;
   logout: () => void;
@@ -61,6 +63,7 @@ interface OSContextType {
   setTheme: (theme: ThemeMode) => void;
   setAccentColor: (color: AccentColor) => void;
   setTaskbarPosition: (position: TaskbarPosition) => void;
+  connectToWifi: (ssid: string) => void;
   restart: () => void;
   shutDown: () => void;
   powerOn: () => void;
@@ -94,6 +97,8 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   const [accentColor, setAccentColorState] = useState<AccentColor>('purple');
   const [powerStatus, setPowerStatus] = useState<PowerStatus>('booting');
   const [taskbarPosition, setTaskbarPositionState] = useState<TaskbarPosition>('bottom');
+  const [currentWifi, setCurrentWifi] = useState("Nebula_Secure_5G");
+  const [isWifiConnecting, setIsWifiConnecting] = useState(false);
   const [nextZIndex, setNextZIndex] = useState(10);
 
   // Load accounts on initial mount
@@ -138,6 +143,9 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
 
     const savedWallpaper = localStorage.getItem(`nebula_${uid}_wallpaper`);
     setWallpaper(savedWallpaper || "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=1920");
+
+    const savedWifi = localStorage.getItem(`nebula_${uid}_wifi`);
+    setCurrentWifi(savedWifi || "Nebula_Secure_5G");
 
   }, [currentUser]);
 
@@ -186,6 +194,15 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   const setTaskbarPosition = (position: TaskbarPosition) => {
     setTaskbarPositionState(position);
     if (currentUser) localStorage.setItem(`nebula_${currentUser.id}_taskbar_pos`, position);
+  };
+
+  const connectToWifi = (ssid: string) => {
+    setIsWifiConnecting(true);
+    setTimeout(() => {
+      setCurrentWifi(ssid);
+      setIsWifiConnecting(false);
+      if (currentUser) localStorage.setItem(`nebula_${currentUser.id}_wifi`, ssid);
+    }, 2000);
   };
 
   const powerOn = () => {
@@ -311,6 +328,8 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       accentColor,
       powerStatus,
       taskbarPosition,
+      currentWifi,
+      isWifiConnecting,
       login,
       logout,
       createAccount,
@@ -325,6 +344,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       setTheme,
       setAccentColor,
       setTaskbarPosition,
+      connectToWifi,
       restart,
       shutDown,
       powerOn,
