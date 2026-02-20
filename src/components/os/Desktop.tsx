@@ -1,10 +1,10 @@
-
 "use client"
 
 import React, { useState, useEffect } from 'react';
 import { useOS, AppId } from '@/context/os-context';
 import { Window } from './Window';
 import { Taskbar } from './Taskbar';
+import { ContextMenu } from './ContextMenu';
 import { 
   ShoppingBag, 
   FolderOpen, 
@@ -54,6 +54,7 @@ export const Desktop: React.FC = () => {
   const { wallpaper, openWindows, openApp, theme, accentColor, powerStatus, powerOn, taskbarPosition } = useOS();
   const [bootOpacity, setBootOpacity] = useState(1);
   const [shouldRenderBoot, setShouldRenderBoot] = useState(true);
+  const [contextMenu, setContextMenu] = useState<{ x: number, y: number } | null>(null);
 
   useEffect(() => {
     if (powerStatus === 'on') {
@@ -68,6 +69,11 @@ export const Desktop: React.FC = () => {
       setBootOpacity(0);
     }
   }, [powerStatus]);
+
+  const handleContextMenu = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setContextMenu({ x: e.clientX, y: e.clientY });
+  };
 
   if (powerStatus === 'off') {
     return (
@@ -108,6 +114,8 @@ export const Desktop: React.FC = () => {
         backgroundSize: 'cover',
         backgroundPosition: 'center'
       }}
+      onContextMenu={handleContextMenu}
+      onClick={() => setContextMenu(null)}
     >
       <div className={cn(
         "absolute inset-0 flex flex-col flex-wrap gap-4 content-start transition-all duration-300",
@@ -119,7 +127,11 @@ export const Desktop: React.FC = () => {
             <div 
               key={shortcut.id}
               className="desktop-icon group"
-              onDoubleClick={() => openApp(shortcut.id, shortcut.label)}
+              onDoubleClick={(e) => {
+                e.stopPropagation();
+                openApp(shortcut.id, shortcut.label);
+              }}
+              onContextMenu={(e) => e.stopPropagation()}
             >
               <div className="w-14 h-14 glass rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform mb-1 shadow-lg border-white/20">
                 <Icon size={28} className="text-accent" />
@@ -139,6 +151,14 @@ export const Desktop: React.FC = () => {
       ))}
 
       <Taskbar />
+
+      {contextMenu && (
+        <ContextMenu 
+          x={contextMenu.x} 
+          y={contextMenu.y} 
+          onClose={() => setContextMenu(null)} 
+        />
+      )}
 
       {shouldRenderBoot && (
         <div 

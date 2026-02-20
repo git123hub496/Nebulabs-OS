@@ -16,7 +16,7 @@
     --secondary-foreground: 0 0% 100%;
     --muted: 210 25% 15%;
     --muted-foreground: 210 10% 70%;
-    --accent: 262.1 83.3% 57.8%;
+    --accent: 210 29% 74%;
     --accent-foreground: 0 0% 100%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
@@ -94,6 +94,9 @@
 @layer base {
   * {
     @apply border-border;
+  }
+  html, body {
+    cursor: url("data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cGF0aCBkPSJNNS41IDMuNUwxOC41IDEzTDEzLjUgMTRMMTYuNSAxOS41TDE0LjUgMjAuNUwxMS41IDE1TDcuNSAxOC41VjMuNUg1LjVaIiBmaWxsPSIjMzMzMzMzIiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjEuNSIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPgo8L3N2Zz4=") 0 0, auto;
   }
   body {
     @apply bg-background text-foreground overflow-hidden h-screen w-screen selection:bg-accent selection:text-accent-foreground transition-colors duration-500;
