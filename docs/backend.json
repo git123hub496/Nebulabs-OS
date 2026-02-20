@@ -1,19 +1,453 @@
-
 {
   "entities": {
-    "UserProfile": {
-      "title": "User Profile",
-      "description": "Information about the logged-in user.",
+    "UserAccount": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "UserAccount",
       "type": "object",
+      "description": "Represents a user's account for authentication and system access to Nebulabs WebOS. (Security Best Practice: Passwords and sensitive authentication data are handled by an external system and not stored here.)",
       "properties": {
-        "uid": { "type": "string" },
-        "displayName": { "type": "string" },
-        "email": { "type": "string" },
-        "photoURL": { "type": "string" }
-      }
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the UserAccount entity."
+        },
+        "username": {
+          "type": "string",
+          "description": "A unique username chosen by the user for login and display."
+        },
+        "email": {
+          "type": "string",
+          "description": "A unique email address associated with the user account.",
+          "format": "email"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp indicating when the user account was created.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp indicating when the user account was last updated.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "username",
+        "email",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "UserProfile": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "UserProfile",
+      "type": "object",
+      "description": "Stores additional user-specific information not directly related to authentication or core settings, but enhancing the user's profile.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the UserProfile entity."
+        },
+        "userAccountId": {
+          "type": "string",
+          "description": "Reference to the UserAccount this profile belongs to. (Relationship: UserAccount 1:1 UserProfile)"
+        },
+        "displayName": {
+          "type": "string",
+          "description": "The user's preferred display name, which may differ from their username."
+        },
+        "avatarUrl": {
+          "type": "string",
+          "description": "URL to the user's profile avatar image.",
+          "format": "uri"
+        },
+        "lastLoginAt": {
+          "type": "string",
+          "description": "Timestamp of the user's last successful login.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "userAccountId"
+      ]
+    },
+    "UserSetting": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "UserSetting",
+      "type": "object",
+      "description": "Stores individual user preferences and configurations for the Nebulabs WebOS, such as theme choices, desktop background, and other UI parameters.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the UserSetting entity."
+        },
+        "userAccountId": {
+          "type": "string",
+          "description": "Reference to the UserAccount this setting belongs to. (Relationship: UserAccount 1:N UserSetting)"
+        },
+        "key": {
+          "type": "string",
+          "description": "The unique key identifying the specific setting (e.g., 'themeName', 'desktopBackgroundColor')."
+        },
+        "value": {
+          "type": "string",
+          "description": "The value associated with the setting key. This can be a simple string or a JSON stringified object for complex settings."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp indicating when the setting was created.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp indicating when the setting was last updated.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "userAccountId",
+        "key",
+        "value",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "Application": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Application",
+      "type": "object",
+      "description": "Defines an application available in the Nebulabs OS App Store or bundled with the OS.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Application entity."
+        },
+        "name": {
+          "type": "string",
+          "description": "The display name of the application (e.g., 'Google Docs', 'Terminal')."
+        },
+        "description": {
+          "type": "string",
+          "description": "A brief description of what the application does."
+        },
+        "iconUrl": {
+          "type": "string",
+          "description": "URL to the application's icon image.",
+          "format": "uri"
+        },
+        "version": {
+          "type": "string",
+          "description": "The current version of the application."
+        },
+        "publisher": {
+          "type": "string",
+          "description": "The entity or company that published the application."
+        },
+        "category": {
+          "type": "string",
+          "description": "The category the application belongs to (e.g., 'Productivity', 'System Tools', 'Utilities')."
+        },
+        "isBundledGoogleApp": {
+          "type": "boolean",
+          "description": "Indicates if the application is a pre-integrated Google product."
+        },
+        "launchCommand": {
+          "type": "string",
+          "description": "A command or identifier used by the OS to launch the application."
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "description",
+        "iconUrl",
+        "version",
+        "publisher",
+        "category",
+        "isBundledGoogleApp",
+        "launchCommand"
+      ]
+    },
+    "UserInstalledApplication": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "UserInstalledApplication",
+      "type": "object",
+      "description": "Records which applications a specific user has installed or has access to, including layout preferences on their virtual desktop.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the UserInstalledApplication entity."
+        },
+        "userAccountId": {
+          "type": "string",
+          "description": "Reference to the UserAccount that installed this application. (Relationship: UserAccount 1:N UserInstalledApplication)"
+        },
+        "applicationId": {
+          "type": "string",
+          "description": "Reference to the Application definition from the App Store. (Relationship: Application 1:N UserInstalledApplication)"
+        },
+        "installedAt": {
+          "type": "string",
+          "description": "Timestamp indicating when the application was installed by the user.",
+          "format": "date-time"
+        },
+        "lastUsedAt": {
+          "type": "string",
+          "description": "Timestamp of the last time the user launched or interacted with this application.",
+          "format": "date-time"
+        },
+        "isPinnedToTaskbar": {
+          "type": "boolean",
+          "description": "Indicates if the application's icon is pinned to the user's taskbar."
+        },
+        "desktopIconPositionX": {
+          "type": "number",
+          "description": "The X-coordinate for the application's desktop icon position."
+        },
+        "desktopIconPositionY": {
+          "type": "number",
+          "description": "The Y-coordinate for the application's desktop icon position."
+        }
+      },
+      "required": [
+        "id",
+        "userAccountId",
+        "applicationId",
+        "installedAt",
+        "isPinnedToTaskbar"
+      ]
+    },
+    "UserFolder": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "UserFolder",
+      "type": "object",
+      "description": "Represents a folder within a user's virtual file system, allowing for hierarchical organization of files and other folders.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the UserFolder entity."
+        },
+        "userAccountId": {
+          "type": "string",
+          "description": "Reference to the UserAccount that owns this folder. (Relationship: UserAccount 1:N UserFolder)"
+        },
+        "parentFolderId": {
+          "type": "string",
+          "description": "Reference to the parent folder's ID, if this folder is nested. Null for root-level folders. (Relationship: UserFolder 1:N UserFolder (Self-referencing))"
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the folder."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp indicating when the folder was created.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp indicating when the folder was last updated.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "userAccountId",
+        "name",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "UserFile": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "UserFile",
+      "type": "object",
+      "description": "Represents a file stored within a user's virtual file system.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the UserFile entity."
+        },
+        "userAccountId": {
+          "type": "string",
+          "description": "Reference to the UserAccount that owns this file. (Relationship: UserAccount 1:N UserFile)"
+        },
+        "folderId": {
+          "type": "string",
+          "description": "Reference to the UserFolder where this file is located. (Relationship: UserFolder 1:N UserFile)"
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the file, including its extension."
+        },
+        "mimeType": {
+          "type": "string",
+          "description": "The MIME type of the file (e.g., 'text/plain', 'image/png', 'application/vnd.google-docs')."
+        },
+        "sizeBytes": {
+          "type": "number",
+          "description": "The size of the file in bytes."
+        },
+        "storagePath": {
+          "type": "string",
+          "description": "An internal path or reference to the actual storage location of the file's content."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp indicating when the file was created.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp indicating when the file was last updated.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "userAccountId",
+        "folderId",
+        "name",
+        "mimeType",
+        "storagePath",
+        "createdAt",
+        "updatedAt"
+      ]
     }
   },
   "auth": {
-    "providers": ["google.com"]
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/users/{userId}",
+        "definition": {
+          "entityName": "UserAccount",
+          "schema": {
+            "$ref": "#/backend/entities/UserAccount"
+          },
+          "description": "Stores core user account information. The document ID (`{userId}`) corresponds to the Firebase Authentication UID (`request.auth.uid`)."
+        }
+      },
+      {
+        "path": "/users/{userId}/profile",
+        "definition": {
+          "entityName": "UserProfile",
+          "schema": {
+            "$ref": "#/backend/entities/UserProfile"
+          },
+          "description": "Stores user-specific profile details (e.g., display name, avatar URL). This is a 1:1 relationship with UserAccount, stored as a single document named 'profile' within the subcollection. Includes denormalized 'userAccountId' field for authorization independence.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user (Firebase Authentication UID)."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/settings/{settingId}",
+        "definition": {
+          "entityName": "UserSetting",
+          "schema": {
+            "$ref": "#/backend/entities/UserSetting"
+          },
+          "description": "Stores individual user preferences and configurations for Nebulabs WebOS. Includes denormalized 'userAccountId' field for authorization independence.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user (Firebase Authentication UID)."
+            },
+            {
+              "name": "settingId",
+              "description": "The unique identifier for a specific user setting."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/applications/{applicationId}",
+        "definition": {
+          "entityName": "Application",
+          "schema": {
+            "$ref": "#/backend/entities/Application"
+          },
+          "description": "Defines an application available in the Nebulabs OS App Store. This collection is globally readable.",
+          "params": [
+            {
+              "name": "applicationId",
+              "description": "The unique identifier for an application."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/installedApplications/{installedApplicationId}",
+        "definition": {
+          "entityName": "UserInstalledApplication",
+          "schema": {
+            "$ref": "#/backend/entities/UserInstalledApplication"
+          },
+          "description": "Records applications installed by a specific user, including user-specific preferences like pinning status and desktop position. Includes denormalized 'userAccountId' field for authorization independence.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user (Firebase Authentication UID)."
+            },
+            {
+              "name": "installedApplicationId",
+              "description": "The unique identifier for a user's installed application record."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/folders/{folderId}",
+        "definition": {
+          "entityName": "UserFolder",
+          "schema": {
+            "$ref": "#/backend/entities/UserFolder"
+          },
+          "description": "Represents a folder within a user's virtual file system. The 'parentFolderId' references another folder within the same user's collection, maintaining ownership. Includes denormalized 'userAccountId' field for authorization independence.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user (Firebase Authentication UID)."
+            },
+            {
+              "name": "folderId",
+              "description": "The unique identifier for a user's folder."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/files/{fileId}",
+        "definition": {
+          "entityName": "UserFile",
+          "schema": {
+            "$ref": "#/backend/entities/UserFile"
+          },
+          "description": "Represents a file stored within a user's virtual file system. The 'folderId' references a folder within the same user's collection, maintaining ownership. Includes denormalized 'userAccountId' field for authorization independence.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user (Firebase Authentication UID)."
+            },
+            {
+              "name": "fileId",
+              "description": "The unique identifier for a user's file."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The Firestore data structure for Nebulabs WebOS prioritizes robust security, scalability, and debuggability by adhering strictly to the core design principles. All user-specific data is organized hierarchically under a top-level `/users/{userId}` collection, where `{userId}` directly corresponds to `request.auth.uid`. This path-based ownership is fundamental for secure data access.\n\n**Authorization Independence (CRITICAL):**\nAuthorization independence is achieved through pervasive denormalization. For every document residing in a user's subcollection (e.g., `profile`, `settings`, `installedApplications`, `folders`, `files`), the `userAccountId` field within the document itself is mandated to match the `{userId}` wildcard in its path. For example, a `UserSetting` document at `/users/{userId}/settings/{settingId}` will contain `userAccountId: '{userId}'`. This design eliminates the need for `get()` calls in Firestore Security Rules to check parent documents for ownership, which would otherwise break atomic operations and introduce performance overhead. Rules can directly compare `request.auth.uid` with `resource.data.userAccountId` or `request.path[1]` (which is the `{userId}` wildcard), ensuring efficient, atomic, and easily auditable access control.\n\n**Querying for Authorized Paths (QAPs - Rules are not Filters):**\nQAPs are inherently supported through **Structural Segregation**. The application's data is divided into two primary security postures:\n1.  **Global Public Data:** The `/applications/{applicationId}` collection stores global application definitions. This collection has a homogeneous security posture (globally readable), allowing any authenticated (or even unauthenticated) user to list and retrieve application details without requiring complex filtering rules. A `list` operation on `/applications` will return all available apps.\n2.  **User-Owned Private Data:** All subcollections under `/users/{userId}` (`profile`, `settings`, `installedApplications`, `folders`, `files`) are strictly private to the user identified by `{userId}`. When a user queries a `list` from, for example, `/users/{request.auth.uid}/settings`, the security rules can efficiently confirm that `request.auth.uid` matches the `{userId}` in the path, thereby guaranteeing that only the requesting user's data is returned. Any attempt to `list` documents from another user's path (e.g., `/users/anotherUserUid/settings`) will be explicitly denied by the rules, enforcing ownership structurally rather than by filtering results. This ensures that client-side list queries are secure by design, preventing data leakage and minimizing the burden on rules to filter unauthorized content.\n\n**Summary of Design Principles Applied:**\n*   **Authorization Independence:** Denormalized `userAccountId` in all user-owned documents.\n*   **Clarity of Intent:** Paths clearly indicate ownership (`/users/{userId}/...`) and global scope (`/applications`).\n*   **DBAC (No Custom Claims):** `request.auth.uid` is the sole determinant for user-specific data access.\n*   **QAPs:** Achieved via structural segregation of global and user-owned data, with path-based authorization for user data.\n*   **Invariants:** Ownership (`userAccountId`), timestamps (`createdAt`, `updatedAt`), and denormalized data (`isPinnedToTaskbar`, icon positions) are maintained within the respective documents."
   }
 }

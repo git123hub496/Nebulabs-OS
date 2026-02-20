@@ -1,0 +1,158 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    /**
+     * NEBULABS WEBOS SECURITY RULES
+     * 
+     * CORE PHILOSOPHY:
+     * This ruleset enforces a strict user-ownership model for all personal data while providing 
+     * global access to the system-wide application registry. Security is anchored in Firebase 
+     * Authentication, using the user's UID as the primary authorization key.
+     * 
+     * DATA STRUCTURE:
+     * User-specific data is hierarchically organized under the path /users/{userId}. This includes 
+     * account info, profiles, settings, installed applications, and the virtual file system (folders/files).
+     * Global data for the app store is located in the top-level /applications collection.
+     * 
+     * KEY SECURITY DECISIONS:
+     * 1. Authorization Independence: Every user-owned document contains a denormalized 'userAccountId' 
+     *    field. This allows rules to verify ownership instantly without performing expensive cross-document 
+     *    lookups using get().
+     * 2. Structural Segregation: Private data and public data are kept in separate top-level collections.
+     *    Users are prevented from listing or reading any data under /users/ paths that do not match 
+     *    their own UID.
+     * 3. Immutability: Critical relational fields, such as owner IDs and primary identifiers, are 
+     *    enforced as immutable after creation to prevent unauthorized data re-parenting.
+     * 4. Prototyping Flexibility: These rules strictly control "Who" can access data but allow 
+     *    flexibility on "What" the data looks like (schema types), enabling rapid UI/UX iteration.
+     */
+
+    // --- Helper Functions ---
+
+    /** Simple check if the request is from an authenticated user. */
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    /** Verifies if the authenticated user's UID matches the provided userId. */
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    /** Combines ownership check with document existence for update/delete operations. */
+    function isExistingOwner(userId) {
+      return resource != null && isOwner(userId);
+    }
+
+    /** Validates that the owner ID field in the data matches the path-based owner. */
+    function isValidOwnerField(userId, fieldName) {
+      return request.resource.data[fieldName] == userId;
+    }
+
+    /** Ensures that an owner ID field remains unchanged during an update. */
+    function isOwnerImmutable(fieldName) {
+      return request.resource.data[fieldName] == resource.data[fieldName];
+    }
+
+    // --- Collection Rules ---
+
+    /**
+     * @description Rules for the root UserAccount document.
+     * @path /users/{userId}
+     * @allow (get, update) if the user is signed in and requesting their own account document.
+     * @deny (list) if trying to browse all user accounts.
+     * @principle Path-based ownership and relational integrity for the account ID.
+     */
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow list: if false; 
+      allow create: if isOwner(userId) && request.resource.data.id == userId;
+      allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
+      allow delete: if isExistingOwner(userId);
+
+      /**
+       * @description User-specific profile details (e.g., display name, avatar).
+       * @path /users/{userId}/profile
+       * @allow (create) if creating a profile for oneself with matching userAccountId.
+       * @deny (update) if attempting to change the userAccountId to another user.
+       * @principle Denormalized ownership verification for sub-documents.
+       */
+      match /profile {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidOwnerField(userId, 'userAccountId');
+        allow update: if isExistingOwner(userId) && isOwnerImmutable('userAccountId');
+        allow delete: if isExistingOwner(userId);
+      }
+
+      /**
+       * @description User settings and UI configurations.
+       * @path /users/{userId}/settings/{settingId}
+       * @allow (list) for the owner to retrieve all their settings.
+       * @deny (get) if another user tries to read specific settings.
+       * @principle Scoped access control for user preferences.
+       */
+      match /settings/{settingId} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidOwnerField(userId, 'userAccountId');
+        allow update: if isExistingOwner(userId) && isOwnerImmutable('userAccountId');
+        allow delete: if isExistingOwner(userId);
+      }
+
+      /**
+       * @description Records of applications installed by the user.
+       * @path /users/{userId}/installedApplications/{installedAppId}
+       * @allow (update) to change pin status or desktop position.
+       * @deny (create) if the userAccountId in the data doesn't match the path.
+       * @principle Relational integrity between auth state, path, and document data.
+       */
+      match /installedApplications/{installedAppId} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidOwnerField(userId, 'userAccountId');
+        allow update: if isExistingOwner(userId) && isOwnerImmutable('userAccountId');
+        allow delete: if isExistingOwner(userId);
+      }
+
+      /**
+       * @description Folders in the user's virtual file system.
+       * @path /users/{userId}/folders/{folderId}
+       * @allow (delete) if the owner is deleting their own folder.
+       * @deny (get) access to folders belonging to other users.
+       * @principle Hierarchical data protection.
+       */
+      match /folders/{folderId} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidOwnerField(userId, 'userAccountId');
+        allow update: if isExistingOwner(userId) && isOwnerImmutable('userAccountId');
+        allow delete: if isExistingOwner(userId);
+      }
+
+      /**
+       * @description Files in the user's virtual file system.
+       * @path /users/{userId}/files/{fileId}
+       * @allow (create) by the owner to save new files.
+       * @deny (list) files from another user's directory.
+       * @principle Ownership-based access for private file storage.
+       */
+      match /files/{fileId} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidOwnerField(userId, 'userAccountId');
+        allow update: if isExistingOwner(userId) && isOwnerImmutable('userAccountId');
+        allow delete: if isExistingOwner(userId);
+      }
+    }
+
+    /**
+     * @description Global Application registry (App Store).
+     * @path /applications/{applicationId}
+     * @allow (get, list) for any user to browse available applications.
+     * @deny (write) modifications by standard users.
+     * @principle Public read access for system-wide configuration data.
+     */
+    match /applications/{applicationId} {
+      allow get, list: if true;
+      // CRITICAL: Cannot implement owner-only writes. The 'Application' entity is missing an 'ownerId' or 'authorId' field.
+      allow create, update, delete: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+    }
+  }
+}
