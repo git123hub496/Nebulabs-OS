@@ -7,6 +7,30 @@
       "imageHint": "purple blue gradient"
     },
     {
+      "id": "wallpaper-abstract-1",
+      "description": "Fluid Nebula Flow",
+      "imageUrl": "https://images.unsplash.com/photo-1631195535986-4717d6a8a1d8?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHxhYnN0cmFjdCUyMGZsb3d8ZW58MHx8fHwxNzcxNTE3NTc2fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "abstract flow"
+    },
+    {
+      "id": "wallpaper-abstract-2",
+      "description": "Cosmic Swirl",
+      "imageUrl": "https://images.unsplash.com/photo-1771013678263-d4755d759587?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHxjb3NtaWMlMjBzd2lybHxlbnwwfHx8fDE3NzE2MjUwNDB8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "cosmic swirl"
+    },
+    {
+      "id": "wallpaper-abstract-3",
+      "description": "Ethereal Waves",
+      "imageUrl": "https://images.unsplash.com/photo-1743842773564-142688c5461a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHxldGhlcmVhbCUyMHdhdmVzfGVufDB8fHx8MTc3MTYyNTA0MHww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "ethereal waves"
+    },
+    {
+      "id": "wallpaper-abstract-4",
+      "description": "Digital Silk",
+      "imageUrl": "https://images.unsplash.com/photo-1711437134852-2876232e479c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxkaWdpdGFsJTIwc2lsa3xlbnwwfHx8fDE3NzE2MjUwNDB8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "digital silk"
+    },
+    {
       "id": "app-icon-store",
       "description": "App Store Icon",
       "imageUrl": "https://images.unsplash.com/photo-1575081838238-d06e716afa28?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxzdG9yZSUyMHNob3BwaW5nfGVufDB8fHx8MTc3MTU0NDI5NHww&ixlib=rb-4.1.0&q=80&w=1080",

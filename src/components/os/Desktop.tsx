@@ -1,5 +1,4 @@
-
-"use client"
+'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useOS, AppId, DesktopShortcut } from '@/context/os-context';
@@ -48,7 +47,7 @@ const APP_COMPONENTS: Record<AppId, React.ReactNode> = {
 export const Desktop: React.FC = () => {
   const { 
     wallpaper, openWindows, openApp, theme, accentColor, customAccentHex,
-    powerStatus, powerOn, taskbarPosition, currentUser,
+    powerStatus, powerOn, taskbarPosition, iconSize, currentUser,
     cursorColor, isInverted, glassEnabled, desktopApps, updateDesktopAppPosition, toggleDesktopApp
   } = useOS();
   
@@ -169,6 +168,9 @@ export const Desktop: React.FC = () => {
     '--sidebar-accent': hexToHslString(customAccentHex),
   } as React.CSSProperties : {};
 
+  const iconScaleMap = { sm: 0.8, md: 1, lg: 1.25 };
+  const currentScale = iconScaleMap[iconSize];
+
   return (
     <div 
       ref={desktopRef}
@@ -207,7 +209,9 @@ export const Desktop: React.FC = () => {
             )}
             style={{ 
               left: isDragging ? currentDragPos.x : shortcut.x, 
-              top: isDragging ? currentDragPos.y : shortcut.y 
+              top: isDragging ? currentDragPos.y : shortcut.y,
+              transform: `scale(${currentScale})`,
+              transformOrigin: 'top left'
             }}
             onMouseDown={(e) => handleMouseDown(e, shortcut.id)}
             onDoubleClick={(e) => {

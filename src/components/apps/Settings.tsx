@@ -1,12 +1,11 @@
-
-"use client"
+'use client';
 
 import React, { useRef } from 'react';
-import { useOS, TaskbarPosition, AccentColor, CursorColor } from '@/context/os-context';
+import { useOS, TaskbarPosition, TaskbarSize, DesktopIconSize, AccentColor, CursorColor } from '@/context/os-context';
 import { 
   Monitor, Palette, User, Shield, Bell, HelpCircle, Upload, 
   Image as ImageIcon, Sun, Moon, Layout, Check, MousePointer2, 
-  Eye, Zap, Layers, Pipette 
+  Eye, Zap, Layers, Pipette, Maximize2 
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
@@ -24,9 +23,11 @@ import { Input } from '@/components/ui/input';
 
 const WALLPAPERS = [
   "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=1920",
-  "https://images.unsplash.com/photo-1599625803125-6efff06c9c37?auto=format&fit=crop&q=80&w=1920",
+  "https://picsum.photos/seed/abstract1/1920/1080",
+  "https://picsum.photos/seed/abstract2/1920/1080",
+  "https://picsum.photos/seed/abstract3/1920/1080",
+  "https://picsum.photos/seed/abstract4/1920/1080",
   "https://images.unsplash.com/photo-1550684848-fac1c5b4e853?auto=format&fit=crop&q=80&w=1920",
-  "https://picsum.photos/seed/nebula1/1920/1080",
 ];
 
 const ACCENT_COLORS: { id: AccentColor; class: string; label: string }[] = [
@@ -48,6 +49,7 @@ const CURSOR_THEMES: { id: CursorColor; label: string; class: string }[] = [
 export const Settings: React.FC = () => {
   const { 
     wallpaper, updateWallpaper, theme, setTheme, taskbarPosition, setTaskbarPosition, 
+    taskbarSize, setTaskbarSize, iconSize, setIconSize,
     accentColor, setAccentColor, customAccentHex, setCustomAccentHex,
     cursorColor, setCursorColor, isInverted, setInverted,
     glassEnabled, setGlassEnabled 
@@ -181,6 +183,68 @@ export const Settings: React.FC = () => {
             </div>
           </section>
 
+          {/* Section: Taskbar & Icons */}
+          <section>
+            <div className="flex items-center gap-2 mb-6">
+              <Layout size={18} className="text-accent" />
+              <h2 className="text-lg font-bold">Layout Controls</h2>
+            </div>
+            
+            <div className="grid gap-6">
+              <div className="flex items-center justify-between p-5 bg-white/5 rounded-2xl border border-border/50">
+                <div className="space-y-0.5">
+                  <Label className="text-sm font-bold">Taskbar Size</Label>
+                  <p className="text-[11px] opacity-40">Adjust the vertical height or horizontal width</p>
+                </div>
+                <Select value={taskbarSize} onValueChange={(v) => setTaskbarSize(v as TaskbarSize)}>
+                  <SelectTrigger className="w-[120px] bg-black/20 border-white/10 text-xs">
+                    <SelectValue placeholder="Size" />
+                  </SelectTrigger>
+                  <SelectContent className="glass border-white/10">
+                    <SelectItem value="sm">Small</SelectItem>
+                    <SelectItem value="md">Medium</SelectItem>
+                    <SelectItem value="lg">Large</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex items-center justify-between p-5 bg-white/5 rounded-2xl border border-border/50">
+                <div className="space-y-0.5">
+                  <Label className="text-sm font-bold">Icon Scaling</Label>
+                  <p className="text-[11px] opacity-40">Change the size of desktop shortcuts</p>
+                </div>
+                <Select value={iconSize} onValueChange={(v) => setIconSize(v as DesktopIconSize)}>
+                  <SelectTrigger className="w-[120px] bg-black/20 border-white/10 text-xs">
+                    <SelectValue placeholder="Size" />
+                  </SelectTrigger>
+                  <SelectContent className="glass border-white/10">
+                    <SelectItem value="sm">Small</SelectItem>
+                    <SelectItem value="md">Standard</SelectItem>
+                    <SelectItem value="lg">Large</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex items-center justify-between p-5 bg-white/5 rounded-2xl border border-border/50">
+                <div className="space-y-0.5">
+                  <Label className="text-sm font-bold">Taskbar Position</Label>
+                  <p className="text-[11px] opacity-40">Move the system bar to any screen edge</p>
+                </div>
+                <Select value={taskbarPosition} onValueChange={(v) => setTaskbarPosition(v as TaskbarPosition)}>
+                  <SelectTrigger className="w-[120px] bg-black/20 border-white/10 text-xs">
+                    <SelectValue placeholder="Position" />
+                  </SelectTrigger>
+                  <SelectContent className="glass border-white/10">
+                    <SelectItem value="top">Top</SelectItem>
+                    <SelectItem value="bottom">Bottom</SelectItem>
+                    <SelectItem value="left">Left</SelectItem>
+                    <SelectItem value="right">Right</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </section>
+
           {/* Section: Mouse & Cursor */}
           <section>
             <div className="flex items-center gap-2 mb-6">
@@ -235,24 +299,6 @@ export const Settings: React.FC = () => {
                   onCheckedChange={setInverted}
                 />
               </div>
-
-              <div className="flex items-center justify-between p-5 bg-white/5 rounded-2xl border border-border/50">
-                <div className="space-y-0.5">
-                  <Label className="text-sm font-bold">Taskbar Position</Label>
-                  <p className="text-[11px] opacity-40">Move the system bar to any screen edge</p>
-                </div>
-                <Select value={taskbarPosition} onValueChange={(v) => setTaskbarPosition(v as TaskbarPosition)}>
-                  <SelectTrigger className="w-[120px] bg-black/20 border-white/10 text-xs">
-                    <SelectValue placeholder="Position" />
-                  </SelectTrigger>
-                  <SelectContent className="glass border-white/10">
-                    <SelectItem value="top">Top</SelectItem>
-                    <SelectItem value="bottom">Bottom</SelectItem>
-                    <SelectItem value="left">Left</SelectItem>
-                    <SelectItem value="right">Right</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
             </div>
           </section>
 
@@ -261,7 +307,7 @@ export const Settings: React.FC = () => {
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-2">
                 <ImageIcon size={18} className="text-accent" />
-                <h2 className="text-lg font-bold">Desktop Wallpaper</h2>
+                <h2 className="text-lg font-bold">Flow Wallpapers</h2>
               </div>
               <Button 
                 variant="outline" 

@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
@@ -18,6 +17,8 @@ export type AppId = 'store' | 'files' | 'settings' | 'assistant' | 'google-drive
 export type ThemeMode = 'dark' | 'light';
 export type PowerStatus = 'on' | 'off' | 'booting';
 export type TaskbarPosition = 'top' | 'bottom' | 'left' | 'right';
+export type TaskbarSize = 'sm' | 'md' | 'lg';
+export type DesktopIconSize = 'sm' | 'md' | 'lg';
 export type AccentColor = 'default' | 'blue' | 'purple' | 'rose' | 'orange' | 'green' | 'grey' | 'custom';
 export type CursorColor = 'black' | 'white' | 'accent';
 
@@ -72,6 +73,8 @@ interface OSContextType {
   glassEnabled: boolean;
   powerStatus: PowerStatus;
   taskbarPosition: TaskbarPosition;
+  taskbarSize: TaskbarSize;
+  iconSize: DesktopIconSize;
   currentWifi: string;
   isWifiConnecting: boolean;
   isOnline: boolean;
@@ -95,6 +98,8 @@ interface OSContextType {
   setInverted: (inverted: boolean) => void;
   setGlassEnabled: (enabled: boolean) => void;
   setTaskbarPosition: (position: TaskbarPosition) => void;
+  setTaskbarSize: (size: TaskbarSize) => void;
+  setIconSize: (size: DesktopIconSize) => void;
   connectToWifi: (ssid: string) => void;
   setVolume: (v: number) => void;
   restart: () => void;
@@ -171,6 +176,8 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   const [glassEnabled, setGlassEnabledState] = useState(true);
   const [powerStatus, setPowerStatus] = useState<PowerStatus>('booting');
   const [taskbarPosition, setTaskbarPositionState] = useState<TaskbarPosition>('bottom');
+  const [taskbarSize, setTaskbarSizeState] = useState<TaskbarSize>('md');
+  const [iconSize, setIconSizeState] = useState<DesktopIconSize>('md');
   const [currentWifi, setCurrentWifi] = useState("Nebula_Secure_5G");
   const [isWifiConnecting, setIsWifiConnecting] = useState(false);
   const [isOnline, setIsOnline] = useState(true);
@@ -220,6 +227,8 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     setIsInvertedState(load('inverted', false));
     setGlassEnabledState(load('glass', true));
     setTaskbarPositionState(load('taskbar_pos', 'bottom') as TaskbarPosition);
+    setTaskbarSizeState(load('taskbar_size', 'md') as TaskbarSize);
+    setIconSizeState(load('icon_size', 'md') as DesktopIconSize);
     setWallpaper(load('wallpaper', "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=1920"));
     setDesktopApps(load('desktop_apps', INITIAL_DESKTOP).map((app: any) => ({ ...app, icon: APP_INFO[app.id as AppId]?.icon || Globe })));
     setFileSystem(load('file_system', INITIAL_FILES));
@@ -307,6 +316,16 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   const setTaskbarPosition = (position: TaskbarPosition) => {
     setTaskbarPositionState(position);
     saveSetting('taskbar_pos', position);
+  };
+
+  const setTaskbarSize = (size: TaskbarSize) => {
+    setTaskbarSizeState(size);
+    saveSetting('taskbar_size', size);
+  };
+
+  const setIconSize = (size: DesktopIconSize) => {
+    setIconSizeState(size);
+    saveSetting('icon_size', size);
   };
 
   const connectToWifi = (ssid: string) => {
@@ -557,6 +576,8 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       glassEnabled,
       powerStatus,
       taskbarPosition,
+      taskbarSize,
+      iconSize,
       currentWifi,
       isWifiConnecting,
       isOnline,
@@ -579,6 +600,8 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       setInverted,
       setGlassEnabled,
       setTaskbarPosition,
+      setTaskbarSize,
+      setIconSize,
       connectToWifi,
       setVolume,
       restart,

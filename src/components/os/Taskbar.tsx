@@ -1,5 +1,4 @@
-
-"use client"
+'use client';
 
 import React, { useState, useEffect } from 'react';
 import { useOS, AppId } from '@/context/os-context';
@@ -28,7 +27,7 @@ const SIMULATED_NETWORKS = [
 ];
 
 export const Taskbar: React.FC = () => {
-  const { openWindows, activeWindowId, focusWindow, openApp, taskbarPosition, currentWifi, isWifiConnecting, connectToWifi, volume, setVolume, isOnline } = useOS();
+  const { openWindows, activeWindowId, focusWindow, openApp, taskbarPosition, taskbarSize, currentWifi, isWifiConnecting, connectToWifi, volume, setVolume, isOnline } = useOS();
   const [isStartOpen, setIsStartOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [time, setTime] = useState<Date | null>(null);
@@ -50,12 +49,21 @@ export const Taskbar: React.FC = () => {
 
   const isVertical = taskbarPosition === 'left' || taskbarPosition === 'right';
 
-  const positionClasses = {
-    bottom: 'bottom-0 left-0 right-0 h-12 border-t',
-    top: 'top-0 left-0 right-0 h-12 border-b',
-    left: 'left-0 top-0 bottom-0 w-12 border-r',
-    right: 'right-0 top-0 bottom-0 w-12 border-l',
+  const sizeMap = {
+    sm: isVertical ? 'w-10' : 'h-10',
+    md: isVertical ? 'w-12' : 'h-12',
+    lg: isVertical ? 'w-16' : 'h-16',
   };
+
+  const positionClasses = {
+    bottom: `bottom-0 left-0 right-0 ${sizeMap[taskbarSize]} border-t`,
+    top: `top-0 left-0 right-0 ${sizeMap[taskbarSize]} border-b`,
+    left: `left-0 top-0 bottom-0 ${sizeMap[taskbarSize]} border-r`,
+    right: `right-0 top-0 bottom-0 ${sizeMap[taskbarSize]} border-l`,
+  };
+
+  const iconSize = taskbarSize === 'sm' ? 14 : taskbarSize === 'lg' ? 24 : 18;
+  const logoSizeClass = taskbarSize === 'sm' ? 'text-lg' : taskbarSize === 'lg' ? 'text-2xl' : 'text-xl';
 
   const VolumeIcon = volume === 0 ? VolumeX : volume < 50 ? Volume1 : Volume2;
 
@@ -74,7 +82,7 @@ export const Taskbar: React.FC = () => {
             isStartOpen && "bg-white/10"
           )}
         >
-          <span className="text-xl font-black text-accent font-headline tracking-tighter select-none leading-none">N</span>
+          <span className={cn("font-black text-accent font-headline tracking-tighter select-none leading-none", logoSizeClass)}>N</span>
         </button>
         {isStartOpen && <StartMenu onClose={() => setIsStartOpen(false)} />}
       </div>
@@ -100,7 +108,7 @@ export const Taskbar: React.FC = () => {
                 )}
                 title={item.label}
               >
-                <Icon size={18} />
+                <Icon size={iconSize} />
               </button>
               {isAppOpen && (
                 <div className={cn(
@@ -127,7 +135,7 @@ export const Taskbar: React.FC = () => {
                 )}
                 title={window.title}
               >
-                <div className="w-5 h-5 bg-accent/20 rounded-md border border-accent/40" />
+                <div className={cn("bg-accent/20 rounded-md border border-accent/40", taskbarSize === 'sm' ? 'w-3 h-3' : taskbarSize === 'lg' ? 'w-6 h-6' : 'w-5 h-5')} />
               </button>
               <div className={cn(
                 "absolute bg-accent rounded-full transition-all",
