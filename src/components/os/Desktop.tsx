@@ -51,7 +51,7 @@ const DESKTOP_SHORTCUTS: { id: AppId; label: string; icon: any }[] = [
 ];
 
 export const Desktop: React.FC = () => {
-  const { wallpaper, openWindows, openApp, theme, powerStatus, powerOn } = useOS();
+  const { wallpaper, openWindows, openApp, theme, powerStatus, powerOn, taskbarPosition } = useOS();
   const [bootOpacity, setBootOpacity] = useState(1);
   const [shouldRenderBoot, setShouldRenderBoot] = useState(true);
 
@@ -86,6 +86,13 @@ export const Desktop: React.FC = () => {
     );
   }
 
+  const paddingClasses = {
+    bottom: 'pb-16 pt-4 px-4',
+    top: 'pt-16 pb-4 px-4',
+    left: 'pl-16 pr-4 py-4',
+    right: 'pr-16 pl-4 py-4',
+  };
+
   return (
     <div 
       className={cn(
@@ -99,7 +106,10 @@ export const Desktop: React.FC = () => {
         backgroundPosition: 'center'
       }}
     >
-      <div className="absolute inset-0 p-4 flex flex-col flex-wrap gap-4 content-start">
+      <div className={cn(
+        "absolute inset-0 flex flex-col flex-wrap gap-4 content-start transition-all duration-300",
+        paddingClasses[taskbarPosition]
+      )}>
         {DESKTOP_SHORTCUTS.map(shortcut => {
           const Icon = shortcut.icon;
           return (

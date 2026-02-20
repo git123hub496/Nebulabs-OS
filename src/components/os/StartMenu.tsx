@@ -28,6 +28,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
 interface StartMenuProps {
   onClose: () => void;
@@ -46,15 +47,25 @@ const APP_INFO: Record<AppId, { icon: any; label: string }> = {
 };
 
 export const StartMenu: React.FC<StartMenuProps> = ({ onClose }) => {
-  const { installedApps, openApp, restart, shutDown } = useOS();
+  const { installedApps, openApp, restart, shutDown, taskbarPosition } = useOS();
 
   const handleAppClick = (appId: AppId) => {
     openApp(appId, APP_INFO[appId].label);
     onClose();
   };
 
+  const positionClasses = {
+    bottom: 'bottom-14 left-0 animate-in slide-in-from-bottom-4',
+    top: 'top-14 left-0 animate-in slide-in-from-top-4',
+    left: 'left-14 bottom-0 animate-in slide-in-from-left-4',
+    right: 'right-14 bottom-0 animate-in slide-in-from-right-4',
+  };
+
   return (
-    <div className="absolute bottom-14 left-0 w-96 h-[560px] glass rounded-xl border window-shadow p-6 flex flex-col gap-6 animate-in slide-in-from-bottom-4 duration-300">
+    <div className={cn(
+      "absolute w-96 h-[560px] glass rounded-xl border window-shadow p-6 flex flex-col gap-6 duration-300 z-[10000]",
+      positionClasses[taskbarPosition]
+    )}>
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40" size={16} />
         <Input 

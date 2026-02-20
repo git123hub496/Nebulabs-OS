@@ -1,3 +1,4 @@
+
 "use client"
 
 import React, { useState, useRef, useEffect } from 'react';
@@ -11,7 +12,7 @@ interface WindowProps {
 }
 
 export const Window: React.FC<WindowProps> = ({ window: win, children }) => {
-  const { closeWindow, minimizeWindow, maximizeWindow, focusWindow, activeWindowId } = useOS();
+  const { closeWindow, minimizeWindow, maximizeWindow, focusWindow, activeWindowId, taskbarPosition } = useOS();
   const [position, setPosition] = useState({ x: 100 + (win.zIndex * 2), y: 50 + (win.zIndex * 2) });
   const [size, setSize] = useState({ width: 800, height: 600 });
   const [isDragging, setIsDragging] = useState(false);
@@ -61,20 +62,34 @@ export const Window: React.FC<WindowProps> = ({ window: win, children }) => {
 
   if (win.isMinimized) return null;
 
+  const getMaximizedStyles = () => {
+    if (!win.isMaximized) return {};
+    
+    const base = { zIndex: win.zIndex };
+    switch (taskbarPosition) {
+      case 'bottom': return { ...base, inset: 0, height: 'calc(100% - 48px)' };
+      case 'top': return { ...base, inset: '48px 0 0 0', height: 'calc(100% - 48px)' };
+      case 'left': return { ...base, inset: '0 0 0 48px', width: 'calc(100% - 48px)', height: '100%' };
+      case 'right': return { ...base, inset: '0 48px 0 0', width: 'calc(100% - 48px)', height: '100%' };
+      default: return { ...base, inset: 0 };
+    }
+  };
+
   return (
     <div
       ref={windowRef}
       className={cn(
-        "fixed flex flex-col glass rounded-xl border overflow-hidden window-shadow transition-[box-shadow,transform]",
+        "fixed flex flex-col glass rounded-xl border overflow-hidden window-shadow transition-all duration-300",
         isActive ? "z-[100] border-accent/40 ring-1 ring-accent/20" : "z-10 opacity-90",
-        win.isMaximized ? "inset-0 w-full h-full rounded-none" : ""
+        win.isMaximized ? "rounded-none" : ""
       )}
       style={{
-        left: win.isMaximized ? 0 : position.x,
-        top: win.isMaximized ? 0 : position.y,
-        width: win.isMaximized ? '100%' : size.width,
-        height: win.isMaximized ? 'calc(100% - 48px)' : size.height,
-        zIndex: win.zIndex
+        left: win.isMaximized ? undefined : position.x,
+        top: win.isMaximized ? undefined : position.y,
+        width: win.isMaximized ? undefined : size.width,
+        height: win.isMaximized ? undefined : size.height,
+        zIndex: win.zIndex,
+        ...getMaximizedStyles()
       }}
       onClick={() => focusWindow(win.id)}
     >

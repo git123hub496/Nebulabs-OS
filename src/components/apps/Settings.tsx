@@ -1,12 +1,20 @@
+
 "use client"
 
 import React, { useRef } from 'react';
-import { useOS } from '@/context/os-context';
-import { Monitor, Palette, User, Shield, Bell, HelpCircle, Upload, Image as ImageIcon, Sun, Moon } from 'lucide-react';
+import { useOS, TaskbarPosition } from '@/context/os-context';
+import { Monitor, Palette, User, Shield, Bell, HelpCircle, Upload, Image as ImageIcon, Sun, Moon, Layout } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const WALLPAPERS = [
   "https://picsum.photos/seed/nebula1/1920/1080",
@@ -16,7 +24,7 @@ const WALLPAPERS = [
 ];
 
 export const Settings: React.FC = () => {
-  const { wallpaper, updateWallpaper, theme, setTheme } = useOS();
+  const { wallpaper, updateWallpaper, theme, setTheme, taskbarPosition, setTaskbarPosition } = useOS();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -68,6 +76,32 @@ export const Settings: React.FC = () => {
                 />
                 <span className="text-xs font-medium opacity-50 uppercase tracking-tighter">Light</span>
               </div>
+            </div>
+          </section>
+
+          <section className="mb-10">
+            <h3 className="text-sm font-semibold mb-4 opacity-80">Desktop Layout</h3>
+            <div className="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-border">
+              <div className="flex items-center gap-4">
+                <div className="p-2 rounded-lg bg-black/20 text-accent">
+                  <Layout size={20} />
+                </div>
+                <div className="space-y-0.5">
+                  <Label className="text-sm font-bold">Taskbar Position</Label>
+                  <p className="text-xs opacity-50">Move the bar to your preferred edge</p>
+                </div>
+              </div>
+              <Select value={taskbarPosition} onValueChange={(v) => setTaskbarPosition(v as TaskbarPosition)}>
+                <SelectTrigger className="w-[120px] bg-black/20 border-white/10 text-xs">
+                  <SelectValue placeholder="Position" />
+                </SelectTrigger>
+                <SelectContent className="bg-[#1e2731] border-white/10 text-white">
+                  <SelectItem value="top">Top</SelectItem>
+                  <SelectItem value="bottom">Bottom</SelectItem>
+                  <SelectItem value="left">Left</SelectItem>
+                  <SelectItem value="right">Right</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </section>
 

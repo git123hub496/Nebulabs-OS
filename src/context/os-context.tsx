@@ -6,6 +6,7 @@ import React, { createContext, useContext, useState, ReactNode, useEffect } from
 export type AppId = 'store' | 'files' | 'settings' | 'assistant' | 'google-drive' | 'notes' | 'calc' | 'terminal' | 'browser';
 export type ThemeMode = 'dark' | 'light';
 export type PowerStatus = 'on' | 'off' | 'booting';
+export type TaskbarPosition = 'top' | 'bottom' | 'left' | 'right';
 
 export interface WindowInstance {
   id: string;
@@ -32,6 +33,7 @@ interface OSContextType {
   notes: string;
   theme: ThemeMode;
   powerStatus: PowerStatus;
+  taskbarPosition: TaskbarPosition;
   
   openApp: (appId: AppId, title: string) => void;
   closeWindow: (windowId: string) => void;
@@ -42,6 +44,7 @@ interface OSContextType {
   updateWallpaper: (url: string) => void;
   setNotes: (content: string) => void;
   setTheme: (theme: ThemeMode) => void;
+  setTaskbarPosition: (position: TaskbarPosition) => void;
   restart: () => void;
   shutDown: () => void;
   powerOn: () => void;
@@ -69,6 +72,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   const [notes, setNotesState] = useState("");
   const [theme, setThemeState] = useState<ThemeMode>('dark');
   const [powerStatus, setPowerStatus] = useState<PowerStatus>('booting');
+  const [taskbarPosition, setTaskbarPositionState] = useState<TaskbarPosition>('bottom');
   const [nextZIndex, setNextZIndex] = useState(10);
 
   useEffect(() => {
@@ -77,6 +81,9 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     
     const savedTheme = localStorage.getItem('nebula_theme') as ThemeMode;
     if (savedTheme) setThemeState(savedTheme);
+
+    const savedPosition = localStorage.getItem('nebula_taskbar_pos') as TaskbarPosition;
+    if (savedPosition) setTaskbarPositionState(savedPosition);
 
     const bootTimer = setTimeout(() => setPowerStatus('on'), 2600);
     return () => clearTimeout(bootTimer);
@@ -90,6 +97,11 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   const setTheme = (newTheme: ThemeMode) => {
     setThemeState(newTheme);
     localStorage.setItem('nebula_theme', newTheme);
+  };
+
+  const setTaskbarPosition = (position: TaskbarPosition) => {
+    setTaskbarPositionState(position);
+    localStorage.setItem('nebula_taskbar_pos', position);
   };
 
   const powerOn = () => {
@@ -189,6 +201,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       notes,
       theme,
       powerStatus,
+      taskbarPosition,
       openApp,
       closeWindow,
       minimizeWindow,
@@ -198,6 +211,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       updateWallpaper,
       setNotes,
       setTheme,
+      setTaskbarPosition,
       restart,
       shutDown,
       powerOn,
