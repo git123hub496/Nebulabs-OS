@@ -1,3 +1,4 @@
+
 "use client"
 
 import React from 'react';
@@ -46,7 +47,7 @@ const APP_INFO: Record<AppId, { icon: any; label: string }> = {
 };
 
 export const StartMenu: React.FC<StartMenuProps> = ({ onClose }) => {
-  const { installedApps, openApp, restart, shutDown, taskbarPosition, accentColor } = useOS();
+  const { installedApps, openApp, restart, shutDown, taskbarPosition, accentColor, currentUser, logout } = useOS();
 
   const handleAppClick = (appId: AppId) => {
     openApp(appId, APP_INFO[appId].label);
@@ -54,10 +55,10 @@ export const StartMenu: React.FC<StartMenuProps> = ({ onClose }) => {
   };
 
   const positionClasses = {
-    bottom: 'bottom-12 left-0 animate-in slide-in-from-bottom-2 origin-bottom-left',
-    top: 'top-12 left-0 animate-in slide-in-from-top-2 origin-top-left',
-    left: 'left-12 top-0 animate-in slide-in-from-left-2 origin-top-left',
-    right: 'right-12 top-0 animate-in slide-in-from-right-2 origin-top-right',
+    bottom: 'bottom-14 left-0 animate-in slide-in-from-bottom-2 origin-bottom-left',
+    top: 'top-14 left-0 animate-in slide-in-from-top-2 origin-top-left',
+    left: 'left-14 top-0 animate-in slide-in-from-left-2 origin-top-left',
+    right: 'right-14 top-0 animate-in slide-in-from-right-2 origin-top-right',
   };
 
   return (
@@ -119,11 +120,16 @@ export const StartMenu: React.FC<StartMenuProps> = ({ onClose }) => {
       <div className="border-t border-white/10 pt-4 mt-auto flex items-center justify-between">
         <div className="flex items-center gap-3 overflow-hidden">
           <Avatar className="w-10 h-10 border-2 border-accent/20">
-            <AvatarFallback className="bg-accent text-primary font-bold">G</AvatarFallback>
+            <AvatarFallback 
+              className="text-white font-bold"
+              style={{ backgroundColor: currentUser?.avatarColor || 'var(--accent)' }}
+            >
+              {currentUser?.username[0].toUpperCase() || 'G'}
+            </AvatarFallback>
           </Avatar>
           <div className="flex flex-col overflow-hidden">
-            <span className="text-sm font-bold text-white/90 truncate">Guest User</span>
-            <span className="text-[10px] text-accent/60 truncate font-medium uppercase tracking-tighter">System Administrator</span>
+            <span className="text-sm font-bold text-white/90 truncate">{currentUser?.username || 'Guest User'}</span>
+            <span className="text-[10px] text-accent/60 truncate font-medium uppercase tracking-tighter">Local Administrator</span>
           </div>
         </div>
         
@@ -144,7 +150,7 @@ export const StartMenu: React.FC<StartMenuProps> = ({ onClose }) => {
                 <span className="font-medium">Shut Down</span>
               </DropdownMenuItem>
               <DropdownMenuSeparator className="bg-white/10" />
-              <DropdownMenuItem className="gap-3 cursor-pointer p-3 rounded-lg hover:bg-destructive/10 focus:bg-destructive/20 text-destructive font-medium">
+              <DropdownMenuItem onClick={logout} className="gap-3 cursor-pointer p-3 rounded-lg hover:bg-destructive/10 focus:bg-destructive/20 text-destructive font-medium">
                 <LogOut size={16} />
                 <span>Log Out</span>
               </DropdownMenuItem>

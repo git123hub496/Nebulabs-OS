@@ -9,6 +9,12 @@ export type PowerStatus = 'on' | 'off' | 'booting';
 export type TaskbarPosition = 'top' | 'bottom' | 'left' | 'right';
 export type AccentColor = 'default' | 'blue' | 'purple' | 'rose' | 'orange' | 'green';
 
+export interface LocalUser {
+  id: string;
+  username: string;
+  avatarColor: string;
+}
+
 export interface WindowInstance {
   id: string;
   appId: AppId;
@@ -28,6 +34,8 @@ export interface FileSystemItem {
 }
 
 interface OSContextType {
+  currentUser: LocalUser | null;
+  accounts: LocalUser[];
   openWindows: WindowInstance[];
   activeWindowId: string | null;
   installedApps: AppId[];
@@ -39,6 +47,9 @@ interface OSContextType {
   powerStatus: PowerStatus;
   taskbarPosition: TaskbarPosition;
   
+  login: (userId: string) => void;
+  logout: () => void;
+  createAccount: (username: string) => void;
   openApp: (appId: AppId, title: string) => void;
   closeWindow: (windowId: string) => void;
   minimizeWindow: (windowId: string) => void;
@@ -68,7 +79,11 @@ const INITIAL_FILES: FileSystemItem[] = [
 
 const INITIAL_APPS: AppId[] = ['store', 'files', 'settings', 'assistant', 'notes', 'calc', 'terminal', 'browser'];
 
+const AVATAR_COLORS = ['#9333ea', '#3b82f6', '#e11d48', '#f97316', '#16a34a'];
+
 export const OSProvider = ({ children }: { children: ReactNode }) => {
+  const [currentUser, setCurrentUser] = useState<LocalUser | null>(null);
+  const [accounts, setAccounts] = useState<LocalUser[]>([]);
   const [openWindows, setOpenWindows] = useState<WindowInstance[]>([]);
   const [activeWindowId, setActiveWindowId] = useState<string | null>(null);
   const [installedApps, setInstalledApps] = useState<AppId[]>(INITIAL_APPS);
@@ -81,44 +96,96 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   const [taskbarPosition, setTaskbarPositionState] = useState<TaskbarPosition>('bottom');
   const [nextZIndex, setNextZIndex] = useState(10);
 
+  // Load accounts on initial mount
   useEffect(() => {
-    const savedNotes = localStorage.getItem('nebula_notes');
-    if (savedNotes) setNotesState(savedNotes);
-    
-    const savedTheme = localStorage.getItem('nebula_theme') as ThemeMode;
-    if (savedTheme) setThemeState(savedTheme);
+    const savedAccounts = localStorage.getItem('nebula_accounts');
+    if (savedAccounts) {
+      setAccounts(JSON.parse(savedAccounts));
+    } else {
+      // Create a default guest account if none exists
+      const guest = { id: 'guest', username: 'Guest', avatarColor: AVATAR_COLORS[0] };
+      setAccounts([guest]);
+      localStorage.setItem('nebula_accounts', JSON.stringify([guest]));
+    }
 
-    const savedAccent = localStorage.getItem('nebula_accent') as AccentColor;
-    if (savedAccent) setAccentColorState(savedAccent);
-
-    const savedPosition = localStorage.getItem('nebula_taskbar_pos') as TaskbarPosition;
-    if (savedPosition) setTaskbarPositionState(savedPosition);
-
-    const savedWallpaper = localStorage.getItem('nebula_wallpaper');
-    if (savedWallpaper) setWallpaper(savedWallpaper);
+    const savedCurrentUserId = localStorage.getItem('nebula_current_user_id');
+    if (savedCurrentUserId) {
+      const accs = JSON.parse(localStorage.getItem('nebula_accounts') || '[]');
+      const user = accs.find((a: LocalUser) => a.id === savedCurrentUserId);
+      if (user) login(user.id);
+    }
 
     const bootTimer = setTimeout(() => setPowerStatus('on'), 2600);
     return () => clearTimeout(bootTimer);
   }, []);
 
+  // Sync user-specific data whenever the current user changes
+  useEffect(() => {
+    if (!currentUser) return;
+
+    const uid = currentUser.id;
+    const savedNotes = localStorage.getItem(`nebula_${uid}_notes`);
+    setNotesState(savedNotes || "");
+    
+    const savedTheme = localStorage.getItem(`nebula_${uid}_theme`) as ThemeMode;
+    setThemeState(savedTheme || 'dark');
+
+    const savedAccent = localStorage.getItem(`nebula_${uid}_accent`) as AccentColor;
+    setAccentColorState(savedAccent || 'purple');
+
+    const savedPosition = localStorage.getItem(`nebula_${uid}_taskbar_pos`) as TaskbarPosition;
+    setTaskbarPositionState(savedPosition || 'bottom');
+
+    const savedWallpaper = localStorage.getItem(`nebula_${uid}_wallpaper`);
+    setWallpaper(savedWallpaper || "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=1920");
+
+  }, [currentUser]);
+
+  const login = (userId: string) => {
+    const user = accounts.find(a => a.id === userId);
+    if (user) {
+      setCurrentUser(user);
+      localStorage.setItem('nebula_current_user_id', userId);
+    }
+  };
+
+  const logout = () => {
+    setCurrentUser(null);
+    localStorage.removeItem('nebula_current_user_id');
+    setOpenWindows([]);
+    setActiveWindowId(null);
+  };
+
+  const createAccount = (username: string) => {
+    const newAcc: LocalUser = {
+      id: Math.random().toString(36).substr(2, 9),
+      username,
+      avatarColor: AVATAR_COLORS[accounts.length % AVATAR_COLORS.length]
+    };
+    const updated = [...accounts, newAcc];
+    setAccounts(updated);
+    localStorage.setItem('nebula_accounts', JSON.stringify(updated));
+    login(newAcc.id);
+  };
+
   const setNotes = (content: string) => {
     setNotesState(content);
-    localStorage.setItem('nebula_notes', content);
+    if (currentUser) localStorage.setItem(`nebula_${currentUser.id}_notes`, content);
   };
 
   const setTheme = (newTheme: ThemeMode) => {
     setThemeState(newTheme);
-    localStorage.setItem('nebula_theme', newTheme);
+    if (currentUser) localStorage.setItem(`nebula_${currentUser.id}_theme`, newTheme);
   };
 
   const setAccentColor = (color: AccentColor) => {
     setAccentColorState(color);
-    localStorage.setItem('nebula_accent', color);
+    if (currentUser) localStorage.setItem(`nebula_${currentUser.id}_accent`, color);
   };
 
   const setTaskbarPosition = (position: TaskbarPosition) => {
     setTaskbarPositionState(position);
-    localStorage.setItem('nebula_taskbar_pos', position);
+    if (currentUser) localStorage.setItem(`nebula_${currentUser.id}_taskbar_pos`, position);
   };
 
   const powerOn = () => {
@@ -149,7 +216,6 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       return;
     }
 
-    // Set initial sizes based on app type
     let initialWidth = 800;
     let initialHeight = 600;
 
@@ -214,7 +280,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
 
   const updateWallpaper = (url: string) => {
     setWallpaper(url);
-    localStorage.setItem('nebula_wallpaper', url);
+    if (currentUser) localStorage.setItem(`nebula_${currentUser.id}_wallpaper`, url);
   };
 
   const createFolder = (name: string, parentId: string | null) => {
@@ -233,6 +299,8 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
 
   return (
     <OSContext.Provider value={{
+      currentUser,
+      accounts,
       openWindows,
       activeWindowId,
       installedApps,
@@ -243,6 +311,9 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       accentColor,
       powerStatus,
       taskbarPosition,
+      login,
+      logout,
+      createAccount,
       openApp,
       closeWindow,
       minimizeWindow,

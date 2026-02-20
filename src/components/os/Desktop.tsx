@@ -1,3 +1,4 @@
+
 "use client"
 
 import React, { useState, useEffect } from 'react';
@@ -5,6 +6,7 @@ import { useOS, AppId } from '@/context/os-context';
 import { Window } from './Window';
 import { Taskbar } from './Taskbar';
 import { ContextMenu } from './ContextMenu';
+import { LoginScreen } from './LoginScreen';
 import { 
   ShoppingBag, 
   FolderOpen, 
@@ -51,7 +53,7 @@ const DESKTOP_SHORTCUTS: { id: AppId; label: string; icon: any }[] = [
 ];
 
 export const Desktop: React.FC = () => {
-  const { wallpaper, openWindows, openApp, theme, accentColor, powerStatus, powerOn, taskbarPosition } = useOS();
+  const { wallpaper, openWindows, openApp, theme, accentColor, powerStatus, powerOn, taskbarPosition, currentUser } = useOS();
   const [bootOpacity, setBootOpacity] = useState(1);
   const [shouldRenderBoot, setShouldRenderBoot] = useState(true);
   const [contextMenu, setContextMenu] = useState<{ x: number, y: number } | null>(null);
@@ -90,6 +92,11 @@ export const Desktop: React.FC = () => {
         <div className="text-white/20 text-xs italic">Click to power on</div>
       </div>
     );
+  }
+
+  // If powered on but no user logged in, show login screen
+  if (powerStatus === 'on' && !currentUser && !shouldRenderBoot) {
+    return <LoginScreen />;
   }
 
   const paddingClasses = {
