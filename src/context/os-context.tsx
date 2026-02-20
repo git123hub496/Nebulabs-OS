@@ -113,6 +113,11 @@ interface OSContextType {
 
 const OSContext = createContext<OSContextType | undefined>(undefined);
 
+// Grid configuration for desktop icons
+const GRID_X = 100;
+const GRID_Y = 110;
+const PADDING = 20;
+
 const INITIAL_FILES: FileSystemItem[] = [
   { id: '1', name: 'Documents', type: 'folder', parentId: null },
   { id: '2', name: 'Pictures', type: 'folder', parentId: null },
@@ -133,12 +138,12 @@ const APP_INFO: Record<AppId, { icon: any; label: string }> = {
 };
 
 const INITIAL_DESKTOP: DesktopShortcut[] = [
-  { id: 'browser', label: 'Nebula Browser', icon: Globe, x: 20, y: 20 },
-  { id: 'files', label: 'File Explorer', icon: FolderOpen, x: 20, y: 130 },
-  { id: 'store', label: 'App Store', icon: ShoppingBag, x: 20, y: 240 },
-  { id: 'assistant', label: 'AI Assistant', icon: MessageSquare, x: 20, y: 350 },
-  { id: 'notes', label: 'Notes', icon: FileText, x: 20, y: 460 },
-  { id: 'trash', label: 'Recycling Bin', icon: Trash2, x: 20, y: 570 },
+  { id: 'browser', label: 'Nebula Browser', icon: Globe, x: PADDING, y: PADDING },
+  { id: 'files', label: 'File Explorer', icon: FolderOpen, x: PADDING, y: PADDING + GRID_Y },
+  { id: 'store', label: 'App Store', icon: ShoppingBag, x: PADDING, y: PADDING + (GRID_Y * 2) },
+  { id: 'assistant', label: 'AI Assistant', icon: MessageSquare, x: PADDING, y: PADDING + (GRID_Y * 3) },
+  { id: 'notes', label: 'Notes', icon: FileText, x: PADDING, y: PADDING + (GRID_Y * 4) },
+  { id: 'trash', label: 'Recycling Bin', icon: Trash2, x: PADDING, y: PADDING + (GRID_Y * 5) },
 ];
 
 const INITIAL_APPS: AppId[] = ['store', 'files', 'settings', 'assistant', 'notes', 'calc', 'terminal', 'browser', 'trash'];
@@ -465,7 +470,12 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const updateDesktopAppPosition = (id: AppId, x: number, y: number) => {
-    const updated = desktopApps.map(app => app.id === id ? { ...app, x, y } : app);
+    const snappedX = Math.round((x - PADDING) / GRID_X) * GRID_X + PADDING;
+    const snappedY = Math.round((y - PADDING) / GRID_Y) * GRID_Y + PADDING;
+    
+    const updated = desktopApps.map(app => 
+      app.id === id ? { ...app, x: snappedX, y: snappedY } : app
+    );
     setDesktopApps(updated);
     const stored = updated.map(({ icon, ...app }) => app);
     saveSetting('desktop_apps', stored);
@@ -479,12 +489,13 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       saveSetting('desktop_apps', updated.map(({ icon, ...app }) => app));
     } else {
       const info = APP_INFO[id];
+      // Place new apps on the grid vertically starting from first column
       const newApp = { 
         id, 
         label: info.label, 
         icon: info.icon, 
-        x: 20, 
-        y: 20 + (desktopApps.length * 110) 
+        x: PADDING, 
+        y: PADDING + (desktopApps.length * GRID_Y) 
       };
       const updated = [...desktopApps, newApp];
       setDesktopApps(updated);

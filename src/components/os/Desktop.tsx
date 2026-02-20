@@ -59,6 +59,7 @@ export const Desktop: React.FC = () => {
   // Dragging State
   const [draggingAppId, setDraggingAppId] = useState<AppId | null>(null);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const [currentDragPos, setCurrentDragPos] = useState({ x: 0, y: 0 });
   const desktopRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -89,6 +90,7 @@ export const Desktop: React.FC = () => {
         x: e.clientX - app.x,
         y: e.clientY - app.y
       });
+      setCurrentDragPos({ x: app.x, y: app.y });
     }
   };
 
@@ -96,12 +98,15 @@ export const Desktop: React.FC = () => {
     if (draggingAppId) {
       const newX = e.clientX - dragOffset.x;
       const newY = e.clientY - dragOffset.y;
-      updateDesktopAppPosition(draggingAppId, newX, newY);
+      setCurrentDragPos({ x: newX, y: newY });
     }
   };
 
   const handleMouseUp = () => {
-    setDraggingAppId(null);
+    if (draggingAppId) {
+      updateDesktopAppPosition(draggingAppId, currentDragPos.x, currentDragPos.y);
+      setDraggingAppId(null);
+    }
   };
 
   if (powerStatus === 'off') {
@@ -188,14 +193,19 @@ export const Desktop: React.FC = () => {
       {/* Desktop Icons */}
       {desktopApps.map(shortcut => {
         const Icon = shortcut.icon;
+        const isDragging = draggingAppId === shortcut.id;
+        
         return (
           <div 
             key={shortcut.id}
             className={cn(
-              "absolute desktop-icon group transition-shadow",
-              draggingAppId === shortcut.id ? "z-50 opacity-50 scale-105 pointer-events-none" : ""
+              "absolute desktop-icon group transition-all",
+              isDragging ? "z-50 opacity-50 scale-105 pointer-events-none transition-none" : "duration-200"
             )}
-            style={{ left: shortcut.x, top: shortcut.y }}
+            style={{ 
+              left: isDragging ? currentDragPos.x : shortcut.x, 
+              top: isDragging ? currentDragPos.y : shortcut.y 
+            }}
             onMouseDown={(e) => handleMouseDown(e, shortcut.id)}
             onDoubleClick={(e) => {
               e.stopPropagation();
