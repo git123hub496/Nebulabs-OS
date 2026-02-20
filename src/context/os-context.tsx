@@ -7,6 +7,7 @@ export type AppId = 'store' | 'files' | 'settings' | 'assistant' | 'google-drive
 export type ThemeMode = 'dark' | 'light';
 export type PowerStatus = 'on' | 'off' | 'booting';
 export type TaskbarPosition = 'top' | 'bottom' | 'left' | 'right';
+export type AccentColor = 'default' | 'blue' | 'purple' | 'rose' | 'orange' | 'green';
 
 export interface WindowInstance {
   id: string;
@@ -32,6 +33,7 @@ interface OSContextType {
   wallpaper: string;
   notes: string;
   theme: ThemeMode;
+  accentColor: AccentColor;
   powerStatus: PowerStatus;
   taskbarPosition: TaskbarPosition;
   
@@ -44,6 +46,7 @@ interface OSContextType {
   updateWallpaper: (url: string) => void;
   setNotes: (content: string) => void;
   setTheme: (theme: ThemeMode) => void;
+  setAccentColor: (color: AccentColor) => void;
   setTaskbarPosition: (position: TaskbarPosition) => void;
   restart: () => void;
   shutDown: () => void;
@@ -68,9 +71,10 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   const [activeWindowId, setActiveWindowId] = useState<string | null>(null);
   const [installedApps, setInstalledApps] = useState<AppId[]>(INITIAL_APPS);
   const [fileSystem, setFileSystem] = useState<FileSystemItem[]>(INITIAL_FILES);
-  const [wallpaper, setWallpaper] = useState("https://picsum.photos/seed/nebula1/1920/1080");
+  const [wallpaper, setWallpaper] = useState("https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=1920");
   const [notes, setNotesState] = useState("");
   const [theme, setThemeState] = useState<ThemeMode>('dark');
+  const [accentColor, setAccentColorState] = useState<AccentColor>('purple');
   const [powerStatus, setPowerStatus] = useState<PowerStatus>('booting');
   const [taskbarPosition, setTaskbarPositionState] = useState<TaskbarPosition>('bottom');
   const [nextZIndex, setNextZIndex] = useState(10);
@@ -82,8 +86,14 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     const savedTheme = localStorage.getItem('nebula_theme') as ThemeMode;
     if (savedTheme) setThemeState(savedTheme);
 
+    const savedAccent = localStorage.getItem('nebula_accent') as AccentColor;
+    if (savedAccent) setAccentColorState(savedAccent);
+
     const savedPosition = localStorage.getItem('nebula_taskbar_pos') as TaskbarPosition;
     if (savedPosition) setTaskbarPositionState(savedPosition);
+
+    const savedWallpaper = localStorage.getItem('nebula_wallpaper');
+    if (savedWallpaper) setWallpaper(savedWallpaper);
 
     const bootTimer = setTimeout(() => setPowerStatus('on'), 2600);
     return () => clearTimeout(bootTimer);
@@ -97,6 +107,11 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   const setTheme = (newTheme: ThemeMode) => {
     setThemeState(newTheme);
     localStorage.setItem('nebula_theme', newTheme);
+  };
+
+  const setAccentColor = (color: AccentColor) => {
+    setAccentColorState(color);
+    localStorage.setItem('nebula_accent', color);
   };
 
   const setTaskbarPosition = (position: TaskbarPosition) => {
@@ -175,7 +190,10 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const updateWallpaper = (url: string) => setWallpaper(url);
+  const updateWallpaper = (url: string) => {
+    setWallpaper(url);
+    localStorage.setItem('nebula_wallpaper', url);
+  };
 
   const createFolder = (name: string, parentId: string | null) => {
     const newFolder: FileSystemItem = {
@@ -200,6 +218,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       wallpaper,
       notes,
       theme,
+      accentColor,
       powerStatus,
       taskbarPosition,
       openApp,
@@ -211,6 +230,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       updateWallpaper,
       setNotes,
       setTheme,
+      setAccentColor,
       setTaskbarPosition,
       restart,
       shutDown,

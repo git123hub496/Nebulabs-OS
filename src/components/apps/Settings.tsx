@@ -2,8 +2,8 @@
 "use client"
 
 import React, { useRef } from 'react';
-import { useOS, TaskbarPosition } from '@/context/os-context';
-import { Monitor, Palette, User, Shield, Bell, HelpCircle, Upload, Image as ImageIcon, Sun, Moon, Layout } from 'lucide-react';
+import { useOS, TaskbarPosition, AccentColor } from '@/context/os-context';
+import { Monitor, Palette, User, Shield, Bell, HelpCircle, Upload, Image as ImageIcon, Sun, Moon, Layout, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
@@ -17,14 +17,23 @@ import {
 } from "@/components/ui/select";
 
 const WALLPAPERS = [
+  "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=1920",
+  "https://images.unsplash.com/photo-1599625803125-6efff06c9c37?auto=format&fit=crop&q=80&w=1920",
+  "https://images.unsplash.com/photo-1550684848-fac1c5b4e853?auto=format&fit=crop&q=80&w=1920",
   "https://picsum.photos/seed/nebula1/1920/1080",
-  "https://picsum.photos/seed/nebula2/1920/1080",
-  "https://picsum.photos/seed/nebula3/1920/1080",
-  "https://picsum.photos/seed/space1/1920/1080",
+];
+
+const ACCENT_COLORS: { id: AccentColor; class: string; label: string; color: string }[] = [
+  { id: 'purple', class: 'bg-[#9333ea]', label: 'Purple', color: '262.1 83.3% 57.8%' },
+  { id: 'blue', class: 'bg-[#3b82f6]', label: 'Blue', color: '217.2 91.2% 59.8%' },
+  { id: 'rose', class: 'bg-[#e11d48]', label: 'Rose', color: '346.8 77.2% 49.8%' },
+  { id: 'orange', class: 'bg-[#f97316]', label: 'Orange', color: '24.6 95% 53.1%' },
+  { id: 'green', class: 'bg-[#16a34a]', label: 'Green', color: '142.1 76.2% 36.3%' },
+  { id: 'default', class: 'bg-[#94a3b8]', label: 'Nebula', color: '125 31% 74%' },
 ];
 
 export const Settings: React.FC = () => {
-  const { wallpaper, updateWallpaper, theme, setTheme, taskbarPosition, setTaskbarPosition } = useOS();
+  const { wallpaper, updateWallpaper, theme, setTheme, taskbarPosition, setTaskbarPosition, accentColor, setAccentColor } = useOS();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -60,7 +69,7 @@ export const Settings: React.FC = () => {
             <h3 className="text-sm font-semibold mb-4 opacity-80">Theme Mode</h3>
             <div className="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-border">
               <div className="flex items-center gap-4">
-                <div className={cn("p-2 rounded-lg", theme === 'light' ? "bg-accent text-white" : "bg-black/20 text-accent")}>
+                <div className={cn("p-2 rounded-lg bg-black/20 text-accent")}>
                   {theme === 'light' ? <Sun size={20} /> : <Moon size={20} />}
                 </div>
                 <div className="space-y-0.5">
@@ -77,6 +86,27 @@ export const Settings: React.FC = () => {
                 <span className="text-xs font-medium opacity-50 uppercase tracking-tighter">Light</span>
               </div>
             </div>
+          </section>
+
+          <section className="mb-10">
+            <h3 className="text-sm font-semibold mb-4 opacity-80">Accent Color</h3>
+            <div className="grid grid-cols-6 gap-3">
+              {ACCENT_COLORS.map((color) => (
+                <button
+                  key={color.id}
+                  onClick={() => setAccentColor(color.id)}
+                  className={cn(
+                    "group relative aspect-square rounded-full flex items-center justify-center border-2 transition-all",
+                    color.class,
+                    accentColor === color.id ? "border-white scale-110 shadow-lg shadow-black/20" : "border-transparent opacity-80 hover:opacity-100"
+                  )}
+                  title={color.label}
+                >
+                  {accentColor === color.id && <Check size={20} className="text-white drop-shadow-md" />}
+                </button>
+              ))}
+            </div>
+            <p className="mt-3 text-[11px] opacity-40 italic">This color will be used for buttons, links, and highlights.</p>
           </section>
 
           <section className="mb-10">

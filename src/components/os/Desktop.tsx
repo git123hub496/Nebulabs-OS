@@ -51,7 +51,7 @@ const DESKTOP_SHORTCUTS: { id: AppId; label: string; icon: any }[] = [
 ];
 
 export const Desktop: React.FC = () => {
-  const { wallpaper, openWindows, openApp, theme, powerStatus, powerOn, taskbarPosition } = useOS();
+  const { wallpaper, openWindows, openApp, theme, accentColor, powerStatus, powerOn, taskbarPosition } = useOS();
   const [bootOpacity, setBootOpacity] = useState(1);
   const [shouldRenderBoot, setShouldRenderBoot] = useState(true);
 
@@ -93,11 +93,14 @@ export const Desktop: React.FC = () => {
     right: 'pr-16 pl-4 py-4',
   };
 
+  const accentClass = accentColor !== 'default' ? `accent-${accentColor}` : '';
+
   return (
     <div 
       className={cn(
         "fixed inset-0 overflow-hidden select-none transition-opacity duration-1000",
         theme === 'light' ? "light" : "",
+        accentClass,
         powerStatus === 'booting' ? "opacity-0" : "opacity-100"
       )}
       style={{
