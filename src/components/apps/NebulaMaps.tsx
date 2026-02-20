@@ -10,16 +10,15 @@ import { cn } from '@/lib/utils';
 export const NebulaMaps: React.FC = () => {
   const { isOnline } = useOS();
   const [search, setSearch] = useState("San Francisco, CA");
-  const [mapUrl, setMapUrl] = useState(`https://www.google.com/maps/embed/v1/place?key=REPLACE_WITH_API_KEY&q=San+Francisco,CA`);
+  // Using the keyless embed fallback for the initial state to avoid API key errors
+  const [mapUrl, setMapUrl] = useState(`https://www.google.com/maps?q=San+Francisco,CA&output=embed`);
   const [isSecureView, setIsSecureView] = useState(true);
 
-  // Note: For a real app, you'd use a Google Maps API key. 
-  // For this prototype, we'll use the public search URL which is more embed-friendly or fallback to a safe view.
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (!isOnline) return;
     
-    // Using a simpler embed URL for prototyping that doesn't always require a hard-coded key for basic views
+    // Using a simpler embed URL for prototyping that doesn't require a hard-coded API key
     const encodedSearch = encodeURIComponent(search);
     setMapUrl(`https://www.google.com/maps?q=${encodedSearch}&output=embed`);
   };
