@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
@@ -43,6 +44,7 @@ export interface WindowInstance {
   zIndex: number;
   initialWidth?: number;
   initialHeight?: number;
+  displayId?: string; // Target display for this window
 }
 
 export interface FileSystemItem {
@@ -90,6 +92,7 @@ interface OSContextType {
   isWidgetsOpen: boolean;
   isQuickSettingsOpen: boolean;
   systemStats: { cpu: number; ram: number; net: number };
+  currentDisplayId: string;
   
   login: (userId: string) => void;
   logout: () => void;
@@ -100,6 +103,7 @@ interface OSContextType {
   maximizeWindow: (windowId: string) => void;
   snapWindow: (windowId: string, side: 'left' | 'right' | null) => void;
   focusWindow: (windowId: string) => void;
+  moveWindowToDisplay: (windowId: string, displayId: string) => void;
   installApp: (appId: AppId) => void;
   updateWallpaper: (url: string) => void;
   setNotes: (content: string) => void;
@@ -117,6 +121,7 @@ interface OSContextType {
   setBrightness: (b: number) => void;
   setIsWidgetsOpen: (isOpen: boolean) => void;
   setIsQuickSettingsOpen: (isOpen: boolean) => void;
+  setCurrentDisplayId: (id: string) => void;
   restart: () => void;
   shutDown: () => void;
   powerOn: () => void;
@@ -139,12 +144,6 @@ const GRID_X = 100;
 const GRID_Y = 110;
 const PADDING = 20;
 
-const INITIAL_FILES: FileSystemItem[] = [
-  { id: '1', name: 'Documents', type: 'folder', parentId: null },
-  { id: '2', name: 'Pictures', type: 'folder', parentId: null },
-  { id: '3', name: 'README.md', type: 'file', parentId: null },
-];
-
 export const APP_INFO: Record<AppId, { icon: any; label: string }> = {
   'browser': { icon: Globe, label: 'Nebula Browser' },
   'files': { icon: FolderOpen, label: 'File Explorer' },
@@ -161,6 +160,12 @@ export const APP_INFO: Record<AppId, { icon: any; label: string }> = {
   'monitor': { icon: Activity, label: 'System Monitor' },
   'calendar': { icon: CalendarIcon, label: 'Calendar' },
 };
+
+const INITIAL_FILES: FileSystemItem[] = [
+  { id: '1', name: 'Documents', type: 'folder', parentId: null },
+  { id: '2', name: 'Pictures', type: 'folder', parentId: null },
+  { id: '3', name: 'README.md', type: 'file', parentId: null },
+];
 
 const INITIAL_DESKTOP: DesktopShortcut[] = [
   { id: 'browser', label: 'Nebula Browser', icon: Globe, x: PADDING, y: PADDING },
@@ -208,6 +213,39 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   const [isQuickSettingsOpen, setIsQuickSettingsOpen] = useState(false);
   const [nextZIndex, setNextZIndex] = useState(10);
   const [systemStats, setSystemStats] = useState({ cpu: 12, ram: 42, net: 2 });
+  const [currentDisplayId, setDisplayIdState] = useState('1');
+
+  // Handle Multi-Display Synchronization
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (!currentUser) return;
+      const prefix = `nebula_${currentUser.id}_`;
+      if (e.key?.startsWith(prefix)) {
+        const key = e.key.replace(prefix, '');
+        const val = e.newValue;
+        if (!val) return;
+
+        try {
+          switch (key) {
+            case 'windows': setOpenWindows(JSON.parse(val)); break;
+            case 'active_window': setActiveWindowId(val); break;
+            case 'theme': setThemeState(val as ThemeMode); break;
+            case 'accent': setAccentColorState(val as AccentColor); break;
+            case 'wallpaper': setWallpaper(val); break;
+            case 'pinned_apps': setPinnedApps(JSON.parse(val)); break;
+            case 'brightness': setBrightnessState(parseInt(val)); break;
+            case 'volume': setVolumeState(parseInt(val)); break;
+            case 'power': setPowerStatus(val as PowerStatus); break;
+          }
+        } catch (err) {
+          console.error('Sync Error:', err);
+        }
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, [currentUser]);
 
   useEffect(() => {
     const savedAccounts = localStorage.getItem('nebula_accounts');
@@ -230,7 +268,6 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     return () => clearTimeout(bootTimer);
   }, []);
 
-  // Telemetry simulation
   useEffect(() => {
     if (powerStatus !== 'on') return;
     const interval = setInterval(() => {
@@ -272,7 +309,9 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     setPinnedApps(load('pinned_apps', INITIAL_PINNED));
     setFileSystem(load('file_system', INITIAL_FILES));
     setTrash(load('trash_items', []));
-    
+    setOpenWindows(load('windows', []));
+    setDisplayIdState(load('display_id', '1'));
+
     const savedWifi = load('wifi', "Nebula_Secure_5G");
     setCurrentWifi(savedWifi);
     setIsOnline(savedWifi !== OFFLINE_WIFI);
@@ -390,22 +429,36 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     saveSetting('brightness', b);
   };
 
+  const setCurrentDisplayId = (id: string) => {
+    setDisplayIdState(id);
+    saveSetting('display_id', id);
+  };
+
   const powerOn = () => {
     setPowerStatus('booting');
-    setTimeout(() => setPowerStatus('on'), 2600);
+    saveSetting('power', 'booting');
+    setTimeout(() => {
+      setPowerStatus('on');
+      saveSetting('power', 'on');
+    }, 2600);
   };
 
   const restart = () => {
     setOpenWindows([]);
     setActiveWindowId(null);
     setPowerStatus('booting');
-    setTimeout(() => setPowerStatus('on'), 2600);
+    saveSetting('power', 'booting');
+    setTimeout(() => {
+      setPowerStatus('on');
+      saveSetting('power', 'on');
+    }, 2600);
   };
 
   const shutDown = () => {
     setOpenWindows([]);
     setActiveWindowId(null);
     setPowerStatus('off');
+    saveSetting('power', 'off');
   };
 
   const openApp = (appId: AppId, title: string) => {
@@ -413,7 +466,9 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     if (existing) {
       focusWindow(existing.id);
       if (existing.isMinimized) {
-        setOpenWindows(prev => prev.map(w => w.id === existing.id ? { ...w, isMinimized: false } : w));
+        const updated = openWindows.map(w => w.id === existing.id ? { ...w, isMinimized: false, displayId: currentDisplayId } : w);
+        setOpenWindows(updated);
+        saveSetting('windows', updated);
       }
       return;
     }
@@ -421,34 +476,15 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     let initialWidth = 800;
     let initialHeight = 600;
 
-    if (appId === 'calc') {
-      initialWidth = 320;
-      initialHeight = 480;
-    } else if (appId === 'terminal') {
-      initialWidth = 700;
-      initialHeight = 450;
-    } else if (appId === 'notes') {
-      initialWidth = 500;
-      initialHeight = 600;
-    } else if (appId === 'assistant') {
-      initialWidth = 400;
-      initialHeight = 650;
-    } else if (appId === 'trash') {
-      initialWidth = 600;
-      initialHeight = 400;
-    } else if (appId === 'news') {
-      initialWidth = 900;
-      initialHeight = 700;
-    } else if (appId === 'maps') {
-      initialWidth = 950;
-      initialHeight = 650;
-    } else if (appId === 'monitor') {
-      initialWidth = 700;
-      initialHeight = 500;
-    } else if (appId === 'calendar') {
-      initialWidth = 850;
-      initialHeight = 600;
-    }
+    if (appId === 'calc') { initialWidth = 320; initialHeight = 480; }
+    else if (appId === 'terminal') { initialWidth = 700; initialHeight = 450; }
+    else if (appId === 'notes') { initialWidth = 500; initialHeight = 600; }
+    else if (appId === 'assistant') { initialWidth = 400; initialHeight = 650; }
+    else if (appId === 'trash') { initialWidth = 600; initialHeight = 400; }
+    else if (appId === 'news') { initialWidth = 900; initialHeight = 700; }
+    else if (appId === 'maps') { initialWidth = 950; initialHeight = 650; }
+    else if (appId === 'monitor') { initialWidth = 700; initialHeight = 500; }
+    else if (appId === 'calendar') { initialWidth = 850; initialHeight = 600; }
 
     const newId = `${appId}-${Date.now()}`;
     const newWindow: WindowInstance = {
@@ -459,38 +495,61 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       isMaximized: false,
       zIndex: nextZIndex,
       initialWidth,
-      initialHeight
+      initialHeight,
+      displayId: currentDisplayId
     };
 
-    setOpenWindows(prev => [...prev, newWindow]);
+    const updated = [...openWindows, newWindow];
+    setOpenWindows(updated);
     setActiveWindowId(newId);
     setNextZIndex(prev => prev + 1);
+    saveSetting('windows', updated);
+    saveSetting('active_window', newId);
   };
 
   const closeWindow = (windowId: string) => {
-    setOpenWindows(prev => prev.filter(w => w.id !== windowId));
+    const updated = openWindows.filter(w => w.id !== windowId);
+    setOpenWindows(updated);
     if (activeWindowId === windowId) {
       setActiveWindowId(null);
+      saveSetting('active_window', null);
     }
+    saveSetting('windows', updated);
   };
 
   const minimizeWindow = (windowId: string) => {
-    setOpenWindows(prev => prev.map(w => w.id === windowId ? { ...w, isMinimized: true } : w));
+    const updated = openWindows.map(w => w.id === windowId ? { ...w, isMinimized: true } : w);
+    setOpenWindows(updated);
     setActiveWindowId(null);
+    saveSetting('windows', updated);
+    saveSetting('active_window', null);
   };
 
   const maximizeWindow = (windowId: string) => {
-    setOpenWindows(prev => prev.map(w => w.id === windowId ? { ...w, isMaximized: !w.isMaximized, isSnapped: null } : w));
+    const updated = openWindows.map(w => w.id === windowId ? { ...w, isMaximized: !w.isMaximized, isSnapped: null } : w);
+    setOpenWindows(updated);
+    saveSetting('windows', updated);
   };
 
   const snapWindow = (windowId: string, side: 'left' | 'right' | null) => {
-    setOpenWindows(prev => prev.map(w => w.id === windowId ? { ...w, isSnapped: side, isMaximized: false } : w));
+    const updated = openWindows.map(w => w.id === windowId ? { ...w, isSnapped: side, isMaximized: false } : w);
+    setOpenWindows(updated);
+    saveSetting('windows', updated);
   };
 
   const focusWindow = (windowId: string) => {
     setActiveWindowId(windowId);
-    setOpenWindows(prev => prev.map(w => w.id === windowId ? { ...w, zIndex: nextZIndex, isMinimized: false } : w));
+    const updated = openWindows.map(w => w.id === windowId ? { ...w, zIndex: nextZIndex, isMinimized: false } : w);
+    setOpenWindows(updated);
     setNextZIndex(prev => prev + 1);
+    saveSetting('windows', updated);
+    saveSetting('active_window', windowId);
+  };
+
+  const moveWindowToDisplay = (windowId: string, displayId: string) => {
+    const updated = openWindows.map(w => w.id === windowId ? { ...w, displayId } : w);
+    setOpenWindows(updated);
+    saveSetting('windows', updated);
   };
 
   const installApp = (appId: AppId) => {
@@ -554,57 +613,31 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   const updateDesktopAppPosition = (id: AppId, x: number, y: number) => {
     const snappedX = Math.round((x - PADDING) / GRID_X) * GRID_X + PADDING;
     const snappedY = Math.round((y - PADDING) / GRID_Y) * GRID_Y + PADDING;
-    
     const isOccupied = desktopApps.some(app => app.id !== id && app.x === snappedX && app.y === snappedY);
-    
     if (isOccupied) return;
-
-    const updated = desktopApps.map(app => 
-      app.id === id ? { ...app, x: snappedX, y: snappedY } : app
-    );
+    const updated = desktopApps.map(app => app.id === id ? { ...app, x: snappedX, y: snappedY } : app);
     setDesktopApps(updated);
-    const stored = updated.map(({ icon, ...app }) => app);
-    saveSetting('desktop_apps', stored);
+    saveSetting('desktop_apps', updated.map(({ icon, ...app }) => app));
   };
 
   const toggleDesktopApp = (id: AppId) => {
     const CORE_APPS: AppId[] = ['trash', 'files', 'store'];
-    
     const exists = desktopApps.find(app => app.id === id);
     if (exists) {
       if (CORE_APPS.includes(id)) return;
-      
       const updated = desktopApps.filter(app => app.id !== id);
       setDesktopApps(updated);
       saveSetting('desktop_apps', updated.map(({ icon, ...app }) => app));
     } else {
       const info = APP_INFO[id];
-      let foundX = PADDING;
-      let foundY = PADDING;
-      let col = 0;
-      let row = 0;
-      let isOccupied = true;
-
+      let foundX = PADDING, foundY = PADDING, col = 0, row = 0, isOccupied = true;
       while (isOccupied) {
         foundX = PADDING + (col * GRID_X);
         foundY = PADDING + (row * GRID_Y);
         isOccupied = desktopApps.some(app => app.x === foundX && app.y === foundY);
-        if (isOccupied) {
-          row++;
-          if (row > 6) { 
-            row = 0;
-            col++;
-          }
-        }
+        if (isOccupied) { row++; if (row > 6) { row = 0; col++; } }
       }
-
-      const newApp = { 
-        id, 
-        label: info.label, 
-        icon: info.icon, 
-        x: foundX, 
-        y: foundY 
-      };
+      const newApp = { id, label: info.label, icon: info.icon, x: foundX, y: foundY };
       const updated = [...desktopApps, newApp];
       setDesktopApps(updated);
       saveSetting('desktop_apps', updated.map(({ icon, ...app }) => app));
@@ -613,9 +646,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
 
   const togglePinApp = (id: AppId) => {
     const isPinned = pinnedApps.includes(id);
-    const updated = isPinned 
-      ? pinnedApps.filter(appId => appId !== id)
-      : [...pinnedApps, id];
+    const updated = isPinned ? pinnedApps.filter(appId => appId !== id) : [...pinnedApps, id];
     setPinnedApps(updated);
     saveSetting('pinned_apps', updated);
   };
@@ -627,74 +658,20 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
 
   return (
     <OSContext.Provider value={{
-      currentUser,
-      accounts,
-      openWindows,
-      activeWindowId,
-      installedApps,
-      pinnedApps,
-      fileSystem,
-      trash,
-      desktopApps,
-      wallpaper,
-      notes,
-      theme,
-      accentColor,
-      customAccentHex,
-      cursorColor,
-      isInverted,
-      glassEnabled,
-      powerStatus,
-      taskbarPosition,
-      taskbarSize,
-      iconSize,
-      currentWifi,
-      isWifiConnecting,
-      isOnline,
-      volume,
-      brightness,
-      isWidgetsOpen,
-      isQuickSettingsOpen,
-      systemStats,
-      login,
-      logout,
-      createAccount,
-      openApp,
-      closeWindow,
-      minimizeWindow,
-      maximizeWindow,
-      snapWindow,
-      focusWindow,
-      installApp,
-      updateWallpaper,
-      setNotes,
-      setTheme,
-      setAccentColor,
-      setCustomAccentHex,
-      setCursorColor,
-      setInverted,
-      setGlassEnabled,
-      setTaskbarPosition,
-      setTaskbarSize,
-      setIconSize,
-      connectToWifi,
-      setVolume,
-      setBrightness,
-      setIsWidgetsOpen,
-      setIsQuickSettingsOpen,
-      restart,
-      shutDown,
-      powerOn,
-      createFolder,
-      moveToTrash,
-      restoreFromTrash,
-      emptyTrash,
-      deleteItemPermanently,
-      updateDesktopAppPosition,
-      toggleDesktopApp,
-      togglePinApp,
-      reorderPinnedApps,
-      setIsQuickSettingsOpen,
+      currentUser, accounts, openWindows, activeWindowId, installedApps, pinnedApps,
+      fileSystem, trash, desktopApps, wallpaper, notes, theme, accentColor,
+      customAccentHex, cursorColor, isInverted, glassEnabled, powerStatus,
+      taskbarPosition, taskbarSize, iconSize, currentWifi, isWifiConnecting,
+      isOnline, volume, brightness, isWidgetsOpen, isQuickSettingsOpen, systemStats,
+      currentDisplayId,
+      login, logout, createAccount, openApp, closeWindow, minimizeWindow,
+      maximizeWindow, snapWindow, focusWindow, moveWindowToDisplay, installApp,
+      updateWallpaper, setNotes, setTheme, setAccentColor, setCustomAccentHex,
+      setCursorColor, setInverted, setGlassEnabled, setTaskbarPosition, setTaskbarSize,
+      setIconSize, connectToWifi, setVolume, setBrightness, setIsWidgetsOpen,
+      setIsQuickSettingsOpen, setCurrentDisplayId, restart, shutDown, powerOn,
+      createFolder, moveToTrash, restoreFromTrash, emptyTrash, deleteItemPermanently,
+      updateDesktopAppPosition, toggleDesktopApp, togglePinApp, reorderPinnedApps,
     }}>
       {children}
     </OSContext.Provider>

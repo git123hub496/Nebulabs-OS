@@ -1,3 +1,4 @@
+
 "use client"
 
 import React from 'react';
@@ -20,13 +21,20 @@ import {
   Monitor,
   Check,
   ChevronRight,
-  Maximize2
+  Maximize2,
+  Plus
 } from 'lucide-react';
 import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export const QuickSettings: React.FC = () => {
   const { 
@@ -36,7 +44,7 @@ export const QuickSettings: React.FC = () => {
     brightness, setBrightness,
     currentWifi, isOnline, connectToWifi,
     currentUser, logout, shutDown, openApp,
-    taskbarPosition, accentColor
+    taskbarPosition, accentColor, currentDisplayId, setCurrentDisplayId
   } = useOS();
 
   if (!isQuickSettingsOpen) return null;
@@ -52,6 +60,14 @@ export const QuickSettings: React.FC = () => {
   };
 
   const handleToggleTheme = () => setTheme(theme === 'dark' ? 'light' : 'dark');
+
+  const addDisplay = () => {
+    // Determine next display ID based on current ID
+    const nextId = String(parseInt(currentDisplayId) + 1);
+    window.open(window.location.href, '_blank', 'width=1280,height=720');
+    // Note: The new window will need to be manually identified as Display X 
+    // or we can pass it via URL params if we were using a more complex router.
+  };
 
   return (
     <div 
@@ -116,6 +132,36 @@ export const QuickSettings: React.FC = () => {
           </div>
         </button>
 
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className="flex items-center gap-3 p-3 rounded-xl border bg-white/5 border-white/5 text-white/40 hover:bg-white/10 transition-all text-left">
+              <Monitor size={18} className="text-accent" />
+              <div className="flex flex-col min-w-0">
+                <span className="text-[11px] font-bold text-white/80">Displays</span>
+                <span className="text-[9px] truncate opacity-60">ID: {currentDisplayId}</span>
+              </div>
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className="glass border-white/10 w-48">
+             <div className="px-2 py-1.5 text-[10px] font-black uppercase text-white/30 tracking-widest">Identify This Display</div>
+             {['1', '2', '3'].map(id => (
+               <DropdownMenuItem 
+                 key={id} 
+                 onClick={() => setCurrentDisplayId(id)}
+                 className="gap-2"
+               >
+                 <Monitor size={12} className={id === currentDisplayId ? "text-accent" : ""} />
+                 Display {id} {id === currentDisplayId ? '(Selected)' : ''}
+               </DropdownMenuItem>
+             ))}
+             <Separator className="my-1 bg-white/5" />
+             <DropdownMenuItem onClick={addDisplay} className="gap-2 text-accent">
+               <Plus size={12} />
+               Add Virtual Display
+             </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
         <button 
           onClick={handleToggleTheme}
           className={cn(
@@ -143,20 +189,6 @@ export const QuickSettings: React.FC = () => {
             <span className="text-[9px] opacity-60">{isDND ? 'Do Not Disturb' : 'Enabled'}</span>
           </div>
         </button>
-
-        <button 
-          onClick={() => setIsNightLight(!isNightLight)}
-          className={cn(
-            "flex items-center gap-3 p-3 rounded-xl border transition-all text-left",
-            isNightLight ? "bg-accent/20 border-accent/30 text-accent" : "bg-white/5 border-white/5 text-white/40 hover:bg-white/10"
-          )}
-        >
-          <Shield size={18} />
-          <div className="flex flex-col">
-            <span className="text-[11px] font-bold">Night Light</span>
-            <span className="text-[9px] opacity-60">{isNightLight ? 'Active' : 'Off'}</span>
-          </div>
-        </button>
       </div>
 
       {/* Sliders: Brightness & Volume */}
@@ -182,7 +214,7 @@ export const QuickSettings: React.FC = () => {
         <div className="space-y-3">
           <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-widest text-white/30">
             <div className="flex items-center gap-2">
-              {volume === 0 ? <VolumeX size={12} className="text-accent" /> : <Volume2 size={12} className="text-accent" />}
+              {volume === 0 ? <VolumeX size={12} className="text-accent" /> : <Volume1 size={12} className="text-accent" />}
               <span>System Volume</span>
             </div>
             <span>{volume}%</span>

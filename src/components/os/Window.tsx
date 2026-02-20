@@ -1,9 +1,16 @@
+
 "use client"
 
 import React, { useState, useRef, useEffect } from 'react';
 import { useOS, WindowInstance } from '@/context/os-context';
-import { X, Minus, Square, Columns } from 'lucide-react';
+import { X, Minus, Square, Columns, Monitor } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface WindowProps {
   window: WindowInstance;
@@ -11,7 +18,7 @@ interface WindowProps {
 }
 
 export const Window: React.FC<WindowProps> = ({ window: win, children }) => {
-  const { closeWindow, minimizeWindow, maximizeWindow, snapWindow, focusWindow, activeWindowId, taskbarPosition } = useOS();
+  const { closeWindow, minimizeWindow, maximizeWindow, snapWindow, focusWindow, activeWindowId, taskbarPosition, moveWindowToDisplay, currentDisplayId } = useOS();
   const [position, setPosition] = useState({ 
     x: 100 + (win.zIndex * 2), 
     y: 50 + (win.zIndex * 2) 
@@ -135,6 +142,32 @@ export const Window: React.FC<WindowProps> = ({ window: win, children }) => {
           <span className="text-sm font-medium text-white/80">{win.title}</span>
         </div>
         <div className="flex items-center gap-1">
+          {/* Multi-Display Move Control */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button 
+                className="p-1.5 hover:bg-white/10 rounded-md transition-colors"
+                title="Move to Display"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <Monitor size={14} className="text-accent" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="glass border-white/10">
+              {['1', '2', '3'].map(id => (
+                <DropdownMenuItem 
+                  key={id} 
+                  onClick={() => moveWindowToDisplay(win.id, id)}
+                  disabled={id === (win.displayId || '1')}
+                  className="gap-2 text-[10px] font-bold uppercase"
+                >
+                  <Monitor size={12} />
+                  Display {id} {id === (win.displayId || '1') ? '(Current)' : ''}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+
           <button 
             onClick={(e) => { e.stopPropagation(); minimizeWindow(win.id); }}
             className="p-1.5 hover:bg-white/10 rounded-md transition-colors"

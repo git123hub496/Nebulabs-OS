@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -64,7 +65,7 @@ export const Desktop: React.FC = () => {
     powerStatus, powerOn, taskbarPosition, iconSize, currentUser,
     cursorColor, isInverted, glassEnabled, desktopApps, updateDesktopAppPosition, toggleDesktopApp,
     isWidgetsOpen, setIsWidgetsOpen, isQuickSettingsOpen, setIsQuickSettingsOpen,
-    brightness
+    brightness, currentDisplayId
   } = useOS();
   
   const [bootOpacity, setBootOpacity] = useState(1);
@@ -185,6 +186,9 @@ export const Desktop: React.FC = () => {
   const iconScaleMap = { sm: 0.8, md: 1, lg: 1.25 };
   const currentScale = iconScaleMap[iconSize];
 
+  // Filter windows based on current display identity
+  const displayWindows = openWindows.filter(w => (w.displayId || '1') === currentDisplayId);
+
   return (
     <div 
       ref={desktopRef}
@@ -234,8 +238,16 @@ export const Desktop: React.FC = () => {
       {/* Widgets Panel */}
       <WidgetsPanel />
 
-      {/* Desktop Icons */}
-      {desktopApps.map(shortcut => {
+      {/* Display Identity Overlay (Indicator) */}
+      <div className="absolute top-4 right-4 z-[9999] pointer-events-none">
+        <div className="bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/10 flex items-center gap-2">
+          <Activity size={12} className="text-accent" />
+          <span className="text-[10px] font-black uppercase tracking-widest text-white/80">Display {currentDisplayId}</span>
+        </div>
+      </div>
+
+      {/* Desktop Icons - Only show on primary display */}
+      {currentDisplayId === '1' && desktopApps.map(shortcut => {
         const Icon = shortcut.icon;
         const isDragging = draggingAppId === shortcut.id;
         
@@ -284,7 +296,7 @@ export const Desktop: React.FC = () => {
         );
       })}
 
-      {openWindows.map(window => (
+      {displayWindows.map(window => (
         <Window key={window.id} window={window}>
           {APP_COMPONENTS[window.appId]}
         </Window>
