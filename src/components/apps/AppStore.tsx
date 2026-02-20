@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useOS, AppId } from '@/context/os-context';
-import { ShoppingBag, Star, Download, CheckCircle2, FileText, Calculator, Terminal, Cloud, MessageSquare, Globe, Map as MapIcon } from 'lucide-react';
+import { ShoppingBag, Star, Download, CheckCircle2, FileText, Calculator, Terminal, Cloud, MessageSquare, Globe, Map as MapIcon, Activity, Calendar as CalendarIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
@@ -15,6 +15,8 @@ const STORE_APPS: { id: AppId; name: string; description: string; category: stri
   { id: 'terminal', name: 'Terminal', icon: Terminal, description: 'Direct access to system shell.', category: 'Utilities', rating: 4.9 },
   { id: 'assistant', name: 'Nebula AI', description: 'Smart assistant for your OS.', category: 'AI', rating: 5.0, icon: MessageSquare },
   { id: 'maps', name: 'Nebula Maps', description: 'World navigation and intelligence.', category: 'Navigation', rating: 4.7, icon: MapIcon },
+  { id: 'monitor', name: 'System Monitor', description: 'Real-time telemetry and stats.', category: 'System', rating: 4.8, icon: Activity },
+  { id: 'calendar', name: 'Calendar', description: 'Unified OS scheduling.', category: 'Productivity', rating: 4.6, icon: CalendarIcon },
 ];
 
 export const AppStore: React.FC = () => {

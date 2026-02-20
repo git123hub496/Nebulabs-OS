@@ -14,9 +14,11 @@ import {
   Newspaper,
   Map as MapIcon,
   Cloud,
+  Activity,
+  Calendar as CalendarIcon,
 } from 'lucide-react';
 
-export type AppId = 'store' | 'files' | 'settings' | 'assistant' | 'google-drive' | 'notes' | 'calc' | 'terminal' | 'browser' | 'trash' | 'news' | 'maps';
+export type AppId = 'store' | 'files' | 'settings' | 'assistant' | 'google-drive' | 'notes' | 'calc' | 'terminal' | 'browser' | 'trash' | 'news' | 'maps' | 'monitor' | 'calendar';
 export type ThemeMode = 'dark' | 'light';
 export type PowerStatus = 'on' | 'off' | 'booting';
 export type TaskbarPosition = 'top' | 'bottom' | 'left' | 'right';
@@ -37,6 +39,7 @@ export interface WindowInstance {
   title: string;
   isMinimized: boolean;
   isMaximized: boolean;
+  isSnapped?: 'left' | 'right' | null;
   zIndex: number;
   initialWidth?: number;
   initialHeight?: number;
@@ -84,6 +87,7 @@ interface OSContextType {
   isOnline: boolean;
   volume: number;
   isWidgetsOpen: boolean;
+  systemStats: { cpu: number; ram: number; net: number };
   
   login: (userId: string) => void;
   logout: () => void;
@@ -92,6 +96,7 @@ interface OSContextType {
   closeWindow: (windowId: string) => void;
   minimizeWindow: (windowId: string) => void;
   maximizeWindow: (windowId: string) => void;
+  snapWindow: (windowId: string, side: 'left' | 'right' | null) => void;
   focusWindow: (windowId: string) => void;
   installApp: (appId: AppId) => void;
   updateWallpaper: (url: string) => void;
@@ -149,6 +154,8 @@ export const APP_INFO: Record<AppId, { icon: any; label: string }> = {
   'trash': { icon: Trash2, label: 'Recycling Bin' },
   'news': { icon: Newspaper, label: 'Nebula News' },
   'maps': { icon: MapIcon, label: 'Nebula Maps' },
+  'monitor': { icon: Activity, label: 'System Monitor' },
+  'calendar': { icon: CalendarIcon, label: 'Calendar' },
 };
 
 const INITIAL_DESKTOP: DesktopShortcut[] = [
@@ -159,8 +166,8 @@ const INITIAL_DESKTOP: DesktopShortcut[] = [
   { id: 'trash', label: 'Recycling Bin', icon: Trash2, x: PADDING, y: PADDING + (GRID_Y * 4) },
 ];
 
-const INITIAL_APPS: AppId[] = ['store', 'files', 'settings', 'assistant', 'notes', 'calc', 'terminal', 'browser', 'trash', 'news', 'maps'];
-const INITIAL_PINNED: AppId[] = ['files', 'store', 'assistant', 'browser', 'settings'];
+const INITIAL_APPS: AppId[] = ['store', 'files', 'settings', 'assistant', 'notes', 'calc', 'terminal', 'browser', 'trash', 'news', 'maps', 'monitor', 'calendar'];
+const INITIAL_PINNED: AppId[] = ['files', 'store', 'assistant', 'browser', 'settings', 'monitor'];
 
 const AVATAR_COLORS = ['#9333ea', '#3b82f6', '#e11d48', '#f97316', '#16a34a'];
 
@@ -194,6 +201,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   const [volume, setVolumeState] = useState(75);
   const [isWidgetsOpen, setIsWidgetsOpen] = useState(false);
   const [nextZIndex, setNextZIndex] = useState(10);
+  const [systemStats, setSystemStats] = useState({ cpu: 12, ram: 42, net: 2 });
 
   useEffect(() => {
     const savedAccounts = localStorage.getItem('nebula_accounts');
@@ -215,6 +223,19 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     const bootTimer = setTimeout(() => setPowerStatus('on'), 2600);
     return () => clearTimeout(bootTimer);
   }, []);
+
+  // Telemetry simulation
+  useEffect(() => {
+    if (powerStatus !== 'on') return;
+    const interval = setInterval(() => {
+      setSystemStats({
+        cpu: Math.floor(Math.random() * 25) + 5,
+        ram: Math.floor(Math.random() * 10) + 40,
+        net: Math.floor(Math.random() * 100),
+      });
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [powerStatus]);
 
   useEffect(() => {
     if (!currentUser) return;
@@ -407,6 +428,12 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     } else if (appId === 'maps') {
       initialWidth = 950;
       initialHeight = 650;
+    } else if (appId === 'monitor') {
+      initialWidth = 700;
+      initialHeight = 500;
+    } else if (appId === 'calendar') {
+      initialWidth = 850;
+      initialHeight = 600;
     }
 
     const newId = `${appId}-${Date.now()}`;
@@ -439,7 +466,11 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const maximizeWindow = (windowId: string) => {
-    setOpenWindows(prev => prev.map(w => w.id === windowId ? { ...w, isMaximized: !w.isMaximized } : w));
+    setOpenWindows(prev => prev.map(w => w.id === windowId ? { ...w, isMaximized: !w.isMaximized, isSnapped: null } : w));
+  };
+
+  const snapWindow = (windowId: string, side: 'left' | 'right' | null) => {
+    setOpenWindows(prev => prev.map(w => w.id === windowId ? { ...w, isSnapped: side, isMaximized: false } : w));
   };
 
   const focusWindow = (windowId: string) => {
@@ -608,6 +639,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       isOnline,
       volume,
       isWidgetsOpen,
+      systemStats,
       login,
       logout,
       createAccount,
@@ -615,6 +647,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       closeWindow,
       minimizeWindow,
       maximizeWindow,
+      snapWindow,
       focusWindow,
       installApp,
       updateWallpaper,

@@ -1,9 +1,8 @@
-
 "use client"
 
 import React, { useState, useRef, useEffect } from 'react';
 import { useOS, WindowInstance } from '@/context/os-context';
-import { X, Minus, Square } from 'lucide-react';
+import { X, Minus, Square, Columns } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface WindowProps {
@@ -12,7 +11,7 @@ interface WindowProps {
 }
 
 export const Window: React.FC<WindowProps> = ({ window: win, children }) => {
-  const { closeWindow, minimizeWindow, maximizeWindow, focusWindow, activeWindowId, taskbarPosition } = useOS();
+  const { closeWindow, minimizeWindow, maximizeWindow, snapWindow, focusWindow, activeWindowId, taskbarPosition } = useOS();
   const [position, setPosition] = useState({ 
     x: 100 + (win.zIndex * 2), 
     y: 50 + (win.zIndex * 2) 
@@ -29,7 +28,7 @@ export const Window: React.FC<WindowProps> = ({ window: win, children }) => {
 
   const handleMouseDown = (e: React.MouseEvent) => {
     focusWindow(win.id);
-    if (win.isMaximized) return;
+    if (win.isMaximized || win.isSnapped) return;
     
     setIsDragging(true);
     const rect = windowRef.current?.getBoundingClientRect();
@@ -68,18 +67,51 @@ export const Window: React.FC<WindowProps> = ({ window: win, children }) => {
 
   if (win.isMinimized) return null;
 
-  const getMaximizedStyles = () => {
-    if (!win.isMaximized) return {};
+  const getResponsiveDimensions = () => {
+    const isHorizontal = taskbarPosition === 'bottom' || taskbarPosition === 'top';
+    const offset = 48; // Taskbar height/width
     
-    const base = { zIndex: win.zIndex };
-    switch (taskbarPosition) {
-      case 'bottom': return { ...base, inset: 0, height: 'calc(100% - 48px)' };
-      case 'top': return { ...base, inset: '48px 0 0 0', height: 'calc(100% - 48px)' };
-      case 'left': return { ...base, inset: '0 0 0 48px', width: 'calc(100% - 48px)', height: '100%' };
-      case 'right': return { ...base, inset: '0 48px 0 0', width: 'calc(100% - 48px)', height: '100%' };
-      default: return { ...base, inset: 0 };
+    if (win.isMaximized) {
+      return {
+        left: taskbarPosition === 'left' ? offset : 0,
+        right: taskbarPosition === 'right' ? offset : 0,
+        top: taskbarPosition === 'top' ? offset : 0,
+        bottom: taskbarPosition === 'bottom' ? offset : 0,
+        width: isHorizontal ? '100%' : `calc(100% - ${offset}px)`,
+        height: !isHorizontal ? '100%' : `calc(100% - ${offset}px)`,
+      };
     }
+
+    if (win.isSnapped === 'left') {
+      return {
+        left: taskbarPosition === 'left' ? offset : 0,
+        top: taskbarPosition === 'top' ? offset : 0,
+        bottom: taskbarPosition === 'bottom' ? offset : 0,
+        width: isHorizontal ? '50%' : `calc(50% - ${offset / 2}px)`,
+        height: !isHorizontal ? '100%' : `calc(100% - ${offset}px)`,
+      };
+    }
+
+    if (win.isSnapped === 'right') {
+      return {
+        right: taskbarPosition === 'right' ? offset : 0,
+        top: taskbarPosition === 'top' ? offset : 0,
+        bottom: taskbarPosition === 'bottom' ? offset : 0,
+        left: isHorizontal ? '50%' : undefined,
+        width: isHorizontal ? '50%' : `calc(50% - ${offset / 2}px)`,
+        height: !isHorizontal ? '100%' : `calc(100% - ${offset}px)`,
+      };
+    }
+
+    return {
+      left: position.x,
+      top: position.y,
+      width: size.width,
+      height: size.height,
+    };
   };
+
+  const dimensions = getResponsiveDimensions();
 
   return (
     <div
@@ -87,15 +119,11 @@ export const Window: React.FC<WindowProps> = ({ window: win, children }) => {
       className={cn(
         "fixed flex flex-col glass rounded-xl border overflow-hidden window-shadow transition-all duration-300",
         isActive ? "z-[100] border-accent/40 ring-1 ring-accent/20" : "z-10 opacity-90",
-        win.isMaximized ? "rounded-none" : ""
+        win.isMaximized || win.isSnapped ? "rounded-none" : ""
       )}
       style={{
-        left: win.isMaximized ? undefined : position.x,
-        top: win.isMaximized ? undefined : position.y,
-        width: win.isMaximized ? undefined : size.width,
-        height: win.isMaximized ? undefined : size.height,
+        ...dimensions,
         zIndex: win.zIndex,
-        ...getMaximizedStyles()
       }}
       onClick={() => focusWindow(win.id)}
     >
@@ -110,18 +138,41 @@ export const Window: React.FC<WindowProps> = ({ window: win, children }) => {
           <button 
             onClick={(e) => { e.stopPropagation(); minimizeWindow(win.id); }}
             className="p-1.5 hover:bg-white/10 rounded-md transition-colors"
+            title="Minimize"
           >
             <Minus size={14} className="text-white/60" />
           </button>
-          <button 
-            onClick={(e) => { e.stopPropagation(); maximizeWindow(win.id); }}
-            className="p-1.5 hover:bg-white/10 rounded-md transition-colors"
-          >
-            <Square size={12} className="text-white/60" />
-          </button>
+          
+          <div className="flex items-center group/snap relative">
+            <button 
+              onClick={(e) => { e.stopPropagation(); maximizeWindow(win.id); }}
+              className="p-1.5 hover:bg-white/10 rounded-md transition-colors"
+              title="Maximize"
+            >
+              <Square size={12} className="text-white/60" />
+            </button>
+            <div className="absolute top-full right-0 mt-1 hidden group-hover/snap:flex glass border border-white/10 p-1 rounded-lg gap-1 z-[200] shadow-2xl">
+              <button 
+                onClick={(e) => { e.stopPropagation(); snapWindow(win.id, 'left'); }}
+                className="p-1 hover:bg-accent/20 rounded text-accent"
+                title="Snap Left"
+              >
+                <Columns size={12} className="rotate-180" />
+              </button>
+              <button 
+                onClick={(e) => { e.stopPropagation(); snapWindow(win.id, 'right'); }}
+                className="p-1 hover:bg-accent/20 rounded text-accent"
+                title="Snap Right"
+              >
+                <Columns size={12} />
+              </button>
+            </div>
+          </div>
+
           <button 
             onClick={(e) => { e.stopPropagation(); closeWindow(win.id); }}
             className="p-1.5 hover:bg-destructive/80 group rounded-md transition-colors"
+            title="Close"
           >
             <X size={14} className="text-white/60 group-hover:text-white" />
           </button>

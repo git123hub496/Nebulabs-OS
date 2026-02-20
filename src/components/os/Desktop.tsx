@@ -20,6 +20,8 @@ import {
   Trash2,
   Newspaper,
   Map as MapIcon,
+  Activity,
+  Calendar as CalendarIcon,
 } from 'lucide-react';
 import { FileExplorer } from '../apps/FileExplorer';
 import { AppStore } from '../apps/AppStore';
@@ -33,6 +35,8 @@ import { NebulaBrowser } from '../apps/NebulaBrowser';
 import { RecyclingBin } from '../apps/RecyclingBin';
 import { NebulaNews } from '../apps/NebulaNews';
 import { NebulaMaps } from '../apps/NebulaMaps';
+import { SystemMonitor } from '../apps/SystemMonitor';
+import { Calendar } from '../apps/Calendar';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 
@@ -49,6 +53,8 @@ const APP_COMPONENTS: Record<AppId, React.ReactNode> = {
   'trash': <RecyclingBin />,
   'news': <NebulaNews />,
   'maps': <NebulaMaps />,
+  'monitor': <SystemMonitor />,
+  'calendar': <Calendar />,
 };
 
 export const Desktop: React.FC = () => {

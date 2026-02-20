@@ -1,6 +1,6 @@
 "use client"
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useOS, AppId, APP_INFO } from '@/context/os-context';
 import { 
   Search, 
@@ -21,6 +21,8 @@ import {
   PinOff,
   Trash2,
   Map as MapIcon,
+  Activity,
+  Calendar as CalendarIcon,
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -44,10 +46,18 @@ export const StartMenu: React.FC<StartMenuProps> = ({ onClose }) => {
     currentUser, logout, pinnedApps, togglePinApp 
   } = useOS();
 
+  const [searchQuery, setSearchQuery] = useState("");
+
   const handleAppClick = (appId: AppId) => {
     openApp(appId, APP_INFO[appId]?.label || appId);
     onClose();
   };
+
+  const filteredApps = installedApps.filter(appId => {
+    const info = APP_INFO[appId];
+    if (!info) return false;
+    return info.label.toLowerCase().includes(searchQuery.toLowerCase());
+  });
 
   const positionClasses = {
     bottom: 'bottom-14 left-0 animate-in slide-in-from-bottom-2 origin-bottom-left',
@@ -64,6 +74,8 @@ export const StartMenu: React.FC<StartMenuProps> = ({ onClose }) => {
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-accent/60" size={16} />
         <Input 
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="Search apps, settings, and files" 
           className="pl-10 bg-white/10 border-white/10 text-white placeholder:text-white/30 h-10 rounded-xl focus-visible:ring-accent"
         />
@@ -71,60 +83,71 @@ export const StartMenu: React.FC<StartMenuProps> = ({ onClose }) => {
 
       <div className="flex-1 overflow-auto pr-1">
         <div className="mb-6">
-          <h3 className="text-[11px] font-bold text-accent uppercase tracking-widest mb-4 opacity-80">All Applications</h3>
-          <div className="grid grid-cols-4 gap-4">
-            {installedApps.map(appId => {
-              const info = APP_INFO[appId];
-              if (!info) return null;
-              const Icon = info.icon;
-              const isPinned = pinnedApps.includes(appId);
+          <h3 className="text-[11px] font-bold text-accent uppercase tracking-widest mb-4 opacity-80">
+            {searchQuery ? "Search Results" : "All Applications"}
+          </h3>
+          {filteredApps.length > 0 ? (
+            <div className="grid grid-cols-4 gap-4">
+              {filteredApps.map(appId => {
+                const info = APP_INFO[appId];
+                if (!info) return null;
+                const Icon = info.icon;
+                const isPinned = pinnedApps.includes(appId);
 
-              return (
-                <DropdownMenu key={appId}>
-                  <DropdownMenuTrigger asChild>
-                    <button
-                      className="flex flex-col items-center gap-2 group transition-all"
-                      onClick={() => handleAppClick(appId)}
-                      onContextMenu={(e) => e.preventDefault()}
-                    >
-                      <div className="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center group-hover:bg-accent/20 group-hover:scale-105 transition-all border border-white/5 group-hover:border-accent/20">
-                        <Icon className="text-white/80 group-hover:text-accent transition-colors" size={24} />
-                      </div>
-                      <span className="text-[10px] text-white/70 font-medium text-center truncate w-full group-hover:text-accent transition-colors">{info.label}</span>
-                    </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent className="glass border-white/10 w-48 backdrop-blur-3xl">
-                    <DropdownMenuItem onClick={() => handleAppClick(appId)} className="gap-2">
-                      <div className="w-4" /> Open
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => togglePinApp(appId)} className="gap-2">
-                      {isPinned ? <PinOff size={14} className="text-accent" /> : <Pin size={14} className="text-accent" />}
-                      {isPinned ? 'Unpin from Taskbar' : 'Pin to Taskbar'}
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              );
-            })}
-          </div>
+                return (
+                  <DropdownMenu key={appId}>
+                    <DropdownMenuTrigger asChild>
+                      <button
+                        className="flex flex-col items-center gap-2 group transition-all"
+                        onClick={() => handleAppClick(appId)}
+                        onContextMenu={(e) => e.preventDefault()}
+                      >
+                        <div className="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center group-hover:bg-accent/20 group-hover:scale-105 transition-all border border-white/5 group-hover:border-accent/20">
+                          <Icon className="text-white/80 group-hover:text-accent transition-colors" size={24} />
+                        </div>
+                        <span className="text-[10px] text-white/70 font-medium text-center truncate w-full group-hover:text-accent transition-colors">{info.label}</span>
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="glass border-white/10 w-48 backdrop-blur-3xl">
+                      <DropdownMenuItem onClick={() => handleAppClick(appId)} className="gap-2">
+                        <div className="w-4" /> Open
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => togglePinApp(appId)} className="gap-2">
+                        {isPinned ? <PinOff size={14} className="text-accent" /> : <Pin size={14} className="text-accent" />}
+                        {isPinned ? 'Unpin from Taskbar' : 'Pin to Taskbar'}
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="text-center py-8 opacity-40 flex flex-col items-center gap-2">
+              <Search size={32} strokeWidth={1} />
+              <p className="text-xs">No matching applications found.</p>
+            </div>
+          )}
         </div>
 
-        <div>
-          <h3 className="text-[11px] font-bold text-accent uppercase tracking-widest mb-4 opacity-80">Quick Links</h3>
-          <div className="space-y-1">
-            <button className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-accent/10 text-sm text-white/80 transition-colors group" onClick={() => handleAppClick('news')}>
-              <Newspaper size={16} className="text-accent group-hover:scale-110 transition-transform" />
-              <span className="group-hover:text-accent">Nebula Local News</span>
-            </button>
-            <button className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-accent/10 text-sm text-white/80 transition-colors group" onClick={() => handleAppClick('maps')}>
-              <MapIcon size={16} className="text-accent group-hover:scale-110 transition-transform" />
-              <span className="group-hover:text-accent">Nebula Maps</span>
-            </button>
-            <button className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-accent/10 text-sm text-white/80 transition-colors group" onClick={() => handleAppClick('browser')}>
-              <Globe size={16} className="text-accent group-hover:scale-110 transition-transform" />
-              <span className="group-hover:text-accent">Nebula Browser</span>
-            </button>
+        {!searchQuery && (
+          <div>
+            <h3 className="text-[11px] font-bold text-accent uppercase tracking-widest mb-4 opacity-80">Quick Links</h3>
+            <div className="space-y-1">
+              <button className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-accent/10 text-sm text-white/80 transition-colors group" onClick={() => handleAppClick('news')}>
+                <Newspaper size={16} className="text-accent group-hover:scale-110 transition-transform" />
+                <span className="group-hover:text-accent">Nebula Local News</span>
+              </button>
+              <button className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-accent/10 text-sm text-white/80 transition-colors group" onClick={() => handleAppClick('maps')}>
+                <MapIcon size={16} className="text-accent group-hover:scale-110 transition-transform" />
+                <span className="group-hover:text-accent">Nebula Maps</span>
+              </button>
+              <button className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-accent/10 text-sm text-white/80 transition-colors group" onClick={() => handleAppClick('browser')}>
+                <Globe size={16} className="text-accent group-hover:scale-110 transition-transform" />
+                <span className="group-hover:text-accent">Nebula Browser</span>
+              </button>
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       <div className="border-t border-white/10 pt-4 mt-auto flex items-center justify-between">
