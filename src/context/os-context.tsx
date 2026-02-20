@@ -16,6 +16,8 @@ export interface WindowInstance {
   isMinimized: boolean;
   isMaximized: boolean;
   zIndex: number;
+  initialWidth?: number;
+  initialHeight?: number;
 }
 
 export interface FileSystemItem {
@@ -147,6 +149,24 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       return;
     }
 
+    // Set initial sizes based on app type
+    let initialWidth = 800;
+    let initialHeight = 600;
+
+    if (appId === 'calc') {
+      initialWidth = 320;
+      initialHeight = 480;
+    } else if (appId === 'terminal') {
+      initialWidth = 700;
+      initialHeight = 450;
+    } else if (appId === 'notes') {
+      initialWidth = 500;
+      initialHeight = 600;
+    } else if (appId === 'assistant') {
+      initialWidth = 400;
+      initialHeight = 650;
+    }
+
     const newId = `${appId}-${Date.now()}`;
     const newWindow: WindowInstance = {
       id: newId,
@@ -154,7 +174,9 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       title,
       isMinimized: false,
       isMaximized: false,
-      zIndex: nextZIndex
+      zIndex: nextZIndex,
+      initialWidth,
+      initialHeight
     };
 
     setOpenWindows(prev => [...prev, newWindow]);

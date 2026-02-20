@@ -13,8 +13,14 @@ interface WindowProps {
 
 export const Window: React.FC<WindowProps> = ({ window: win, children }) => {
   const { closeWindow, minimizeWindow, maximizeWindow, focusWindow, activeWindowId, taskbarPosition } = useOS();
-  const [position, setPosition] = useState({ x: 100 + (win.zIndex * 2), y: 50 + (win.zIndex * 2) });
-  const [size, setSize] = useState({ width: 800, height: 600 });
+  const [position, setPosition] = useState({ 
+    x: 100 + (win.zIndex * 2), 
+    y: 50 + (win.zIndex * 2) 
+  });
+  const [size, setSize] = useState({ 
+    width: win.initialWidth || 800, 
+    height: win.initialHeight || 600 
+  });
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const windowRef = useRef<HTMLDivElement>(null);
