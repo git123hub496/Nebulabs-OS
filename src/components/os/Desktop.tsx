@@ -21,6 +21,7 @@ import { GoogleAppPlaceholder } from '../apps/GoogleAppPlaceholder';
 import { Notes } from '../apps/Notes';
 import { Calculator } from '../apps/Calculator';
 import { Terminal } from '../apps/Terminal';
+import { cn } from '@/lib/utils';
 
 const APP_COMPONENTS: Record<AppId, React.ReactNode> = {
   'store': <AppStore />,
@@ -43,22 +44,27 @@ const DESKTOP_SHORTCUTS: { id: AppId; label: string; icon: any }[] = [
 ];
 
 export const Desktop: React.FC = () => {
-  const { wallpaper, openWindows, openApp } = useOS();
-  const [bootVisible, setBootVisible] = useState(true);
+  const { wallpaper, openWindows, openApp, theme, isBooting } = useOS();
   const [bootOpacity, setBootOpacity] = useState(1);
+  const [shouldRenderBoot, setShouldRenderBoot] = useState(true);
 
   useEffect(() => {
-    const fadeTimer = setTimeout(() => setBootOpacity(0), 1500);
-    const removeTimer = setTimeout(() => setBootVisible(false), 2600);
-    return () => {
-      clearTimeout(fadeTimer);
-      clearTimeout(removeTimer);
-    };
-  }, []);
+    if (!isBooting) {
+      setBootOpacity(0);
+      const timer = setTimeout(() => setShouldRenderBoot(false), 1000);
+      return () => clearTimeout(timer);
+    } else {
+      setShouldRenderBoot(true);
+      setBootOpacity(1);
+    }
+  }, [isBooting]);
 
   return (
     <div 
-      className="fixed inset-0 overflow-hidden select-none"
+      className={cn(
+        "fixed inset-0 overflow-hidden select-none",
+        theme === 'light' ? "light" : ""
+      )}
       style={{
         backgroundImage: `url(${wallpaper})`,
         backgroundSize: 'cover',
@@ -93,9 +99,9 @@ export const Desktop: React.FC = () => {
 
       <Taskbar />
 
-      {bootVisible && (
+      {shouldRenderBoot && (
         <div 
-          className="fixed inset-0 bg-background z-[10000] flex flex-col items-center justify-center transition-opacity duration-1000 pointer-events-none"
+          className="fixed inset-0 bg-[#0a0f14] z-[10000] flex flex-col items-center justify-center transition-opacity duration-1000 pointer-events-none"
           style={{ opacity: bootOpacity }}
         >
           <div className="w-24 h-24 bg-accent/20 rounded-3xl flex items-center justify-center mb-8 animate-pulse">

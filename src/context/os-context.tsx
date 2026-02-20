@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 
 export type AppId = 'store' | 'files' | 'settings' | 'assistant' | 'google-drive' | 'notes' | 'calc' | 'terminal';
+export type ThemeMode = 'dark' | 'light';
 
 export interface WindowInstance {
   id: string;
@@ -27,6 +28,8 @@ interface OSContextType {
   fileSystem: FileSystemItem[];
   wallpaper: string;
   notes: string;
+  theme: ThemeMode;
+  isBooting: boolean;
   
   openApp: (appId: AppId, title: string) => void;
   closeWindow: (windowId: string) => void;
@@ -36,6 +39,9 @@ interface OSContextType {
   installApp: (appId: AppId) => void;
   updateWallpaper: (url: string) => void;
   setNotes: (content: string) => void;
+  setTheme: (theme: ThemeMode) => void;
+  restart: () => void;
+  shutDown: () => void;
   
   createFolder: (name: string, parentId: string | null) => void;
   deleteItem: (id: string) => void;
@@ -58,16 +64,44 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   const [fileSystem, setFileSystem] = useState<FileSystemItem[]>(INITIAL_FILES);
   const [wallpaper, setWallpaper] = useState("https://picsum.photos/seed/nebula1/1920/1080");
   const [notes, setNotesState] = useState("");
+  const [theme, setThemeState] = useState<ThemeMode>('dark');
+  const [isBooting, setIsBooting] = useState(true);
   const [nextZIndex, setNextZIndex] = useState(10);
 
   useEffect(() => {
-    const saved = localStorage.getItem('nebula_notes');
-    if (saved) setNotesState(saved);
+    const savedNotes = localStorage.getItem('nebula_notes');
+    if (savedNotes) setNotesState(savedNotes);
+    
+    const savedTheme = localStorage.getItem('nebula_theme') as ThemeMode;
+    if (savedTheme) setThemeState(savedTheme);
+
+    const bootTimer = setTimeout(() => setIsBooting(false), 2600);
+    return () => clearTimeout(bootTimer);
   }, []);
 
   const setNotes = (content: string) => {
     setNotesState(content);
     localStorage.setItem('nebula_notes', content);
+  };
+
+  const setTheme = (newTheme: ThemeMode) => {
+    setThemeState(newTheme);
+    localStorage.setItem('nebula_theme', newTheme);
+  };
+
+  const restart = () => {
+    setOpenWindows([]);
+    setActiveWindowId(null);
+    setIsBooting(true);
+    setTimeout(() => setIsBooting(false), 2600);
+  };
+
+  const shutDown = () => {
+    setOpenWindows([]);
+    setActiveWindowId(null);
+    setIsBooting(true);
+    // In a web app, "Shut Down" just stays on a black screen or shows boot logo indefinitely
+    // We'll treat it as a trigger for a long-term "off" state for this demo
   };
 
   const openApp = (appId: AppId, title: string) => {
@@ -147,6 +181,8 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       fileSystem,
       wallpaper,
       notes,
+      theme,
+      isBooting,
       openApp,
       closeWindow,
       minimizeWindow,
@@ -155,6 +191,9 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       installApp,
       updateWallpaper,
       setNotes,
+      setTheme,
+      restart,
+      shutDown,
       createFolder,
       deleteItem
     }}>

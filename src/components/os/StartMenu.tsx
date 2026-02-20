@@ -1,6 +1,6 @@
 "use client"
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useOS, AppId } from '@/context/os-context';
 import { 
   Search, 
@@ -12,10 +12,20 @@ import {
   Cloud,
   Info,
   Calculator as CalcIcon,
-  Terminal as TermIcon
+  Terminal as TermIcon,
+  Power,
+  RefreshCw,
+  LogOut
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Button } from '@/components/ui/button';
 
 interface StartMenuProps {
   onClose: () => void;
@@ -33,7 +43,7 @@ const APP_INFO: Record<AppId, { icon: any; label: string }> = {
 };
 
 export const StartMenu: React.FC<StartMenuProps> = ({ onClose }) => {
-  const { installedApps, openApp } = useOS();
+  const { installedApps, openApp, restart, shutDown } = useOS();
 
   const handleAppClick = (appId: AppId) => {
     openApp(appId, APP_INFO[appId].label);
@@ -103,12 +113,30 @@ export const StartMenu: React.FC<StartMenuProps> = ({ onClose }) => {
             <span className="text-[10px] text-white/40 truncate">Nebula Cloud Sync Active</span>
           </div>
         </div>
-        <button 
-          onClick={onClose}
-          className="p-2 rounded-lg hover:bg-white/5 text-white/40 hover:text-white transition-colors"
-        >
-          <Info size={18} />
-        </button>
+        
+        <div className="flex items-center gap-1">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-9 w-9 text-white/40 hover:text-white hover:bg-white/5">
+                <Power size={18} />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-40 bg-[#1e2731] border-white/10 text-white">
+              <DropdownMenuItem onClick={restart} className="gap-2 cursor-pointer hover:bg-white/5">
+                <RefreshCw size={14} />
+                <span>Restart</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={shutDown} className="gap-2 cursor-pointer hover:bg-white/5">
+                <Power size={14} />
+                <span>Shut Down</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem className="gap-2 cursor-pointer hover:bg-white/5 text-destructive">
+                <LogOut size={14} />
+                <span>Log Out</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
     </div>
   );
