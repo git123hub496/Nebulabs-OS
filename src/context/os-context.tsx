@@ -473,6 +473,14 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     const snappedX = Math.round((x - PADDING) / GRID_X) * GRID_X + PADDING;
     const snappedY = Math.round((y - PADDING) / GRID_Y) * GRID_Y + PADDING;
     
+    // Check for collision: prevent placing an icon on top of another existing icon
+    const isOccupied = desktopApps.some(app => app.id !== id && app.x === snappedX && app.y === snappedY);
+    
+    if (isOccupied) {
+      // If occupied, do nothing. The icon will snap back in Desktop.tsx logic
+      return;
+    }
+
     const updated = desktopApps.map(app => 
       app.id === id ? { ...app, x: snappedX, y: snappedY } : app
     );
@@ -489,13 +497,34 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       saveSetting('desktop_apps', updated.map(({ icon, ...app }) => app));
     } else {
       const info = APP_INFO[id];
-      // Place new apps on the grid vertically starting from first column
+      
+      // Find the first empty spot in a grid (column by column)
+      let foundX = PADDING;
+      let foundY = PADDING;
+      let col = 0;
+      let row = 0;
+      let isOccupied = true;
+
+      while (isOccupied) {
+        foundX = PADDING + (col * GRID_X);
+        foundY = PADDING + (row * GRID_Y);
+        isOccupied = desktopApps.some(app => app.x === foundX && app.y === foundY);
+        if (isOccupied) {
+          row++;
+          // Basic grid wrapping logic
+          if (row > 6) { 
+            row = 0;
+            col++;
+          }
+        }
+      }
+
       const newApp = { 
         id, 
         label: info.label, 
         icon: info.icon, 
-        x: PADDING, 
-        y: PADDING + (desktopApps.length * GRID_Y) 
+        x: foundX, 
+        y: foundY 
       };
       const updated = [...desktopApps, newApp];
       setDesktopApps(updated);
