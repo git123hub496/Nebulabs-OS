@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 
-export type AppId = 'store' | 'files' | 'settings' | 'assistant' | 'google-docs' | 'google-sheets' | 'google-slides' | 'google-drive' | 'notes' | 'calc' | 'terminal';
+export type AppId = 'store' | 'files' | 'settings' | 'assistant' | 'google-drive' | 'notes' | 'calc' | 'terminal';
 
 export interface WindowInstance {
   id: string;
@@ -60,7 +60,6 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   const [notes, setNotesState] = useState("");
   const [nextZIndex, setNextZIndex] = useState(10);
 
-  // Load notes from localStorage on mount
   useEffect(() => {
     const saved = localStorage.getItem('nebula_notes');
     if (saved) setNotesState(saved);

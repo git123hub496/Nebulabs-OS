@@ -1,37 +1,18 @@
-
 "use client"
 
 import React from 'react';
-import { FileText, Table, Presentation, Cloud, ExternalLink, Loader2 } from 'lucide-react';
+import { Cloud, ExternalLink, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
 interface GoogleAppPlaceholderProps {
-  type: 'docs' | 'sheets' | 'slides' | 'drive';
+  type: 'drive';
 }
 
 export const GoogleAppPlaceholder: React.FC<GoogleAppPlaceholderProps> = ({ type }) => {
   const [isLoading, setIsLoading] = React.useState(true);
 
   const configs = {
-    docs: { 
-      icon: FileText, 
-      color: "bg-blue-600", 
-      label: "Google Docs", 
-      url: "https://docs.google.com/document/u/0/?authuser=0"
-    },
-    sheets: { 
-      icon: Table, 
-      color: "bg-green-600", 
-      label: "Google Sheets", 
-      url: "https://docs.google.com/spreadsheets/u/0/?authuser=0"
-    },
-    slides: { 
-      icon: Presentation, 
-      color: "bg-yellow-600", 
-      label: "Google Slides", 
-      url: "https://docs.google.com/presentation/u/0/?authuser=0"
-    },
     drive: { 
       icon: Cloud, 
       color: "bg-blue-500", 
@@ -76,7 +57,7 @@ export const GoogleAppPlaceholder: React.FC<GoogleAppPlaceholderProps> = ({ type
           title={config.label}
         />
         
-        {/* Overlay for "Blocked by Google" cases (common for standard URLs in iframes) */}
+        {/* Overlay for "Blocked by Google" cases */}
         {!isLoading && (
           <div className="absolute inset-0 pointer-events-none opacity-0 hover:opacity-100 transition-opacity bg-black/50 flex items-center justify-center">
             <div className="bg-[#1e2731] p-6 rounded-2xl border border-white/10 text-center max-w-xs pointer-events-auto">

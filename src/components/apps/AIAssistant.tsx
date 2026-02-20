@@ -2,11 +2,12 @@
 
 import React, { useState } from 'react';
 import { suggestGoogleProduct, SuggestGoogleProductOutput } from '@/ai/flows/ai-assistant-google-product-suggestion';
-import { Send, Bot, User, Sparkles, ShoppingBag, ExternalLink } from 'lucide-react';
+import { Send, Bot, User, Sparkles, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useOS, AppId } from '@/context/os-context';
+import { cn } from '@/lib/utils';
 
 export const AIAssistant: React.FC = () => {
   const [query, setQuery] = useState("");
@@ -40,10 +41,10 @@ export const AIAssistant: React.FC = () => {
 
   const handleLaunchApp = (name: string) => {
     const appMap: Record<string, { id: AppId; title: string }> = {
-      'Google Docs': { id: 'google-docs', title: 'Google Docs' },
-      'Google Sheets': { id: 'google-sheets', title: 'Google Sheets' },
-      'Google Slides': { id: 'google-slides', title: 'Google Slides' },
       'Google Drive': { id: 'google-drive', title: 'Google Drive' },
+      'Notes': { id: 'notes', title: 'Nebula Notes' },
+      'Calculator': { id: 'calc', title: 'Calculator' },
+      'Terminal': { id: 'terminal', title: 'Terminal' },
     };
     
     const matched = Object.entries(appMap).find(([key]) => name.toLowerCase().includes(key.toLowerCase()));
@@ -144,5 +145,3 @@ export const AIAssistant: React.FC = () => {
     </div>
   );
 };
-
-import { cn } from '@/lib/utils';

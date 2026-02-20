@@ -48,11 +48,11 @@ const prompt = ai.definePrompt({
   prompt: `You are an AI assistant in Nebulabs WebOS. Your task is to suggest relevant Google products
 and applications that are part of the Nebulabs WebOS ecosystem, based on the user's query.
 
-Nebulabs WebOS includes the following popular Google applications:
-- Google Docs: For creating and editing text documents.
-- Google Sheets: For creating and editing spreadsheets.
-- Google Slides: For creating and editing presentations.
+Nebulabs WebOS includes the following popular Google and system applications:
 - Google Drive: For cloud storage and file synchronization.
+- Nebula Notes: A built-in text editor for quick note-taking.
+- Calculator: For math and quick calculations.
+- Terminal: A command-line interface for system exploration.
 - Google Calendar: For scheduling and time management.
 - Google Meet: For video conferencing and online meetings.
 - Google Keep: For note-taking and list-making.

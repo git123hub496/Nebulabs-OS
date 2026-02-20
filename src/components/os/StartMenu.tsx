@@ -10,8 +10,6 @@ import {
   MessageSquare, 
   FolderOpen,
   Cloud,
-  Table as TableIcon,
-  Presentation,
   Info,
   Calculator as CalcIcon,
   Terminal as TermIcon
@@ -28,9 +26,6 @@ const APP_INFO: Record<AppId, { icon: any; label: string }> = {
   'files': { icon: FolderOpen, label: 'File Explorer' },
   'settings': { icon: Settings, label: 'Settings' },
   'assistant': { icon: MessageSquare, label: 'Nebula Assistant' },
-  'google-docs': { icon: FileText, label: 'Google Docs' },
-  'google-sheets': { icon: TableIcon, label: 'Google Sheets' },
-  'google-slides': { icon: Presentation, label: 'Google Slides' },
   'google-drive': { icon: Cloud, label: 'Google Drive' },
   'notes': { icon: FileText, label: 'Nebula Notes' },
   'calc': { icon: CalcIcon, label: 'Calculator' },
@@ -98,7 +93,6 @@ export const StartMenu: React.FC<StartMenuProps> = ({ onClose }) => {
         </div>
       </div>
 
-      {/* User Section */}
       <div className="border-t border-white/10 pt-4 flex items-center justify-between">
         <div className="flex items-center gap-3 overflow-hidden">
           <Avatar className="w-9 h-9 border border-accent/20">

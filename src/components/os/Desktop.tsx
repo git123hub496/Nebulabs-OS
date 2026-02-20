@@ -12,7 +12,6 @@ import {
   FileText,
   Calculator as CalcIcon,
   Terminal as TermIcon,
-  FileCode
 } from 'lucide-react';
 import { FileExplorer } from '../apps/FileExplorer';
 import { AppStore } from '../apps/AppStore';
@@ -28,9 +27,6 @@ const APP_COMPONENTS: Record<AppId, React.ReactNode> = {
   'files': <FileExplorer />,
   'settings': <Settings />,
   'assistant': <AIAssistant />,
-  'google-docs': <GoogleAppPlaceholder type="docs" />,
-  'google-sheets': <GoogleAppPlaceholder type="sheets" />,
-  'google-slides': <GoogleAppPlaceholder type="slides" />,
   'google-drive': <GoogleAppPlaceholder type="drive" />,
   'notes': <Notes />,
   'calc': <Calculator />,
@@ -69,7 +65,6 @@ export const Desktop: React.FC = () => {
         backgroundPosition: 'center'
       }}
     >
-      {/* Desktop Icons */}
       <div className="absolute inset-0 p-4 flex flex-col flex-wrap gap-4 content-start">
         {DESKTOP_SHORTCUTS.map(shortcut => {
           const Icon = shortcut.icon;
@@ -90,17 +85,14 @@ export const Desktop: React.FC = () => {
         })}
       </div>
 
-      {/* Windows Layer */}
       {openWindows.map(window => (
         <Window key={window.id} window={window}>
           {APP_COMPONENTS[window.appId]}
         </Window>
       ))}
 
-      {/* Taskbar */}
       <Taskbar />
 
-      {/* Boot overlay simulation */}
       {bootVisible && (
         <div 
           className="fixed inset-0 bg-background z-[10000] flex flex-col items-center justify-center transition-opacity duration-1000 pointer-events-none"
