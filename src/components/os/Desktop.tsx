@@ -7,6 +7,7 @@ import { Taskbar } from './Taskbar';
 import { ContextMenu } from './ContextMenu';
 import { LoginScreen } from './LoginScreen';
 import { WidgetsPanel } from './WidgetsPanel';
+import { QuickSettings } from './QuickSettings';
 import { 
   ShoppingBag, 
   FolderOpen, 
@@ -62,7 +63,8 @@ export const Desktop: React.FC = () => {
     wallpaper, openWindows, openApp, theme, accentColor, customAccentHex,
     powerStatus, powerOn, taskbarPosition, iconSize, currentUser,
     cursorColor, isInverted, glassEnabled, desktopApps, updateDesktopAppPosition, toggleDesktopApp,
-    isWidgetsOpen, setIsWidgetsOpen
+    isWidgetsOpen, setIsWidgetsOpen, isQuickSettingsOpen, setIsQuickSettingsOpen,
+    brightness
   } = useOS();
   
   const [bootOpacity, setBootOpacity] = useState(1);
@@ -206,17 +208,25 @@ export const Desktop: React.FC = () => {
       onClick={() => {
         setContextMenu(null);
         if (isWidgetsOpen) setIsWidgetsOpen(false);
+        if (isQuickSettingsOpen) setIsQuickSettingsOpen(false);
       }}
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
     >
+      {/* Brightness Overlay */}
+      <div 
+        className="absolute inset-0 bg-black pointer-events-none z-[10000] transition-opacity duration-300" 
+        style={{ opacity: 1 - (brightness / 100) }}
+      />
+
       {/* Widgets Focus Overlay */}
-      {isWidgetsOpen && (
+      {(isWidgetsOpen || isQuickSettingsOpen) && (
         <div 
           className="absolute inset-0 bg-black/20 backdrop-blur-sm z-[9997] animate-in fade-in duration-300" 
           onClick={(e) => {
             e.stopPropagation();
             setIsWidgetsOpen(false);
+            setIsQuickSettingsOpen(false);
           }}
         />
       )}
@@ -292,7 +302,7 @@ export const Desktop: React.FC = () => {
 
       {shouldRenderBoot && (
         <div 
-          className="fixed inset-0 bg-[#0a0f14] z-[10000] flex flex-col items-center justify-center transition-opacity duration-1000 pointer-events-none"
+          className="fixed inset-0 bg-[#0a0f14] z-[20000] flex flex-col items-center justify-center transition-opacity duration-1000 pointer-events-none"
           style={{ opacity: bootOpacity }}
         >
           <div className="w-24 h-24 bg-accent/20 rounded-3xl flex items-center justify-center mb-8 animate-pulse">

@@ -2,9 +2,10 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useOS, AppId, APP_INFO } from '@/context/os-context';
-import { Wifi, Volume2, FolderOpen, ShoppingBag, MessageSquare, Settings, Lock, Check, Loader2, VolumeX, Volume1, LayoutGrid } from 'lucide-react';
+import { Wifi, Volume2, FolderOpen, ShoppingBag, MessageSquare, Settings, Lock, Check, Loader2, VolumeX, Volume1, LayoutGrid, Battery, BatteryMedium } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { StartMenu } from './StartMenu';
+import { QuickSettings } from './QuickSettings';
 import {
   Popover,
   PopoverContent,
@@ -12,18 +13,12 @@ import {
 } from "@/components/ui/popover";
 import { Slider } from "@/components/ui/slider";
 
-const SIMULATED_NETWORKS = [
-  { ssid: 'Nebula_Secure_5G', secure: true, strength: 4 },
-  { ssid: 'Hotel Guest', secure: false, strength: 3 },
-  { ssid: 'Starbucks_Free_WiFi', secure: false, strength: 2 },
-  { ssid: 'Public_Guest_No_Internet', secure: false, strength: 1, internet: false },
-];
-
 export const Taskbar: React.FC = () => {
   const { 
     openWindows, activeWindowId, focusWindow, openApp, taskbarPosition, taskbarSize, 
     currentWifi, isWifiConnecting, connectToWifi, volume, setVolume, isOnline,
-    isWidgetsOpen, setIsWidgetsOpen, pinnedApps, reorderPinnedApps
+    isWidgetsOpen, setIsWidgetsOpen, pinnedApps, reorderPinnedApps,
+    isQuickSettingsOpen, setIsQuickSettingsOpen, setIsStartOpen: setIsStartOpenGlobal
   } = useOS();
   
   const [isStartOpen, setIsStartOpen] = useState(false);
@@ -105,6 +100,7 @@ export const Taskbar: React.FC = () => {
           onClick={() => {
             setIsStartOpen(!isStartOpen);
             setIsWidgetsOpen(false);
+            setIsQuickSettingsOpen(false);
           }}
           className={cn(
             "p-2 rounded-md hover:bg-white/10 transition-all active:scale-95 group flex items-center justify-center min-w-[32px] min-h-[32px]",
@@ -118,6 +114,7 @@ export const Taskbar: React.FC = () => {
           onClick={() => {
             setIsWidgetsOpen(!isWidgetsOpen);
             setIsStartOpen(false);
+            setIsQuickSettingsOpen(false);
           }}
           className={cn(
             "p-2 rounded-md hover:bg-white/10 transition-all active:scale-95 group flex items-center justify-center min-w-[32px] min-h-[32px]",
@@ -211,87 +208,43 @@ export const Taskbar: React.FC = () => {
       {/* System Tray (Right Side) */}
       <div className={cn(
         "flex gap-3 text-white/70 z-10",
-        isVertical ? "flex-col items-center pb-2" : "items-center px-3"
+        isVertical ? "flex-col items-center pb-2" : "items-center px-1"
       )}>
-        {!isVertical && (
-          <div className="flex items-center gap-2">
-            <Popover>
-              <PopoverTrigger asChild>
-                <button className="p-1.5 rounded-md hover:bg-white/10 transition-colors relative">
-                  {isWifiConnecting ? (
-                    <Loader2 size={14} className="animate-spin text-accent" />
-                  ) : (
-                    <Wifi size={14} className={cn(currentWifi ? (isOnline ? "text-accent" : "text-destructive") : "opacity-40")} />
-                  )}
-                </button>
-              </PopoverTrigger>
-              <PopoverContent className="w-64 glass border-white/10 p-2 backdrop-blur-3xl rounded-xl shadow-2xl">
-                <div className="p-2 border-b border-white/5 mb-2">
-                  <h4 className="text-[10px] font-bold text-accent uppercase tracking-widest">Available Networks</h4>
-                </div>
-                <div className="space-y-1">
-                  {SIMULATED_NETWORKS.map(net => (
-                    <button
-                      key={net.ssid}
-                      onClick={() => connectToWifi(net.ssid)}
-                      disabled={isWifiConnecting || currentWifi === net.ssid}
-                      className={cn(
-                        "w-full flex items-center justify-between p-2 rounded-lg text-xs transition-all",
-                        currentWifi === net.ssid ? "bg-accent/20 text-accent" : "hover:bg-white/5 text-white/80"
-                      )}
-                    >
-                      <div className="flex items-center gap-2">
-                        <Wifi size={12} className={cn(currentWifi === net.ssid ? "text-accent" : "opacity-40")} />
-                        <span className="font-medium">{net.ssid}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {net.secure && <Lock size={10} className="opacity-40" />}
-                        {currentWifi === net.ssid && <Check size={12} className="text-accent" />}
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </PopoverContent>
-            </Popover>
-            
-            <Popover>
-              <PopoverTrigger asChild>
-                <button className="p-1.5 rounded-md hover:bg-white/10 transition-colors">
-                  <VolumeIcon size={14} className="opacity-60 hover:opacity-100" />
-                </button>
-              </PopoverTrigger>
-              <PopoverContent className="w-48 glass border-white/10 p-4 backdrop-blur-3xl rounded-xl shadow-2xl">
-                <div className="flex items-center gap-4">
-                  <VolumeIcon size={16} className="text-accent" />
-                  <Slider 
-                    value={[volume]} 
-                    max={100} 
-                    step={1} 
-                    onValueChange={(vals) => setVolume(vals[0])}
-                    className="flex-1"
-                  />
-                  <span className="text-[10px] font-mono text-white/40 w-6">{volume}</span>
-                </div>
-              </PopoverContent>
-            </Popover>
-          </div>
-        )}
-        <div className={cn(
-          "flex flex-col items-end leading-none min-w-[75px]",
-          isVertical ? "items-center text-center scale-75 origin-bottom" : ""
-        )}>
-          {mounted && time ? (
-            <>
-              <span className="text-[11px] font-medium whitespace-nowrap">{formatTime(time)}</span>
-              {!isVertical && <span className="text-[10px] opacity-40 whitespace-nowrap">{formatDate(time)}</span>}
-            </>
-          ) : (
-            <div className="animate-pulse flex flex-col items-end gap-1">
-              <div className="h-2 w-12 bg-white/10 rounded" />
-            </div>
+        <button
+          onClick={() => {
+            setIsQuickSettingsOpen(!isQuickSettingsOpen);
+            setIsStartOpen(false);
+            setIsWidgetsOpen(false);
+          }}
+          className={cn(
+            "flex items-center gap-2 px-3 py-1.5 rounded-xl hover:bg-white/10 transition-all active:scale-95 group",
+            isQuickSettingsOpen && "bg-accent/20 text-accent"
           )}
-        </div>
+        >
+          <div className="flex items-center gap-2 mr-2 border-r border-white/10 pr-2">
+            {isWifiConnecting ? (
+              <Loader2 size={14} className="animate-spin text-accent" />
+            ) : (
+              <Wifi size={14} className={cn(isOnline ? (isQuickSettingsOpen ? "text-accent" : "text-white/60") : "text-destructive")} />
+            )}
+            <VolumeIcon size={14} className={cn(isQuickSettingsOpen ? "text-accent" : "text-white/60")} />
+            <BatteryMedium size={14} className={cn(isQuickSettingsOpen ? "text-accent" : "text-white/60")} />
+          </div>
+          
+          <div className={cn(
+            "flex flex-col items-end leading-none min-w-[50px]",
+            isVertical ? "items-center text-center scale-75 origin-bottom" : ""
+          )}>
+            {mounted && time ? (
+              <span className="text-[11px] font-bold whitespace-nowrap">{formatTime(time)}</span>
+            ) : (
+              <div className="h-3 w-10 bg-white/10 rounded animate-pulse" />
+            )}
+          </div>
+        </button>
       </div>
+
+      {isQuickSettingsOpen && <QuickSettings />}
     </div>
   );
 };

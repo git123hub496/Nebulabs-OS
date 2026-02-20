@@ -86,7 +86,9 @@ interface OSContextType {
   isWifiConnecting: boolean;
   isOnline: boolean;
   volume: number;
+  brightness: number;
   isWidgetsOpen: boolean;
+  isQuickSettingsOpen: boolean;
   systemStats: { cpu: number; ram: number; net: number };
   
   login: (userId: string) => void;
@@ -112,7 +114,9 @@ interface OSContextType {
   setIconSize: (size: DesktopIconSize) => void;
   connectToWifi: (ssid: string) => void;
   setVolume: (v: number) => void;
+  setBrightness: (b: number) => void;
   setIsWidgetsOpen: (isOpen: boolean) => void;
+  setIsQuickSettingsOpen: (isOpen: boolean) => void;
   restart: () => void;
   shutDown: () => void;
   powerOn: () => void;
@@ -199,7 +203,9 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   const [isWifiConnecting, setIsWifiConnecting] = useState(false);
   const [isOnline, setIsOnline] = useState(true);
   const [volume, setVolumeState] = useState(75);
+  const [brightness, setBrightnessState] = useState(100);
   const [isWidgetsOpen, setIsWidgetsOpen] = useState(false);
+  const [isQuickSettingsOpen, setIsQuickSettingsOpen] = useState(false);
   const [nextZIndex, setNextZIndex] = useState(10);
   const [systemStats, setSystemStats] = useState({ cpu: 12, ram: 42, net: 2 });
 
@@ -273,6 +279,9 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
 
     const savedVol = load('volume', "75");
     setVolumeState(parseInt(savedVol));
+
+    const savedBrightness = load('brightness', "100");
+    setBrightnessState(parseInt(savedBrightness));
 
   }, [currentUser]);
 
@@ -374,6 +383,11 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   const setVolume = (v: number) => {
     setVolumeState(v);
     saveSetting('volume', v);
+  };
+
+  const setBrightness = (b: number) => {
+    setBrightnessState(b);
+    saveSetting('brightness', b);
   };
 
   const powerOn = () => {
@@ -638,7 +652,9 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       isWifiConnecting,
       isOnline,
       volume,
+      brightness,
       isWidgetsOpen,
+      isQuickSettingsOpen,
       systemStats,
       login,
       logout,
@@ -663,7 +679,9 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       setIconSize,
       connectToWifi,
       setVolume,
+      setBrightness,
       setIsWidgetsOpen,
+      setIsQuickSettingsOpen,
       restart,
       shutDown,
       powerOn,
@@ -675,7 +693,8 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       updateDesktopAppPosition,
       toggleDesktopApp,
       togglePinApp,
-      reorderPinnedApps
+      reorderPinnedApps,
+      setIsQuickSettingsOpen,
     }}>
       {children}
     </OSContext.Provider>
