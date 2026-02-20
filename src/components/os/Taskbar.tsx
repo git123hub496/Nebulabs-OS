@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useOS, AppId } from '@/context/os-context';
-import { Wifi, Volume2, FolderOpen, ShoppingBag, MessageSquare, Settings, Lock, Check, Loader2 } from 'lucide-react';
+import { Wifi, Volume2, FolderOpen, ShoppingBag, MessageSquare, Settings, Lock, Check, Loader2, VolumeX, Volume1 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { StartMenu } from './StartMenu';
 import {
@@ -11,7 +11,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Button } from '@/components/ui/button';
+import { Slider } from "@/components/ui/slider";
 
 const QUICK_LAUNCH: { id: AppId; icon: any; label: string }[] = [
   { id: 'files', icon: FolderOpen, label: 'File Explorer' },
@@ -24,11 +24,11 @@ const SIMULATED_NETWORKS = [
   { ssid: 'Nebula_Secure_5G', secure: true, strength: 4 },
   { ssid: 'Hotel Guest', secure: false, strength: 3 },
   { ssid: 'Starbucks_Free_WiFi', secure: false, strength: 2 },
-  { ssid: 'Dev_Network_Hidden', secure: true, strength: 1 },
+  { ssid: 'Public_Guest_No_Internet', secure: false, strength: 1, internet: false },
 ];
 
 export const Taskbar: React.FC = () => {
-  const { openWindows, activeWindowId, focusWindow, openApp, taskbarPosition, currentWifi, isWifiConnecting, connectToWifi } = useOS();
+  const { openWindows, activeWindowId, focusWindow, openApp, taskbarPosition, currentWifi, isWifiConnecting, connectToWifi, volume, setVolume, isOnline } = useOS();
   const [isStartOpen, setIsStartOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [time, setTime] = useState<Date | null>(null);
@@ -56,6 +56,8 @@ export const Taskbar: React.FC = () => {
     left: 'left-0 top-0 bottom-0 w-12 border-r',
     right: 'right-0 top-0 bottom-0 w-12 border-l',
   };
+
+  const VolumeIcon = volume === 0 ? VolumeX : volume < 50 ? Volume1 : Volume2;
 
   return (
     <div className={cn(
@@ -133,7 +135,7 @@ export const Taskbar: React.FC = () => {
                   {isWifiConnecting ? (
                     <Loader2 size={14} className="animate-spin text-accent" />
                   ) : (
-                    <Wifi size={14} className={cn(currentWifi ? "text-accent" : "opacity-40")} />
+                    <Wifi size={14} className={cn(currentWifi ? (isOnline ? "text-accent" : "text-destructive") : "opacity-40")} />
                   )}
                 </button>
               </PopoverTrigger>
@@ -165,14 +167,34 @@ export const Taskbar: React.FC = () => {
                 </div>
                 {currentWifi && (
                   <div className="mt-2 p-2 pt-2 border-t border-white/5">
-                    <p className="text-[9px] text-white/40 italic">Connected to {currentWifi}</p>
+                    <p className={cn("text-[9px] italic", isOnline ? "text-white/40" : "text-destructive/60")}>
+                      {isOnline ? `Connected to ${currentWifi}` : `Connected to ${currentWifi} (No Internet)`}
+                    </p>
                   </div>
                 )}
               </PopoverContent>
             </Popover>
-            <button className="p-1.5 rounded-md hover:bg-white/10 transition-colors">
-              <Volume2 size={14} className="opacity-60 hover:opacity-100" />
-            </button>
+            
+            <Popover>
+              <PopoverTrigger asChild>
+                <button className="p-1.5 rounded-md hover:bg-white/10 transition-colors">
+                  <VolumeIcon size={14} className="opacity-60 hover:opacity-100" />
+                </button>
+              </PopoverTrigger>
+              <PopoverContent className="w-48 glass border-white/10 p-4 backdrop-blur-3xl rounded-xl shadow-2xl">
+                <div className="flex items-center gap-4">
+                  <VolumeIcon size={16} className="text-accent" />
+                  <Slider 
+                    value={[volume]} 
+                    max={100} 
+                    step={1} 
+                    onValueChange={(vals) => setVolume(vals[0])}
+                    className="flex-1"
+                  />
+                  <span className="text-[10px] font-mono text-white/40 w-6">{volume}</span>
+                </div>
+              </PopoverContent>
+            </Popover>
           </div>
         )}
         <div className={cn(

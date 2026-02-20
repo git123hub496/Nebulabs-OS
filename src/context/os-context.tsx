@@ -48,6 +48,8 @@ interface OSContextType {
   taskbarPosition: TaskbarPosition;
   currentWifi: string;
   isWifiConnecting: boolean;
+  isOnline: boolean;
+  volume: number;
   
   login: (userId: string) => void;
   logout: () => void;
@@ -64,6 +66,7 @@ interface OSContextType {
   setAccentColor: (color: AccentColor) => void;
   setTaskbarPosition: (position: TaskbarPosition) => void;
   connectToWifi: (ssid: string) => void;
+  setVolume: (v: number) => void;
   restart: () => void;
   shutDown: () => void;
   powerOn: () => void;
@@ -84,6 +87,8 @@ const INITIAL_APPS: AppId[] = ['store', 'files', 'settings', 'assistant', 'notes
 
 const AVATAR_COLORS = ['#9333ea', '#3b82f6', '#e11d48', '#f97316', '#16a34a'];
 
+const OFFLINE_WIFI = "Public_Guest_No_Internet";
+
 export const OSProvider = ({ children }: { children: ReactNode }) => {
   const [currentUser, setCurrentUser] = useState<LocalUser | null>(null);
   const [accounts, setAccounts] = useState<LocalUser[]>([]);
@@ -99,15 +104,15 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   const [taskbarPosition, setTaskbarPositionState] = useState<TaskbarPosition>('bottom');
   const [currentWifi, setCurrentWifi] = useState("Nebula_Secure_5G");
   const [isWifiConnecting, setIsWifiConnecting] = useState(false);
+  const [isOnline, setIsOnline] = useState(true);
+  const [volume, setVolumeState] = useState(75);
   const [nextZIndex, setNextZIndex] = useState(10);
 
-  // Load accounts on initial mount
   useEffect(() => {
     const savedAccounts = localStorage.getItem('nebula_accounts');
     if (savedAccounts) {
       setAccounts(JSON.parse(savedAccounts));
     } else {
-      // Create a default guest account if none exists
       const guest = { id: 'guest', username: 'Guest', avatarColor: AVATAR_COLORS[0] };
       setAccounts([guest]);
       localStorage.setItem('nebula_accounts', JSON.stringify([guest]));
@@ -124,7 +129,6 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     return () => clearTimeout(bootTimer);
   }, []);
 
-  // Sync user-specific data whenever the current user changes
   useEffect(() => {
     if (!currentUser) return;
 
@@ -146,6 +150,10 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
 
     const savedWifi = localStorage.getItem(`nebula_${uid}_wifi`);
     setCurrentWifi(savedWifi || "Nebula_Secure_5G");
+    setIsOnline(savedWifi !== OFFLINE_WIFI);
+
+    const savedVol = localStorage.getItem(`nebula_${uid}_volume`);
+    setVolumeState(savedVol ? parseInt(savedVol) : 75);
 
   }, [currentUser]);
 
@@ -177,6 +185,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const setNotes = (content: string) => {
+    if (!isOnline) return; // Prevent "saving" when offline
     setNotesState(content);
     if (currentUser) localStorage.setItem(`nebula_${currentUser.id}_notes`, content);
   };
@@ -200,9 +209,15 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     setIsWifiConnecting(true);
     setTimeout(() => {
       setCurrentWifi(ssid);
+      setIsOnline(ssid !== OFFLINE_WIFI);
       setIsWifiConnecting(false);
       if (currentUser) localStorage.setItem(`nebula_${currentUser.id}_wifi`, ssid);
     }, 2000);
+  };
+
+  const setVolume = (v: number) => {
+    setVolumeState(v);
+    if (currentUser) localStorage.setItem(`nebula_${currentUser.id}_volume`, String(v));
   };
 
   const powerOn = () => {
@@ -330,6 +345,8 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       taskbarPosition,
       currentWifi,
       isWifiConnecting,
+      isOnline,
+      volume,
       login,
       logout,
       createAccount,
@@ -345,6 +362,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       setAccentColor,
       setTaskbarPosition,
       connectToWifi,
+      setVolume,
       restart,
       shutDown,
       powerOn,
