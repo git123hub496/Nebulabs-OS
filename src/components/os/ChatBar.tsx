@@ -1,8 +1,9 @@
+
 "use client"
 
 import React, { useState, useRef, useEffect } from 'react';
 import { useOS } from '@/context/os-context';
-import { Send, X, User, Bot, Sparkles, MessageCircle, MoreHorizontal, ShieldCheck, ShieldAlert, Lock, Heart, ShoppingBag, Bell } from 'lucide-react';
+import { Send, X, User, Bot, Sparkles, MessageCircle, MoreHorizontal, ShieldCheck, ShieldAlert, Lock, Heart, ShoppingBag, Bell, GraduationCap, School } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -13,6 +14,13 @@ const WORK_COLLEAGUES = [
   { name: 'System Admin', role: 'Infrastructure', status: 'online', avatar: 'https://picsum.photos/seed/admin/100/100' },
   { name: 'Nebulabs HR', role: 'Personnel', status: 'away', avatar: 'https://picsum.photos/seed/hr/100/100' },
   { name: 'Nebulabs CEO', role: 'Executive', status: 'online', avatar: 'https://picsum.photos/seed/ceo/100/100' },
+];
+
+const TEACHERS = [
+  { name: 'Mr. Henderson', role: 'History Teacher', status: 'online', avatar: 'https://picsum.photos/seed/teacher1/100/100' },
+  { name: 'Ms. Garcia', role: 'Science Faculty', status: 'online', avatar: 'https://picsum.photos/seed/teacher2/100/100' },
+  { name: 'Principal Vance', role: 'Administration', status: 'away', avatar: 'https://picsum.photos/seed/principal/100/100' },
+  { name: 'Nebula Support', role: 'IT Desk', status: 'online', avatar: '' },
 ];
 
 const PERSONAL_CONTACTS = [
@@ -34,7 +42,9 @@ export const ChatBar: React.FC = () => {
   } = useOS();
   
   const isWorkAccount = currentUser?.isWorkAccount;
-  const currentContacts = isWorkAccount ? WORK_COLLEAGUES : PERSONAL_CONTACTS;
+  const isSchoolAccount = currentUser?.isSchoolAccount;
+  
+  const currentContacts = isSchoolAccount ? TEACHERS : (isWorkAccount ? WORK_COLLEAGUES : PERSONAL_CONTACTS);
   
   const [inputText, setInputText] = useState("");
   const [selectedColleague, setSelectedColleague] = useState(currentContacts[0]);
@@ -43,7 +53,7 @@ export const ChatBar: React.FC = () => {
   useEffect(() => {
     // Sync selected colleague if mode changes
     setSelectedColleague(currentContacts[0]);
-  }, [isWorkAccount]);
+  }, [isWorkAccount, isSchoolAccount]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -78,13 +88,15 @@ export const ChatBar: React.FC = () => {
       <div className="p-6 border-b border-white/5 bg-black/20 shrink-0">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center">
-              <MessageCircle className="text-accent" size={24} />
+            <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", isSchoolAccount ? "bg-blue-500/20" : "bg-accent/20")}>
+              {isSchoolAccount ? <School className="text-blue-400" size={24} /> : <MessageCircle className="text-accent" size={24} />}
             </div>
             <div>
-              <h2 className="text-xl font-bold">{isWorkAccount ? "Nebula Teams" : "Personal Chat"}</h2>
+              <h2 className="text-xl font-bold">
+                {isSchoolAccount ? "Nebula Classroom" : (isWorkAccount ? "Nebula Teams" : "Personal Chat")}
+              </h2>
               <p className="text-[10px] text-white/40 font-medium uppercase tracking-widest">
-                {isWorkAccount ? "Internal Communication" : "Local Workspace Messaging"}
+                {isSchoolAccount ? "Academic Communication" : (isWorkAccount ? "Internal Communication" : "Local Workspace Messaging")}
               </p>
             </div>
           </div>
@@ -105,7 +117,7 @@ export const ChatBar: React.FC = () => {
               className={cn(
                 "flex flex-col items-center gap-2 p-3 rounded-2xl border transition-all shrink-0 min-w-[100px]",
                 selectedColleague.name === c.name 
-                  ? "bg-accent/20 border-accent/40 text-accent" 
+                  ? (isSchoolAccount ? "bg-blue-500/20 border-blue-500/40 text-blue-400" : "bg-accent/20 border-accent/40 text-accent") 
                   : "bg-white/5 border-white/5 text-white/40 hover:bg-white/10"
               )}
             >
@@ -113,7 +125,7 @@ export const ChatBar: React.FC = () => {
                 <Avatar className="w-10 h-10 border border-white/10">
                   <AvatarImage src={c.avatar} />
                   <AvatarFallback className="bg-white/5">
-                    {c.icon ? <c.icon size={16} /> : c.name[0]}
+                    {('icon' in c && c.icon) ? <c.icon size={16} /> : c.name[0]}
                   </AvatarFallback>
                 </Avatar>
                 <div className={cn(
@@ -142,13 +154,13 @@ export const ChatBar: React.FC = () => {
                 {!msg.isBot ? (
                   <>
                     <AvatarImage src={currentUser?.avatarUrl} />
-                    <AvatarFallback className="bg-accent/20 text-accent font-bold text-[10px]">ME</AvatarFallback>
+                    <AvatarFallback className={cn("font-bold text-[10px]", isSchoolAccount ? "bg-blue-500/20 text-blue-400" : "bg-accent/20 text-accent")}>ME</AvatarFallback>
                   </>
                 ) : (
                   <>
                     <AvatarImage src={msg.sender === 'Nebulabs Onboarding' ? '' : selectedColleague.avatar} />
                     <AvatarFallback className="bg-white/5 text-white font-bold text-[10px]">
-                      {selectedColleague.icon ? <selectedColleague.icon size={12} /> : msg.sender[0]}
+                      {('icon' in selectedColleague && selectedColleague.icon) ? <selectedColleague.icon size={12} /> : msg.sender[0]}
                     </AvatarFallback>
                   </>
                 )}
@@ -157,7 +169,7 @@ export const ChatBar: React.FC = () => {
                 <div className={cn(
                   "p-3 rounded-2xl text-xs leading-relaxed",
                   !msg.isBot 
-                    ? "bg-accent text-primary-foreground font-medium rounded-tr-none" 
+                    ? (isSchoolAccount ? "bg-blue-500 text-white font-medium rounded-tr-none" : "bg-accent text-primary-foreground font-medium rounded-tr-none") 
                     : "bg-white/5 border border-white/10 text-white/80 rounded-tl-none"
                 )}>
                   {msg.text}
@@ -185,7 +197,7 @@ export const ChatBar: React.FC = () => {
             className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 pr-12 text-xs text-white placeholder:text-white/20 focus:outline-none focus:border-accent/40 resize-none h-20"
           />
           <button 
-            className="absolute right-2 bottom-2 bg-accent text-primary-foreground hover:bg-accent/80 h-8 w-8 rounded-xl disabled:opacity-50 flex items-center justify-center transition-all"
+            className={cn("absolute right-2 bottom-2 h-8 w-8 rounded-xl disabled:opacity-50 flex items-center justify-center transition-all", isSchoolAccount ? "bg-blue-500 text-white hover:bg-blue-400" : "bg-accent text-primary-foreground hover:bg-accent/80")}
             onClick={handleSend}
             disabled={!inputText.trim()}
           >
@@ -193,9 +205,9 @@ export const ChatBar: React.FC = () => {
           </button>
         </div>
         <div className="flex items-center gap-2 mt-3 opacity-20 justify-center">
-          <ShieldCheck size={10} className="text-accent" />
+          <ShieldCheck size={10} className={isSchoolAccount ? "text-blue-400" : "text-accent"} />
           <span className="text-[8px] font-black uppercase tracking-widest text-white">
-            {isWorkAccount ? "Encrypted Workspace Bridge" : "End-to-End Encrypted"}
+            {isSchoolAccount ? "District Monitored Channel" : (isWorkAccount ? "Encrypted Workspace Bridge" : "End-to-End Encrypted")}
           </span>
         </div>
       </div>

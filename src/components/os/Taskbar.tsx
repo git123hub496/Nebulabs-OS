@@ -20,7 +20,7 @@ export const Taskbar: React.FC = () => {
     currentWifi, isWifiConnecting, connectToWifi, volume, setVolume, isOnline,
     isWidgetsOpen, setIsWidgetsOpen, pinnedApps, reorderPinnedApps,
     isQuickSettingsOpen, setIsQuickSettingsOpen, isStartOpen, setIsStartOpen,
-    isChatOpen, setIsChatOpen, playSound, currentUser
+    isChatOpen, setIsChatOpen, playSound, currentUser, addNotification
   } = useOS();
   
   const [mounted, setMounted] = useState(false);
@@ -78,6 +78,15 @@ export const Taskbar: React.FC = () => {
     setTargetIndex(null);
   };
 
+  const handleStartToggle = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (isSchool) {
+      addNotification("System Restriction", "Managed learning accounts do not have access to the global start menu.", "security");
+      return;
+    }
+    setIsStartOpen(!isStartOpen);
+  };
+
   const VolumeIcon = volume === 0 ? VolumeX : volume < 50 ? Volume1 : Volume2;
 
   return (
@@ -95,10 +104,7 @@ export const Taskbar: React.FC = () => {
       {/* Start & Widgets Buttons */}
       <div className={cn("flex", isVertical ? "flex-col gap-1" : "gap-1")}>
         <button
-          onClick={(e) => {
-            e.stopPropagation();
-            setIsStartOpen(!isStartOpen);
-          }}
+          onClick={handleStartToggle}
           className={cn(
             "p-2 rounded-md hover:bg-white/10 transition-all active:scale-95 group flex items-center justify-center min-w-[32px] min-h-[32px]",
             isStartOpen && "bg-white/10"
@@ -131,7 +137,7 @@ export const Taskbar: React.FC = () => {
           </button>
         )}
         
-        {isStartOpen && <StartMenu onClose={() => setIsStartOpen(false)} />}
+        {isStartOpen && !isSchool && <StartMenu onClose={() => setIsStartOpen(false)} />}
       </div>
 
       {/* Centered App Container */}
@@ -205,7 +211,7 @@ export const Taskbar: React.FC = () => {
             "p-2 rounded-md hover:bg-white/10 transition-all active:scale-95 group flex items-center justify-center min-w-[32px] min-h-[32px]",
             isChatOpen && (isSchool ? "bg-blue-500/20 text-blue-400" : "bg-accent/20 text-accent")
           )}
-          title="District Communication"
+          title={isSchool ? "Nebula Classroom" : "District Communication"}
         >
           <MessageCircle size={iconSize} className={isChatOpen ? (isSchool ? "text-blue-400" : "text-accent") : "text-white/60 group-hover:text-white"} />
         </button>

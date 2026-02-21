@@ -37,7 +37,7 @@ import {
   Palette,
   Info,
   Camera as CameraIcon,
-  Presentation,
+  Presentation as PresentationIcon,
   Monitor as MonitorIcon,
   Cpu,
   Zap,
@@ -170,10 +170,14 @@ export const Desktop: React.FC = () => {
       switch (e.key.toLowerCase()) {
         case ' ': 
           e.preventDefault();
-          setIsStartOpen(!isStartOpen);
-          setIsWidgetsOpen(false);
-          setIsQuickSettingsOpen(false);
-          setIsChatOpen(false);
+          if (isSchool) {
+            addNotification("System Restriction", "Managed learning accounts do not have access to the global start menu.", "security");
+          } else {
+            setIsStartOpen(!isStartOpen);
+            setIsWidgetsOpen(false);
+            setIsQuickSettingsOpen(false);
+            setIsChatOpen(false);
+          }
           break;
         case 'e': 
           e.preventDefault();
@@ -229,7 +233,7 @@ export const Desktop: React.FC = () => {
       setIsRunOpen(false);
       setContextMenu(null);
     }
-  }, [powerStatus, currentUser, isStartOpen, isWidgetsOpen, isQuickSettingsOpen, isChatOpen, activeWindowId, openApp, setIsStartOpen, setIsWidgetsOpen, setIsQuickSettingsOpen, setIsChatOpen, closeWindow, minimizeAllWindows, lock]);
+  }, [powerStatus, currentUser, isStartOpen, isWidgetsOpen, isQuickSettingsOpen, isChatOpen, activeWindowId, openApp, setIsStartOpen, setIsWidgetsOpen, setIsQuickSettingsOpen, setIsChatOpen, closeWindow, minimizeAllWindows, lock, isSchool, addNotification]);
 
   useEffect(() => {
     window.addEventListener('keydown', handleKeyDown);

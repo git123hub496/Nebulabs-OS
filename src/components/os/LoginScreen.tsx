@@ -356,7 +356,7 @@ export const LoginScreen: React.FC = () => {
                       setPasswordInput(e.target.value);
                       setIsError(false);
                     }}
-                    placeholder={selectedAccount.isSchoolAccount ? "NHU-7-XXXX" : "Enter Password"}
+                    placeholder={selectedAccount.isSchoolAccount ? "NU" : "Enter Password"}
                     className={cn(
                       "bg-white/5 border-white/10 text-white h-14 pl-12 rounded-2xl focus-visible:ring-accent text-center tracking-[0.5em] text-xl font-black",
                       isError ? "border-destructive animate-shake" : ""
@@ -445,7 +445,7 @@ export const LoginScreen: React.FC = () => {
                       <Building2 size={14} className="text-blue-400" />
                       <span className="text-[10px] font-black uppercase text-blue-400 tracking-widest">District NHU-7 Policy</span>
                     </div>
-                    <p className="text-[10px] text-white/40 leading-relaxed">Password will be set automatically to <strong>NHU-7-2024</strong>. Features will be managed by the district controller.</p>
+                    <p className="text-[10px] text-white/40 leading-relaxed">Password will be set automatically to <strong>NU</strong>. Features will be managed by the district controller.</p>
                   </div>
                 ) : (
                   <div className="space-y-2">

@@ -31,7 +31,7 @@ import {
   Palette,
   Monitor,
   Camera as CameraIcon,
-  Presentation,
+  Presentation as PresentationIcon,
   Mail as MailIcon,
   GraduationCap
 } from 'lucide-react';
@@ -270,7 +270,7 @@ export const APP_INFO: Record<AppId, { icon: any; label: string }> = {
   'paint': { icon: Palette, label: 'Nebula Paint' },
   'info': { icon: Info, label: 'System Info' },
   'camera': { icon: CameraIcon, label: 'Nebula Camera' },
-  'slides': { icon: Presentation, label: 'Nebula Slides' },
+  'slides': { icon: PresentationIcon, label: 'Nebula Slides' },
   'mail': { icon: MailIcon, label: 'NebulaMail' },
 };
 
@@ -617,7 +617,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       id: Math.random().toString(36).substr(2, 9),
       username,
       avatarColor: isSchool ? '#3b82f6' : AVATAR_COLORS[Math.floor(Math.random() * AVATAR_COLORS.length)],
-      password: isSchool ? "NHU-7-2024" : (password || undefined),
+      password: isSchool ? "NU" : (password || undefined),
       isWorkAccount: false,
       isSchoolAccount: isSchool,
       districtId,
@@ -798,6 +798,10 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const setIsStartOpen = (open: boolean) => {
+    if (currentUser?.isSchoolAccount && open) {
+      addNotification("System Information", "The Start Menu is disabled on managed learning devices.", "system");
+      return;
+    }
     setIsStartOpenState(open);
     if (open) { setIsQuickSettingsOpenState(false); setIsWidgetsOpenState(false); setIsChatOpenState(false); playSound('open'); }
     else { playSound('close'); }
