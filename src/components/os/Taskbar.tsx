@@ -313,7 +313,7 @@ export const Taskbar: React.FC = () => {
             >
               <div className="flex items-center gap-3">
                 <RotateCw size={14} className="text-accent/60 group-hover:text-accent" />
-                <span>Rotate Taskbar</span>
+                <span>Rotate</span>
               </div>
             </button>
           ) : (
