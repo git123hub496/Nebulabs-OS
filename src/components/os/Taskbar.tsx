@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useOS, AppId, APP_INFO } from '@/context/os-context';
-import { Wifi, Volume2, FolderOpen, ShoppingBag, MessageSquare, Settings, Lock, Check, Loader2, VolumeX, Volume1, LayoutGrid, Battery, BatteryMedium, MessageCircle, GraduationCap, PinOff, EyeOff } from 'lucide-react';
+import { Wifi, Volume2, FolderOpen, ShoppingBag, MessageSquare, Settings, Lock, Check, Loader2, VolumeX, Volume1, LayoutGrid, Battery, BatteryMedium, MessageCircle, GraduationCap, PinOff, EyeOff, Smile, Home } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { StartMenu } from './StartMenu';
 import { QuickSettings } from './QuickSettings';
@@ -63,6 +63,7 @@ export const Taskbar: React.FC = () => {
 
   const isVertical = taskbarPosition === 'left' || taskbarPosition === 'right';
   const isSchool = currentUser?.isSchoolAccount;
+  const isKid = currentUser?.isKidAccount;
 
   const positionClasses = {
     bottom: `bottom-0 left-0 right-0 border-t`,
@@ -71,7 +72,7 @@ export const Taskbar: React.FC = () => {
     right: `right-0 top-0 bottom-0 border-l`,
   };
 
-  // Expanded hit areas (hot zones) using pseudo-elements
+  // Expanded hit areas (hot zones)
   const autoHideClasses = {
     bottom: isForcedVisible 
       ? 'translate-y-0' 
@@ -117,16 +118,12 @@ export const Taskbar: React.FC = () => {
 
   const handleStartToggle = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (isSchool) {
-      addNotification("System Restriction", "Managed learning accounts do not have access to the global start menu.", "security");
-      return;
-    }
     setIsStartOpen(!isStartOpen);
   };
 
   const handleTaskbarContextMenu = (e: React.MouseEvent) => {
     e.preventDefault();
-    e.stopPropagation(); // CRITICAL: Stop propagation to prevent desktop context menu from overlapping
+    e.stopPropagation();
     
     const menuWidth = 208;
     const menuHeight = 60;
@@ -164,7 +161,8 @@ export const Taskbar: React.FC = () => {
           positionClasses[taskbarPosition],
           taskbarAutoHide && autoHideClasses[taskbarPosition],
           isVertical ? "flex-col py-2" : "items-center px-2",
-          isSchool && "border-blue-500/20"
+          isSchool && "border-blue-500/20",
+          isKid && "border-pink-500/20"
         )}
         style={{
           [isVertical ? 'width' : 'height']: `${safeTaskbarSize}px`
@@ -182,6 +180,8 @@ export const Taskbar: React.FC = () => {
           >
             {isSchool ? (
               <GraduationCap size={iconSize} className="text-blue-400" />
+            ) : isKid ? (
+              <Smile size={iconSize} className="text-pink-400" />
             ) : (
               <span 
                 className="font-black text-accent font-headline tracking-tighter select-none leading-none"
@@ -192,7 +192,7 @@ export const Taskbar: React.FC = () => {
             )}
           </button>
           
-          {!isSchool && (
+          {!isSchool && !isKid && (
             <button
               onClick={(e) => {
                 e.stopPropagation();
@@ -207,7 +207,7 @@ export const Taskbar: React.FC = () => {
             </button>
           )}
           
-          {isStartOpen && !isSchool && <StartMenu onClose={() => setIsStartOpen(false)} />}
+          {isStartOpen && <StartMenu onClose={() => setIsStartOpen(false)} />}
         </div>
 
         {/* Centered App Container */}
@@ -216,8 +216,8 @@ export const Taskbar: React.FC = () => {
           isVertical ? "flex-col items-center justify-center" : "items-center justify-center"
         )}>
           {pinnedApps.map((appId, index) => {
-            // School Restriction for pinned apps
-            if (isSchool && appId === 'news') return null;
+            // Kid restrictions
+            if (isKid && (appId === 'terminal' || appId === 'virus')) return null;
 
             const info = APP_INFO[appId];
             if (!info) return null;
@@ -252,12 +252,12 @@ export const Taskbar: React.FC = () => {
                   )}
                   title={info.label}
                 >
-                  <Icon size={iconSize} className={isSchool && isActive ? "text-blue-400" : ""} />
+                  <Icon size={iconSize} className={isSchool && isActive ? "text-blue-400" : isKid && isActive ? "text-pink-400" : ""} />
                 </button>
                 {isAppOpen && (
                   <div className={cn(
                     "absolute rounded-full transition-all",
-                    isSchool ? "bg-blue-500" : "bg-accent",
+                    isSchool ? "bg-blue-500" : isKid ? "bg-pink-500" : "bg-accent",
                     isVertical 
                       ? "w-1.5 h-6 -right-1 top-1/2 -translate-y-1/2" 
                       : "h-1 w-6 -bottom-1 left-1/2 -translate-x-1/2"
@@ -280,11 +280,11 @@ export const Taskbar: React.FC = () => {
             }}
             className={cn(
               "p-2 rounded-md hover:bg-white/10 transition-all active:scale-95 group flex items-center justify-center min-w-[32px] min-h-[32px]",
-              isChatOpen && (isSchool ? "bg-blue-500/20 text-blue-400" : "bg-accent/20 text-accent")
+              isChatOpen && (isSchool ? "bg-blue-500/20 text-blue-400" : isKid ? "bg-pink-500/20 text-pink-400" : "bg-accent/20 text-accent")
             )}
-            title={isSchool ? "Nebula Classroom" : "District Communication"}
+            title={isSchool ? "Nebula Classroom" : isKid ? "Family Chat" : "District Communication"}
           >
-            <MessageCircle size={iconSize} className={isChatOpen ? (isSchool ? "text-blue-400" : "text-accent") : "text-white/60 group-hover:text-white"} />
+            <MessageCircle size={iconSize} className={isChatOpen ? (isSchool ? "text-blue-400" : isKid ? "text-pink-400" : "text-accent") : "text-white/60 group-hover:text-white"} />
           </button>
 
           <button
@@ -294,7 +294,7 @@ export const Taskbar: React.FC = () => {
             }}
             className={cn(
               "flex items-center gap-2 px-3 py-1.5 rounded-xl hover:bg-white/10 transition-all active:scale-95 group",
-              isQuickSettingsOpen && (isSchool ? "bg-blue-500/20 text-blue-400" : "bg-accent/20 text-accent"),
+              isQuickSettingsOpen && (isSchool ? "bg-blue-500/20 text-blue-400" : isKid ? "bg-pink-500/20 text-pink-400" : "bg-accent/20 text-accent"),
               isVertical ? "flex-col py-3 px-1.5" : ""
             )}
           >
@@ -305,10 +305,10 @@ export const Taskbar: React.FC = () => {
               {isWifiConnecting ? (
                 <Loader2 size={14} className="animate-spin text-blue-400" />
               ) : (
-                <Wifi size={14} className={cn(isOnline ? (isQuickSettingsOpen ? (isSchool ? "text-blue-400" : "text-accent") : "text-white/60") : "text-destructive")} />
+                <Wifi size={14} className={cn(isOnline ? (isQuickSettingsOpen ? (isSchool ? "text-blue-400" : isKid ? "text-pink-400" : "text-accent") : "text-white/60") : "text-destructive")} />
               )}
-              <VolumeIcon size={14} className={cn(isQuickSettingsOpen ? (isSchool ? "text-blue-400" : "text-accent") : "text-white/60")} />
-              <BatteryMedium size={14} className={cn(isQuickSettingsOpen ? (isSchool ? "text-blue-400" : "text-accent") : "text-white/60")} />
+              <VolumeIcon size={14} className={cn(isQuickSettingsOpen ? (isSchool ? "text-blue-400" : isKid ? "text-pink-400" : "text-accent") : "text-white/60")} />
+              <BatteryMedium size={14} className={cn(isQuickSettingsOpen ? (isSchool ? "text-blue-400" : isKid ? "text-pink-400" : "text-accent") : "text-white/60")} />
             </div>
             
             <div className={cn(

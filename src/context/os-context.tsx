@@ -32,7 +32,9 @@ import {
   Camera as CameraIcon,
   Presentation as PresentationIcon,
   Mail as MailIcon,
-  GraduationCap
+  GraduationCap,
+  Smile,
+  Home
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { respondToEmail } from '@/ai/flows/mail-ai-flow';
@@ -55,6 +57,7 @@ export interface LocalUser {
   password?: string;
   isWorkAccount?: boolean;
   isSchoolAccount?: boolean;
+  isKidAccount?: boolean;
   districtId?: string;
   uniqueCode?: string;
 }
@@ -190,7 +193,7 @@ interface OSContextType {
   logout: () => void;
   lock: () => void;
   unlock: (password?: string) => boolean;
-  createAccount: (username: string, password?: string, isSchool?: boolean, isWork?: boolean, districtId?: string) => void;
+  createAccount: (username: string, password?: string, isSchool?: boolean, isWork?: boolean, isKid?: boolean, districtId?: string) => void;
   deleteAccount: (userId: string) => void;
   updateUserPassword: (password: string) => void;
   resetUserPassword: (userId: string, password: string) => void;
@@ -316,7 +319,7 @@ const MOCK_EMAILS: Email[] = [
 const INITIAL_APPS: AppId[] = ['store', 'files', 'settings', 'assistant', 'notes', 'calc', 'terminal', 'browser', 'trash', 'news', 'maps', 'monitor', 'calendar', 'snake', 'minesweeper', 'update', 'paint', 'info', 'camera', 'slides', 'mail'];
 const INITIAL_PINNED: AppId[] = ['files', 'store', 'assistant', 'browser', 'settings', 'mail', 'camera', 'slides'];
 
-const AVATAR_COLORS = ['#9333ea', '#3b82f6', '#e11d48', '#f97316', '#16a34a'];
+const AVATAR_COLORS = ['#9333ea', '#3b82f6', '#e11d48', '#f97316', '#16a34a', '#ec4899', '#06b6d4'];
 const OFFLINE_WIFI = "Public_Guest_No_Internet";
 
 export const OSProvider = ({ children }: { children: ReactNode }) => {
@@ -431,7 +434,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
         if (type === 'chat') {
           const contacts = currentUser.isSchoolAccount 
             ? ['Mr. Henderson', 'Ms. Garcia', 'IT Desk'] 
-            : (currentUser.isWorkAccount ? ['Sarah', 'Admin', 'HR'] : ['Mom', 'Best Friend', 'Pizza Planet']);
+            : (currentUser.isKidAccount ? ['Mom', 'Dad', 'Best Friend'] : (currentUser.isWorkAccount ? ['Sarah', 'Admin', 'HR'] : ['Mom', 'Best Friend', 'Pizza Planet']));
           
           const sender = contacts[Math.floor(Math.random() * contacts.length)];
           const messages = [
@@ -695,17 +698,18 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     return false;
   };
 
-  const createAccount = useCallback((username: string, password?: string, isSchool: boolean = false, isWork: boolean = false, districtId?: string) => {
+  const createAccount = useCallback((username: string, password?: string, isSchool: boolean = false, isWork: boolean = false, isKid: boolean = false, districtId?: string) => {
     const effectiveDistrictId = districtId || (isSchool ? "NHU-7" : undefined);
-    const uniqueCode = `${effectiveDistrictId || (isWork ? 'WRK' : 'USR')}-${Math.floor(1000 + Math.random() * 9000)}-X`;
+    const uniqueCode = `${effectiveDistrictId || (isKid ? 'KID' : (isWork ? 'WRK' : 'USR'))}-${Math.floor(1000 + Math.random() * 9000)}-X`;
     
     const newAcc: LocalUser = {
       id: Math.random().toString(36).substr(2, 9),
       username,
-      avatarColor: isSchool ? '#3b82f6' : AVATAR_COLORS[Math.floor(Math.random() * AVATAR_COLORS.length)],
+      avatarColor: isKid ? '#ec4899' : (isSchool ? '#3b82f6' : AVATAR_COLORS[Math.floor(Math.random() * AVATAR_COLORS.length)]),
       password: password || (isSchool ? "NU" : undefined),
       isWorkAccount: isWork,
       isSchoolAccount: isSchool,
+      isKidAccount: isKid,
       districtId: effectiveDistrictId,
       uniqueCode
     };
@@ -719,10 +723,10 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     setIsLocked(false);
     try {
       localStorage.setItem(`nebula_${newAcc.id}_theme`, theme);
-      localStorage.setItem(`nebula_${newAcc.id}_accent`, isSchool ? 'blue' : accentColor);
+      localStorage.setItem(`nebula_${newAcc.id}_accent`, isKid ? 'rose' : (isSchool ? 'blue' : accentColor));
       localStorage.setItem(`nebula_${newAcc.id}_wallpaper`, wallpaper);
     } catch (e) {}
-    addNotification("Account Created", `Welcome, ${username}! ${isSchool ? "District profile active." : (isWork ? "Professional workspace ready." : "System initialized.")}`);
+    addNotification("Account Created", `Welcome, ${username}! ${isKid ? "Home Managed profile active." : (isSchool ? "District profile active." : (isWork ? "Professional workspace ready." : "System initialized."))}`);
   }, [theme, accentColor, wallpaper, addNotification]);
 
   const deleteAccount = useCallback((userId: string) => {
@@ -780,8 +784,13 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   const clearNotifications = () => setNotifications([]);
 
   const openApp = (appId: AppId, title: string, params?: any) => {
-    if (currentUser?.isSchoolAccount && (appId === 'news' || appId === 'virus')) {
-      addNotification("Access Restricted", "The Nebula News app is disabled by District Policy.", "security");
+    // Restrictions logic
+    if (currentUser?.isSchoolAccount && (appId === 'virus')) {
+      addNotification("Access Restricted", "Restricted app execution prevented by District Policy.", "security");
+      return;
+    }
+    if (currentUser?.isKidAccount && (appId === 'terminal' || appId === 'virus')) {
+      addNotification("Parental Control", "Terminal access is disabled for Home Managed accounts.", "security");
       return;
     }
 
@@ -868,8 +877,8 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   const setBrightness = (b: number) => { setBrightnessState(b); saveSetting('brightness', b); };
 
   const setIsWidgetsOpen = (open: boolean) => {
-    if (currentUser?.isSchoolAccount && open) {
-      addNotification("Restricted", "Widgets are disabled during school hours.", "security");
+    if ((currentUser?.isSchoolAccount || currentUser?.isKidAccount) && open) {
+      addNotification("Restricted", "Widgets are disabled on managed accounts.", "security");
       return;
     }
     setIsWidgetsOpenState(open);
@@ -884,10 +893,6 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const setIsStartOpen = (open: boolean) => {
-    if (currentUser?.isSchoolAccount && open) {
-      addNotification("System Information", "The Start Menu is disabled on managed learning devices.", "system");
-      return;
-    }
     setIsStartOpenState(open);
     if (open) { setIsQuickSettingsOpenState(false); setIsWidgetsOpenState(false); setIsChatOpenState(false); playSound('open'); }
     else { playSound('close'); }
@@ -913,7 +918,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const setSecurityEnabled = (enabled: boolean) => {
-    if (currentUser?.isSchoolAccount) return;
+    if (currentUser?.isSchoolAccount || currentUser?.isKidAccount) return;
     setSecurityEnabledState(enabled);
   };
 

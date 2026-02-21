@@ -24,7 +24,9 @@ import {
   Activity,
   Calendar as CalendarIcon,
   GraduationCap,
-  Presentation as PresentationIcon
+  Presentation as PresentationIcon,
+  Smile,
+  Home
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -99,9 +101,7 @@ export const StartMenu: React.FC<StartMenuProps> = ({ onClose }) => {
   const [appContextMenu, setAppContextMenu] = useState<{ x: number, y: number, appId: AppId } | null>(null);
 
   const isSchool = currentUser?.isSchoolAccount;
-
-  // In case somehow opened on school account, return null
-  if (isSchool) return null;
+  const isKid = currentUser?.isKidAccount;
 
   const handleAppClick = (appId: AppId) => {
     openApp(appId, APP_INFO[appId]?.label || appId);
@@ -127,6 +127,9 @@ export const StartMenu: React.FC<StartMenuProps> = ({ onClose }) => {
   const filteredApps = installedApps.filter(appId => {
     const info = APP_INFO[appId];
     if (!info) return false;
+    // Kid restrictions
+    if (isKid && (appId === 'terminal' || appId === 'virus')) return false;
+    
     return info.label.toLowerCase().includes(searchQuery.toLowerCase());
   });
 
@@ -174,10 +177,10 @@ export const StartMenu: React.FC<StartMenuProps> = ({ onClose }) => {
                     onClick={() => handleAppClick(appId)}
                     onContextMenu={(e) => handleAppContextMenu(e, appId)}
                   >
-                    <div className="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center group-hover:scale-105 transition-all border border-white/5 group-hover:bg-accent/20 group-hover:border-accent/20">
-                      <Icon className="text-muted-foreground transition-colors group-hover:text-accent" size={24} />
+                    <div className={cn("w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center group-hover:scale-105 transition-all border border-white/5", isSchool ? "group-hover:bg-blue-500/20 group-hover:border-blue-500/20" : isKid ? "group-hover:bg-pink-500/20 group-hover:border-pink-500/20" : "group-hover:bg-accent/20 group-hover:border-accent/20")}>
+                      <Icon className={cn("transition-colors", isSchool ? "group-hover:text-blue-400" : isKid ? "group-hover:text-pink-400" : "group-hover:text-accent")} size={24} />
                     </div>
-                    <span className="text-[10px] text-muted-foreground font-medium text-center truncate w-full transition-colors group-hover:text-accent">{info.label}</span>
+                    <span className={cn("text-[10px] text-muted-foreground font-medium text-center truncate w-full transition-colors", isSchool ? "group-hover:text-blue-400" : isKid ? "group-hover:text-pink-400" : "group-hover:text-accent")}>{info.label}</span>
                   </button>
                 );
               })}
@@ -220,8 +223,8 @@ export const StartMenu: React.FC<StartMenuProps> = ({ onClose }) => {
           </Avatar>
           <div className="flex flex-col overflow-hidden">
             <span className="text-sm font-bold text-foreground truncate">{currentUser?.username || 'Guest User'}</span>
-            <span className="text-[10px] truncate font-medium uppercase tracking-tighter text-accent/60">
-              Local Administrator
+            <span className={cn("text-[10px] truncate font-medium uppercase tracking-tighter", isSchool ? "text-blue-400/60" : isKid ? "text-pink-400/60" : "text-accent/60")}>
+              {isSchool ? "School Account" : isKid ? "Home Managed" : "Local Administrator"}
             </span>
           </div>
         </div>

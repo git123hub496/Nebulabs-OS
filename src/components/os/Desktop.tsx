@@ -43,7 +43,9 @@ import {
   Mail,
   GraduationCap,
   Pin,
-  PinOff
+  PinOff,
+  Smile,
+  Home
 } from 'lucide-react';
 import { FileExplorer } from '../apps/FileExplorer';
 import { AppStore } from '../apps/AppStore';
@@ -151,6 +153,7 @@ export const Desktop: React.FC = () => {
   const desktopRef = useRef<HTMLDivElement>(null);
 
   const isSchool = currentUser?.isSchoolAccount;
+  const isKid = currentUser?.isKidAccount;
 
   useEffect(() => {
     if (powerStatus === 'on') {
@@ -167,7 +170,7 @@ export const Desktop: React.FC = () => {
   }, [powerStatus]);
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
-    // BIOS Key Listener (Only on boot screen or power off menu)
+    // BIOS Key Listener
     if (e.key.toLowerCase() === 'b') {
       const isBooting = powerStatus === 'booting' || shouldRenderBoot;
       const isOff = powerStatus === 'off';
@@ -184,14 +187,10 @@ export const Desktop: React.FC = () => {
       switch (e.key.toLowerCase()) {
         case ' ': 
           e.preventDefault();
-          if (isSchool) {
-            addNotification("System Restriction", "Managed learning accounts do not have access to the global start menu.", "security");
-          } else {
-            setIsStartOpen(!isStartOpen);
-            setIsWidgetsOpen(false);
-            setIsQuickSettingsOpen(false);
-            setIsChatOpen(false);
-          }
+          setIsStartOpen(!isStartOpen);
+          setIsWidgetsOpen(false);
+          setIsQuickSettingsOpen(false);
+          setIsChatOpen(false);
           break;
         case 'e': 
           e.preventDefault();
@@ -203,7 +202,7 @@ export const Desktop: React.FC = () => {
           break;
         case 't': 
           e.preventDefault();
-          openApp('terminal', 'Terminal');
+          if (!isKid) openApp('terminal', 'Terminal');
           break;
         case 'a': 
           e.preventDefault();
@@ -248,7 +247,7 @@ export const Desktop: React.FC = () => {
       setContextMenu(null);
       setShortcutContextMenu(null);
     }
-  }, [powerStatus, currentUser, isStartOpen, isWidgetsOpen, isQuickSettingsOpen, isChatOpen, activeWindowId, openApp, setIsStartOpen, setIsWidgetsOpen, setIsQuickSettingsOpen, setIsChatOpen, closeWindow, minimizeAllWindows, lock, isSchool, addNotification, shouldRenderBoot]);
+  }, [powerStatus, currentUser, isStartOpen, isWidgetsOpen, isQuickSettingsOpen, isChatOpen, activeWindowId, openApp, setIsStartOpen, setIsWidgetsOpen, setIsQuickSettingsOpen, setIsChatOpen, closeWindow, minimizeAllWindows, lock, isSchool, isKid, addNotification, shouldRenderBoot]);
 
   useEffect(() => {
     window.addEventListener('keydown', handleKeyDown);
@@ -257,7 +256,6 @@ export const Desktop: React.FC = () => {
 
   const handleContextMenu = (e: React.MouseEvent) => {
     e.preventDefault();
-    // Boundary check for context menu
     const menuWidth = 224;
     const menuHeight = 250;
     let x = e.clientX;
@@ -273,7 +271,6 @@ export const Desktop: React.FC = () => {
   const handleShortcutContextMenu = (e: React.MouseEvent, appId: AppId) => {
     e.preventDefault();
     e.stopPropagation();
-    // Boundary check for shortcut menu
     const menuWidth = 224;
     const menuHeight = 200;
     let x = e.clientX;
@@ -328,7 +325,6 @@ export const Desktop: React.FC = () => {
     }
   };
 
-  // BIOS Overlay
   if (showBIOS) {
     return <BIOS onClose={() => setShowBIOS(false)} />;
   }
@@ -430,15 +426,15 @@ export const Desktop: React.FC = () => {
         />
       )}
 
-      {!isSchool && <WidgetsPanel />}
+      {!isSchool && !isKid && <WidgetsPanel />}
       
       <GlobalSearch />
 
       <ChatBar />
 
       {currentDisplayId === '1' && desktopApps.map(shortcut => {
-        // School Restriction for pinned apps
-        if (isSchool && shortcut.id === 'news') return null;
+        // Kid Restrictions
+        if (isKid && (shortcut.id === 'terminal' || shortcut.id === 'virus')) return null;
 
         const Icon = shortcut.icon;
         const isDragging = draggingAppId === shortcut.id;
@@ -463,10 +459,10 @@ export const Desktop: React.FC = () => {
             }}
             onContextMenu={(e) => handleShortcutContextMenu(e, shortcut.id)}
           >
-            <div className={cn("w-14 h-14 glass rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform mb-1 shadow-lg border-white/20 relative", isSchool && "border-blue-500/20 shadow-blue-500/10")}>
-              <Icon size={28} className={isSchool ? "text-blue-400" : "text-accent"} />
+            <div className={cn("w-14 h-14 glass rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform mb-1 shadow-lg border-white/20 relative", isSchool && "border-blue-500/20 shadow-blue-500/10", isKid && "border-pink-500/20 shadow-pink-500/10")}>
+              <Icon size={28} className={isSchool ? "text-blue-400" : isKid ? "text-pink-400" : "text-accent"} />
               
-              {shortcut.id !== 'trash' && shortcut.id !== 'files' && shortcut.id !== 'store' && !isSchool && (
+              {shortcut.id !== 'trash' && shortcut.id !== 'files' && shortcut.id !== 'store' && !isSchool && !isKid && (
                 <button 
                   className="delete-shortcut-btn absolute -top-1.5 -right-1.5 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 hover:scale-110 transition-all z-10 border-2 border-white shadow-md flex items-center justify-center"
                   onMouseDown={(e) => e.stopPropagation()} 
@@ -545,7 +541,7 @@ export const Desktop: React.FC = () => {
             </div>
           </button>
 
-          {!['trash', 'files', 'store'].includes(shortcutContextMenu.appId) && (
+          {!['trash', 'files', 'store'].includes(shortcutContextMenu.appId) && !isSchool && !isKid && (
             <button 
               onClick={() => {
                 toggleDesktopApp(shortcutContextMenu.appId);
@@ -565,8 +561,8 @@ export const Desktop: React.FC = () => {
       {isRunOpen && (
         <div className="fixed top-1/4 left-1/2 -translate-x-1/2 z-[10001] w-[400px] glass p-6 rounded-3xl border border-white/10 shadow-2xl animate-in zoom-in-95 slide-in-from-top-4">
           <div className="flex items-center gap-3 mb-4">
-            <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center", isSchool ? "bg-blue-500/20" : "bg-accent/20")}>
-              <Command size={16} className={isSchool ? "text-blue-400" : "text-accent"} />
+            <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center", isSchool ? "bg-blue-500/20" : isKid ? "bg-pink-500/20" : "bg-accent/20")}>
+              <Command size={16} className={isSchool ? "text-blue-400" : isKid ? "text-pink-400" : "text-accent"} />
             </div>
             <h2 className="text-sm font-bold uppercase tracking-widest text-white/80">Run Intelligence</h2>
           </div>

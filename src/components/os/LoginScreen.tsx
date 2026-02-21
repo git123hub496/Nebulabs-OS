@@ -27,7 +27,9 @@ import {
   Fingerprint,
   GraduationCap,
   Building2,
-  Briefcase
+  Briefcase,
+  Smile,
+  Home
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -73,7 +75,7 @@ const ACCENT_COLORS: { id: AccentColor; color: string }[] = [
   { id: 'green', color: '#16a34a' },
 ];
 
-type AccountType = 'personal' | 'school' | 'work';
+type AccountType = 'personal' | 'school' | 'work' | 'kid';
 
 export const LoginScreen: React.FC = () => {
   const { 
@@ -139,6 +141,7 @@ export const LoginScreen: React.FC = () => {
                     effectivePassword, 
                     creationAccountType === 'school',
                     creationAccountType === 'work',
+                    creationAccountType === 'kid',
                     creationAccountType === 'school' ? newDistrict : undefined
                   );
                 } else {
@@ -180,7 +183,7 @@ export const LoginScreen: React.FC = () => {
         return;
       }
       playSound('click');
-      if (creationAccountType === 'school') {
+      if (creationAccountType === 'school' || creationAccountType === 'kid') {
         setStep('initialize'); 
       } else {
         setStep('customize');
@@ -233,6 +236,7 @@ export const LoginScreen: React.FC = () => {
 
   const isSchoolMode = creationAccountType === 'school';
   const isWorkMode = creationAccountType === 'work';
+  const isKidMode = creationAccountType === 'kid';
 
   return (
     <div 
@@ -285,7 +289,12 @@ export const LoginScreen: React.FC = () => {
                         <GraduationCap size={12} className="text-white" />
                       </div>
                     )}
-                    {account.isWorkAccount && !account.isSchoolAccount && (
+                    {account.isKidAccount && (
+                      <div className="absolute top-0 right-0 bg-pink-500 p-1.5 rounded-full border-2 border-[#1e2731]">
+                        <Smile size={12} className="text-white" />
+                      </div>
+                    )}
+                    {account.isWorkAccount && !account.isSchoolAccount && !account.isKidAccount && (
                       <div className="absolute top-0 right-0 bg-accent p-1.5 rounded-full border-2 border-[#1e2731]">
                         <Briefcase size={12} className="text-white" />
                       </div>
@@ -300,7 +309,12 @@ export const LoginScreen: React.FC = () => {
                         {account.districtId || "NHU-7"}
                       </span>
                     )}
-                    {account.isWorkAccount && !account.isSchoolAccount && (
+                    {account.isKidAccount && (
+                      <span className="text-[10px] text-pink-400 uppercase font-black tracking-tighter">
+                        Home Managed
+                      </span>
+                    )}
+                    {account.isWorkAccount && !account.isSchoolAccount && !account.isKidAccount && (
                       <span className="text-[10px] text-accent uppercase font-black tracking-tighter">
                         Work Account
                       </span>
@@ -352,6 +366,11 @@ export const LoginScreen: React.FC = () => {
                   <GraduationCap size={14} className="text-blue-400" />
                   <span className="text-[10px] text-blue-400 font-black uppercase tracking-widest">{selectedAccount.districtId || "Managed Account"}</span>
                 </div>
+              ) : selectedAccount.isKidAccount ? (
+                <div className="flex items-center gap-2 justify-center py-1 px-3 bg-pink-500/20 rounded-full border border-pink-500/30">
+                  <Home size={14} className="text-pink-400" />
+                  <span className="text-[10px] text-pink-400 font-black uppercase tracking-widest">Home Managed</span>
+                </div>
               ) : selectedAccount.isWorkAccount ? (
                 <div className="flex items-center gap-2 justify-center py-1 px-3 bg-accent/20 rounded-full border border-accent/30">
                   <Briefcase size={14} className="text-accent" />
@@ -374,7 +393,7 @@ export const LoginScreen: React.FC = () => {
                       setPasswordInput(e.target.value);
                       setIsError(false);
                     }}
-                    placeholder={selectedAccount.isSchoolAccount ? "ID" : "Enter Password"}
+                    placeholder={selectedAccount.isSchoolAccount ? "District Code" : "Enter Password"}
                     className={cn(
                       "bg-white/5 border-white/10 text-white h-14 pl-12 rounded-2xl focus-visible:ring-accent text-center tracking-[0.5em] text-xl font-black",
                       isError ? "border-destructive animate-shake" : ""
@@ -385,7 +404,7 @@ export const LoginScreen: React.FC = () => {
                   <p className="text-destructive text-[10px] font-bold uppercase text-center tracking-widest">Access Denied: Incorrect Password</p>
                 )}
                 
-                {!selectedAccount.isSchoolAccount && (
+                {!selectedAccount.isSchoolAccount && !selectedAccount.isKidAccount && (
                   <div className="text-center">
                     <button 
                       type="button"
@@ -429,24 +448,30 @@ export const LoginScreen: React.FC = () => {
               </Button>
             </div>
             
-            <div className="flex gap-2 p-1 bg-white/5 rounded-xl border border-white/5">
+            <div className="flex flex-wrap gap-2 p-1 bg-white/5 rounded-xl border border-white/5">
               <button 
                 onClick={() => setCreationAccountType('personal')}
-                className={cn("flex-1 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all", creationAccountType === 'personal' ? "bg-accent text-white shadow-lg" : "text-white/40 hover:text-white/60")}
+                className={cn("flex-1 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all", creationAccountType === 'personal' ? "bg-accent text-white shadow-lg" : "text-white/40 hover:text-white/60")}
               >
                 Personal
               </button>
               <button 
                 onClick={() => setCreationAccountType('work')}
-                className={cn("flex-1 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all", creationAccountType === 'work' ? "bg-accent text-white shadow-lg" : "text-white/40 hover:text-white/60")}
+                className={cn("flex-1 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all", creationAccountType === 'work' ? "bg-accent text-white shadow-lg" : "text-white/40 hover:text-white/60")}
               >
                 Work
               </button>
               <button 
                 onClick={() => setCreationAccountType('school')}
-                className={cn("flex-1 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all", creationAccountType === 'school' ? "bg-blue-500 text-white shadow-lg" : "text-white/40 hover:text-white/60")}
+                className={cn("flex-1 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all", creationAccountType === 'school' ? "bg-blue-500 text-white shadow-lg" : "text-white/40 hover:text-white/60")}
               >
                 School
+              </button>
+              <button 
+                onClick={() => setCreationAccountType('kid')}
+                className={cn("flex-1 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all", creationAccountType === 'kid' ? "bg-pink-500 text-white shadow-lg" : "text-white/40 hover:text-white/60")}
+              >
+                Kid
               </button>
             </div>
 
@@ -458,7 +483,7 @@ export const LoginScreen: React.FC = () => {
                     autoFocus
                     value={newUsername}
                     onChange={(e) => setNewUsername(e.target.value)}
-                    placeholder={isSchoolMode ? "Student Name" : isWorkMode ? "Corporate Name" : "e.g. Administrator"}
+                    placeholder={isSchoolMode ? "Student Name" : isWorkMode ? "Corporate Name" : isKidMode ? "Kid's Name" : "e.g. Administrator"}
                     className="bg-white/5 border-white/10 text-white h-12 rounded-xl focus-visible:ring-accent"
                   />
                 </div>
@@ -485,6 +510,24 @@ export const LoginScreen: React.FC = () => {
                       </div>
                     )}
                     <p className="text-[10px] text-white/40 leading-relaxed italic">The first 2 letters of your district will be your access password.</p>
+                  </div>
+                ) : isKidMode ? (
+                  <div className="p-4 bg-pink-500/10 border border-pink-500/20 rounded-xl space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Home size={14} className="text-pink-400" />
+                      <span className="text-[10px] font-black uppercase text-pink-400 tracking-widest">Home Managed Account</span>
+                    </div>
+                    <p className="text-[10px] text-white/40 leading-relaxed">Age-appropriate environment. Parental controls enabled. Secure communication restricted to family.</p>
+                    <div className="space-y-2 pt-2">
+                      <label className="text-[10px] font-black text-pink-400 uppercase tracking-widest px-1">Access Password (Optional)</label>
+                      <Input 
+                        type="password"
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        placeholder="Kid-friendly code"
+                        className="bg-white/5 border-white/10 text-white h-10 rounded-xl focus-visible:ring-pink-500"
+                      />
+                    </div>
                   </div>
                 ) : isWorkMode ? (
                   <div className="p-4 bg-accent/10 border border-accent/20 rounded-xl space-y-2">
@@ -518,7 +561,7 @@ export const LoginScreen: React.FC = () => {
                 )}
               </div>
               <Button type="submit" className="w-full h-14 bg-accent text-primary-foreground font-black rounded-2xl hover:bg-accent/80 gap-2 uppercase tracking-[0.2em] shadow-lg shadow-accent/20">
-                {isSchoolMode ? "Verify & Initialize" : "Continue Setup"}
+                {isSchoolMode || isKidMode ? "Verify & Initialize" : "Continue Setup"}
                 <ArrowRight size={18} />
               </Button>
             </form>
@@ -594,7 +637,7 @@ export const LoginScreen: React.FC = () => {
             <div className="relative">
               <div className="w-20 h-20 rounded-3xl bg-accent/20 flex items-center justify-center animate-pulse">
                 {step === 'initialize' ? (
-                  <Loader2 className={cn("animate-spin", isSchoolMode ? "text-blue-400" : "text-accent")} size={40} />
+                  <Loader2 className={cn("animate-spin", isSchoolMode ? "text-blue-400" : isKidMode ? "text-pink-400" : "text-accent")} size={40} />
                 ) : (
                   <Fingerprint className="text-accent animate-pulse" size={40} />
                 )}
@@ -607,14 +650,16 @@ export const LoginScreen: React.FC = () => {
             <div className="w-full space-y-6">
               <div className="space-y-2">
                 <div className="flex justify-between text-[10px] font-black uppercase tracking-widest">
-                  <span className={isSchoolMode ? "text-blue-400" : "text-accent"}>{isSchoolMode ? "Enrolling Managed Identity" : isWorkMode ? "Staging Workplace Assets" : "Preparing Workspace"}</span>
+                  <span className={isSchoolMode ? "text-blue-400" : isKidMode ? "text-pink-400" : "text-accent"}>
+                    {isSchoolMode ? "Enrolling Managed Identity" : isKidMode ? "Verifying Home Managed Auth" : isWorkMode ? "Staging Workplace Assets" : "Preparing Workspace"}
+                  </span>
                   <span>{progress}%</span>
                 </div>
                 <Progress value={progress} className="h-2 bg-white/5" />
               </div>
 
               <div className="bg-black/20 rounded-xl p-4 h-32 overflow-hidden border border-white/5 font-mono text-[10px] space-y-1">
-                <div className={cn("font-bold animate-pulse", isSchoolMode ? "text-blue-400" : "text-green-500")}>{currentLog}</div>
+                <div className={cn("font-bold animate-pulse", isSchoolMode ? "text-blue-400" : isKidMode ? "text-pink-400" : "text-green-500")}>{currentLog}</div>
                 <div className="text-white/20 opacity-40">{">> "}Hardware link active</div>
                 <div className="text-white/20 opacity-40">{">> "}Kernel integrity verified</div>
                 <div className="text-white/20 opacity-40">{">> "}Identity registry unlocked</div>
