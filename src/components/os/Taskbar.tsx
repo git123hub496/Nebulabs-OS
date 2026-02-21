@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useOS, AppId, APP_INFO } from '@/context/os-context';
-import { Wifi, Volume2, FolderOpen, ShoppingBag, MessageSquare, Settings, Lock, Check, Loader2, VolumeX, Volume1, LayoutGrid, Battery, BatteryMedium } from 'lucide-react';
+import { Wifi, Volume2, FolderOpen, ShoppingBag, MessageSquare, Settings, Lock, Check, Loader2, VolumeX, Volume1, LayoutGrid, Battery, BatteryMedium, MessageCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { StartMenu } from './StartMenu';
 import { QuickSettings } from './QuickSettings';
@@ -18,7 +18,8 @@ export const Taskbar: React.FC = () => {
     openWindows, activeWindowId, focusWindow, openApp, taskbarPosition, taskbarSize, 
     currentWifi, isWifiConnecting, connectToWifi, volume, setVolume, isOnline,
     isWidgetsOpen, setIsWidgetsOpen, pinnedApps, reorderPinnedApps,
-    isQuickSettingsOpen, setIsQuickSettingsOpen, isStartOpen, setIsStartOpen
+    isQuickSettingsOpen, setIsQuickSettingsOpen, isStartOpen, setIsStartOpen,
+    isChatOpen, setIsChatOpen
   } = useOS();
   
   const [mounted, setMounted] = useState(false);
@@ -102,6 +103,7 @@ export const Taskbar: React.FC = () => {
             setIsStartOpen(!isStartOpen);
             setIsWidgetsOpen(false);
             setIsQuickSettingsOpen(false);
+            setIsChatOpen(false);
           }}
           className={cn(
             "p-2 rounded-md hover:bg-white/10 transition-all active:scale-95 group flex items-center justify-center min-w-[32px] min-h-[32px]",
@@ -122,6 +124,7 @@ export const Taskbar: React.FC = () => {
             setIsWidgetsOpen(!isWidgetsOpen);
             setIsStartOpen(false);
             setIsQuickSettingsOpen(false);
+            setIsChatOpen(false);
           }}
           className={cn(
             "p-2 rounded-md hover:bg-white/10 transition-all active:scale-95 group flex items-center justify-center min-w-[32px] min-h-[32px]",
@@ -226,9 +229,27 @@ export const Taskbar: React.FC = () => {
         <button
           onClick={(e) => {
             e.stopPropagation();
+            setIsChatOpen(!isChatOpen);
+            setIsQuickSettingsOpen(false);
+            setIsStartOpen(false);
+            setIsWidgetsOpen(false);
+          }}
+          className={cn(
+            "p-2 rounded-md hover:bg-white/10 transition-all active:scale-95 group flex items-center justify-center min-w-[32px] min-h-[32px]",
+            isChatOpen && "bg-accent/20 text-accent"
+          )}
+          title="Nebula Chat"
+        >
+          <MessageCircle size={iconSize} className={isChatOpen ? "text-accent" : "text-white/60 group-hover:text-white"} />
+        </button>
+
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
             setIsQuickSettingsOpen(!isQuickSettingsOpen);
             setIsStartOpen(false);
             setIsWidgetsOpen(false);
+            setIsChatOpen(false);
           }}
           className={cn(
             "flex items-center gap-2 px-3 py-1.5 rounded-xl hover:bg-white/10 transition-all active:scale-95 group",

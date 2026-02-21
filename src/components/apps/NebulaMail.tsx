@@ -1,23 +1,21 @@
 "use client"
 
 import React, { useState } from 'react';
-import { Mail, Send, Inbox, Trash2, Star, Archive, ShieldCheck, User, Reply, Forward, MoreVertical, Search, Plus, X, Loader2 } from 'lucide-react';
+import { Mail, Send, Inbox, Trash2, Star, Archive, ShieldCheck, User, Reply, Forward, MoreVertical, Search, Plus, X, Loader2, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { useOS, Email } from '@/context/os-context';
+import { useOS, Email, EmailFolder } from '@/context/os-context';
 import { cn } from '@/lib/utils';
 import { Textarea } from '@/components/ui/textarea';
 
-type MailFolder = 'inbox' | 'sent' | 'starred' | 'archive' | 'trash';
-
 export const NebulaMail: React.FC = () => {
-  const { emails, markEmailRead, currentUser, sendEmail } = useOS();
+  const { emails, markEmailRead, currentUser, sendEmail, archiveEmail, deleteEmail, restoreEmail, permanentlyDeleteEmail } = useOS();
   const [selectedEmailId, setSelectedEmailId] = useState<string | null>(emails[0]?.id || null);
   const [search, setSearch] = useState("");
-  const [activeFolder, setActiveFolder] = useState<MailFolder>('inbox');
+  const [activeFolder, setActiveFolder] = useState<EmailFolder>('inbox');
   const [isComposeOpen, setIsComposeOpen] = useState(false);
   const [composeTo, setComposeTo] = useState("");
   const [composeSubject, setComposeSubject] = useState("");
@@ -42,16 +40,27 @@ export const NebulaMail: React.FC = () => {
     setComposeBody("");
   };
 
-  const folderEmails = emails.filter(e => {
-    if (activeFolder === 'starred') return false; // Mock starred logic
-    return e.folder === activeFolder;
-  });
+  const handleArchive = (id: string) => {
+    archiveEmail(id);
+    if (selectedEmailId === id) setSelectedEmailId(null);
+  };
 
-  const filteredEmails = folderEmails.filter(e => 
-    e.subject.toLowerCase().includes(search.toLowerCase()) || 
-    e.from.toLowerCase().includes(search.toLowerCase()) ||
-    e.to.toLowerCase().includes(search.toLowerCase())
-  );
+  const handleDelete = (id: string) => {
+    if (activeFolder === 'trash') {
+      permanentlyDeleteEmail(id);
+    } else {
+      deleteEmail(id);
+    }
+    if (selectedEmailId === id) setSelectedEmailId(null);
+  };
+
+  const filteredEmails = emails.filter(e => {
+    const matchesFolder = e.folder === activeFolder;
+    const matchesSearch = e.subject.toLowerCase().includes(search.toLowerCase()) || 
+                         e.from.toLowerCase().includes(search.toLowerCase()) ||
+                         e.to.toLowerCase().includes(search.toLowerCase());
+    return matchesFolder && matchesSearch;
+  });
 
   return (
     <div className="flex h-full bg-[#161d25] overflow-hidden relative">
@@ -88,15 +97,6 @@ export const NebulaMail: React.FC = () => {
             <Send size={14} /> Sent
           </button>
           <button 
-            onClick={() => setActiveFolder('starred')}
-            className={cn(
-              "w-full flex items-center gap-3 px-4 h-10 rounded-lg text-xs transition-all",
-              activeFolder === 'starred' ? "bg-accent/10 text-accent font-bold" : "text-white/40 hover:bg-white/5"
-            )}
-          >
-            <Star size={14} /> Starred
-          </button>
-          <button 
             onClick={() => setActiveFolder('archive')}
             className={cn(
               "w-full flex items-center gap-3 px-4 h-10 rounded-lg text-xs transition-all",
@@ -122,7 +122,7 @@ export const NebulaMail: React.FC = () => {
               <ShieldCheck size={14} className="text-accent" />
               <span className="text-[9px] font-black uppercase text-accent">Nebula Secured</span>
             </div>
-            <p className="text-[10px] text-white/40 leading-relaxed">Workspace endpoint is encrypted with quantum-grade signatures.</p>
+            <p className="text-[10px] text-white/40 leading-relaxed">Multi-recipient encryption active.</p>
           </div>
         </div>
       </div>
@@ -152,7 +152,7 @@ export const NebulaMail: React.FC = () => {
               >
                 <div className="flex items-center justify-between mb-1">
                   <span className={cn("text-[10px] font-bold truncate max-w-[120px]", email.isRead ? "text-white/40" : "text-white")}>
-                    {activeFolder === 'sent' ? `To: ${email.to}` : email.from}
+                    {email.folder === 'sent' ? `To: ${email.to}` : email.from}
                   </span>
                   <span className="text-[9px] text-white/20 font-mono">{email.timestamp}</span>
                 </div>
@@ -164,7 +164,7 @@ export const NebulaMail: React.FC = () => {
             ))}
             {filteredEmails.length === 0 && (
               <div className="p-8 text-center opacity-20">
-                <p className="text-xs font-bold uppercase tracking-widest">No messages</p>
+                <p className="text-xs font-bold uppercase tracking-widest">No messages in {activeFolder}</p>
               </div>
             )}
           </div>
@@ -177,10 +177,25 @@ export const NebulaMail: React.FC = () => {
           <>
             <div className="h-14 border-b border-white/5 bg-black/20 flex items-center justify-between px-6 shrink-0">
               <div className="flex items-center gap-2">
-                <Button variant="ghost" size="icon" className="h-8 w-8 text-white/40 hover:text-accent"><Archive size={16} /></Button>
-                <Button variant="ghost" size="icon" className="h-8 w-8 text-white/40 hover:text-accent"><Trash2 size={16} /></Button>
+                {selectedEmail.folder !== 'archive' && (
+                  <Button variant="ghost" size="icon" className="h-8 w-8 text-white/40 hover:text-accent" onClick={() => handleArchive(selectedEmail.id)}>
+                    <Archive size={16} />
+                  </Button>
+                )}
+                {selectedEmail.folder === 'trash' ? (
+                  <Button variant="ghost" size="icon" className="h-8 w-8 text-white/40 hover:text-accent" onClick={() => restoreEmail(selectedEmail.id)}>
+                    <RotateCcw size={16} />
+                  </Button>
+                ) : null}
+                <Button variant="ghost" size="icon" className="h-8 w-8 text-white/40 hover:text-destructive" onClick={() => handleDelete(selectedEmail.id)}>
+                  <Trash2 size={16} />
+                </Button>
                 <div className="w-px h-4 bg-white/10 mx-1" />
-                <Button variant="ghost" size="icon" className="h-8 w-8 text-white/40 hover:text-accent"><Reply size={16} /></Button>
+                <Button variant="ghost" size="icon" className="h-8 w-8 text-white/40 hover:text-accent" onClick={() => {
+                  setComposeTo(selectedEmail.from);
+                  setComposeSubject(`Re: ${selectedEmail.subject}`);
+                  setIsComposeOpen(true);
+                }}><Reply size={16} /></Button>
                 <Button variant="ghost" size="icon" className="h-8 w-8 text-white/40 hover:text-accent"><Forward size={16} /></Button>
               </div>
               <Button variant="ghost" size="icon" className="h-8 w-8 text-white/40 hover:text-accent"><MoreVertical size={16} /></Button>
@@ -275,7 +290,7 @@ export const NebulaMail: React.FC = () => {
                   <input 
                     value={composeTo}
                     onChange={(e) => setComposeTo(e.target.value)}
-                    placeholder="Recipient name"
+                    placeholder="Recipient names (comma separated for group)"
                     className="flex-1 bg-transparent border-none outline-none text-sm text-white placeholder:text-white/10"
                   />
                 </div>

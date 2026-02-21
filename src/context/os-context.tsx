@@ -53,6 +53,8 @@ export interface LocalUser {
   password?: string;
 }
 
+export type EmailFolder = 'inbox' | 'sent' | 'archive' | 'trash';
+
 export interface Email {
   id: string;
   from: string;
@@ -62,7 +64,15 @@ export interface Email {
   timestamp: string;
   isRead: boolean;
   isSystem?: boolean;
-  folder: 'inbox' | 'sent' | 'trash';
+  folder: EmailFolder;
+}
+
+export interface ChatMessage {
+  id: string;
+  sender: string;
+  text: string;
+  timestamp: string;
+  isBot: boolean;
 }
 
 export interface WindowInstance {
@@ -128,6 +138,10 @@ interface OSContextType {
   emails: Email[];
   markEmailRead: (id: string) => void;
   sendEmail: (to: string, subject: string, content: string) => Promise<void>;
+  archiveEmail: (id: string) => void;
+  deleteEmail: (id: string) => void;
+  restoreEmail: (id: string) => void;
+  permanentlyDeleteEmail: (id: string) => void;
   wallpaper: string;
   notes: string;
   theme: ThemeMode;
@@ -148,11 +162,13 @@ interface OSContextType {
   isWidgetsOpen: boolean;
   isQuickSettingsOpen: boolean;
   isStartOpen: boolean;
+  isChatOpen: boolean;
   isLocked: boolean;
   systemStats: { cpu: number; ram: number; net: number };
   currentDisplayId: string;
   displayLayout: DisplayLayout;
   isSecurityEnabled: boolean;
+  chatMessages: ChatMessage[];
   
   login: (userId: string, password?: string) => boolean;
   logout: () => void;
@@ -192,6 +208,8 @@ interface OSContextType {
   setIsWidgetsOpen: (isOpen: boolean) => void;
   setIsQuickSettingsOpen: (isOpen: boolean) => void;
   setIsStartOpen: (isOpen: boolean) => void;
+  setIsChatOpen: (isOpen: boolean) => void;
+  sendChatMessage: (text: string, recipient: string) => Promise<void>;
   setCurrentDisplayId: (id: string) => void;
   setSecurityEnabled: (enabled: boolean) => void;
   restart: () => void;
@@ -316,6 +334,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   const [isWidgetsOpen, setIsWidgetsOpenState] = useState(false);
   const [isQuickSettingsOpen, setIsQuickSettingsOpenState] = useState(false);
   const [isStartOpen, setIsStartOpenState] = useState(false);
+  const [isChatOpen, setIsChatOpenState] = useState(false);
 
   const [openWindows, setOpenWindows] = useState<WindowInstance[]>([]);
   const [activeWindowId, setActiveWindowId] = useState<string | null>(null);
@@ -343,6 +362,9 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   const [trash, setTrash] = useState<FileSystemItem[]>([]);
   const [notes, setNotesInternal] = useState("");
   const [emails, setEmails] = useState<Email[]>(MOCK_EMAILS);
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
+    { id: '1', sender: 'Nebulabs Onboarding', text: 'Welcome to your internal chat workspace.', timestamp: '10:00 AM', isBot: true }
+  ]);
 
   const [currentWifi, setCurrentWifiState] = useState("Nebula_Secure_5G");
   const [isWifiConnecting, setIsWifiConnecting] = useState(false);
@@ -353,6 +375,24 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
 
   const markEmailRead = (id: string) => {
     setEmails(prev => prev.map(email => email.id === id ? { ...email, isRead: true } : email));
+  };
+
+  const archiveEmail = (id: string) => {
+    setEmails(prev => prev.map(e => e.id === id ? { ...e, folder: 'archive' } : e));
+    addNotification("Email Archived", "Message moved to Archive.");
+  };
+
+  const deleteEmail = (id: string) => {
+    setEmails(prev => prev.map(e => e.id === id ? { ...e, folder: 'trash' } : e));
+    addNotification("Email Deleted", "Message moved to Trash.");
+  };
+
+  const restoreEmail = (id: string) => {
+    setEmails(prev => prev.map(e => e.id === id ? { ...e, folder: 'inbox' } : e));
+  };
+
+  const permanentlyDeleteEmail = (id: string) => {
+    setEmails(prev => prev.filter(e => e.id !== id));
   };
 
   const sendEmail = async (to: string, subject: string, content: string) => {
@@ -373,13 +413,15 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
 
     // Trigger AI response logic
     try {
-      const response = await respondToEmail({ toName: to, subject, content });
+      // Pick first name if multiple recipients
+      const firstRecipient = to.split(',')[0].trim();
+      const response = await respondToEmail({ toName: firstRecipient, subject, content });
       
       // Delay response to simulate realism
       setTimeout(() => {
         const replyEmail: Email = {
           id: Math.random().toString(36).substr(2, 9),
-          from: to,
+          from: firstRecipient,
           to: currentUser?.username || 'user',
           subject: response.responseSubject,
           content: response.responseContent,
@@ -388,11 +430,37 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
           folder: 'inbox'
         };
         setEmails(prev => [replyEmail, ...prev]);
-        addNotification(`New Mail: ${to}`, response.responseSubject, 'app');
+        addNotification(`New Mail: ${firstRecipient}`, response.responseSubject, 'app');
       }, 3000 + Math.random() * 5000);
     } catch (e) {
       console.error("AI Mail Core: Response generation failed.", e);
     }
+  };
+
+  const sendChatMessage = async (text: string, recipient: string) => {
+    const msg: ChatMessage = {
+      id: Math.random().toString(36).substr(2, 9),
+      sender: currentUser?.username || 'Me',
+      text,
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      isBot: false
+    };
+    setChatMessages(prev => [...prev, msg]);
+
+    // Simulate AI Colleague response
+    setTimeout(() => {
+      const botMsg: ChatMessage = {
+        id: Math.random().toString(36).substr(2, 9),
+        sender: recipient,
+        text: `Hey ${currentUser?.username}, I received your message: "${text}". I'm looking into it right now.`,
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        isBot: true
+      };
+      setChatMessages(prev => [...prev, botMsg]);
+      if (!isChatOpen) {
+        addNotification(`Chat: ${recipient}`, text.slice(0, 30) + '...', 'app');
+      }
+    }, 1500 + Math.random() * 2000);
   };
 
   const addNotification = useCallback((title: string, message: string, type: SystemNotification['type'] = 'system') => {
@@ -745,17 +813,22 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
 
   const setIsWidgetsOpen = (open: boolean) => {
     setIsWidgetsOpenState(open);
-    if (open) { setIsStartOpenState(false); setIsQuickSettingsOpenState(false); }
+    if (open) { setIsStartOpenState(false); setIsQuickSettingsOpenState(false); setIsChatOpenState(false); }
   };
 
   const setIsQuickSettingsOpen = (open: boolean) => {
     setIsQuickSettingsOpenState(open);
-    if (open) { setIsStartOpenState(false); setIsWidgetsOpenState(false); }
+    if (open) { setIsStartOpenState(false); setIsWidgetsOpenState(false); setIsChatOpenState(false); }
   };
 
   const setIsStartOpen = (open: boolean) => {
     setIsStartOpenState(open);
-    if (open) { setIsQuickSettingsOpenState(false); setIsWidgetsOpenState(false); }
+    if (open) { setIsQuickSettingsOpenState(false); setIsWidgetsOpenState(false); setIsChatOpenState(false); }
+  };
+
+  const setIsChatOpen = (open: boolean) => {
+    setIsChatOpenState(open);
+    if (open) { setIsStartOpenState(false); setIsQuickSettingsOpenState(false); setIsWidgetsOpenState(false); }
   };
 
   const connectToWifi = (ssid: string) => {
@@ -899,19 +972,21 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   return (
     <OSContext.Provider value={{
       currentUser, accounts, openWindows, activeWindowId, installedApps, pinnedApps,
-      fileSystem, trash, desktopApps, notifications, emails, markEmailRead, sendEmail, wallpaper, notes, theme, accentColor,
+      fileSystem, trash, desktopApps, notifications, emails, markEmailRead, sendEmail, 
+      archiveEmail, deleteEmail, restoreEmail, permanentlyDeleteEmail,
+      wallpaper, notes, theme, accentColor,
       customAccentHex, cursorColor, isInverted, glassEnabled, powerStatus,
       taskbarPosition, taskbarSize, iconSize, currentWifi, isWifiConnecting,
       isOnline, volume, brightness, isWidgetsOpen, isQuickSettingsOpen, 
-      isStartOpen, isLocked, systemStats,
-      currentDisplayId, displayLayout, isSecurityEnabled,
+      isStartOpen, isChatOpen, isLocked, systemStats,
+      currentDisplayId, displayLayout, isSecurityEnabled, chatMessages,
       login, logout, lock, unlock, createAccount, deleteAccount, updateUserPassword, updateUserAvatar, openApp, closeWindow, minimizeWindow,
       maximizeWindow, snapWindow, focusWindow, updateWindowPosition, moveWindowToDisplay,
       updateDisplayLayout, resetDisplayLayout, installApp, addNotification, clearNotifications,
       updateWallpaper, setNotes, setTheme, setAccentColor, setCustomAccentHex,
       setCursorColor, setInverted, setGlassEnabled, setTaskbarPosition, setTaskbarSize,
       setIconSize, connectToWifi, setVolume, setBrightness, setIsWidgetsOpen,
-      setIsQuickSettingsOpen, setIsStartOpen, setCurrentDisplayId, setSecurityEnabled, restart, shutDown, powerOn,
+      setIsQuickSettingsOpen, setIsStartOpen, setIsChatOpen, sendChatMessage, setCurrentDisplayId, setSecurityEnabled, restart, shutDown, powerOn,
       minimizeAllWindows,
       createFolder, importFile, moveToTrash, restoreFromTrash, emptyTrash, deleteItemPermanently,
       updateDesktopAppPosition, toggleDesktopApp, togglePinApp, reorderPinnedApps,

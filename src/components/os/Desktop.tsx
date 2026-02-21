@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
@@ -10,6 +9,7 @@ import { LoginScreen } from './LoginScreen';
 import { WidgetsPanel } from './WidgetsPanel';
 import { QuickSettings } from './QuickSettings';
 import { GlobalSearch } from './GlobalSearch';
+import { ChatBar } from './ChatBar';
 import { 
   ShoppingBag, 
   FolderOpen, 
@@ -129,7 +129,7 @@ export const Desktop: React.FC = () => {
     powerStatus, powerOn, taskbarPosition, iconSize, currentUser,
     cursorColor, isInverted, glassEnabled, desktopApps, updateDesktopAppPosition, toggleDesktopApp,
     isWidgetsOpen, setIsWidgetsOpen, isQuickSettingsOpen, setIsQuickSettingsOpen,
-    isStartOpen, setIsStartOpen, activeWindowId, closeWindow, minimizeAllWindows,
+    isStartOpen, setIsStartOpen, isChatOpen, setIsChatOpen, activeWindowId, closeWindow, minimizeAllWindows,
     brightness, currentDisplayId, displayLayout, isSecurityEnabled, addNotification,
     isLocked, lock
   } = useOS();
@@ -169,6 +169,7 @@ export const Desktop: React.FC = () => {
           setIsStartOpen(!isStartOpen);
           setIsWidgetsOpen(false);
           setIsQuickSettingsOpen(false);
+          setIsChatOpen(false);
           break;
         case 'e': 
           e.preventDefault();
@@ -211,6 +212,7 @@ export const Desktop: React.FC = () => {
           setIsQuickSettingsOpen(!isQuickSettingsOpen);
           setIsStartOpen(false);
           setIsWidgetsOpen(false);
+          setIsChatOpen(false);
           break;
       }
     }
@@ -219,10 +221,11 @@ export const Desktop: React.FC = () => {
       setIsStartOpen(false);
       setIsWidgetsOpen(false);
       setIsQuickSettingsOpen(false);
+      setIsChatOpen(false);
       setIsRunOpen(false);
       setContextMenu(null);
     }
-  }, [powerStatus, currentUser, isStartOpen, isWidgetsOpen, isQuickSettingsOpen, activeWindowId, openApp, setIsStartOpen, setIsWidgetsOpen, setIsQuickSettingsOpen, closeWindow, minimizeAllWindows, lock]);
+  }, [powerStatus, currentUser, isStartOpen, isWidgetsOpen, isQuickSettingsOpen, isChatOpen, activeWindowId, openApp, setIsStartOpen, setIsWidgetsOpen, setIsQuickSettingsOpen, setIsChatOpen, closeWindow, minimizeAllWindows, lock]);
 
   useEffect(() => {
     window.addEventListener('keydown', handleKeyDown);
@@ -375,6 +378,7 @@ export const Desktop: React.FC = () => {
         if (isWidgetsOpen) setIsWidgetsOpen(false);
         if (isQuickSettingsOpen) setIsQuickSettingsOpen(false);
         if (isStartOpen) setIsStartOpen(false);
+        if (isChatOpen) setIsChatOpen(false);
       }}
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
@@ -384,7 +388,7 @@ export const Desktop: React.FC = () => {
         style={{ opacity: 1 - (brightness / 100) }}
       />
 
-      {(isWidgetsOpen || isQuickSettingsOpen || isStartOpen || isRunOpen) && (
+      {(isWidgetsOpen || isQuickSettingsOpen || isStartOpen || isChatOpen || isRunOpen) && (
         <div 
           className="absolute inset-0 bg-black/20 backdrop-blur-sm z-[9997] animate-in fade-in duration-300" 
           onClick={(e) => {
@@ -392,6 +396,7 @@ export const Desktop: React.FC = () => {
             setIsWidgetsOpen(false);
             setIsQuickSettingsOpen(false);
             setIsStartOpen(false);
+            setIsChatOpen(false);
             setIsRunOpen(false);
           }}
         />
@@ -400,6 +405,8 @@ export const Desktop: React.FC = () => {
       <WidgetsPanel />
       
       <GlobalSearch />
+
+      <ChatBar />
 
       {currentDisplayId === '1' && desktopApps.map(shortcut => {
         const Icon = shortcut.icon;
