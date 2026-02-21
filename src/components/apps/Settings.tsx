@@ -309,7 +309,7 @@ export const Settings: React.FC = () => {
         );
 
       case 'security':
-        if (isSchool || isKid) return null;
+        if (isSchool || isKid) return <div className="py-20 text-center text-muted-foreground opacity-40 uppercase tracking-widest font-black">Managed Environment Restricted</div>;
         return (
           <div className="space-y-12 animate-in fade-in slide-in-from-right-4 duration-500">
             <section>
@@ -462,6 +462,24 @@ export const Settings: React.FC = () => {
           </div>
         );
 
+      case 'updates':
+        if (isKid) return <div className="py-20 text-center text-muted-foreground opacity-40 uppercase tracking-widest font-black">Managed Environment Restricted</div>;
+        return (
+          <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
+             <div className="flex items-center gap-2 mb-6">
+                <RefreshCw size={18} className="text-accent" />
+                <h2 className="text-lg font-bold text-foreground">Kernel Updates</h2>
+              </div>
+              <div className="p-6 bg-foreground/5 rounded-2xl border border-border/50 flex items-center justify-between">
+                <div>
+                  <h3 className="text-sm font-bold">System is up to date</h3>
+                  <p className="text-[11px] text-muted-foreground">Last checked: Today at 10:00 AM</p>
+                </div>
+                <Button variant="outline" size="sm" onClick={() => openApp('update', 'System Update')}>Launch Update Tool</Button>
+              </div>
+          </div>
+        );
+
       case 'about':
         return (
           <div className="space-y-12 animate-in fade-in slide-in-from-right-4 duration-500">
@@ -551,12 +569,19 @@ export const Settings: React.FC = () => {
           <User size={16} /> {isSchool ? "Student Profile" : isKid ? "Kid Profile" : "User Accounts"}
         </button>
         
-        {!isSchool && !isKid && (
+        <button 
+          onClick={() => setActiveTab('security')}
+          className={cn("w-full flex items-center gap-3 px-4 h-11 rounded-xl transition-all text-sm", activeTab === 'security' ? "bg-accent/10 text-accent font-bold" : "text-muted-foreground hover:bg-foreground/5")}
+        >
+          <Shield size={16} /> Security
+        </button>
+
+        {!isKid && (
           <button 
-            onClick={() => setActiveTab('security')}
-            className={cn("w-full flex items-center gap-3 px-4 h-11 rounded-xl transition-all text-sm", activeTab === 'security' ? "bg-accent/10 text-accent font-bold" : "text-muted-foreground hover:bg-foreground/5")}
+            onClick={() => setActiveTab('updates')}
+            className={cn("w-full flex items-center gap-3 px-4 h-11 rounded-xl transition-all text-sm", activeTab === 'updates' ? "bg-accent/10 text-accent font-bold" : "text-muted-foreground hover:bg-foreground/5")}
           >
-            <Shield size={16} /> Security
+            <RefreshCw size={16} /> Updates
           </button>
         )}
         

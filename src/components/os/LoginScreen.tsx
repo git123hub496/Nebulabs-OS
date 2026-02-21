@@ -119,6 +119,14 @@ export const LoginScreen: React.FC = () => {
     } catch (e) {}
   };
 
+  // Reset creation lock when entering a new flow
+  useEffect(() => {
+    if (step === 'create' || step === 'select') {
+      hasCreated.current = false;
+      setProgress(0);
+    }
+  }, [step]);
+
   useEffect(() => {
     if ((step === 'initialize' || step === 'recovery') && !hasCreated.current) {
       const sequenceLogs = step === 'initialize' ? SETUP_LOGS : RECOVERY_LOGS;
@@ -569,7 +577,7 @@ export const LoginScreen: React.FC = () => {
         )}
 
         {step === 'customize' && (
-          <div className="glass p-8 rounded-3xl border border-white/10 w-full max-w-lg flex flex-col gap-8 animate-in zoom-in-95 shadow-2xl">
+          <div className="glass p-8 rounded-3xl border border-white/10 w-full max-lg flex flex-col gap-8 animate-in zoom-in-95 shadow-2xl">
             <div className="text-center space-y-1">
               <h2 className="text-2xl font-bold text-white">Choose Your Style</h2>
               <p className="text-xs text-white/40 uppercase tracking-widest font-bold">Personalize your Nebulabs experience</p>
@@ -633,7 +641,7 @@ export const LoginScreen: React.FC = () => {
         )}
 
         {(step === 'initialize' || (step === 'recovery' && progress > 0)) && (
-          <div className="glass p-10 rounded-3xl border border-white/10 w-full max-w-lg flex flex-col items-center gap-8 animate-in fade-in shadow-2xl">
+          <div className="glass p-10 rounded-3xl border border-white/10 w-full max-lg flex flex-col items-center gap-8 animate-in fade-in shadow-2xl">
             <div className="relative">
               <div className="w-20 h-20 rounded-3xl bg-accent/20 flex items-center justify-center animate-pulse">
                 {step === 'initialize' ? (

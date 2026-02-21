@@ -160,7 +160,7 @@ export const StartMenu: React.FC<StartMenuProps> = ({ onClose }) => {
 
       <div className="flex-1 overflow-auto pr-1">
         <div className="mb-6">
-          <h3 className="text-[11px] font-bold uppercase tracking-widest mb-4 opacity-80 text-accent">
+          <h3 className={cn("text-[11px] font-bold uppercase tracking-widest mb-4 opacity-80", isSchool ? "text-blue-400" : isKid ? "text-pink-400" : "text-accent")}>
             {searchQuery ? "Search Results" : "All Applications"}
           </h3>
           {filteredApps.length > 0 ? (
@@ -195,15 +195,15 @@ export const StartMenu: React.FC<StartMenuProps> = ({ onClose }) => {
 
         {!searchQuery && (
           <div>
-            <h3 className="text-[11px] font-bold uppercase tracking-widest mb-4 opacity-80 text-accent">Quick Links</h3>
+            <h3 className={cn("text-[11px] font-bold uppercase tracking-widest mb-4 opacity-80", isSchool ? "text-blue-400" : isKid ? "text-pink-400" : "text-accent")}>Quick Links</h3>
             <div className="space-y-1">
               <button className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-accent/10 text-sm text-foreground transition-colors group" onClick={() => handleAppClick('news')}>
-                <Newspaper size={16} className="text-accent group-hover:scale-110 transition-transform" />
-                <span className="group-hover:text-accent">Nebula Local News</span>
+                <Newspaper size={16} className={cn("group-hover:scale-110 transition-transform", isSchool ? "text-blue-400" : isKid ? "text-pink-400" : "text-accent")} />
+                <span className={cn(isSchool ? "group-hover:text-blue-400" : isKid ? "group-hover:text-pink-400" : "group-hover:text-accent")}>Nebula Local News</span>
               </button>
               <button className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-accent/10 text-sm text-foreground transition-colors group" onClick={() => handleAppClick('browser')}>
-                <Globe size={16} className="text-accent group-hover:scale-110 transition-transform" />
-                <span className="group-hover:text-accent">Research Browser</span>
+                <Globe size={16} className={cn("group-hover:scale-110 transition-transform", isSchool ? "text-blue-400" : isKid ? "text-pink-400" : "text-accent")} />
+                <span className={cn(isSchool ? "group-hover:text-blue-400" : isKid ? "group-hover:text-pink-400" : "group-hover:text-accent")}>Research Browser</span>
               </button>
             </div>
           </div>
@@ -212,7 +212,7 @@ export const StartMenu: React.FC<StartMenuProps> = ({ onClose }) => {
 
       <div className="border-t border-white/10 pt-4 mt-auto flex items-center justify-between">
         <div className="flex items-center gap-3 overflow-hidden">
-          <Avatar className="w-10 h-10 border-2 shrink-0 border-accent/20">
+          <Avatar className={cn("w-10 h-10 border-2 shrink-0", isSchool ? "border-blue-500/40" : isKid ? "border-pink-500/40" : "border-accent/40")}>
             <AvatarImage src={currentUser?.avatarUrl} className="object-cover" />
             <AvatarFallback 
               className="text-white font-bold"
@@ -224,7 +224,7 @@ export const StartMenu: React.FC<StartMenuProps> = ({ onClose }) => {
           <div className="flex flex-col overflow-hidden">
             <span className="text-sm font-bold text-foreground truncate">{currentUser?.username || 'Guest User'}</span>
             <span className={cn("text-[10px] truncate font-medium uppercase tracking-tighter", isSchool ? "text-blue-400/60" : isKid ? "text-pink-400/60" : "text-accent/60")}>
-              {isSchool ? "School Account" : isKid ? "Home Managed" : "Local Administrator"}
+              {isSchool ? "District Student" : isKid ? "Home Managed" : "Local Administrator"}
             </span>
           </div>
         </div>
