@@ -89,16 +89,18 @@ export const LoginScreen: React.FC = () => {
     return () => clearInterval(timer);
   }, []);
 
-  // Sound Effects
+  // Sound Effects with safety guard
   const playSound = (type: 'click' | 'success') => {
     if (typeof window === 'undefined') return;
     const urls = {
       click: 'https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3',
       success: 'https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3'
     };
-    const audio = new Audio(urls[type]);
-    audio.volume = 0.4;
-    audio.play().catch(() => {}); 
+    try {
+      const audio = new Audio(urls[type]);
+      audio.volume = 0.4;
+      audio.play().catch(() => {}); 
+    } catch (e) {}
   };
 
   useEffect(() => {
@@ -198,7 +200,7 @@ export const LoginScreen: React.FC = () => {
     >
       <div className="absolute inset-0 bg-black/40 backdrop-blur-xl" />
       
-      {/* Top Header Tray (Outside OS UI) */}
+      {/* Top Header Tray */}
       <div className="absolute top-0 inset-x-0 h-16 flex items-center justify-between px-12 z-20 pointer-events-none">
         <div className="flex items-center gap-4 animate-in fade-in slide-in-from-top-4 duration-700">
           <div className="text-white/60 font-black text-2xl tracking-tighter opacity-40">NEBULABS</div>
@@ -511,22 +513,22 @@ export const LoginScreen: React.FC = () => {
           <div className="flex items-center gap-4 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-100">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="p-2.5 rounded-full hover:bg-white/10 text-white/40 transition-all group" title="Accessibility">
+                <button className="p-2.5 rounded-full hover:bg-white/10 text-white/40 transition-all group pointer-events-auto" title="Accessibility">
                   <Accessibility size={20} className="group-hover:text-accent transition-colors" />
                 </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56 glass border-white/10 p-2 rounded-xl backdrop-blur-3xl shadow-2xl text-foreground">
+              <DropdownMenuContent align="end" className="w-56 glass border-white/10 p-2 rounded-xl backdrop-blur-3xl shadow-2xl text-foreground z-[10000]">
                 <div className="px-2 py-1.5 text-[10px] font-black uppercase text-muted-foreground tracking-widest">Accessibility Options</div>
-                <DropdownMenuItem onClick={() => setInverted(!isInverted)} className="gap-3 cursor-pointer p-3 rounded-lg hover:bg-accent/10">
+                <DropdownMenuItem onSelect={() => setInverted(!isInverted)} className="gap-3 cursor-pointer p-3 rounded-lg hover:bg-accent/10">
                   <Check size={14} className={cn("text-accent", !isInverted && "opacity-0")} />
                   <span className="font-medium text-xs">High Contrast Mode</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setGlassEnabled(!glassEnabled)} className="gap-3 cursor-pointer p-3 rounded-lg hover:bg-accent/10">
+                <DropdownMenuItem onSelect={() => setGlassEnabled(!glassEnabled)} className="gap-3 cursor-pointer p-3 rounded-lg hover:bg-accent/10">
                   <Check size={14} className={cn("text-accent", !glassEnabled && "opacity-0")} />
                   <span className="font-medium text-xs">Glass Effects</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator className="bg-white/5" />
-                <DropdownMenuItem onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')} className="gap-3 cursor-pointer p-3 rounded-lg hover:bg-accent/10">
+                <DropdownMenuItem onSelect={() => setTheme(theme === 'dark' ? 'light' : 'dark')} className="gap-3 cursor-pointer p-3 rounded-lg hover:bg-accent/10">
                   {theme === 'dark' ? <Sun size={14} className="text-accent" /> : <Moon size={14} className="text-accent" />}
                   <span className="font-medium text-xs">Switch to {theme === 'dark' ? 'Light' : 'Dark'} Mode</span>
                 </DropdownMenuItem>
@@ -539,17 +541,17 @@ export const LoginScreen: React.FC = () => {
             
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="p-2.5 rounded-full hover:bg-white/10 text-white/40 transition-all group" title="Power">
+                <button className="p-2.5 rounded-full hover:bg-white/10 text-white/40 transition-all group pointer-events-auto" title="Power">
                   <Power size={20} className="group-hover:text-accent transition-colors" />
                 </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48 glass border-white/10 p-2 rounded-xl backdrop-blur-3xl shadow-2xl text-foreground">
-                <DropdownMenuItem onClick={() => { playSound('click'); restart(); }} className="gap-3 cursor-pointer p-3 rounded-lg hover:bg-accent/10">
+              <DropdownMenuContent align="end" className="w-48 glass border-white/10 p-2 rounded-xl backdrop-blur-3xl shadow-2xl text-foreground z-[10000]">
+                <DropdownMenuItem onSelect={() => { playSound('click'); restart(); }} className="gap-3 cursor-pointer p-3 rounded-lg hover:bg-accent/10">
                   <RefreshCw size={16} className="text-accent" />
                   <span className="font-bold uppercase text-[10px] tracking-widest">Restart System</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator className="bg-white/5" />
-                <DropdownMenuItem onClick={() => { playSound('click'); shutDown(); }} className="gap-3 cursor-pointer p-3 rounded-lg hover:bg-destructive/10 text-destructive">
+                <DropdownMenuItem onSelect={() => { playSound('click'); shutDown(); }} className="gap-3 cursor-pointer p-3 rounded-lg hover:bg-destructive/10 text-destructive">
                   <Power size={16} />
                   <span className="font-bold uppercase text-[10px] tracking-widest">Shut Down</span>
                 </DropdownMenuItem>

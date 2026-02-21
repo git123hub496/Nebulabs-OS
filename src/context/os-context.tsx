@@ -708,17 +708,19 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const restart = () => {
+    setCurrentUser(null);
     setOpenWindows([]);
     setActiveWindowId(null);
-    setCurrentUser(null);
+    setIsLocked(false);
     setPowerStatusState('booting');
     setTimeout(() => setPowerStatusState('on'), 2600);
   };
 
   const shutDown = () => {
+    setCurrentUser(null);
     setOpenWindows([]);
     setActiveWindowId(null);
-    setCurrentUser(null);
+    setIsLocked(false);
     setPowerStatusState('off');
   };
 
