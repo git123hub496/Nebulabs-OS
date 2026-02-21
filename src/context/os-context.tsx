@@ -669,11 +669,9 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       }
 
       const baseScale = 32 * mouserScale;
-      // High-fidelity vector path: Longer, sleeker, and not so thick.
-      // Small stroke-width makes the "inside" (fill) appear much larger.
       const svg = `
         <svg width="${baseScale}" height="${baseScale}" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M3,3 L3,28 L9,22 L13,31 L16,29 L11,21 L18,21 Z" fill="${fill}" stroke="${stroke}" stroke-width="1.5" stroke-linejoin="round"/>
+          <path d="M3,3 L3,23 L9,17 L13,26 L16,24 L11,16 L18,16 Z" fill="${fill}" stroke="${stroke}" stroke-width="1.5" stroke-linejoin="round"/>
         </svg>`;
       
       return `url("data:image/svg+xml;base64,${window.btoa(svg)}") 3 3, auto`;
