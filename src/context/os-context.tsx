@@ -210,6 +210,7 @@ interface OSContextType {
   updateDisplayLayout: (fromId: string, direction: DisplayDirection, toId: string) => void;
   resetDisplayLayout: () => void;
   installApp: (appId: AppId) => void;
+  uninstallApp: (appId: AppId) => void;
   addNotification: (title: string, message: string, type?: SystemNotification['type']) => void;
   clearNotifications: () => void;
   updateWallpaper: (url: string) => void;
@@ -975,7 +976,24 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   const installApp = (appId: AppId) => {
     if (!installedApps.includes(appId)) {
       setInstalledApps(prev => [...prev, appId]);
+      addNotification("App Installed", `${APP_INFO[appId]?.label || appId} is now available in your workspace.`, 'app');
     }
+  };
+
+  const uninstallApp = (appId: AppId) => {
+    // Protect system critical apps
+    const SYSTEM_APPS: AppId[] = ['settings', 'store', 'files', 'assistant'];
+    if (SYSTEM_APPS.includes(appId)) {
+      addNotification("System Protection", "Cannot uninstall core system components.", "security");
+      return;
+    }
+
+    setInstalledApps(prev => prev.filter(id => id !== appId));
+    setPinnedApps(prev => prev.filter(id => id !== appId));
+    setDesktopApps(prev => prev.filter(item => item.id !== appId));
+    setOpenWindows(prev => prev.filter(win => win.appId !== appId));
+    addNotification("App Uninstalled", `${APP_INFO[appId]?.label || appId} has been removed.`, 'system');
+    playSound('close');
   };
 
   const updateDesktopAppPosition = (id: AppId, x: number, y: number) => {
@@ -1020,7 +1038,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       currentDisplayId, displayLayout, isSecurityEnabled, chatMessages, biosSettings,
       login, logout, lock, unlock, createAccount, deleteAccount, updateUserPassword, resetUserPassword, updateUserAvatar, updateUserWorkStatus, openApp, closeWindow, minimizeWindow,
       maximizeWindow, snapWindow, focusWindow, updateWindowPosition, moveWindowToDisplay,
-      updateDisplayLayout, resetDisplayLayout, installApp, addNotification, clearNotifications,
+      updateDisplayLayout, resetDisplayLayout, installApp, uninstallApp, addNotification, clearNotifications,
       updateWallpaper, setNotes, setTheme, setAccentColor, setCustomAccentHex,
       setCursorColor, setInverted, setGlassEnabled, setTaskbarPosition, setTaskbarSize, setTaskbarAutoHide,
       setIconSize, connectToWifi, setVolume, setBrightness, setIsWidgetsOpen,

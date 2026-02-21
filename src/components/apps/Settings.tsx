@@ -6,7 +6,8 @@ import {
   Monitor, Palette, User, Shield, Bell, BellOff, HelpCircle, Upload, 
   ImageIcon, Sun, Moon, Layout, Check, MousePointer2, 
   Eye, Zap, Layers, Pipette, Maximize2, Plus, ArrowUpRight,
-  Wifi, ShieldCheck, Activity, Trash2, Info, Newspaper, Clock, XCircle, RefreshCw, ChevronRight, ShieldAlert, ShieldX, Lock, KeyRound, Camera, Building2, Briefcase, GraduationCap, Heart, MonitorCheck, Sliders, Smartphone, Smile, Home, Search, AppWindow, ExternalLink
+  Wifi, ShieldCheck, Activity, Trash2, Info, Newspaper, Clock, XCircle, RefreshCw, ChevronRight, ShieldAlert, ShieldX, Lock, KeyRound, Camera, Building2, Briefcase, GraduationCap, Heart, MonitorCheck, Sliders, Smartphone, Smile, Home, Search, AppWindow, ExternalLink,
+  Trash
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
@@ -25,6 +26,17 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Slider } from '@/components/ui/slider';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 type SettingsTab = 'personalization' | 'display' | 'apps' | 'accessibility' | 'notifications' | 'accounts' | 'security' | 'updates' | 'about';
 
@@ -54,7 +66,7 @@ export const Settings: React.FC = () => {
     currentDisplayId, setCurrentDisplayId, displayLayout, updateDisplayLayout, resetDisplayLayout,
     currentUser, logout, notifications, clearNotifications, addNotification, openApp,
     isSecurityEnabled, setSecurityEnabled, updateUserPassword, updateUserAvatar, updateUserWorkStatus,
-    installedApps
+    installedApps, uninstallApp
   } = useOS();
 
   const [activeTab, setActiveTab] = useState<SettingsTab>('personalization');
@@ -71,7 +83,7 @@ export const Settings: React.FC = () => {
     const allTabs: { id: SettingsTab; label: string; icon: any; keywords: string[] }[] = [
       { id: 'personalization', label: 'Personalization', icon: Palette, keywords: ['theme', 'wallpaper', 'taskbar', 'accent', 'color', 'dark mode', 'light mode'] },
       { id: 'display', label: 'Display', icon: Monitor, keywords: ['brightness', 'monitor', 'screen', 'resolution', 'multi-display'] },
-      { id: 'apps', label: 'Apps', icon: AppWindow, keywords: ['installed', 'applications', 'software', 'management'] },
+      { id: 'apps', label: 'Apps', icon: AppWindow, keywords: ['installed', 'applications', 'software', 'management', 'uninstall'] },
       { id: 'accessibility', label: 'Accessibility', icon: Eye, keywords: ['contrast', 'glass', 'transparency', 'cursor', 'pointer', 'mouse'] },
       { id: 'notifications', label: 'Notifications', icon: Bell, keywords: ['alerts', 'messages', 'activity', 'dnd'] },
       { id: 'accounts', label: 'Accounts', icon: User, keywords: ['profile', 'identity', 'password', 'avatar', 'user', 'sign out'] },
@@ -237,6 +249,7 @@ export const Settings: React.FC = () => {
                   const info = APP_INFO[appId];
                   if (!info) return null;
                   const Icon = info.icon;
+                  const isSystemApp = ['settings', 'store', 'files', 'assistant'].includes(appId);
                   
                   return (
                     <div key={appId} className="flex items-center justify-between p-4 bg-foreground/5 rounded-2xl border border-border/50 group hover:border-accent/30 transition-all">
@@ -246,7 +259,9 @@ export const Settings: React.FC = () => {
                         </div>
                         <div>
                           <h4 className="text-sm font-bold text-white">{info.label}</h4>
-                          <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-black">Nebula Certified</p>
+                          <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-black">
+                            {isSystemApp ? "Nebula Core Service" : "Nebula Certified"}
+                          </p>
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
@@ -259,6 +274,38 @@ export const Settings: React.FC = () => {
                           <ExternalLink size={14} className="mr-2" />
                           Launch
                         </Button>
+
+                        {!isSystemApp && (
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                className="h-8 text-[10px] font-bold uppercase tracking-widest hover:bg-destructive/10 hover:text-destructive text-muted-foreground/40"
+                              >
+                                <Trash size={14} className="mr-2" />
+                                Uninstall
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent className="glass border-white/10 backdrop-blur-3xl">
+                              <AlertDialogHeader>
+                                <AlertDialogTitle className="text-white">Uninstall {info.label}?</AlertDialogTitle>
+                                <AlertDialogDescription className="text-white/60">
+                                  This will remove the application and all its data from your current workspace. You can re-install it from the App Store later.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel className="bg-white/5 border-white/10 text-white hover:bg-white/10">Cancel</AlertDialogCancel>
+                                <AlertDialogAction 
+                                  className="bg-destructive text-white hover:bg-destructive/80 font-bold"
+                                  onClick={() => uninstallApp(appId)}
+                                >
+                                  Uninstall
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        )}
                       </div>
                     </div>
                   );
