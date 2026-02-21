@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { createContext, useContext, useState, ReactNode, useEffect, useCallback } from 'react';
@@ -35,6 +34,7 @@ import {
   Mail as MailIcon
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { respondToEmail } from '@/ai/flows/mail-ai-flow';
 
 export type AppId = 'store' | 'files' | 'settings' | 'assistant' | 'google-drive' | 'notes' | 'calc' | 'terminal' | 'browser' | 'trash' | 'news' | 'maps' | 'monitor' | 'calendar' | 'snake' | 'minesweeper' | 'image-viewer' | 'update' | 'virus' | 'paint' | 'info' | 'camera' | 'slides' | 'mail';
 export type ThemeMode = 'dark' | 'light';
@@ -56,11 +56,13 @@ export interface LocalUser {
 export interface Email {
   id: string;
   from: string;
+  to: string;
   subject: string;
   content: string;
   timestamp: string;
   isRead: boolean;
   isSystem?: boolean;
+  folder: 'inbox' | 'sent' | 'trash';
 }
 
 export interface WindowInstance {
@@ -125,6 +127,7 @@ interface OSContextType {
   notifications: SystemNotification[];
   emails: Email[];
   markEmailRead: (id: string) => void;
+  sendEmail: (to: string, subject: string, content: string) => Promise<void>;
   wallpaper: string;
   notes: string;
   theme: ThemeMode;
@@ -266,28 +269,34 @@ const MOCK_EMAILS: Email[] = [
   {
     id: '1',
     from: 'Nebulabs Corp',
+    to: 'user',
     subject: 'Welcome to your NebulaBook 180 Pro',
     content: 'Dear User,\n\nCongratulations on your new hardware! Your NebulaBook 180 Pro is the latest in quantum-threaded mobile workstations. We have pre-installed Nebula-Core v4.5.2 for maximum performance.\n\nBest regards,\nNebulabs Hardware Division',
     timestamp: 'Today, 10:00 AM',
     isRead: false,
-    isSystem: true
+    isSystem: true,
+    folder: 'inbox'
   },
   {
     id: '2',
     from: 'Sarah (Dev Team)',
+    to: 'user',
     subject: 'Project Aura Updates',
     content: 'Hey! I\'ve uploaded the latest schematics to the Shared Assets drive. Take a look when you get a chance. The new kernel-level threading is looking sharp.',
     timestamp: 'Today, 11:45 AM',
-    isRead: false
+    isRead: false,
+    folder: 'inbox'
   },
   {
     id: '3',
     from: 'System Security',
+    to: 'user',
     subject: 'Security Protocol Verification',
     content: 'ALERT: Nebula Defender has completed its initial sweep. Your virtual partition is 100% encrypted and secured against external script execution.',
     timestamp: 'Yesterday, 4:20 PM',
     isRead: true,
-    isSystem: true
+    isSystem: true,
+    folder: 'inbox'
   }
 ];
 
@@ -346,6 +355,46 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     setEmails(prev => prev.map(email => email.id === id ? { ...email, isRead: true } : email));
   };
 
+  const sendEmail = async (to: string, subject: string, content: string) => {
+    const newId = Math.random().toString(36).substr(2, 9);
+    const sentEmail: Email = {
+      id: newId,
+      from: currentUser?.username || 'user',
+      to,
+      subject,
+      content,
+      timestamp: 'Just now',
+      isRead: true,
+      folder: 'sent'
+    };
+
+    setEmails(prev => [sentEmail, ...prev]);
+    addNotification("Email Sent", `Message delivered to ${to}.`, 'app');
+
+    // Trigger AI response logic
+    try {
+      const response = await respondToEmail({ toName: to, subject, content });
+      
+      // Delay response to simulate realism
+      setTimeout(() => {
+        const replyEmail: Email = {
+          id: Math.random().toString(36).substr(2, 9),
+          from: to,
+          to: currentUser?.username || 'user',
+          subject: response.responseSubject,
+          content: response.responseContent,
+          timestamp: 'Just now',
+          isRead: false,
+          folder: 'inbox'
+        };
+        setEmails(prev => [replyEmail, ...prev]);
+        addNotification(`New Mail: ${to}`, response.responseSubject, 'app');
+      }, 3000 + Math.random() * 5000);
+    } catch (e) {
+      console.error("AI Mail Core: Response generation failed.", e);
+    }
+  };
+
   const addNotification = useCallback((title: string, message: string, type: SystemNotification['type'] = 'system') => {
     const newNotif: SystemNotification = {
       id: Math.random().toString(36).substr(2, 9),
@@ -389,10 +438,6 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     const size = localStorage.getItem(`nebula_${user.id}_taskbar_size`);
     if (size && !isNaN(Number(size))) setTaskbarSizeState(Number(size));
     else setTaskbarSizeState(48);
-    
-    const ics = localStorage.getItem(`nebula_${user.id}_icon_size`);
-    if (ics && !isNaN(Number(ics))) setIconSizeState(Number(ics));
-    else setIconSizeState(100);
     
     const n = localStorage.getItem(`nebula_${user.id}_notes`);
     if (n) setNotesInternal(n);
@@ -854,7 +899,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   return (
     <OSContext.Provider value={{
       currentUser, accounts, openWindows, activeWindowId, installedApps, pinnedApps,
-      fileSystem, trash, desktopApps, notifications, emails, markEmailRead, wallpaper, notes, theme, accentColor,
+      fileSystem, trash, desktopApps, notifications, emails, markEmailRead, sendEmail, wallpaper, notes, theme, accentColor,
       customAccentHex, cursorColor, isInverted, glassEnabled, powerStatus,
       taskbarPosition, taskbarSize, iconSize, currentWifi, isWifiConnecting,
       isOnline, volume, brightness, isWidgetsOpen, isQuickSettingsOpen, 
