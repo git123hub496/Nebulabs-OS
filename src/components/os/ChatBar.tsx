@@ -1,3 +1,4 @@
+
 "use client"
 
 import React, { useState, useRef, useEffect } from 'react';
@@ -16,7 +17,7 @@ const COLLEAGUES = [
 ];
 
 export const ChatBar: React.FC = () => {
-  const { isChatOpen, setIsChatOpen, chatMessages, sendChatMessage, currentUser } = useOS();
+  const { isChatOpen, setIsChatOpen, chatMessages, sendChatMessage, currentUser, openApp } = useOS();
   const [inputText, setInputText] = useState("");
   const [selectedColleague, setSelectedColleague] = useState(COLLEAGUES[0]);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -117,7 +118,6 @@ export const ChatBar: React.FC = () => {
             <Button 
               className="bg-accent text-primary-foreground font-black px-8 rounded-xl h-12 gap-2"
               onClick={() => {
-                const { openApp } = useOS();
                 openApp('settings', 'Settings');
                 setIsChatOpen(false);
               }}
