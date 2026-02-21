@@ -71,11 +71,20 @@ export const Taskbar: React.FC = () => {
     right: `right-0 top-0 bottom-0 border-l`,
   };
 
+  // Expanded hit areas (hot zones) using pseudo-elements
   const autoHideClasses = {
-    bottom: isForcedVisible ? 'translate-y-0' : 'translate-y-[calc(100%-2px)] hover:translate-y-0',
-    top: isForcedVisible ? 'translate-y-0' : '-translate-y-[calc(100%-2px)] hover:translate-y-0',
-    left: isForcedVisible ? 'translate-x-0' : '-translate-x-[calc(100%-2px)] hover:translate-x-0',
-    right: isForcedVisible ? 'translate-x-0' : 'translate-x-[calc(100%-2px)] hover:translate-x-0',
+    bottom: isForcedVisible 
+      ? 'translate-y-0' 
+      : 'translate-y-[calc(100%-4px)] hover:translate-y-0 before:absolute before:bottom-full before:inset-x-0 before:h-6 before:content-[""]',
+    top: isForcedVisible 
+      ? 'translate-y-0' 
+      : '-translate-y-[calc(100%-4px)] hover:translate-y-0 before:absolute before:top-full before:inset-x-0 before:h-6 before:content-[""]',
+    left: isForcedVisible 
+      ? 'translate-x-0' 
+      : '-translate-x-[calc(100%-4px)] hover:translate-x-0 before:absolute before:left-full before:inset-y-0 before:w-6 before:content-[""]',
+    right: isForcedVisible 
+      ? 'translate-x-0' 
+      : 'translate-x-[calc(100%-4px)] hover:translate-x-0 before:absolute before:right-full before:inset-y-0 before:w-6 before:content-[""]',
   };
 
   const safeTaskbarSize = isNaN(taskbarSize) ? 48 : taskbarSize;
@@ -117,7 +126,7 @@ export const Taskbar: React.FC = () => {
 
   const handleTaskbarContextMenu = (e: React.MouseEvent) => {
     e.preventDefault();
-    e.stopPropagation(); // Prevent desktop context menu from appearing
+    e.stopPropagation(); // CRITICAL: Stop propagation to prevent desktop context menu from overlapping
     
     const menuWidth = 208;
     const menuHeight = 60;
