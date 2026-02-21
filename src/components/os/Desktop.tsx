@@ -25,7 +25,8 @@ import {
   Activity,
   Calendar as CalendarIcon,
   Gamepad2,
-  Bomb
+  Bomb,
+  RefreshCw
 } from 'lucide-react';
 import { FileExplorer } from '../apps/FileExplorer';
 import { AppStore } from '../apps/AppStore';
@@ -44,6 +45,7 @@ import { Calendar } from '../apps/Calendar';
 import { SnakeGame } from '../apps/SnakeGame';
 import { Minesweeper } from '../apps/Minesweeper';
 import { ImageViewer } from '../apps/ImageViewer';
+import { SystemUpdate } from '../apps/SystemUpdate';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 
@@ -65,6 +67,7 @@ const APP_COMPONENTS: Record<AppId, (win: WindowInstance) => React.ReactNode> = 
   'snake': (win) => <SnakeGame />,
   'minesweeper': (win) => <Minesweeper />,
   'image-viewer': (win) => <ImageViewer src={win.params?.src} />,
+  'update': (win) => <SystemUpdate />,
 };
 
 export const Desktop: React.FC = () => {

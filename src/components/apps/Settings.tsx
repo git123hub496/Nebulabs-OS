@@ -7,7 +7,7 @@ import {
   Monitor, Palette, User, Shield, Bell, HelpCircle, Upload, 
   Image as ImageIcon, Sun, Moon, Layout, Check, MousePointer2, 
   Eye, Zap, Layers, Pipette, Maximize2, Plus, ArrowUpRight,
-  Wifi, ShieldCheck, Activity, Trash2, Info, Newspaper, Clock, XCircle
+  Wifi, ShieldCheck, Activity, Trash2, Info, Newspaper, Clock, XCircle, RefreshCw, ChevronRight
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
@@ -25,7 +25,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
-type SettingsTab = 'personalization' | 'display' | 'accessibility' | 'notifications' | 'accounts' | 'security' | 'about';
+type SettingsTab = 'personalization' | 'display' | 'accessibility' | 'notifications' | 'accounts' | 'security' | 'updates' | 'about';
 
 const WALLPAPERS = [
   "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=1920",
@@ -53,7 +53,7 @@ export const Settings: React.FC = () => {
     cursorColor, setCursorColor, isInverted, setInverted,
     glassEnabled, setGlassEnabled, brightness, setBrightness,
     currentDisplayId, setCurrentDisplayId, displayLayout, updateDisplayLayout, resetDisplayLayout,
-    currentUser, notifications, clearNotifications, addNotification
+    currentUser, notifications, clearNotifications, addNotification, openApp
   } = useOS();
 
   const [activeTab, setActiveTab] = useState<SettingsTab>('personalization');
@@ -344,6 +344,69 @@ export const Settings: React.FC = () => {
           </div>
         );
 
+      case 'updates':
+        return (
+          <div className="space-y-12 animate-in fade-in slide-in-from-right-4 duration-500">
+            <section>
+              <div className="flex items-center gap-2 mb-6">
+                <RefreshCw size={18} className="text-accent" />
+                <h2 className="text-lg font-bold">Nebula Update</h2>
+              </div>
+              
+              <div className="p-8 bg-white/5 rounded-3xl border border-white/10 flex flex-col items-center text-center gap-6">
+                <div className="w-20 h-20 bg-accent/10 rounded-3xl flex items-center justify-center animate-pulse">
+                  <RefreshCw size={40} className="text-accent" />
+                </div>
+                <div className="space-y-2">
+                  <h3 className="text-xl font-bold">System Build 4.5.2</h3>
+                  <p className="text-xs text-white/40 max-w-xs mx-auto">Your system is currently running the latest stable build of Nebulabs WebOS Core.</p>
+                </div>
+                <div className="flex flex-col w-full gap-2">
+                  <Button 
+                    className="bg-accent text-primary font-bold rounded-xl h-12"
+                    onClick={() => openApp('update', 'System Update')}
+                  >
+                    Check for Updates
+                  </Button>
+                  <Button variant="ghost" className="text-[10px] font-bold uppercase tracking-widest text-white/20">
+                    View Update History
+                  </Button>
+                </div>
+              </div>
+
+              <div className="mt-8 space-y-4">
+                <h3 className="text-xs font-bold uppercase tracking-widest text-white/20 ml-2">Recent Changes</h3>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/5 hover:border-white/10 transition-colors cursor-pointer group">
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-400">
+                        <ImageIcon size={20} />
+                      </div>
+                      <div>
+                        <p className="text-sm font-bold group-hover:text-accent transition-colors">Native Image Renderer</p>
+                        <p className="text-[10px] text-white/40">Build 4.5.1 Stable</p>
+                      </div>
+                    </div>
+                    <ChevronRight size={16} className="text-white/20" />
+                  </div>
+                  <div className="flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/5 hover:border-white/10 transition-colors cursor-pointer group">
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-400">
+                        <Monitor size={20} />
+                      </div>
+                      <div>
+                        <p className="text-sm font-bold group-hover:text-accent transition-colors">Multi-Display Bridge</p>
+                        <p className="text-[10px] text-white/40">Build 4.5.0 Stable</p>
+                      </div>
+                    </div>
+                    <ChevronRight size={16} className="text-white/20" />
+                  </div>
+                </div>
+              </div>
+            </section>
+          </div>
+        );
+
       case 'accounts':
         return (
           <div className="space-y-12 animate-in fade-in slide-in-from-right-4 duration-500">
@@ -460,6 +523,14 @@ export const Settings: React.FC = () => {
           className={cn("justify-start gap-3 h-11 rounded-xl transition-all", activeTab === 'notifications' ? "bg-accent/10 text-accent font-bold shadow-sm shadow-accent/5" : "text-white/40 hover:bg-white/5")}
         >
           <Bell size={16} /> Notifications
+        </Button>
+        
+        <Button 
+          variant="ghost" 
+          onClick={() => setActiveTab('updates')}
+          className={cn("justify-start gap-3 h-11 rounded-xl transition-all", activeTab === 'updates' ? "bg-accent/10 text-accent font-bold shadow-sm shadow-accent/5" : "text-white/40 hover:bg-white/5")}
+        >
+          <RefreshCw size={16} /> Updates
         </Button>
         
         <Separator className="my-4 opacity-5 mx-2" />
