@@ -142,6 +142,7 @@ interface OSContextType {
   lock: () => void;
   unlock: (password?: string) => boolean;
   createAccount: (username: string, password?: string) => void;
+  deleteAccount: (userId: string) => void;
   updateUserPassword: (password: string) => void;
   updateUserAvatar: (url: string) => void;
   openApp: (appId: AppId, title: string, params?: any) => void;
@@ -438,10 +439,11 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const createAccount = useCallback((username: string, password?: string) => {
+    // Standardize account creation logic to avoid loop triggers in setup UI
     const newAcc: LocalUser = {
       id: Math.random().toString(36).substr(2, 9),
       username,
-      avatarColor: AVATAR_COLORS[accounts.length % AVATAR_COLORS.length],
+      avatarColor: AVATAR_COLORS[Math.floor(Math.random() * AVATAR_COLORS.length)],
       password: password || undefined
     };
     
@@ -455,12 +457,10 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       return updated;
     });
 
-    // ATOMIC LOGIN: Log in immediately with the new object to avoid stale state issues
     setCurrentUser(newAcc);
     localStorage.setItem('nebula_current_user_id', newAcc.id);
     setIsLocked(false);
     
-    // Save wizard choices to the new user registry immediately
     try {
       localStorage.setItem(`nebula_${newAcc.id}_theme`, theme);
       localStorage.setItem(`nebula_${newAcc.id}_accent`, accentColor);
@@ -468,7 +468,19 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     } catch (e) {}
     
     addNotification("Account Created", `Welcome, ${username}! System initialized.`);
-  }, [accounts.length, theme, accentColor, wallpaper, addNotification]);
+  }, [theme, accentColor, wallpaper, addNotification]);
+
+  const deleteAccount = useCallback((userId: string) => {
+    if (userId === 'admin') return; // Protect root admin
+    setAccounts(prev => {
+      const updated = prev.filter(a => a.id !== userId);
+      try {
+        localStorage.setItem('nebula_accounts', JSON.stringify(updated));
+      } catch (e) {}
+      return updated;
+    });
+    addNotification("Account Removed", "User identity purged from system registry.", "security");
+  }, [addNotification]);
 
   const updateUserPassword = (password: string) => {
     if (!currentUser) return;
@@ -786,7 +798,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       isOnline, volume, brightness, isWidgetsOpen, isQuickSettingsOpen, 
       isStartOpen, isLocked, systemStats,
       currentDisplayId, displayLayout, isSecurityEnabled,
-      login, logout, lock, unlock, createAccount, updateUserPassword, updateUserAvatar, openApp, closeWindow, minimizeWindow,
+      login, logout, lock, unlock, createAccount, deleteAccount, updateUserPassword, updateUserAvatar, openApp, closeWindow, minimizeWindow,
       maximizeWindow, snapWindow, focusWindow, updateWindowPosition, moveWindowToDisplay,
       updateDisplayLayout, resetDisplayLayout, installApp, addNotification, clearNotifications,
       updateWallpaper, setNotes, setTheme, setAccentColor, setCustomAccentHex,

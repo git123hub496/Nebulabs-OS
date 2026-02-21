@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useOS, LocalUser, ThemeMode, AccentColor } from '@/context/os-context';
-import { User, Plus, ArrowRight, X, Lock, ShieldCheck, KeyRound, Sun, Moon, Check, Loader2, Sparkles } from 'lucide-react';
+import { User, Plus, ArrowRight, X, Lock, ShieldCheck, KeyRound, Sun, Moon, Check, Loader2, Sparkles, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -33,7 +33,7 @@ const ACCENT_COLORS: { id: AccentColor; color: string }[] = [
 ];
 
 export const LoginScreen: React.FC = () => {
-  const { accounts, login, createAccount, wallpaper, setTheme, setAccentColor } = useOS();
+  const { accounts, login, createAccount, deleteAccount, wallpaper, setTheme, setAccentColor } = useOS();
   const [step, setStep] = useState<'select' | 'create' | 'customize' | 'initialize'>('select');
   const [newUsername, setNewUsername] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -48,6 +48,7 @@ export const LoginScreen: React.FC = () => {
   const [progress, setProgress] = useState(0);
   const [currentLog, setCurrentLog] = useState("");
   const [logIndex, setLogIndex] = useState(0);
+  const hasCreated = useRef(false);
 
   // Sound Effects
   const playSound = (type: 'click' | 'success') => {
@@ -73,21 +74,24 @@ export const LoginScreen: React.FC = () => {
 
   // Initialization sequence
   useEffect(() => {
-    if (step === 'initialize') {
+    if (step === 'initialize' && !hasCreated.current) {
       const interval = setInterval(() => {
         setProgress(prev => {
           if (prev >= 100) {
             clearInterval(interval);
-            // Finalize account creation after a short delay for visual polish
-            setTimeout(() => {
-              playSound('success');
-              createAccount(newUsername, newPassword || undefined);
-            }, 800);
+            if (!hasCreated.current) {
+              hasCreated.current = true;
+              // Finalize account creation after a short delay for visual polish
+              setTimeout(() => {
+                playSound('success');
+                createAccount(newUsername, newPassword || undefined);
+              }, 800);
+            }
             return 100;
           }
           return prev + 1;
         });
-      }, 30); // Slightly faster initialization
+      }, 30);
 
       const logInterval = setInterval(() => {
         setLogIndex(prev => {
@@ -165,40 +169,54 @@ export const LoginScreen: React.FC = () => {
         </div>
 
         {step === 'select' && !selectedAccount && (
-          <div className="flex flex-wrap justify-center gap-8 max-w-2xl px-8">
+          <div className="flex flex-wrap justify-center gap-8 max-w-2xl px-8 max-h-[60vh] overflow-y-auto custom-scrollbar p-4">
             {accounts.map(account => (
-              <button
+              <div
                 key={account.id}
-                onClick={() => handleSelectAccount(account)}
-                className="group flex flex-col items-center gap-4 transition-all hover:scale-105"
+                className="group relative flex flex-col items-center gap-4 transition-all hover:scale-105"
               >
-                <div 
-                  className="w-24 h-24 rounded-full border-4 border-white/10 group-hover:border-accent transition-colors flex items-center justify-center shadow-2xl overflow-hidden relative"
-                  style={{ backgroundColor: account.avatarUrl ? 'transparent' : account.avatarColor }}
+                <button
+                  onClick={() => handleSelectAccount(account)}
+                  className="flex flex-col items-center gap-4"
                 >
-                  <Avatar className="w-full h-full">
-                    <AvatarImage src={account.avatarUrl} className="object-cover" />
-                    <AvatarFallback className="bg-transparent text-white text-3xl font-bold">
-                      {account.username[0].toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-                  {account.password && (
-                    <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Lock size={20} className="text-white drop-shadow-md" />
-                    </div>
-                  )}
-                </div>
-                <div className="flex flex-col items-center gap-1">
-                  <span className="text-white font-bold text-lg drop-shadow-md group-hover:text-accent transition-colors">
-                    {account.username}
-                  </span>
-                  {account.password && (
-                    <span className="text-[10px] text-white/30 uppercase font-bold tracking-widest flex items-center gap-1">
-                      <ShieldCheck size={10} /> Protected
+                  <div 
+                    className="w-24 h-24 rounded-full border-4 border-white/10 group-hover:border-accent transition-colors flex items-center justify-center shadow-2xl overflow-hidden relative"
+                    style={{ backgroundColor: account.avatarUrl ? 'transparent' : account.avatarColor }}
+                  >
+                    <Avatar className="w-full h-full">
+                      <AvatarImage src={account.avatarUrl} className="object-cover" />
+                      <AvatarFallback className="bg-transparent text-white text-3xl font-bold">
+                        {account.username[0].toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    {account.password && (
+                      <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Lock size={20} className="text-white drop-shadow-md" />
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex flex-col items-center gap-1">
+                    <span className="text-white font-bold text-lg drop-shadow-md group-hover:text-accent transition-colors">
+                      {account.username}
                     </span>
-                  )}
-                </div>
-              </button>
+                    {account.password && (
+                      <span className="text-[10px] text-white/30 uppercase font-bold tracking-widest flex items-center gap-1">
+                        <ShieldCheck size={10} /> Protected
+                      </span>
+                    )}
+                  </div>
+                </button>
+
+                {account.id !== 'admin' && (
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); deleteAccount(account.id); }}
+                    className="absolute -top-2 -right-2 bg-destructive text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100 hover:scale-110 transition-all z-20 border-2 border-white shadow-lg"
+                    title="Delete Account"
+                  >
+                    <Trash2 size={12} strokeWidth={3} />
+                  </button>
+                )}
+              </div>
             ))}
 
             <button
@@ -406,9 +424,9 @@ export const LoginScreen: React.FC = () => {
 
               <div className="bg-black/20 rounded-xl p-4 h-32 overflow-hidden border border-white/5 font-mono text-[10px] space-y-1">
                 <div className="text-green-500 font-bold animate-pulse">{currentLog}</div>
-                <div className="text-white/20 opacity-40">{" >> "}System check passed</div>
-                <div className="text-white/20 opacity-40">{" >> "}Kernel integrity verified</div>
-                <div className="text-white/20 opacity-40">{" >> "}User partition initialized</div>
+                <div className="text-white/20 opacity-40">{">> "}System check passed</div>
+                <div className="text-white/20 opacity-40">{">> "}Kernel integrity verified</div>
+                <div className="text-white/20 opacity-40">{">> "}User partition initialized</div>
               </div>
             </div>
 
@@ -441,6 +459,13 @@ export const LoginScreen: React.FC = () => {
         }
         .animate-shake {
           animation: shake 0.2s ease-in-out 0s 2;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: rgba(255, 255, 255, 0.1);
+          border-radius: 10px;
         }
       `}</style>
     </div>
