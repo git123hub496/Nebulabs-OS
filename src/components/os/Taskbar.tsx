@@ -97,7 +97,8 @@ export const Taskbar: React.FC = () => {
       {/* Start & Widgets Buttons */}
       <div className={cn("flex", isVertical ? "flex-col gap-1" : "gap-1")}>
         <button
-          onClick={() => {
+          onClick={(e) => {
+            e.stopPropagation();
             setIsStartOpen(!isStartOpen);
             setIsWidgetsOpen(false);
             setIsQuickSettingsOpen(false);
@@ -111,7 +112,8 @@ export const Taskbar: React.FC = () => {
         </button>
         
         <button
-          onClick={() => {
+          onClick={(e) => {
+            e.stopPropagation();
             setIsWidgetsOpen(!isWidgetsOpen);
             setIsStartOpen(false);
             setIsQuickSettingsOpen(false);
@@ -155,7 +157,10 @@ export const Taskbar: React.FC = () => {
               onDragEnd={handleDragEnd}
             >
               <button
-                onClick={() => openApp(appId, info.label)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  openApp(appId, info.label);
+                }}
                 className={cn(
                   "p-2 rounded-md transition-all active:scale-90 flex items-center justify-center",
                   isActive ? "bg-white/10" : "hover:bg-white/10 text-white/60 hover:text-accent"
@@ -185,7 +190,10 @@ export const Taskbar: React.FC = () => {
           return (
             <div key={window.id} className="relative group">
               <button
-                onClick={() => focusWindow(window.id)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  focusWindow(window.id);
+                }}
                 className={cn(
                   "p-2 rounded-md transition-all active:scale-90 flex items-center justify-center",
                   isActive ? "bg-white/10 text-accent" : "hover:bg-white/10 text-white/40"
@@ -211,7 +219,8 @@ export const Taskbar: React.FC = () => {
         isVertical ? "flex-col items-center pb-2" : "items-center px-1"
       )}>
         <button
-          onClick={() => {
+          onClick={(e) => {
+            e.stopPropagation();
             setIsQuickSettingsOpen(!isQuickSettingsOpen);
             setIsStartOpen(false);
             setIsWidgetsOpen(false);

@@ -43,7 +43,7 @@ export interface WindowInstance {
   zIndex: number;
   initialWidth?: number;
   initialHeight?: number;
-  displayId: string; // Target display for this window
+  displayId: string; 
   x: number;
   y: number;
 }
@@ -67,7 +67,7 @@ export type DisplayDirection = 'left' | 'right' | 'top' | 'bottom';
 
 export interface DisplayLayout {
   [displayId: string]: {
-    [direction in DisplayDirection]?: string; // Adjacent display ID
+    [direction in DisplayDirection]?: string; 
   };
 }
 
@@ -226,12 +226,9 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   const [nextZIndex, setNextZIndex] = useState(10);
   const [systemStats, setSystemStats] = useState({ cpu: 12, ram: 42, net: 2 });
   
-  // Display identity is unique per tab (sessionStorage)
   const [currentDisplayId, setDisplayIdState] = useState('1');
-  // Display layout is shared (localStorage)
   const [displayLayout, setDisplayLayoutState] = useState<DisplayLayout>({ '1': { right: '2' }, '2': { left: '1' } });
 
-  // Handle Multi-Display Synchronization
   useEffect(() => {
     const handleStorageChange = (e: StorageEvent) => {
       if (!currentUser) return;
@@ -311,7 +308,6 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       }
     };
 
-    // Load tab-specific display identity from sessionStorage
     const sessionDisplayId = sessionStorage.getItem(`nebula_${uid}_display_id`);
     if (sessionDisplayId) {
       setDisplayIdState(sessionDisplayId);
@@ -467,7 +463,6 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     if (!updated[fromId]) updated[fromId] = {};
     updated[fromId][direction] = toId;
     
-    // Auto-reverse for the other side
     const reverseMap: Record<DisplayDirection, DisplayDirection> = { left: 'right', right: 'left', top: 'bottom', bottom: 'top' };
     if (!updated[toId]) updated[toId] = {};
     updated[toId][reverseMap[direction]] = fromId;

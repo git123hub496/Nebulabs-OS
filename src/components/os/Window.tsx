@@ -54,30 +54,31 @@ export const Window: React.FC<WindowProps> = ({ window: win, children }) => {
         const windowWidth = win.initialWidth || 800;
         const windowHeight = win.initialHeight || 600;
 
-        // Edge detection for multi-display hopping
         const currentLayout = displayLayout[currentDisplayId];
         if (currentLayout) {
+          const threshold = 50; 
+
           // Check Left Hopping
-          if (newX < -windowWidth / 2 && currentLayout.left) {
-            updateWindowPosition(win.id, screenWidth - windowWidth / 2, newY, currentLayout.left);
+          if (newX < -threshold && currentLayout.left) {
+            updateWindowPosition(win.id, screenWidth - windowWidth - 20, newY, currentLayout.left);
             setIsDragging(false);
             return;
           }
           // Check Right Hopping
-          if (newX > screenWidth - windowWidth / 2 && currentLayout.right) {
-            updateWindowPosition(win.id, -windowWidth / 2, newY, currentLayout.right);
+          if (newX > screenWidth - threshold && currentLayout.right) {
+            updateWindowPosition(win.id, 20, newY, currentLayout.right);
             setIsDragging(false);
             return;
           }
           // Check Top Hopping
-          if (newY < -30 && currentLayout.top) {
-            updateWindowPosition(win.id, newX, screenHeight - 60, currentLayout.top);
+          if (newY < -threshold && currentLayout.top) {
+            updateWindowPosition(win.id, newX, screenHeight - windowHeight - 20, currentLayout.top);
             setIsDragging(false);
             return;
           }
           // Check Bottom Hopping
-          if (newY > screenHeight - 60 && currentLayout.bottom) {
-            updateWindowPosition(win.id, newX, -30, currentLayout.bottom);
+          if (newY > screenHeight - threshold && currentLayout.bottom) {
+            updateWindowPosition(win.id, newX, 20, currentLayout.bottom);
             setIsDragging(false);
             return;
           }
@@ -106,7 +107,7 @@ export const Window: React.FC<WindowProps> = ({ window: win, children }) => {
 
   const getResponsiveDimensions = () => {
     const isHorizontal = taskbarPosition === 'bottom' || taskbarPosition === 'top';
-    const offset = 48; // Taskbar height/width
+    const offset = 48; 
     
     if (win.isMaximized) {
       return {
@@ -172,7 +173,6 @@ export const Window: React.FC<WindowProps> = ({ window: win, children }) => {
           <span className="text-sm font-medium text-white/80">{win.title}</span>
         </div>
         <div className="flex items-center gap-1">
-          {/* Multi-Display Move Control */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button 

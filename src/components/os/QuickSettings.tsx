@@ -76,7 +76,6 @@ export const QuickSettings: React.FC = () => {
       )}
       onClick={(e) => e.stopPropagation()}
     >
-      {/* Header: User & Global Actions */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Avatar className="w-10 h-10 border-2 border-accent/20">
@@ -115,7 +114,6 @@ export const QuickSettings: React.FC = () => {
         </div>
       </div>
 
-      {/* Grid: Feature Toggles */}
       <div className="grid grid-cols-2 gap-3">
         <button 
           onClick={() => connectToWifi(isOnline ? 'Public_Guest_No_Internet' : 'Nebula_Secure_5G')}
@@ -157,37 +155,36 @@ export const QuickSettings: React.FC = () => {
              <Separator className="my-1 bg-white/5" />
              <div className="px-2 py-1.5 text-[10px] font-black uppercase text-white/30 tracking-widest">Physical Layout</div>
              
-             <DropdownMenuSub>
-               <DropdownMenuSubTrigger className="gap-2 text-[11px]">
-                 <Layout size={12} />
-                 Arrange Displays
-               </DropdownMenuSubTrigger>
-               <DropdownMenuSubContent className="glass border-white/10 w-48">
-                 {['1', '2', '3'].map(fromId => (
-                   <DropdownMenuSub key={fromId}>
-                     <DropdownMenuSubTrigger className="text-[10px]">From Display {fromId}</DropdownMenuSubTrigger>
-                     <DropdownMenuSubContent className="glass border-white/10">
-                        {['left', 'right', 'top', 'bottom'].map(dir => (
-                          <DropdownMenuSub key={dir}>
-                            <DropdownMenuSubTrigger className="text-[10px]">{dir} is...</DropdownMenuSubTrigger>
-                            <DropdownMenuSubContent className="glass border-white/10">
-                              {['1', '2', '3'].filter(id => id !== fromId).map(toId => (
-                                <DropdownMenuItem 
-                                  key={toId} 
-                                  onClick={() => updateDisplayLayout(fromId, dir as any, toId)}
-                                  className="text-[10px]"
-                                >
-                                  Display {toId}
-                                </DropdownMenuItem>
-                              ))}
-                            </DropdownMenuSubContent>
-                          </DropdownMenuSub>
-                        ))}
-                     </DropdownMenuSubContent>
-                   </DropdownMenuSub>
-                 ))}
-               </DropdownMenuSubContent>
-             </DropdownMenuSub>
+             {['1', '2', '3'].map(fromId => (
+               <DropdownMenuSub key={fromId}>
+                 <DropdownMenuSubTrigger className="gap-2 text-[11px]">
+                   <Layout size={12} />
+                   Arrange Display {fromId}
+                 </DropdownMenuSubTrigger>
+                 <DropdownMenuSubContent className="glass border-white/10 w-48">
+                    {['left', 'right', 'top', 'bottom'].map(dir => (
+                      <DropdownMenuSub key={dir}>
+                        <DropdownMenuSubTrigger className="text-[10px]">{dir} is...</DropdownMenuSubTrigger>
+                        <DropdownMenuSubContent className="glass border-white/10">
+                          {['1', '2', '3'].filter(id => id !== fromId).map(toId => (
+                            <DropdownMenuItem 
+                              key={toId} 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                updateDisplayLayout(fromId, dir as any, toId);
+                              }}
+                              className="text-[10px]"
+                            >
+                              Display {toId}
+                              {displayLayout[fromId]?.[dir as any] === toId && <Check size={12} className="ml-auto text-accent" />}
+                            </DropdownMenuItem>
+                          ))}
+                        </DropdownMenuSubContent>
+                      </DropdownMenuSub>
+                    ))}
+                 </DropdownMenuSubContent>
+               </DropdownMenuSub>
+             ))}
 
              <Separator className="my-1 bg-white/5" />
              <DropdownMenuItem onClick={addDisplay} className="gap-2 text-accent">
@@ -226,7 +223,6 @@ export const QuickSettings: React.FC = () => {
         </button>
       </div>
 
-      {/* Sliders: Brightness & Volume */}
       <div className="space-y-6 px-1">
         <div className="space-y-3">
           <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-widest text-white/30">
@@ -266,7 +262,6 @@ export const QuickSettings: React.FC = () => {
 
       <Separator className="bg-white/5" />
 
-      {/* Footer: Date & Logout */}
       <div className="flex items-center justify-between">
         <div className="flex flex-col">
           <span className="text-xs font-bold text-white/80">
