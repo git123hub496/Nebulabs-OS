@@ -62,6 +62,7 @@ export const Settings: React.FC = () => {
     taskbarSize, setTaskbarSize, iconSize, setIconSize,
     accentColor, setAccentColor, customAccentHex, 
     cursorColor, setCursorColor, isInverted, setInverted,
+    isGrayscale, setGrayscale,
     glassEnabled, setGlassEnabled, brightness, setBrightness,
     currentDisplayId, setCurrentDisplayId, displayLayout, updateDisplayLayout, resetDisplayLayout,
     currentUser, logout, notifications, clearNotifications, addNotification, openApp,
@@ -84,7 +85,7 @@ export const Settings: React.FC = () => {
       { id: 'personalization', label: 'Personalization', icon: Palette, keywords: ['theme', 'wallpaper', 'taskbar', 'accent', 'color', 'dark mode', 'light mode'] },
       { id: 'display', label: 'Display', icon: Monitor, keywords: ['brightness', 'monitor', 'screen', 'resolution', 'multi-display'] },
       { id: 'apps', label: 'Apps', icon: AppWindow, keywords: ['installed', 'applications', 'software', 'management', 'uninstall'] },
-      { id: 'accessibility', label: 'Accessibility', icon: Eye, keywords: ['contrast', 'glass', 'transparency', 'cursor', 'pointer', 'mouse'] },
+      { id: 'accessibility', label: 'Accessibility', icon: Eye, keywords: ['contrast', 'grayscale', 'glass', 'transparency', 'cursor', 'pointer', 'mouse'] },
       { id: 'notifications', label: 'Notifications', icon: Bell, keywords: ['alerts', 'messages', 'activity', 'dnd'] },
       { id: 'accounts', label: 'Accounts', icon: User, keywords: ['profile', 'identity', 'password', 'avatar', 'user', 'sign out'] },
       { id: 'security', label: 'Security', icon: Shield, keywords: ['encryption', 'lockdown', 'defender', 'kernel'] },
@@ -333,6 +334,13 @@ export const Settings: React.FC = () => {
                 </div>
                 <div className="flex items-center justify-between p-5 bg-foreground/5 rounded-2xl border border-border/50">
                   <div className="space-y-0.5">
+                    <Label className="text-sm font-bold text-foreground">Grayscale Mode</Label>
+                    <p className="text-[11px] text-muted-foreground">Apply a global grayscale filter</p>
+                  </div>
+                  <Switch checked={isGrayscale} onCheckedChange={setGrayscale} />
+                </div>
+                <div className="flex items-center justify-between p-5 bg-foreground/5 rounded-2xl border border-border/50">
+                  <div className="space-y-0.5">
                     <Label className="text-sm font-bold text-foreground">Aero Glass Effects</Label>
                     <p className="text-[11px] text-muted-foreground">Enable transparency and blur on windows</p>
                   </div>
@@ -570,7 +578,7 @@ export const Settings: React.FC = () => {
               <div className="p-6 bg-foreground/5 rounded-2xl border border-border/50 flex items-center justify-between">
                 <div>
                   <h3 className="text-sm font-bold">System is up to date</h3>
-                  <p className="text-[11px] text-muted-foreground">Last checked: Today at 10:00 AM</p>
+                  <p className="text-[11px] text-muted-foreground">Last checked: Today at {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
                 </div>
                 <Button variant="outline" size="sm" onClick={() => openApp('update', 'System Update')}>Launch Update Tool</Button>
               </div>

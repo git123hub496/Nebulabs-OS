@@ -34,13 +34,14 @@ import {
   Mail as MailIcon,
   GraduationCap,
   Smile,
-  Home
+  Home,
+  Layers
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { respondToEmail } from '@/ai/flows/mail-ai-flow';
 import { respondToChat } from '@/ai/flows/chat-ai-flow';
 
-export type AppId = 'store' | 'files' | 'settings' | 'assistant' | 'google-drive' | 'notes' | 'calc' | 'terminal' | 'browser' | 'trash' | 'news' | 'maps' | 'monitor' | 'calendar' | 'snake' | 'minesweeper' | 'image-viewer' | 'update' | 'virus' | 'paint' | 'info' | 'camera' | 'slides' | 'mail';
+export type AppId = 'store' | 'files' | 'settings' | 'assistant' | 'google-drive' | 'notes' | 'calc' | 'terminal' | 'browser' | 'trash' | 'news' | 'maps' | 'monitor' | 'calendar' | 'snake' | 'minesweeper' | 'image-viewer' | 'update' | 'virus' | 'paint' | 'info' | 'camera' | 'slides' | 'mail' | 'nebula-v';
 export type ThemeMode = 'dark' | 'light';
 export type PowerStatus = 'on' | 'off' | 'booting';
 export type TaskbarPosition = 'top' | 'bottom' | 'left' | 'right';
@@ -139,6 +140,7 @@ export interface BIOSSettings {
   networkStack: boolean;
   secureBoot: boolean;
   fastBoot: boolean;
+  virtualization: boolean;
 }
 
 interface OSContextType {
@@ -166,6 +168,7 @@ interface OSContextType {
   customAccentHex: string;
   cursorColor: CursorColor;
   isInverted: boolean;
+  isGrayscale: boolean;
   glassEnabled: boolean;
   powerStatus: PowerStatus;
   taskbarPosition: TaskbarPosition;
@@ -220,6 +223,7 @@ interface OSContextType {
   setCustomAccentHex: (hex: string) => void;
   setCursorColor: (color: CursorColor) => void;
   setInverted: (inverted: boolean) => void;
+  setGrayscale: (grayscale: boolean) => void;
   setGlassEnabled: (enabled: boolean) => void;
   setTaskbarPosition: (position: TaskbarPosition) => void;
   setTaskbarSize: (size: TaskbarSize) => void;
@@ -286,6 +290,7 @@ export const APP_INFO: Record<AppId, { icon: any; label: string }> = {
   'camera': { icon: CameraIcon, label: 'Nebula Camera' },
   'slides': { icon: PresentationIcon, label: 'Nebula Slides' },
   'mail': { icon: MailIcon, label: 'NebulaMail' },
+  'nebula-v': { icon: Layers, label: 'Nebula-V' },
 };
 
 const INITIAL_FILES: FileSystemItem[] = [
@@ -317,7 +322,7 @@ const MOCK_EMAILS: Email[] = [
   },
 ];
 
-const INITIAL_APPS: AppId[] = ['store', 'files', 'settings', 'assistant', 'notes', 'calc', 'terminal', 'browser', 'trash', 'news', 'maps', 'monitor', 'calendar', 'snake', 'minesweeper', 'update', 'paint', 'info', 'camera', 'slides', 'mail'];
+const INITIAL_APPS: AppId[] = ['store', 'files', 'settings', 'assistant', 'notes', 'calc', 'terminal', 'browser', 'trash', 'news', 'maps', 'monitor', 'calendar', 'snake', 'minesweeper', 'update', 'paint', 'info', 'camera', 'slides', 'mail', 'nebula-v'];
 const INITIAL_PINNED: AppId[] = ['files', 'store', 'assistant', 'browser', 'settings', 'mail', 'camera', 'slides'];
 
 const AVATAR_COLORS = ['#9333ea', '#3b82f6', '#e11d48', '#f97316', '#16a34a', '#ec4899', '#06b6d4'];
@@ -345,6 +350,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   const [customAccentHex, setCustomAccentHexState] = useState("#9333ea");
   const [cursorColor, setCursorColorState] = useState<CursorColor>('black');
   const [isInverted, setInvertedState] = useState(false);
+  const [isGrayscale, setGrayscaleState] = useState(false);
   const [glassEnabled, setGlassEnabledState] = useState(true);
   const [brightness, setBrightnessState] = useState(100);
   const [volume, setVolumeState] = useState(75);
@@ -379,6 +385,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     networkStack: true,
     secureBoot: true,
     fastBoot: false,
+    virtualization: false,
   });
 
   useEffect(() => {
@@ -624,6 +631,9 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     
     const n = localStorage.getItem(`nebula_${user.id}_notes`);
     if (n) setNotesInternal(n);
+
+    const gr = localStorage.getItem(`nebula_${user.id}_grayscale`);
+    if (gr) setGrayscaleState(gr === 'true');
   }, []);
 
   useEffect(() => {
@@ -813,6 +823,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     else if (appId === 'camera') { initialWidth = 640; initialHeight = 520; }
     else if (appId === 'slides') { initialWidth = 950; initialHeight = 650; }
     else if (appId === 'mail') { initialWidth = 900; initialHeight = 600; }
+    else if (appId === 'nebula-v') { initialWidth = 1000; initialHeight = 700; }
     const newId = `${appId}-${Date.now()}`;
     const newWindow: WindowInstance = {
       id: newId, appId, title, isMinimized: false, isMaximized: false, zIndex: nextZIndex,
@@ -869,6 +880,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   const setCustomAccentHex = (h: string) => { setCustomAccentHexState(h); saveSetting('custom_accent', h); };
   const setCursorColor = (c: CursorColor) => { setCursorColorState(c); saveSetting('cursor', c); };
   const setInverted = (inv: boolean) => { setInvertedState(inv); saveSetting('inverted', inv); };
+  const setGrayscale = (gr: boolean) => { setGrayscaleState(gr); saveSetting('grayscale', gr); };
   const setGlassEnabled = (gl: boolean) => { setGlassEnabledState(gl); saveSetting('glass', gl); };
   const setTaskbarPosition = (p: TaskbarPosition) => { setTaskbarPositionState(p); saveSetting('taskbar_pos', p); };
   const setTaskbarSize = (s: number) => { if (isNaN(s)) return; setTaskbarSizeState(s); saveSetting('taskbar_size', s); };
@@ -1031,7 +1043,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       fileSystem, trash, desktopApps, notifications, emails, markEmailRead, sendEmail, 
       archiveEmail, deleteEmail, restoreEmail, permanentlyDeleteEmail,
       wallpaper, notes, theme, accentColor,
-      customAccentHex, cursorColor, isInverted, glassEnabled, powerStatus,
+      customAccentHex, cursorColor, isInverted, isGrayscale, glassEnabled, powerStatus,
       taskbarPosition, taskbarSize, taskbarAutoHide, iconSize, currentWifi, isWifiConnecting,
       isOnline, volume, brightness, isWidgetsOpen, isQuickSettingsOpen, 
       isStartOpen, isChatOpen, isLocked, systemStats,
@@ -1040,7 +1052,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       maximizeWindow, snapWindow, focusWindow, updateWindowPosition, moveWindowToDisplay,
       updateDisplayLayout, resetDisplayLayout, installApp, uninstallApp, addNotification, clearNotifications,
       updateWallpaper, setNotes, setTheme, setAccentColor, setCustomAccentHex,
-      setCursorColor, setInverted, setGlassEnabled, setTaskbarPosition, setTaskbarSize, setTaskbarAutoHide,
+      setCursorColor, setInverted, setGrayscale, setGlassEnabled, setTaskbarPosition, setTaskbarSize, setTaskbarAutoHide,
       setIconSize, connectToWifi, setVolume, setBrightness, setIsWidgetsOpen,
       setIsQuickSettingsOpen, setIsStartOpen, setIsChatOpen, sendChatMessage, setCurrentDisplayId, setSecurityEnabled, updateBIOSSettings, restart, shutDown, powerOn,
       minimizeAllWindows, playSound,

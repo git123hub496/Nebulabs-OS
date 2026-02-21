@@ -45,7 +45,8 @@ import {
   Pin,
   PinOff,
   Smile,
-  Home
+  Home,
+  Layers
 } from 'lucide-react';
 import { FileExplorer } from '../apps/FileExplorer';
 import { AppStore } from '../apps/AppStore';
@@ -70,6 +71,7 @@ import { Paint } from '../apps/Paint';
 import { Camera } from '../apps/Camera';
 import { PresentationMaker } from '../apps/PresentationMaker';
 import { NebulaMail } from '../apps/NebulaMail';
+import { NebulaV } from '../apps/NebulaV';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -98,6 +100,7 @@ const APP_COMPONENTS: Record<AppId, (win: WindowInstance) => React.ReactNode> = 
   'camera': (win) => <Camera />,
   'slides': (win) => <PresentationMaker />,
   'mail': (win) => <NebulaMail />,
+  'nebula-v': (win) => <NebulaV />,
   'info': (win) => (
     <div className="p-8 space-y-6 bg-[#161d25] h-full text-white/90 overflow-auto">
       <div className="flex items-center gap-4 mb-8">
@@ -132,7 +135,7 @@ export const Desktop: React.FC = () => {
   const { 
     wallpaper, openWindows, openApp, theme, accentColor, customAccentHex,
     powerStatus, powerOn, taskbarPosition, iconSize, currentUser,
-    cursorColor, isInverted, glassEnabled, desktopApps, updateDesktopAppPosition, toggleDesktopApp,
+    cursorColor, isInverted, isGrayscale, glassEnabled, desktopApps, updateDesktopAppPosition, toggleDesktopApp,
     isWidgetsOpen, setIsWidgetsOpen, isQuickSettingsOpen, setIsQuickSettingsOpen,
     isStartOpen, setIsStartOpen, isChatOpen, setIsChatOpen, activeWindowId, closeWindow, minimizeAllWindows,
     brightness, currentDisplayId, displayLayout, isSecurityEnabled, addNotification,
@@ -386,6 +389,7 @@ export const Desktop: React.FC = () => {
         "fixed inset-0 overflow-hidden select-none transition-all duration-1000",
         theme === 'light' ? "light" : "",
         isInverted ? "system-inverted" : "",
+        isGrayscale ? "grayscale" : "",
         !glassEnabled ? "glass-disabled" : "",
         powerStatus === 'booting' ? "opacity-0" : "opacity-100"
       )}

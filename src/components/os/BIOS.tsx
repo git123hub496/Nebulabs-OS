@@ -18,6 +18,7 @@ export const BIOS: React.FC<{ onClose: () => void }> = ({ onClose }) => {
     networkStack: biosSettings.networkStack,
     secureBoot: biosSettings.secureBoot,
     fastBoot: biosSettings.fastBoot,
+    virtualization: biosSettings.virtualization,
   });
 
   const [bootOrder, setBootOrder] = useState(['Nebulabs Virtual SSD-0', 'Network PXE', 'USB Flash Device']);
@@ -27,7 +28,7 @@ export const BIOS: React.FC<{ onClose: () => void }> = ({ onClose }) => {
 
     if (direction === 'up') setSelectedItem(prev => Math.max(0, prev - 1));
     if (direction === 'down') {
-      const limits = { Main: 0, Advanced: 3, Security: 2, Boot: 2, Exit: 2 };
+      const limits = { Main: 0, Advanced: 4, Security: 2, Boot: 2, Exit: 2 };
       setSelectedItem(prev => Math.min(limits[activeSection], prev + 1));
     }
 
@@ -35,7 +36,8 @@ export const BIOS: React.FC<{ onClose: () => void }> = ({ onClose }) => {
       if (activeSection === 'Advanced') {
         if (selectedItem === 0) setSettings(s => ({ ...s, cpuTurbo: !s.cpuTurbo }));
         if (selectedItem === 1) setSettings(s => ({ ...s, networkStack: !s.networkStack }));
-        if (selectedItem === 3) setSettings(s => ({ ...s, fastBoot: !s.fastBoot }));
+        if (selectedItem === 2) setSettings(s => ({ ...s, virtualization: !s.virtualization }));
+        if (selectedItem === 4) setSettings(s => ({ ...s, fastBoot: !s.fastBoot }));
       }
       if (activeSection === 'Security') {
         if (selectedItem === 2) setSettings(s => ({ ...s, secureBoot: !s.secureBoot }));
@@ -77,7 +79,7 @@ export const BIOS: React.FC<{ onClose: () => void }> = ({ onClose }) => {
         } else if (selectedItem === 1) {
           onClose();
         } else {
-          setSettings({ cpuTurbo: true, networkStack: true, secureBoot: true, fastBoot: false });
+          setSettings({ cpuTurbo: true, networkStack: true, secureBoot: true, fastBoot: false, virtualization: true });
         }
       } else {
         handleAction('enter');
@@ -135,8 +137,9 @@ export const BIOS: React.FC<{ onClose: () => void }> = ({ onClose }) => {
           <div className="space-y-1">
             {[
               { label: 'CPU Turbo Mode', value: settings.cpuTurbo ? '[Enabled]' : '[Disabled]' },
-              { label: 'Network Stack Stack', value: settings.networkStack ? '[Enabled]' : '[Disabled]' },
-              { label: 'Virtualization Technology', value: '[Enabled]' },
+              { label: 'Network Stack', value: settings.networkStack ? '[Enabled]' : '[Disabled]' },
+              { label: 'Virtualization Technology', value: settings.virtualization ? '[Enabled]' : '[Disabled]' },
+              { label: 'Hardware Acceleration', value: '[Enabled]' },
               { label: 'Fast Boot Support', value: settings.fastBoot ? '[Enabled]' : '[Disabled]' },
             ].map((item, i) => (
               <div 
@@ -291,7 +294,7 @@ export const BIOS: React.FC<{ onClose: () => void }> = ({ onClose }) => {
           <div className="text-white font-black mb-4 uppercase tracking-widest border-b border-white/20 pb-2">Item Specific Help</div>
           <div className="leading-relaxed opacity-90 h-40 overflow-hidden text-[#ccc]">
             {activeSection === 'Main' && "Displays general system information including the current Nebulabs Firmware version and processor specifications."}
-            {activeSection === 'Advanced' && "Configure specialized hardware parameters. Warning: Improper settings may lead to virtual hardware instability."}
+            {activeSection === 'Advanced' && "Configure specialized hardware parameters. Warning: Improper settings may lead to virtual hardware instability. Virtualization is required for Nebula-V."}
             {activeSection === 'Security' && "Manage system access and boot security. Enabling Secure Boot prevents unauthorized code execution."}
             {activeSection === 'Boot' && "Specify the device search order. The device at the top of the list will be checked for a bootable OS first."}
             {activeSection === 'Exit' && "Commit settings to the Nebulabs Virtual CMOS memory and restart the system."}
