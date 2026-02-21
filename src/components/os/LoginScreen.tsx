@@ -32,7 +32,6 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { BIOS } from './BIOS';
 import { cn } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';
 import {
@@ -89,7 +88,6 @@ export const LoginScreen: React.FC = () => {
   const [creationAccountType, setCreationAccountType] = useState<AccountType>('personal');
   const [selectedTheme, setSelectedTheme] = useState<ThemeMode>('dark');
   const [selectedAccent, setSelectedAccent] = useState<AccentColor>('purple');
-  const [showBIOS, setShowBIOS] = useState(false);
   const [selectedAccount, setSelectedAccount] = useState<LocalUser | null>(null);
   const [passwordInput, setPasswordInput] = useState("");
   const [isError, setIsError] = useState(false);
@@ -117,16 +115,6 @@ export const LoginScreen: React.FC = () => {
       audio.play().catch(() => {}); 
     } catch (e) {}
   };
-
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key.toLowerCase() === 'b' && step === 'select' && !selectedAccount) {
-        setShowBIOS(true);
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [step, selectedAccount]);
 
   useEffect(() => {
     if ((step === 'initialize' || step === 'recovery') && !hasCreated.current) {
@@ -178,10 +166,6 @@ export const LoginScreen: React.FC = () => {
       };
     }
   }, [step, newUsername, newPassword, createAccount, resetUserPassword, selectedAccount, creationAccountType]);
-
-  if (showBIOS) {
-    return <BIOS onClose={() => setShowBIOS(false)} />;
-  }
 
   const handleCreateSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -341,7 +325,7 @@ export const LoginScreen: React.FC = () => {
         )}
 
         {selectedAccount && step === 'select' && (
-          <div className="glass p-10 rounded-[2.5rem] border border-white/10 w-full max-w-md flex flex-col items-center gap-8 animate-in zoom-in-95 duration-300 shadow-2xl">
+          <div className="glass p-10 rounded-[2.5rem] border border-white/10 w-full max-md flex flex-col items-center gap-8 animate-in zoom-in-95 duration-300 shadow-2xl">
             <Avatar className="w-24 h-24 border-4 border-accent shadow-xl shadow-accent/20">
               <AvatarImage src={selectedAccount.avatarUrl} className="object-cover" />
               <AvatarFallback 
@@ -616,13 +600,13 @@ export const LoginScreen: React.FC = () => {
         )}
 
         <div className="fixed bottom-0 inset-x-0 h-16 flex items-center justify-between px-12 z-20">
-          <div className="flex items-center gap-8 text-white/20">
+          <div className="flex items-center gap-8 text-white/50">
             <div className="flex flex-col items-center gap-1">
-              <span className="text-[10px] font-black uppercase tracking-widest">Diagnostic</span>
+              <span className="text-[10px] font-black uppercase tracking-widest opacity-60">Identity Services</span>
               <div className="flex items-center gap-3">
                 <span className="text-[10px] font-mono">KERNEL: 4.5.2</span>
                 <div className="w-px h-3 bg-white/10" />
-                <span className="text-[10px] font-mono">B: BIOS</span>
+                <span className="text-[10px] font-mono">SECURE BOOT: ACTIVE</span>
               </div>
             </div>
           </div>

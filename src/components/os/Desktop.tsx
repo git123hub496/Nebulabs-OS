@@ -10,6 +10,7 @@ import { WidgetsPanel } from './WidgetsPanel';
 import { QuickSettings } from './QuickSettings';
 import { GlobalSearch } from './GlobalSearch';
 import { ChatBar } from './ChatBar';
+import { BIOS } from './BIOS';
 import { 
   ShoppingBag, 
   FolderOpen, 
@@ -137,6 +138,7 @@ export const Desktop: React.FC = () => {
   
   const [bootOpacity, setBootOpacity] = useState(1);
   const [shouldRenderBoot, setShouldRenderBoot] = useState(true);
+  const [showBIOS, setShowBIOS] = useState(false);
   const [contextMenu, setContextMenu] = useState<{ x: number, y: number } | null>(null);
   const [runQuery, setRunQuery] = useState("");
   const [isRunOpen, setIsRunOpen] = useState(false);
@@ -163,6 +165,17 @@ export const Desktop: React.FC = () => {
   }, [powerStatus]);
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    // BIOS Key Listener (Only on boot screen or power off menu)
+    if (e.key.toLowerCase() === 'b') {
+      const isBooting = powerStatus === 'booting' || shouldRenderBoot;
+      const isOff = powerStatus === 'off';
+      if (isBooting || isOff) {
+        e.preventDefault();
+        setShowBIOS(true);
+        return;
+      }
+    }
+
     if (powerStatus !== 'on' || !currentUser) return;
 
     if (e.altKey) {
@@ -232,7 +245,7 @@ export const Desktop: React.FC = () => {
       setIsRunOpen(false);
       setContextMenu(null);
     }
-  }, [powerStatus, currentUser, isStartOpen, isWidgetsOpen, isQuickSettingsOpen, isChatOpen, activeWindowId, openApp, setIsStartOpen, setIsWidgetsOpen, setIsQuickSettingsOpen, setIsChatOpen, closeWindow, minimizeAllWindows, lock, isSchool, addNotification]);
+  }, [powerStatus, currentUser, isStartOpen, isWidgetsOpen, isQuickSettingsOpen, isChatOpen, activeWindowId, openApp, setIsStartOpen, setIsWidgetsOpen, setIsQuickSettingsOpen, setIsChatOpen, closeWindow, minimizeAllWindows, lock, isSchool, addNotification, shouldRenderBoot]);
 
   useEffect(() => {
     window.addEventListener('keydown', handleKeyDown);
@@ -283,6 +296,11 @@ export const Desktop: React.FC = () => {
     }
   };
 
+  // BIOS Overlay
+  if (showBIOS) {
+    return <BIOS onClose={() => setShowBIOS(false)} />;
+  }
+
   if (powerStatus === 'off') {
     return (
       <div className="fixed inset-0 bg-[#020202] flex flex-col items-center justify-center gap-12 animate-in fade-in duration-1000 overflow-hidden">
@@ -295,6 +313,7 @@ export const Desktop: React.FC = () => {
         >
           <Power size={40} className="group-hover:scale-110 transition-transform duration-500 group-active:scale-90" />
         </Button>
+        <p className="text-[10px] text-white/20 font-black uppercase tracking-[0.4em] animate-pulse">Press [B] for Setup</p>
       </div>
     );
   }
@@ -385,7 +404,7 @@ export const Desktop: React.FC = () => {
       <ChatBar />
 
       {currentDisplayId === '1' && desktopApps.map(shortcut => {
-        // School Restriction
+        // School Restriction for pinned apps
         if (isSchool && shortcut.id === 'news') return null;
 
         const Icon = shortcut.icon;
@@ -487,6 +506,9 @@ export const Desktop: React.FC = () => {
           )}
           <div className="mt-8 w-48 h-1 bg-white/10 rounded-full overflow-hidden">
             <div className="h-full bg-accent animate-[loading_2s_ease-in-out_infinite]" />
+          </div>
+          <div className="mt-6 flex flex-col items-center gap-2">
+             <p className="text-[10px] text-white/40 font-black tracking-widest uppercase animate-pulse">Press [B] for Setup</p>
           </div>
           <p className="fixed bottom-12 text-[10px] text-white/20 font-bold tracking-widest uppercase">Proprietary Kernel v4.5.2 • © 2026</p>
         </div>
