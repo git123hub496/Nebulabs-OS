@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
@@ -34,7 +33,10 @@ import {
   Palette,
   Info,
   Camera as CameraIcon,
-  Presentation
+  Presentation,
+  Monitor as MonitorIcon,
+  Cpu,
+  Zap
 } from 'lucide-react';
 import { FileExplorer } from '../apps/FileExplorer';
 import { AppStore } from '../apps/AppStore';
@@ -267,16 +269,49 @@ export const Desktop: React.FC = () => {
 
   if (powerStatus === 'off') {
     return (
-      <div className="fixed inset-0 bg-black flex flex-col items-center justify-center gap-8 animate-in fade-in duration-1000">
-        <div className="text-white/10 text-[10px] uppercase tracking-[0.4em] font-bold">System Offline</div>
-        <Button 
-          variant="outline" 
-          size="icon" 
-          className="w-20 h-20 rounded-full border-white/5 bg-white/5 hover:bg-white/10 hover:border-accent hover:text-accent transition-all group"
-          onClick={powerOn}
-        >
-          <Power size={32} className="group-hover:scale-110 transition-transform" />
-        </Button>
+      <div className="fixed inset-0 bg-[#020202] flex flex-col items-center justify-center gap-12 animate-in fade-in duration-1000 overflow-hidden">
+        {/* Subtle Monitor CRT Effect */}
+        <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.02)_0%,transparent_70%)]" />
+        
+        <div className="relative group">
+          <div className="absolute inset-0 bg-accent/20 blur-3xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
+          <Button 
+            variant="outline" 
+            size="icon" 
+            className="w-24 h-24 rounded-full border-white/5 bg-white/5 hover:bg-white/10 hover:border-accent hover:text-accent transition-all duration-500 group relative z-10 shadow-2xl"
+            onClick={powerOn}
+          >
+            <Power size={40} className="group-hover:scale-110 transition-transform duration-500 group-active:scale-90" />
+          </Button>
+          
+          <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-white/5 animate-pulse group-hover:bg-accent group-hover:shadow-[0_0_10px_var(--accent)] transition-colors" />
+        </div>
+
+        <div className="flex flex-col items-center gap-4 animate-in slide-in-from-bottom-4 duration-1000 delay-300">
+          <div className="bg-white/5 px-4 py-2 rounded-full border border-white/5 backdrop-blur-sm">
+            <span className="text-white/20 text-[10px] uppercase tracking-[0.5em] font-black">Standby Mode</span>
+          </div>
+          
+          <div className="flex items-center gap-6 text-[9px] font-bold uppercase tracking-widest text-white/10">
+            <div className="flex items-center gap-2">
+              <Cpu size={12} />
+              <span>Logic Core Idle</span>
+            </div>
+            <div className="w-1 h-1 rounded-full bg-white/10" />
+            <div className="flex items-center gap-2">
+              <Zap size={12} />
+              <span>AC Power Verified</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Floating No Signal Style Badge */}
+        <div className="fixed top-12 right-12 opacity-5 pointer-events-none group-hover:opacity-20 transition-opacity">
+          <div className="border border-white p-4 space-y-2">
+            <div className="font-mono text-xs font-bold text-white">AUTO-SLEEP: ACTIVE</div>
+            <div className="font-mono text-[10px] text-white/60">CHECKING HARDWARE LINK...</div>
+          </div>
+        </div>
       </div>
     );
   }

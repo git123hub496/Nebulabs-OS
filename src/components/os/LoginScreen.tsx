@@ -2,13 +2,41 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useOS, LocalUser, ThemeMode, AccentColor } from '@/context/os-context';
-import { User, Plus, ArrowRight, X, Lock, ShieldCheck, KeyRound, Sun, Moon, Check, Loader2, Sparkles, Trash2 } from 'lucide-react';
+import { 
+  User, 
+  Plus, 
+  ArrowRight, 
+  X, 
+  Lock, 
+  ShieldCheck, 
+  KeyRound, 
+  Sun, 
+  Moon, 
+  Check, 
+  Loader2, 
+  Sparkles, 
+  Trash2, 
+  Power, 
+  RefreshCw, 
+  Wifi, 
+  Accessibility, 
+  Languages, 
+  Info,
+  Clock as ClockIcon
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { BIOS } from './BIOS';
 import { cn } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
 
 const SETUP_LOGS = [
   "Initializing Nebulabs Kernel v4.5.2...",
@@ -32,7 +60,7 @@ const ACCENT_COLORS: { id: AccentColor; color: string }[] = [
 ];
 
 export const LoginScreen: React.FC = () => {
-  const { accounts, login, createAccount, deleteAccount, wallpaper, setTheme, setAccentColor } = useOS();
+  const { accounts, login, createAccount, deleteAccount, wallpaper, setTheme, setAccentColor, shutDown, restart } = useOS();
   const [step, setStep] = useState<'select' | 'create' | 'customize' | 'initialize'>('select');
   const [newUsername, setNewUsername] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -42,12 +70,18 @@ export const LoginScreen: React.FC = () => {
   const [selectedAccount, setSelectedAccount] = useState<LocalUser | null>(null);
   const [passwordInput, setPasswordInput] = useState("");
   const [isError, setIsError] = useState(false);
+  const [time, setTime] = useState(new Date());
   
   // Initialization states
   const [progress, setProgress] = useState(0);
   const [currentLog, setCurrentLog] = useState("");
   const [logIndex, setLogIndex] = useState(0);
   const hasCreated = useRef(false);
+
+  useEffect(() => {
+    const timer = setInterval(() => setTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   // Sound Effects
   const playSound = (type: 'click' | 'success') => {
@@ -58,7 +92,7 @@ export const LoginScreen: React.FC = () => {
     };
     const audio = new Audio(urls[type]);
     audio.volume = 0.4;
-    audio.play().catch(() => {}); // Catch silent play blocks
+    audio.play().catch(() => {}); 
   };
 
   useEffect(() => {
@@ -80,7 +114,6 @@ export const LoginScreen: React.FC = () => {
             clearInterval(interval);
             if (!hasCreated.current) {
               hasCreated.current = true;
-              // Finalize account creation after a short delay for visual polish
               setTimeout(() => {
                 playSound('success');
                 createAccount(newUsername, newPassword || undefined);
@@ -159,6 +192,19 @@ export const LoginScreen: React.FC = () => {
     >
       <div className="absolute inset-0 bg-black/40 backdrop-blur-xl" />
       
+      {/* Top Header Tray (Outside OS UI) */}
+      <div className="absolute top-0 inset-x-0 h-16 flex items-center justify-between px-12 z-20 pointer-events-none">
+        <div className="flex items-center gap-4 animate-in fade-in slide-in-from-top-4 duration-700">
+          <div className="text-white/60 font-black text-2xl tracking-tighter opacity-40">NEBULABS</div>
+        </div>
+        <div className="flex items-center gap-8 pointer-events-auto animate-in fade-in slide-in-from-top-4 duration-700 delay-100">
+          <div className="flex flex-col items-end">
+            <span className="text-white font-bold text-lg">{time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+            <span className="text-white/40 text-[10px] font-bold uppercase tracking-widest">{time.toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' })}</span>
+          </div>
+        </div>
+      </div>
+
       <div className="relative z-10 flex flex-col items-center gap-12 animate-in fade-in zoom-in-95 duration-700 w-full max-w-4xl px-8">
         <div className="text-center space-y-2">
           <h1 className="text-4xl font-black text-white tracking-tighter">Nebulabs WebOS</h1>
@@ -435,17 +481,53 @@ export const LoginScreen: React.FC = () => {
           </div>
         )}
 
-        <div className="fixed bottom-12 flex items-center gap-6 text-white/20">
-          <div className="flex flex-col items-center gap-1">
-            <span className="text-[10px] font-bold uppercase tracking-widest">Network</span>
-            <div className="w-4 h-1 bg-white/20 rounded-full overflow-hidden">
-              <div className="w-3/4 h-full bg-accent" />
+        {/* System Bar (Outside OS) */}
+        <div className="fixed bottom-0 inset-x-0 h-16 flex items-center justify-between px-12 z-20">
+          <div className="flex items-center gap-8 text-white/20 animate-in fade-in slide-in-from-bottom-4 duration-700">
+            <div className="flex flex-col items-center gap-1">
+              <span className="text-[10px] font-black uppercase tracking-widest">Diagnostic</span>
+              <div className="flex items-center gap-3">
+                <span className="text-[10px] font-mono">KERNEL: 4.5.2</span>
+                <div className="w-px h-3 bg-white/10" />
+                <span className="text-[10px] font-mono">B: BIOS</span>
+              </div>
+            </div>
+            <div className="w-px h-8 bg-white/10" />
+            <div className="flex flex-col items-start gap-1">
+              <span className="text-[10px] font-black uppercase tracking-widest">Security</span>
+              <div className="flex items-center gap-2">
+                <ShieldCheck size={12} className="text-green-500/40" />
+                <span className="text-[9px] font-bold uppercase">Encrypted Session</span>
+              </div>
             </div>
           </div>
-          <div className="w-px h-8 bg-white/10" />
-          <div className="flex flex-col items-center gap-1 text-center">
-            <span className="text-[10px] font-bold uppercase tracking-widest">System</span>
-            <span className="text-[10px] font-mono">Press 'B' for BIOS</span>
+
+          <div className="flex items-center gap-4 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-100">
+            <button className="p-2.5 rounded-full hover:bg-white/10 text-white/40 transition-all" title="Accessibility">
+              <Accessibility size={20} />
+            </button>
+            <button className="p-2.5 rounded-full hover:bg-white/10 text-white/40 transition-all" title="Keyboard Layout">
+              <Languages size={20} />
+            </button>
+            
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="p-2.5 rounded-full hover:bg-white/10 text-white/40 transition-all group" title="Power">
+                  <Power size={20} className="group-hover:text-accent transition-colors" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48 glass border-white/10 p-2 rounded-xl backdrop-blur-3xl shadow-2xl text-foreground">
+                <DropdownMenuItem onClick={restart} className="gap-3 cursor-pointer p-3 rounded-lg hover:bg-accent/10">
+                  <RefreshCw size={16} className="text-accent" />
+                  <span className="font-bold uppercase text-[10px] tracking-widest">Restart System</span>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator className="bg-white/5" />
+                <DropdownMenuItem onClick={shutDown} className="gap-3 cursor-pointer p-3 rounded-lg hover:bg-destructive/10 text-destructive">
+                  <Power size={16} />
+                  <span className="font-bold uppercase text-[10px] tracking-widest">Shut Down</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </div>
