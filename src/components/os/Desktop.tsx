@@ -338,6 +338,7 @@ export const Desktop: React.FC = () => {
       const distance = Math.hypot(dx, dy);
       
       // Threshold: 5 pixels of movement before entering drag state
+      // This prevents icons from turning "grey-ish" during a normal click or double-click
       if (distance > 5) {
         setDraggingAppId(pendingDragAppId);
       }

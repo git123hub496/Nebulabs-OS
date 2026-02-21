@@ -350,7 +350,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   const [theme, setThemeState] = useState<ThemeMode>('dark');
   const [accentColor, setAccentColorState] = useState<AccentColor>('purple');
   const [customAccentHex, setCustomAccentHexState] = useState("#9333ea");
-  const [cursorColor, setCursorColorState] = useState<CursorColor>('black');
+  const [cursorColor, setCursorColorState] = useState<CursorColor>('white');
   const [mouserScale, setMouserScaleState] = useState<number>(1.0);
   const [isInverted, setInvertedState] = useState(false);
   const [isGrayscale, setGrayscaleState] = useState(false);
@@ -650,17 +650,29 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     if (typeof window === 'undefined') return;
     
     const getCursorValue = () => {
-      let hex = customAccentHex;
+      let fill = '#fff';
+      let stroke = '#000';
       const accentHexes: Record<string, string> = { blue: '#3b82f6', rose: '#e11d48', orange: '#f97316', green: '#16a34a', purple: '#9333ea', grey: '#64748b', default: '#9333ea' };
       
-      if (cursorColor === 'black') hex = '#000000';
-      else if (cursorColor === 'white') hex = '#ffffff';
-      else if (accentColor !== 'custom') hex = accentHexes[accentColor] || accentHexes['default'];
+      if (cursorColor === 'black') {
+        fill = '#000';
+        stroke = '#fff';
+      } else if (cursorColor === 'white') {
+        fill = '#fff';
+        stroke = '#000';
+      } else if (accentColor === 'custom') {
+        fill = customAccentHex;
+        stroke = '#fff';
+      } else {
+        fill = accentHexes[accentColor] || accentHexes['default'];
+        stroke = '#fff';
+      }
 
-      const size = 24 * mouserScale;
+      const size = 32 * mouserScale;
+      // High-fidelity vector path matching the requested sharp chunky pointer
       const svg = `
         <svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M2,2 L2,18 L6,14 L10,22 L13,20 L9,12 L15,12 L2,2 Z" fill="${hex}" stroke="${cursorColor === 'white' ? '#000' : '#fff'}" stroke-width="2.5" stroke-linejoin="round"/>
+          <path d="M3,3 L3,19 L8,14 L13,23 L16,21 L11,12 L18,12 Z" fill="${fill}" stroke="${stroke}" stroke-width="2" stroke-linejoin="round"/>
         </svg>`;
       
       return `url("data:image/svg+xml;base64,${window.btoa(svg)}") 2 2, auto`;
