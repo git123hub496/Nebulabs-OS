@@ -68,6 +68,11 @@ export const Settings: React.FC = () => {
   const handleWallpaperUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      // 2MB limit for wallpapers
+      if (file.size > 2 * 1024 * 1024) {
+        addNotification("File Too Large", "Wallpapers must be under 2MB to ensure system stability.", "security");
+        return;
+      }
       const reader = new FileReader();
       reader.onload = (event) => {
         const result = event.target?.result as string;
@@ -80,6 +85,11 @@ export const Settings: React.FC = () => {
   const handleAvatarUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      // 1.5MB limit for avatars to prevent localStorage quota errors
+      if (file.size > 1.5 * 1024 * 1024) {
+        addNotification("File Too Large", "Profile photos must be under 1.5MB for virtual storage.", "security");
+        return;
+      }
       const reader = new FileReader();
       reader.onload = (event) => {
         const result = event.target?.result as string;

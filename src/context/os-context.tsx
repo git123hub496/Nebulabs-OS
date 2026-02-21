@@ -286,10 +286,24 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   const [displayLayout, setDisplayLayoutState] = useState<DisplayLayout>({ '1': { right: '2' }, '2': { left: '1' } });
   const [isSecurityEnabled, setSecurityEnabledState] = useState(true);
 
+  const addNotification = useCallback((title: string, message: string, type: SystemNotification['type'] = 'system') => {
+    const newNotif: SystemNotification = {
+      id: Math.random().toString(36).substr(2, 9),
+      title, message, type,
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    };
+    setNotifications(prev => [newNotif, ...prev].slice(0, 50));
+    if (currentDisplayId === '1') toast({ title, description: message });
+  }, [currentDisplayId]);
+
   const saveSetting = useCallback((key: string, value: any) => {
     if (currentUser) {
-      const strValue = typeof value === 'object' ? JSON.stringify(value) : String(value);
-      localStorage.setItem(`nebula_${currentUser.id}_${key}`, strValue);
+      try {
+        const strValue = typeof value === 'object' ? JSON.stringify(value) : String(value);
+        localStorage.setItem(`nebula_${currentUser.id}_${key}`, strValue);
+      } catch (e) {
+        console.warn("Nebula Kernel: Local registry entry failed. Quota may be exceeded.", e);
+      }
     }
   }, [currentUser]);
 
@@ -429,7 +443,11 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     };
     const updated = [...accounts, newAcc];
     setAccounts(updated);
-    localStorage.setItem('nebula_accounts', JSON.stringify(updated));
+    try {
+      localStorage.setItem('nebula_accounts', JSON.stringify(updated));
+    } catch (e) {
+      console.warn("Nebula Kernel: Account creation storage failed.", e);
+    }
     login(newAcc.id, password);
   };
 
@@ -439,29 +457,28 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     setCurrentUser(updatedUser);
     const updatedAccounts = accounts.map(a => a.id === currentUser.id ? updatedUser : a);
     setAccounts(updatedAccounts);
-    localStorage.setItem('nebula_accounts', JSON.stringify(updatedAccounts));
-    addNotification("Security Updated", "Your account password has been changed.", "security");
+    try {
+      localStorage.setItem('nebula_accounts', JSON.stringify(updatedAccounts));
+      addNotification("Security Updated", "Your account password has been changed.", "security");
+    } catch (e) {
+      addNotification("Storage Error", "Failed to save password change due to local storage quota.", "security");
+    }
   };
 
   const updateUserAvatar = (url: string) => {
     if (!currentUser) return;
-    const updatedUser = { ...currentUser, avatarUrl: url };
-    setCurrentUser(updatedUser);
-    const updatedAccounts = accounts.map(a => a.id === currentUser.id ? updatedUser : a);
-    setAccounts(updatedAccounts);
-    localStorage.setItem('nebula_accounts', JSON.stringify(updatedAccounts));
-    addNotification("Identity Updated", "Your profile picture has been updated.", "system");
+    try {
+      const updatedUser = { ...currentUser, avatarUrl: url };
+      setCurrentUser(updatedUser);
+      const updatedAccounts = accounts.map(a => a.id === currentUser.id ? updatedUser : a);
+      setAccounts(updatedAccounts);
+      localStorage.setItem('nebula_accounts', JSON.stringify(updatedAccounts));
+      addNotification("Identity Updated", "Your profile picture has been updated.", "system");
+    } catch (e) {
+      console.error("Nebula Kernel: Avatar save failed.", e);
+      addNotification("Identity Failed", "Profile picture is too large for virtual storage.", "security");
+    }
   };
-
-  const addNotification = useCallback((title: string, message: string, type: SystemNotification['type'] = 'system') => {
-    const newNotif: SystemNotification = {
-      id: Math.random().toString(36).substr(2, 9),
-      title, message, type,
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-    };
-    setNotifications(prev => [newNotif, ...prev].slice(0, 50));
-    if (currentDisplayId === '1') toast({ title, description: message });
-  }, [currentDisplayId]);
 
   const clearNotifications = () => setNotifications([]);
 
