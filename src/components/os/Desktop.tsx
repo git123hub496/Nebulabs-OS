@@ -33,7 +33,8 @@ import {
   Lock,
   Palette,
   Info,
-  Camera as CameraIcon
+  Camera as CameraIcon,
+  Presentation
 } from 'lucide-react';
 import { FileExplorer } from '../apps/FileExplorer';
 import { AppStore } from '../apps/AppStore';
@@ -56,6 +57,7 @@ import { SystemUpdate } from '../apps/SystemUpdate';
 import { VirusPopup } from '../apps/VirusPopup';
 import { Paint } from '../apps/Paint';
 import { Camera } from '../apps/Camera';
+import { PresentationMaker } from '../apps/PresentationMaker';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -82,6 +84,7 @@ const APP_COMPONENTS: Record<AppId, (win: WindowInstance) => React.ReactNode> = 
   'virus': (win) => <VirusPopup />,
   'paint': (win) => <Paint />,
   'camera': (win) => <Camera />,
+  'slides': (win) => <PresentationMaker />,
   'info': (win) => (
     <div className="p-8 space-y-6 bg-[#161d25] h-full text-white/80 overflow-auto">
       <div className="flex items-center gap-4 mb-8">
@@ -441,7 +444,7 @@ export const Desktop: React.FC = () => {
             />
           </form>
           <div className="mt-4 flex gap-2 overflow-x-auto pb-2 scrollbar-none">
-            {['paint', 'terminal', 'calc', 'browser', 'camera'].map(app => (
+            {['paint', 'terminal', 'calc', 'browser', 'camera', 'slides'].map(app => (
               <button 
                 key={app}
                 onClick={() => { setRunQuery(app); }}
@@ -462,7 +465,7 @@ export const Desktop: React.FC = () => {
           <div className="w-24 h-24 bg-accent/20 rounded-3xl flex items-center justify-center mb-8 animate-pulse">
             <div className="w-12 h-12 bg-accent rounded-full" />
           </div>
-          <h1 className="text-2xl font-bold tracking-widest text-white/40 uppercase">Nebulabs WebOS</h1>
+          <h1 className="text-2xl font-bold tracking-widest text-white/40 uppercase">Nebula WebOS</h1>
           <div className="mt-8 w-48 h-1 bg-white/10 rounded-full overflow-hidden">
             <div className="h-full bg-accent animate-[loading_2s_ease-in-out_infinite]" />
           </div>

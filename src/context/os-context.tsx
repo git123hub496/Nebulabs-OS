@@ -30,11 +30,12 @@ import {
   ShieldAlert,
   Palette,
   Monitor,
-  Camera as CameraIcon
+  Camera as CameraIcon,
+  Presentation
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
-export type AppId = 'store' | 'files' | 'settings' | 'assistant' | 'google-drive' | 'notes' | 'calc' | 'terminal' | 'browser' | 'trash' | 'news' | 'maps' | 'monitor' | 'calendar' | 'snake' | 'minesweeper' | 'image-viewer' | 'update' | 'virus' | 'paint' | 'info' | 'camera';
+export type AppId = 'store' | 'files' | 'settings' | 'assistant' | 'google-drive' | 'notes' | 'calc' | 'terminal' | 'browser' | 'trash' | 'news' | 'maps' | 'monitor' | 'calendar' | 'snake' | 'minesweeper' | 'image-viewer' | 'update' | 'virus' | 'paint' | 'info' | 'camera' | 'slides';
 export type ThemeMode = 'dark' | 'light';
 export type PowerStatus = 'on' | 'off' | 'booting';
 export type TaskbarPosition = 'top' | 'bottom' | 'left' | 'right';
@@ -224,6 +225,7 @@ export const APP_INFO: Record<AppId, { icon: any; label: string }> = {
   'paint': { icon: Palette, label: 'Nebula Paint' },
   'info': { icon: Info, label: 'System Info' },
   'camera': { icon: CameraIcon, label: 'Nebula Camera' },
+  'slides': { icon: Presentation, label: 'Nebula Slides' },
 };
 
 const INITIAL_FILES: FileSystemItem[] = [
@@ -240,8 +242,8 @@ const INITIAL_DESKTOP: DesktopShortcut[] = [
   { id: 'trash', label: 'Recycling Bin', icon: Trash2, x: PADDING, y: PADDING + (GRID_Y * 4) },
 ];
 
-const INITIAL_APPS: AppId[] = ['store', 'files', 'settings', 'assistant', 'notes', 'calc', 'terminal', 'browser', 'trash', 'news', 'maps', 'monitor', 'calendar', 'snake', 'minesweeper', 'update', 'paint', 'info', 'camera'];
-const INITIAL_PINNED: AppId[] = ['files', 'store', 'assistant', 'browser', 'settings', 'monitor', 'paint', 'camera'];
+const INITIAL_APPS: AppId[] = ['store', 'files', 'settings', 'assistant', 'notes', 'calc', 'terminal', 'browser', 'trash', 'news', 'maps', 'monitor', 'calendar', 'snake', 'minesweeper', 'update', 'paint', 'info', 'camera', 'slides'];
+const INITIAL_PINNED: AppId[] = ['files', 'store', 'assistant', 'browser', 'settings', 'monitor', 'paint', 'camera', 'slides'];
 
 const AVATAR_COLORS = ['#9333ea', '#3b82f6', '#e11d48', '#f97316', '#16a34a'];
 const OFFLINE_WIFI = "Public_Guest_No_Internet";
@@ -439,7 +441,6 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const createAccount = useCallback((username: string, password?: string) => {
-    // Standardize account creation logic to avoid loop triggers in setup UI
     const newAcc: LocalUser = {
       id: Math.random().toString(36).substr(2, 9),
       username,
@@ -471,7 +472,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   }, [theme, accentColor, wallpaper, addNotification]);
 
   const deleteAccount = useCallback((userId: string) => {
-    if (userId === 'admin') return; // Protect root admin
+    if (userId === 'admin') return; 
     setAccounts(prev => {
       const updated = prev.filter(a => a.id !== userId);
       try {
@@ -531,6 +532,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     else if (appId === 'virus') { initialWidth = 300; initialHeight = 250; }
     else if (appId === 'paint') { initialWidth = 900; initialHeight = 700; }
     else if (appId === 'camera') { initialWidth = 640; initialHeight = 520; }
+    else if (appId === 'slides') { initialWidth = 950; initialHeight = 650; }
 
     const newId = `${appId}-${Date.now()}`;
     const newWindow: WindowInstance = {
