@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { createContext, useContext, useState, ReactNode, useEffect, useCallback, useRef } from 'react';
@@ -31,7 +32,8 @@ import {
   Monitor,
   Camera as CameraIcon,
   Presentation,
-  Mail as MailIcon
+  Mail as MailIcon,
+  GraduationCap
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { respondToEmail } from '@/ai/flows/mail-ai-flow';
@@ -53,6 +55,9 @@ export interface LocalUser {
   avatarUrl?: string;
   password?: string;
   isWorkAccount?: boolean;
+  isSchoolAccount?: boolean;
+  districtId?: string;
+  uniqueCode?: string; // The "any device" login code
 }
 
 export type EmailFolder = 'inbox' | 'sent' | 'archive' | 'trash';
@@ -72,7 +77,7 @@ export interface Email {
 export interface ChatMessage {
   id: string;
   sender: string;
-  recipient?: string; // Target of the message
+  recipient?: string; 
   text: string;
   timestamp: string;
   isBot: boolean;
@@ -177,7 +182,7 @@ interface OSContextType {
   logout: () => void;
   lock: () => void;
   unlock: (password?: string) => boolean;
-  createAccount: (username: string, password?: string) => void;
+  createAccount: (username: string, password?: string, isSchool?: boolean) => void;
   deleteAccount: (userId: string) => void;
   updateUserPassword: (password: string) => void;
   resetUserPassword: (userId: string, password: string) => void;
@@ -274,11 +279,6 @@ const INITIAL_FILES: FileSystemItem[] = [
   { id: '2', name: 'Pictures', type: 'folder', parentId: null },
   { id: '3', name: 'README.md', type: 'file', parentId: null },
   { id: '4', name: 'Nebula Shared Assets', type: 'folder', parentId: null },
-  { id: '5', name: 'Project_Aura_Schematic.png', type: 'file', parentId: '4', size: 1024 * 450 },
-  { id: '6', name: 'System_Logs.txt', type: 'file', parentId: '4', size: 1024 * 12 },
-  { id: '7', name: 'Kernel_Source', type: 'folder', parentId: '4' },
-  { id: '8', name: 'main.sys', type: 'file', parentId: '7', size: 1024 * 890 },
-  { id: '9', name: 'User_Manual.pdf', type: 'file', parentId: '1', size: 1024 * 2100 },
 ];
 
 const INITIAL_DESKTOP: DesktopShortcut[] = [
@@ -301,43 +301,6 @@ const MOCK_EMAILS: Email[] = [
     isSystem: true,
     folder: 'inbox'
   },
-  {
-    id: '2',
-    from: 'Sarah (Dev Team)',
-    to: 'user',
-    subject: 'Project Aura Updates',
-    content: 'Hey! I\'ve uploaded the latest schematics to the Shared Assets drive. Take a look when you get a chance. The new kernel-level threading is looking sharp.',
-    timestamp: 'Today, 11:45 AM',
-    isRead: false,
-    folder: 'inbox'
-  }
-];
-
-const PERSONAL_CONTACTS = [
-  { name: 'Mom', role: 'Family' },
-  { name: 'Dad', role: 'Family' },
-  { name: 'Best Friend', role: 'Social' },
-  { name: 'Pizza Planet', role: 'Business' },
-  { name: 'Nebula News Bot', role: 'Subscription' }
-];
-
-const PERSONAL_EMAIL_SUBJECTS = [
-  "Don't forget lunch!",
-  "Check out this cool photo",
-  "Your order is ready",
-  "Weekly Nebula Digest",
-  "Hey, how's it going?",
-  "Dinner on Sunday?",
-  "Important: Subscription Update"
-];
-
-const PERSONAL_EMAIL_BODIES = [
-  "Just wanted to check in and see how you like the new OS. Love you!",
-  "We are processing your order for a Large Nebula Supreme. It will be ready in 15 minutes.",
-  "Here are the top stories for this week. Nebula WebOS usage is up 200%!",
-  "Did you see that thing Sarah posted? Crazy stuff.",
-  "Let's catch up soon. It feels like forever.",
-  "I sent you some files to the Shared Assets folder. Let me know if they work."
 ];
 
 const INITIAL_APPS: AppId[] = ['store', 'files', 'settings', 'assistant', 'notes', 'calc', 'terminal', 'browser', 'trash', 'news', 'maps', 'monitor', 'calendar', 'snake', 'minesweeper', 'update', 'paint', 'info', 'camera', 'slides', 'mail'];
@@ -424,51 +387,13 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [currentDisplayId, playSound]);
 
-  // Background activity simulator
   useEffect(() => {
     if (!currentUser || powerStatus !== 'on') return;
 
-    const simulateIncoming = () => {
-      const isEmail = Math.random() > 0.5;
-      const contacts = currentUser.isWorkAccount 
-        ? [...PERSONAL_CONTACTS, { name: 'Sarah (Dev Team)', role: 'Engineering' }] 
-        : PERSONAL_CONTACTS;
-      
-      const sender = contacts[Math.floor(Math.random() * contacts.length)];
-
-      if (isEmail) {
-        const subject = PERSONAL_EMAIL_SUBJECTS[Math.floor(Math.random() * PERSONAL_EMAIL_SUBJECTS.length)];
-        const content = PERSONAL_EMAIL_BODIES[Math.floor(Math.random() * PERSONAL_EMAIL_BODIES.length)];
-        const newMail: Email = {
-          id: Math.random().toString(36).substr(2, 9),
-          from: sender.name,
-          to: currentUser.username,
-          subject,
-          content,
-          timestamp: 'Just now',
-          isRead: false,
-          folder: 'inbox'
-        };
-        setEmails(prev => [newMail, ...prev]);
-        addNotification(`New Email: ${sender.name}`, subject, 'app');
-      } else {
-        const text = PERSONAL_EMAIL_BODIES[Math.floor(Math.random() * PERSONAL_EMAIL_BODIES.length)].slice(0, 50);
-        const newMsg: ChatMessage = {
-          id: Math.random().toString(36).substr(2, 9),
-          sender: sender.name,
-          recipient: currentUser.username,
-          text,
-          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          isBot: true
-        };
-        setChatMessages(prev => [...prev, newMsg]);
-        addNotification(`Chat: ${sender.name}`, text, 'app');
-      }
-    };
-
-    // Random trigger every 1-3 minutes
     const interval = setInterval(() => {
-      if (Math.random() > 0.7) simulateIncoming();
+      if (currentUser.isSchoolAccount && Math.random() > 0.95) {
+        addNotification("District Update", "Academic filters updated by NHU-7 Admin.", 'security');
+      }
     }, 60000);
 
     return () => clearInterval(interval);
@@ -480,12 +405,10 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
 
   const archiveEmail = (id: string) => {
     setEmails(prev => prev.map(e => e.id === id ? { ...e, folder: 'archive' } : e));
-    addNotification("Email Archived", "Message moved to Archive.");
   };
 
   const deleteEmail = (id: string) => {
     setEmails(prev => prev.map(e => e.id === id ? { ...e, folder: 'trash' } : e));
-    addNotification("Email Deleted", "Message moved to Trash.");
   };
 
   const restoreEmail = (id: string) => {
@@ -686,13 +609,19 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     return false;
   };
 
-  const createAccount = useCallback((username: string, password?: string) => {
+  const createAccount = useCallback((username: string, password?: string, isSchool: boolean = false) => {
+    const districtId = isSchool ? "NHU-7" : undefined;
+    const uniqueCode = `${districtId || 'USR'}-${Math.floor(1000 + Math.random() * 9000)}-X`;
+    
     const newAcc: LocalUser = {
       id: Math.random().toString(36).substr(2, 9),
       username,
-      avatarColor: AVATAR_COLORS[Math.floor(Math.random() * AVATAR_COLORS.length)],
-      password: password || undefined,
-      isWorkAccount: false
+      avatarColor: isSchool ? '#3b82f6' : AVATAR_COLORS[Math.floor(Math.random() * AVATAR_COLORS.length)],
+      password: isSchool ? "NHU-7-2024" : (password || undefined),
+      isWorkAccount: false,
+      isSchoolAccount: isSchool,
+      districtId,
+      uniqueCode
     };
     setAccounts(prev => {
       const updated = [...prev, newAcc];
@@ -704,10 +633,10 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     setIsLocked(false);
     try {
       localStorage.setItem(`nebula_${newAcc.id}_theme`, theme);
-      localStorage.setItem(`nebula_${newAcc.id}_accent`, accentColor);
+      localStorage.setItem(`nebula_${newAcc.id}_accent`, isSchool ? 'blue' : accentColor);
       localStorage.setItem(`nebula_${newAcc.id}_wallpaper`, wallpaper);
     } catch (e) {}
-    addNotification("Account Created", `Welcome, ${username}! System initialized.`);
+    addNotification("Account Created", `Welcome, ${username}! ${isSchool ? "District profile active." : "System initialized."}`);
   }, [theme, accentColor, wallpaper, addNotification]);
 
   const deleteAccount = useCallback((userId: string) => {
@@ -717,11 +646,10 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       try { localStorage.setItem('nebula_accounts', JSON.stringify(updated)); } catch (e) {}
       return updated;
     });
-    addNotification("Account Removed", "User identity purged from system registry.", "security");
-  }, [addNotification]);
+  }, []);
 
   const updateUserPassword = (password: string) => {
-    if (!currentUser) return;
+    if (!currentUser || currentUser.isSchoolAccount) return;
     const updatedUser = { ...currentUser, password };
     setCurrentUser(updatedUser);
     const updatedAccounts = accounts.map(a => a.id === currentUser.id ? updatedUser : a);
@@ -733,6 +661,8 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const resetUserPassword = (userId: string, password: string) => {
+    const user = accounts.find(a => a.id === userId);
+    if (user?.isSchoolAccount) return; // Prevent student password reset
     const updatedAccounts = accounts.map(a => a.id === userId ? { ...a, password } : a);
     setAccounts(updatedAccounts);
     try {
@@ -749,7 +679,6 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       const updatedAccounts = accounts.map(a => a.id === currentUser.id ? updatedUser : a);
       setAccounts(updatedAccounts);
       localStorage.setItem('nebula_accounts', JSON.stringify(updatedAccounts));
-      addNotification("Identity Updated", "Your profile picture has been updated.", "system");
     } catch (e) {}
   };
 
@@ -760,12 +689,17 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     const updatedAccounts = accounts.map(a => a.id === currentUser.id ? updatedUser : a);
     setAccounts(updatedAccounts);
     localStorage.setItem('nebula_accounts', JSON.stringify(updatedAccounts));
-    addNotification("Workspace Mode Changed", enabled ? "Professional Work Account active." : "Personal Mode active.", "system");
   };
 
   const clearNotifications = () => setNotifications([]);
 
   const openApp = (appId: AppId, title: string, params?: any) => {
+    // School Restriction Logic
+    if (currentUser?.isSchoolAccount && (appId === 'news' || appId === 'virus')) {
+      addNotification("Access Restricted", "The Nebula News app is disabled by NHU-7 Policy.", "security");
+      return;
+    }
+
     const existing = openWindows.find(w => w.appId === appId && JSON.stringify(w.params) === JSON.stringify(params));
     if (existing) {
       focusWindow(existing.id);
@@ -788,8 +722,8 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     const newWindow: WindowInstance = {
       id: newId, appId, title, isMinimized: false, isMaximized: false, zIndex: nextZIndex,
       initialWidth, initialHeight, displayId: currentDisplayId,
-      x: appId === 'virus' ? (Math.random() * (window.innerWidth - 300)) : 100 + (openWindows.length * 20),
-      y: appId === 'virus' ? (Math.random() * (window.innerHeight - 250)) : 50 + (openWindows.length * 20),
+      x: 100 + (openWindows.length * 20),
+      y: 50 + (openWindows.length * 20),
       params
     };
     setOpenWindows(prev => [...prev, newWindow]);
@@ -848,6 +782,10 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   const setBrightness = (b: number) => { setBrightnessState(b); saveSetting('brightness', b); };
 
   const setIsWidgetsOpen = (open: boolean) => {
+    if (currentUser?.isSchoolAccount && open) {
+      addNotification("Restricted", "Widgets are disabled during school hours.", "security");
+      return;
+    }
     setIsWidgetsOpenState(open);
     if (open) { setIsStartOpenState(false); setIsQuickSettingsOpenState(false); setIsChatOpenState(false); playSound('open'); }
     else { playSound('close'); }
@@ -877,18 +815,12 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       setCurrentWifiState(ssid);
       setIsOnline(ssid !== OFFLINE_WIFI);
       setIsWifiConnecting(false);
-      addNotification("WiFi Connected", `Successfully joined ${ssid}.`, 'system');
     }, 2000);
   };
 
   const setSecurityEnabled = (enabled: boolean) => {
+    if (currentUser?.isSchoolAccount) return;
     setSecurityEnabledState(enabled);
-    if (enabled) {
-      setOpenWindows(prev => prev.filter(w => w.appId !== 'virus'));
-      addNotification("Security Restored", "Nebula Defender has quarantined active threats.", 'security');
-    } else {
-      addNotification("Security Risk", "Nebula Defender has been disabled.", 'security');
-    }
   };
 
   const setCurrentDisplayId = (id: string) => setDisplayIdState(id);
@@ -926,7 +858,6 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   const importFile = (name: string, content: string, size: number, parentId: string | null) => {
     const newFile: FileSystemItem = { id: Math.random().toString(36).substr(2, 9), name, type: 'file', parentId, content, size };
     setFileSystem(prev => [...prev, newFile]);
-    addNotification("File Imported", `${name} added.`, 'app');
   };
 
   const moveToTrash = (id: string) => {
@@ -945,7 +876,6 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   const installApp = (appId: AppId) => {
     if (!installedApps.includes(appId)) {
       setInstalledApps(prev => [...prev, appId]);
-      addNotification("App Installed", `${APP_INFO[appId].label} added.`, 'app');
     }
   };
 

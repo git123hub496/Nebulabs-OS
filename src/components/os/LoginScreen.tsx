@@ -1,3 +1,4 @@
+
 "use client"
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -24,7 +25,9 @@ import {
   Info,
   Clock as ClockIcon,
   ShieldAlert,
-  Fingerprint
+  Fingerprint,
+  GraduationCap,
+  Building2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -43,6 +46,7 @@ import {
 const SETUP_LOGS = [
   "Initializing Nebulabs Kernel v4.5.2...",
   "Mounting virtual cloud partition...",
+  "Applying District-Level Policies...",
   "Calibrating multi-display bridge interface...",
   "Establishing secure workspace tunnel...",
   "Building system icon cache...",
@@ -80,6 +84,7 @@ export const LoginScreen: React.FC = () => {
   const [step, setStep] = useState<'select' | 'create' | 'customize' | 'initialize' | 'recovery'>('select');
   const [newUsername, setNewUsername] = useState("");
   const [newPassword, setNewPassword] = useState("");
+  const [isSchoolMode, setIsSchoolMode] = useState(false);
   const [selectedTheme, setSelectedTheme] = useState<ThemeMode>('dark');
   const [selectedAccent, setSelectedAccent] = useState<AccentColor>('purple');
   const [showBIOS, setShowBIOS] = useState(false);
@@ -88,7 +93,6 @@ export const LoginScreen: React.FC = () => {
   const [isError, setIsError] = useState(false);
   const [time, setTime] = useState(new Date());
   
-  // Initialization & Recovery states
   const [progress, setProgress] = useState(0);
   const [currentLog, setCurrentLog] = useState("");
   const [logIndex, setLogIndex] = useState(0);
@@ -122,7 +126,6 @@ export const LoginScreen: React.FC = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [step, selectedAccount]);
 
-  // Combined logic for Initialization and Recovery sequences
   useEffect(() => {
     if ((step === 'initialize' || step === 'recovery') && !hasCreated.current) {
       const sequenceLogs = step === 'initialize' ? SETUP_LOGS : RECOVERY_LOGS;
@@ -136,7 +139,7 @@ export const LoginScreen: React.FC = () => {
               setTimeout(() => {
                 playSound('success');
                 if (step === 'initialize') {
-                  createAccount(newUsername, newPassword || undefined);
+                  createAccount(newUsername, newPassword || undefined, isSchoolMode);
                 } else {
                   if (selectedAccount) {
                     resetUserPassword(selectedAccount.id, newPassword);
@@ -150,7 +153,7 @@ export const LoginScreen: React.FC = () => {
             }
             return 100;
           }
-          return prev + 2; // Accelerated progress
+          return prev + 2; 
         });
       }, step === 'initialize' ? 10 : 15);
 
@@ -167,7 +170,7 @@ export const LoginScreen: React.FC = () => {
         clearInterval(logInterval);
       };
     }
-  }, [step, newUsername, newPassword, createAccount, resetUserPassword, selectedAccount]);
+  }, [step, newUsername, newPassword, createAccount, resetUserPassword, selectedAccount, isSchoolMode]);
 
   if (showBIOS) {
     return <BIOS onClose={() => setShowBIOS(false)} />;
@@ -177,7 +180,11 @@ export const LoginScreen: React.FC = () => {
     e.preventDefault();
     if (newUsername.trim()) {
       playSound('click');
-      setStep('customize');
+      if (isSchoolMode) {
+        setStep('initialize'); // Skip customization for schools
+      } else {
+        setStep('customize');
+      }
     }
   };
 
@@ -231,16 +238,13 @@ export const LoginScreen: React.FC = () => {
     >
       <div className="absolute inset-0 bg-black/40 backdrop-blur-xl" />
       
-      {/* Top Header Tray */}
       <div className="absolute top-0 inset-x-0 h-16 flex items-center justify-between px-12 z-20 pointer-events-none">
         <div className="flex items-center gap-4 animate-in fade-in slide-in-from-top-4 duration-700">
           <div className="text-white/60 font-black text-2xl tracking-tighter opacity-40">NEBULABS</div>
         </div>
-        <div className="flex items-center gap-8 pointer-events-auto animate-in fade-in slide-in-from-top-4 duration-700 delay-100">
-          <div className="flex flex-col items-end">
-            <span className="text-white font-bold text-lg">{time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-            <span className="text-white/40 text-[10px] font-bold uppercase tracking-widest">{time.toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' })}</span>
-          </div>
+        <div className="flex flex-col items-end pointer-events-auto animate-in fade-in slide-in-from-top-4 duration-700 delay-100">
+          <span className="text-white font-bold text-lg">{time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+          <span className="text-white/40 text-[10px] font-bold uppercase tracking-widest">{time.toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' })}</span>
         </div>
       </div>
 
@@ -265,7 +269,7 @@ export const LoginScreen: React.FC = () => {
                 >
                   <div 
                     className="w-24 h-24 rounded-full border-4 border-white/10 group-hover:border-accent transition-colors flex items-center justify-center shadow-2xl overflow-hidden relative"
-                    style={{ backgroundColor: account.avatarUrl ? 'transparent' : account.avatarColor }}
+                    style={{ backgroundColor: account.avatarColor }}
                   >
                     <Avatar className="w-full h-full">
                       <AvatarImage src={account.avatarUrl} className="object-cover" />
@@ -273,9 +277,9 @@ export const LoginScreen: React.FC = () => {
                         {account.username[0].toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
-                    {account.password && (
-                      <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Lock size={20} className="text-white drop-shadow-md" />
+                    {account.isSchoolAccount && (
+                      <div className="absolute top-0 right-0 bg-blue-500 p-1.5 rounded-full border-2 border-[#1e2731]">
+                        <GraduationCap size={12} className="text-white" />
                       </div>
                     )}
                   </div>
@@ -283,19 +287,18 @@ export const LoginScreen: React.FC = () => {
                     <span className="text-white font-bold text-lg drop-shadow-md group-hover:text-accent transition-colors">
                       {account.username}
                     </span>
-                    {account.password && (
-                      <span className="text-[10px] text-white/30 uppercase font-bold tracking-widest flex items-center gap-1">
-                        <ShieldCheck size={10} /> Protected
+                    {account.isSchoolAccount && (
+                      <span className="text-[10px] text-blue-400 uppercase font-black tracking-tighter flex items-center gap-1">
+                        District NHU-7
                       </span>
                     )}
                   </div>
                 </button>
 
-                {account.id !== 'admin' && (
+                {account.id !== 'admin' && !account.isSchoolAccount && (
                   <button 
                     onClick={(e) => { e.stopPropagation(); deleteAccount(account.id); }}
                     className="absolute -top-2 -right-2 bg-destructive text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100 hover:scale-110 transition-all z-20 border-2 border-white shadow-lg"
-                    title="Delete Account"
                   >
                     <Trash2 size={12} strokeWidth={3} />
                   </button>
@@ -331,7 +334,14 @@ export const LoginScreen: React.FC = () => {
             
             <div className="text-center space-y-1">
               <h2 className="text-2xl font-bold text-white">{selectedAccount.username}</h2>
-              <p className="text-xs text-white/40 uppercase tracking-widest font-bold">Secure Environment</p>
+              {selectedAccount.isSchoolAccount ? (
+                <div className="flex items-center gap-2 justify-center py-1 px-3 bg-blue-500/20 rounded-full border border-blue-500/30">
+                  <GraduationCap size={14} className="text-blue-400" />
+                  <span className="text-[10px] text-blue-400 font-black uppercase tracking-widest">NHU-7 Managed Account</span>
+                </div>
+              ) : (
+                <p className="text-xs text-white/40 uppercase tracking-widest font-bold">Secure Environment</p>
+              )}
             </div>
 
             <form onSubmit={handleLoginSubmit} className="w-full space-y-6">
@@ -346,7 +356,7 @@ export const LoginScreen: React.FC = () => {
                       setPasswordInput(e.target.value);
                       setIsError(false);
                     }}
-                    placeholder="Enter Password"
+                    placeholder={selectedAccount.isSchoolAccount ? "NHU-7-XXXX" : "Enter Password"}
                     className={cn(
                       "bg-white/5 border-white/10 text-white h-14 pl-12 rounded-2xl focus-visible:ring-accent text-center tracking-[0.5em] text-xl font-black",
                       isError ? "border-destructive animate-shake" : ""
@@ -354,73 +364,33 @@ export const LoginScreen: React.FC = () => {
                   />
                 </div>
                 {isError && (
-                  <p className="text-destructive text-[10px] font-bold uppercase text-center tracking-widest animate-in fade-in">Access Denied: Incorrect Password</p>
+                  <p className="text-destructive text-[10px] font-bold uppercase text-center tracking-widest">Access Denied: Incorrect Password</p>
                 )}
                 
-                <div className="text-center">
-                  <button 
-                    type="button"
-                    onClick={() => { playSound('click'); setStep('recovery'); }}
-                    className="text-[10px] font-black uppercase text-accent/60 hover:text-accent transition-colors tracking-[0.2em]"
-                  >
-                    Forgot Password?
-                  </button>
-                </div>
+                {!selectedAccount.isSchoolAccount && (
+                  <div className="text-center">
+                    <button 
+                      type="button"
+                      onClick={() => { playSound('click'); setStep('recovery'); }}
+                      className="text-[10px] font-black uppercase text-accent/60 hover:text-accent transition-colors tracking-[0.2em]"
+                    >
+                      Forgot Password?
+                    </button>
+                  </div>
+                )}
               </div>
               
               <div className="flex gap-3 w-full">
                 <Button 
                   type="button" 
                   variant="ghost" 
-                  className="flex-1 h-12 text-white/40 hover:text-white hover:bg-white/5 rounded-2xl font-bold"
+                  className="flex-1 h-12 text-white/40 hover:text-white rounded-2xl font-bold"
                   onClick={() => setSelectedAccount(null)}
                 >
                   Cancel
                 </Button>
-                <Button type="submit" className="flex-1 h-12 bg-accent text-primary-foreground font-black rounded-2xl hover:bg-accent/80 gap-2 uppercase tracking-widest">
+                <Button type="submit" className="flex-1 h-12 bg-accent text-primary-foreground font-black rounded-2xl hover:bg-accent/80 uppercase tracking-widest">
                   Sign In
-                </Button>
-              </div>
-            </form>
-          </div>
-        )}
-
-        {selectedAccount && step === 'recovery' && progress === 0 && (
-          <div className="glass p-10 rounded-[2.5rem] border border-white/10 w-full max-w-md flex flex-col gap-8 animate-in slide-in-from-bottom-4 shadow-2xl">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center">
-                <ShieldAlert className="text-accent" size={20} />
-              </div>
-              <h2 className="text-xl font-bold text-white tracking-tight">Identity Recovery</h2>
-            </div>
-            
-            <p className="text-xs text-white/40 leading-relaxed bg-accent/5 p-4 rounded-xl border border-accent/10">
-              Identity Verification required for <strong>{selectedAccount.username}</strong>. Please enter a new access credential to establish a secure link.
-            </p>
-
-            <form onSubmit={handleRecoverySubmit} className="space-y-6">
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-accent uppercase tracking-widest px-1">New Access Password</label>
-                <Input 
-                  type="password"
-                  autoFocus
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  placeholder="Enter new secure password"
-                  className="bg-white/5 border-white/10 text-white h-12 rounded-xl focus-visible:ring-accent"
-                />
-              </div>
-              <div className="flex gap-3">
-                <Button 
-                  type="button"
-                  variant="ghost"
-                  className="flex-1 h-12 text-white/40 font-bold"
-                  onClick={() => setStep('select')}
-                >
-                  Back
-                </Button>
-                <Button type="submit" className="flex-2 h-12 bg-accent text-primary-foreground font-black rounded-xl hover:bg-accent/80 gap-2 uppercase tracking-widest">
-                  Reset & Verify
                 </Button>
               </div>
             </form>
@@ -440,6 +410,22 @@ export const LoginScreen: React.FC = () => {
                 <X size={20} />
               </Button>
             </div>
+            
+            <div className="flex gap-2 p-1 bg-white/5 rounded-xl border border-white/5">
+              <button 
+                onClick={() => setIsSchoolMode(false)}
+                className={cn("flex-1 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all", !isSchoolMode ? "bg-accent text-white shadow-lg" : "text-white/40 hover:text-white/60")}
+              >
+                Personal
+              </button>
+              <button 
+                onClick={() => setIsSchoolMode(true)}
+                className={cn("flex-1 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all", isSchoolMode ? "bg-blue-500 text-white shadow-lg" : "text-white/40 hover:text-white/60")}
+              >
+                School District
+              </button>
+            </div>
+
             <form onSubmit={handleCreateSubmit} className="space-y-6">
               <div className="space-y-4">
                 <div className="space-y-2">
@@ -448,23 +434,34 @@ export const LoginScreen: React.FC = () => {
                     autoFocus
                     value={newUsername}
                     onChange={(e) => setNewUsername(e.target.value)}
-                    placeholder="e.g. Administrator"
+                    placeholder={isSchoolMode ? "Student Name" : "e.g. Administrator"}
                     className="bg-white/5 border-white/10 text-white h-12 rounded-xl focus-visible:ring-accent"
                   />
                 </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-accent uppercase tracking-widest px-1">Access Password (Optional)</label>
-                  <Input 
-                    type="password"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    placeholder="Leave empty for no password"
-                    className="bg-white/5 border-white/10 text-white h-12 rounded-xl focus-visible:ring-accent"
-                  />
-                </div>
+                
+                {isSchoolMode ? (
+                  <div className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-xl space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Building2 size={14} className="text-blue-400" />
+                      <span className="text-[10px] font-black uppercase text-blue-400 tracking-widest">District NHU-7 Policy</span>
+                    </div>
+                    <p className="text-[10px] text-white/40 leading-relaxed">Password will be set automatically to <strong>NHU-7-2024</strong>. Features will be managed by the district controller.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-accent uppercase tracking-widest px-1">Access Password (Optional)</label>
+                    <Input 
+                      type="password"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      placeholder="Leave empty for no password"
+                      className="bg-white/5 border-white/10 text-white h-12 rounded-xl focus-visible:ring-accent"
+                    />
+                  </div>
+                )}
               </div>
               <Button type="submit" className="w-full h-14 bg-accent text-primary-foreground font-black rounded-2xl hover:bg-accent/80 gap-2 uppercase tracking-[0.2em] shadow-lg shadow-accent/20">
-                Continue Setup
+                {isSchoolMode ? "Verify & Initialize" : "Continue Setup"}
                 <ArrowRight size={18} />
               </Button>
             </form>
@@ -483,27 +480,23 @@ export const LoginScreen: React.FC = () => {
                 <label className="text-[10px] font-black text-accent uppercase tracking-widest text-center block">System Theme</label>
                 <div className="grid grid-cols-2 gap-4">
                   <button 
-                    onClick={() => { playSound('click'); setSelectedTheme('dark'); }}
+                    onClick={() => setSelectedTheme('dark')}
                     className={cn(
                       "p-6 rounded-2xl border-2 flex flex-col items-center gap-3 transition-all",
                       selectedTheme === 'dark' ? "bg-accent/10 border-accent scale-105" : "bg-white/5 border-white/5 hover:bg-white/10"
                     )}
                   >
-                    <div className="w-12 h-12 rounded-full bg-slate-900 flex items-center justify-center border border-white/10 shadow-xl">
-                      <Moon size={24} className="text-white" />
-                    </div>
+                    <Moon size={24} className="text-white" />
                     <span className="text-xs font-bold text-white uppercase tracking-widest">Dark Mode</span>
                   </button>
                   <button 
-                    onClick={() => { playSound('click'); setSelectedTheme('light'); }}
+                    onClick={() => setSelectedTheme('light')}
                     className={cn(
                       "p-6 rounded-2xl border-2 flex flex-col items-center gap-3 transition-all",
                       selectedTheme === 'light' ? "bg-accent/10 border-accent scale-105" : "bg-white/5 border-white/5 hover:bg-white/10"
                     )}
                   >
-                    <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center border border-black/5 shadow-xl">
-                      <Sun size={24} className="text-slate-900" />
-                    </div>
+                    <Sun size={24} className="text-slate-900" />
                     <span className="text-xs font-bold text-white uppercase tracking-widest">Light Mode</span>
                   </button>
                 </div>
@@ -515,10 +508,10 @@ export const LoginScreen: React.FC = () => {
                   {ACCENT_COLORS.map(color => (
                     <button
                       key={color.id}
-                      onClick={() => { playSound('click'); setSelectedAccent(color.id); }}
+                      onClick={() => setSelectedAccent(color.id)}
                       className={cn(
-                        "w-10 h-10 rounded-full border-4 flex items-center justify-center transition-all hover:scale-110",
-                        selectedAccent === color.id ? "border-white scale-110 shadow-lg" : "border-transparent opacity-60"
+                        "w-10 h-10 rounded-full border-4 flex items-center justify-center transition-all",
+                        selectedAccent === color.id ? "border-white scale-110" : "border-transparent opacity-60"
                       )}
                       style={{ backgroundColor: color.color }}
                     >
@@ -544,7 +537,7 @@ export const LoginScreen: React.FC = () => {
             <div className="relative">
               <div className="w-20 h-20 rounded-3xl bg-accent/20 flex items-center justify-center animate-pulse">
                 {step === 'initialize' ? (
-                  <Loader2 className="text-accent animate-spin" size={40} />
+                  <Loader2 className={cn("animate-spin", isSchoolMode ? "text-blue-400" : "text-accent")} size={40} />
                 ) : (
                   <Fingerprint className="text-accent animate-pulse" size={40} />
                 )}
@@ -556,30 +549,25 @@ export const LoginScreen: React.FC = () => {
 
             <div className="w-full space-y-6">
               <div className="space-y-2">
-                <div className="flex justify-between text-[10px] font-black uppercase text-accent tracking-widest">
-                  <span>{step === 'initialize' ? "Preparing Workspace" : "Resetting Identity Tunnel"}</span>
+                <div className="flex justify-between text-[10px] font-black uppercase tracking-widest">
+                  <span className={isSchoolMode ? "text-blue-400" : "text-accent"}>{isSchoolMode ? "Enrolling Managed Identity" : "Preparing Workspace"}</span>
                   <span>{progress}%</span>
                 </div>
                 <Progress value={progress} className="h-2 bg-white/5" />
               </div>
 
               <div className="bg-black/20 rounded-xl p-4 h-32 overflow-hidden border border-white/5 font-mono text-[10px] space-y-1">
-                <div className="text-green-500 font-bold animate-pulse">{currentLog}</div>
+                <div className={cn("font-bold animate-pulse", isSchoolMode ? "text-blue-400" : "text-green-500")}>{currentLog}</div>
                 <div className="text-white/20 opacity-40">{">> "}Hardware link active</div>
                 <div className="text-white/20 opacity-40">{">> "}Kernel integrity verified</div>
                 <div className="text-white/20 opacity-40">{">> "}Identity registry unlocked</div>
               </div>
             </div>
-
-            <div className="text-center">
-              <p className="text-[9px] text-white/20 uppercase tracking-[0.3em] font-bold">Hardware-level session in progress</p>
-            </div>
           </div>
         )}
 
-        {/* System Bar (Outside OS) */}
         <div className="fixed bottom-0 inset-x-0 h-16 flex items-center justify-between px-12 z-20">
-          <div className="flex items-center gap-8 text-white/20 animate-in fade-in slide-in-from-bottom-4 duration-700">
+          <div className="flex items-center gap-8 text-white/20">
             <div className="flex flex-col items-center gap-1">
               <span className="text-[10px] font-black uppercase tracking-widest">Diagnostic</span>
               <div className="flex items-center gap-3">
@@ -588,58 +576,40 @@ export const LoginScreen: React.FC = () => {
                 <span className="text-[10px] font-mono">B: BIOS</span>
               </div>
             </div>
-            <div className="w-px h-8 bg-white/10" />
-            <div className="flex flex-col items-start gap-1">
-              <span className="text-[10px] font-black uppercase tracking-widest">Security</span>
-              <div className="flex items-center gap-2">
-                <ShieldCheck size={12} className="text-green-500/40" />
-                <span className="text-[9px] font-bold uppercase">Encrypted Session</span>
-              </div>
-            </div>
           </div>
 
-          <div className="flex items-center gap-4 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-100">
+          <div className="flex items-center gap-4">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="p-2.5 rounded-full hover:bg-white/10 text-white/40 transition-all group pointer-events-auto" title="Accessibility">
-                  <Accessibility size={20} className="group-hover:text-accent transition-colors" />
+                <button className="p-2.5 rounded-full hover:bg-white/10 text-white/40 transition-all pointer-events-auto">
+                  <Accessibility size={20} />
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56 glass border-white/10 p-2 rounded-xl backdrop-blur-3xl shadow-2xl text-foreground z-[10000]">
-                <div className="px-2 py-1.5 text-[10px] font-black uppercase text-muted-foreground tracking-widest">Accessibility Options</div>
-                <DropdownMenuItem onSelect={() => setInverted(!isInverted)} className="gap-3 cursor-pointer p-3 rounded-lg hover:bg-accent/10">
+                <DropdownMenuItem onSelect={() => setInverted(!isInverted)} className="gap-3 cursor-pointer p-3 rounded-lg">
                   <Check size={14} className={cn("text-accent", !isInverted && "opacity-0")} />
                   <span className="font-medium text-xs">High Contrast Mode</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem onSelect={() => setGlassEnabled(!glassEnabled)} className="gap-3 cursor-pointer p-3 rounded-lg hover:bg-accent/10">
+                <DropdownMenuItem onSelect={() => setGlassEnabled(!glassEnabled)} className="gap-3 cursor-pointer p-3 rounded-lg">
                   <Check size={14} className={cn("text-accent", !glassEnabled && "opacity-0")} />
                   <span className="font-medium text-xs">Glass Effects</span>
                 </DropdownMenuItem>
-                <DropdownMenuSeparator className="bg-white/5" />
-                <DropdownMenuItem onSelect={() => setTheme(theme === 'dark' ? 'light' : 'dark')} className="gap-3 cursor-pointer p-3 rounded-lg hover:bg-accent/10">
-                  {theme === 'dark' ? <Sun size={14} className="text-accent" /> : <Moon size={14} className="text-accent" />}
-                  <span className="font-medium text-xs">Switch to {theme === 'dark' ? 'Light' : 'Dark'} Mode</span>
-                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-
-            <button className="p-2.5 rounded-full hover:bg-white/10 text-white/40 transition-all" title="Keyboard Layout">
-              <Languages size={20} />
-            </button>
             
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="p-2.5 rounded-full hover:bg-white/10 text-white/40 transition-all group pointer-events-auto" title="Power">
-                  <Power size={20} className="group-hover:text-accent transition-colors" />
+                <button className="p-2.5 rounded-full hover:bg-white/10 text-white/40 transition-all pointer-events-auto">
+                  <Power size={20} />
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48 glass border-white/10 p-2 rounded-xl backdrop-blur-3xl shadow-2xl text-foreground z-[10000]">
-                <DropdownMenuItem onSelect={() => { playSound('click'); restart(); }} className="gap-3 cursor-pointer p-3 rounded-lg hover:bg-accent/10">
+                <DropdownMenuItem onSelect={() => restart()} className="gap-3 cursor-pointer p-3 rounded-lg">
                   <RefreshCw size={16} className="text-accent" />
                   <span className="font-bold uppercase text-[10px] tracking-widest">Restart System</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator className="bg-white/5" />
-                <DropdownMenuItem onSelect={() => { playSound('click'); shutDown(); }} className="gap-3 cursor-pointer p-3 rounded-lg hover:bg-destructive/10 text-destructive">
+                <DropdownMenuItem onSelect={() => shutDown()} className="gap-3 cursor-pointer p-3 rounded-lg hover:bg-destructive/10 text-destructive">
                   <Power size={16} />
                   <span className="font-bold uppercase text-[10px] tracking-widest">Shut Down</span>
                 </DropdownMenuItem>
@@ -648,24 +618,6 @@ export const LoginScreen: React.FC = () => {
           </div>
         </div>
       </div>
-
-      <style jsx global>{`
-        @keyframes shake {
-          0%, 100% { transform: translateX(0); }
-          25% { transform: translateX(-5px); }
-          75% { transform: translateX(5px); }
-        }
-        .animate-shake {
-          animation: shake 0.2s ease-in-out 0s 2;
-        }
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 4px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: rgba(255, 255, 255, 0.1);
-          border-radius: 10px;
-        }
-      `}</style>
     </div>
   );
 };

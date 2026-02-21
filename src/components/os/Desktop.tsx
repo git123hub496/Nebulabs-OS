@@ -1,7 +1,8 @@
+
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useOS, AppId, DesktopShortcut, WindowInstance } from '@/context/os-context';
+import { useOS, AppId, DesktopShortcut, WindowInstance, APP_INFO } from '@/context/os-context';
 import { Window } from './Window';
 import { Taskbar } from './Taskbar';
 import { ContextMenu } from './ContextMenu';
@@ -40,7 +41,8 @@ import {
   Monitor as MonitorIcon,
   Cpu,
   Zap,
-  Mail
+  Mail,
+  GraduationCap
 } from 'lucide-react';
 import { FileExplorer } from '../apps/FileExplorer';
 import { AppStore } from '../apps/AppStore';
@@ -144,6 +146,8 @@ export const Desktop: React.FC = () => {
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [currentDragPos, setCurrentDragPos] = useState({ x: 0, y: 0 });
   const desktopRef = useRef<HTMLDivElement>(null);
+
+  const isSchool = currentUser?.isSchoolAccount;
 
   useEffect(() => {
     if (powerStatus === 'on') {
@@ -280,45 +284,14 @@ export const Desktop: React.FC = () => {
     return (
       <div className="fixed inset-0 bg-[#020202] flex flex-col items-center justify-center gap-12 animate-in fade-in duration-1000 overflow-hidden">
         <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.02)_0%,transparent_70%)]" />
-        
-        <div className="relative group">
-          <div className="absolute inset-0 bg-accent/20 blur-3xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
-          <Button 
-            variant="outline" 
-            size="icon" 
-            className="w-24 h-24 rounded-full border-white/5 bg-white/5 hover:bg-white/10 hover:border-accent hover:text-accent transition-all duration-500 group relative z-10 shadow-2xl"
-            onClick={powerOn}
-          >
-            <Power size={40} className="group-hover:scale-110 transition-transform duration-500 group-active:scale-90" />
-          </Button>
-          
-          <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-white/5 animate-pulse group-hover:bg-accent group-hover:shadow-[0_0_10px_var(--accent)] transition-colors" />
-        </div>
-
-        <div className="flex flex-col items-center gap-4 animate-in slide-in-from-bottom-4 duration-1000 delay-300">
-          <div className="bg-white/5 px-4 py-2 rounded-full border border-white/5 backdrop-blur-sm">
-            <span className="text-white/20 text-[10px] uppercase tracking-[0.5em] font-black">Standby Mode</span>
-          </div>
-          
-          <div className="flex items-center gap-6 text-[9px] font-bold uppercase tracking-widest text-white/10">
-            <div className="flex items-center gap-2">
-              <Cpu size={12} />
-              <span>Logic Core Idle</span>
-            </div>
-            <div className="w-1 h-1 rounded-full bg-white/10" />
-            <div className="flex items-center gap-2">
-              <Zap size={12} />
-              <span>AC Power Verified</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="fixed top-12 right-12 opacity-5 pointer-events-none group-hover:opacity-20 transition-opacity">
-          <div className="border border-white p-4 space-y-2">
-            <div className="font-mono text-xs font-bold text-white">AUTO-SLEEP: ACTIVE</div>
-            <div className="font-mono text-[10px] text-white/60">CHECKING HARDWARE LINK...</div>
-          </div>
-        </div>
+        <Button 
+          variant="outline" 
+          size="icon" 
+          className="w-24 h-24 rounded-full border-white/5 bg-white/5 hover:bg-white/10 hover:border-accent hover:text-accent transition-all duration-500 group relative z-10 shadow-2xl"
+          onClick={powerOn}
+        >
+          <Power size={40} className="group-hover:scale-110 transition-transform duration-500 group-active:scale-90" />
+        </Button>
       </div>
     );
   }
@@ -402,13 +375,16 @@ export const Desktop: React.FC = () => {
         />
       )}
 
-      <WidgetsPanel />
+      {!isSchool && <WidgetsPanel />}
       
       <GlobalSearch />
 
       <ChatBar />
 
       {currentDisplayId === '1' && desktopApps.map(shortcut => {
+        // School Restriction
+        if (isSchool && shortcut.id === 'news') return null;
+
         const Icon = shortcut.icon;
         const isDragging = draggingAppId === shortcut.id;
         
@@ -434,10 +410,10 @@ export const Desktop: React.FC = () => {
               e.stopPropagation();
             }}
           >
-            <div className="w-14 h-14 glass rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform mb-1 shadow-lg border-white/20 relative">
-              <Icon size={28} className="text-accent" />
+            <div className={cn("w-14 h-14 glass rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform mb-1 shadow-lg border-white/20 relative", isSchool && "border-blue-500/20 shadow-blue-500/10")}>
+              <Icon size={28} className={isSchool ? "text-blue-400" : "text-accent"} />
               
-              {shortcut.id !== 'trash' && shortcut.id !== 'files' && shortcut.id !== 'store' && (
+              {shortcut.id !== 'trash' && shortcut.id !== 'files' && shortcut.id !== 'store' && !isSchool && (
                 <button 
                   className="delete-shortcut-btn absolute -top-1.5 -right-1.5 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 hover:scale-110 transition-all z-10 border-2 border-white shadow-md flex items-center justify-center"
                   onMouseDown={(e) => e.stopPropagation()} 
@@ -476,8 +452,8 @@ export const Desktop: React.FC = () => {
       {isRunOpen && (
         <div className="fixed top-1/4 left-1/2 -translate-x-1/2 z-[10001] w-[400px] glass p-6 rounded-3xl border border-white/10 shadow-2xl animate-in zoom-in-95 slide-in-from-top-4">
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-8 h-8 rounded-lg bg-accent/20 flex items-center justify-center">
-              <Command size={16} className="text-accent" />
+            <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center", isSchool ? "bg-blue-500/20" : "bg-accent/20")}>
+              <Command size={16} className={isSchool ? "text-blue-400" : "text-accent"} />
             </div>
             <h2 className="text-sm font-bold uppercase tracking-widest text-white/60">Run Intelligence</h2>
           </div>
@@ -487,21 +463,10 @@ export const Desktop: React.FC = () => {
               autoFocus
               value={runQuery}
               onChange={(e) => setRunQuery(e.target.value)}
-              placeholder="Enter application ID (e.g. paint, terminal)"
-              className="pl-10 h-12 bg-black/20 border-white/10 text-white rounded-xl focus-visible:ring-accent"
+              placeholder="Enter application ID"
+              className="pl-10 h-12 bg-black/20 border-white/10 text-white rounded-xl"
             />
           </form>
-          <div className="mt-4 flex gap-2 overflow-x-auto pb-2 scrollbar-none">
-            {['paint', 'terminal', 'calc', 'browser', 'camera', 'slides', 'mail'].map(app => (
-              <button 
-                key={app}
-                onClick={() => { setRunQuery(app); }}
-                className="px-3 py-1.5 rounded-lg bg-white/5 border border-white/5 text-[9px] font-bold uppercase tracking-wider text-white/40 hover:bg-accent/10 hover:text-accent transition-all"
-              >
-                {app}
-              </button>
-            ))}
-          </div>
         </div>
       )}
 
