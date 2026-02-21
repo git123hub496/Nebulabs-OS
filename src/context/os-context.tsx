@@ -403,7 +403,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     return () => clearTimeout(timer);
   }, []);
 
-  const login = (userId: string, password?: string): boolean => {
+  const login = useCallback((userId: string, password?: string): boolean => {
     const user = accounts.find(a => a.id === userId);
     if (user) {
       if (user.password && user.password !== password) return false;
@@ -414,15 +414,15 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       return true;
     }
     return false;
-  };
+  }, [accounts, loadSettings]);
 
-  const logout = () => {
+  const logout = useCallback(() => {
     setCurrentUser(null);
     localStorage.removeItem('nebula_current_user_id');
     setOpenWindows([]);
     setActiveWindowId(null);
     setIsLocked(false);
-  };
+  }, []);
 
   const lock = () => {
     if (currentUser) setIsLocked(true);
@@ -437,23 +437,38 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     return false;
   };
 
-  const createAccount = (username: string, password?: string) => {
+  const createAccount = useCallback((username: string, password?: string) => {
     const newAcc: LocalUser = {
       id: Math.random().toString(36).substr(2, 9),
       username,
       avatarColor: AVATAR_COLORS[accounts.length % AVATAR_COLORS.length],
       password: password || undefined
     };
-    const updated = [...accounts, newAcc];
-    setAccounts(updated);
+    
+    setAccounts(prev => {
+      const updated = [...prev, newAcc];
+      try {
+        localStorage.setItem('nebula_accounts', JSON.stringify(updated));
+      } catch (e) {
+        console.warn("Nebula Kernel: Account creation storage failed.", e);
+      }
+      return updated;
+    });
+
+    // ATOMIC LOGIN: Log in immediately with the new object to avoid stale state issues
+    setCurrentUser(newAcc);
+    localStorage.setItem('nebula_current_user_id', newAcc.id);
+    setIsLocked(false);
+    
+    // Save wizard choices to the new user registry immediately
     try {
-      localStorage.setItem('nebula_accounts', JSON.stringify(updated));
-    } catch (e) {
-      console.warn("Nebula Kernel: Account creation storage failed.", e);
-      addNotification("Identity Failed", "Storage limit reached. Account data could not be saved.", "security");
-    }
-    login(newAcc.id, password);
-  };
+      localStorage.setItem(`nebula_${newAcc.id}_theme`, theme);
+      localStorage.setItem(`nebula_${newAcc.id}_accent`, accentColor);
+      localStorage.setItem(`nebula_${newAcc.id}_wallpaper`, wallpaper);
+    } catch (e) {}
+    
+    addNotification("Account Created", `Welcome, ${username}! System initialized.`);
+  }, [accounts.length, theme, accentColor, wallpaper, addNotification]);
 
   const updateUserPassword = (password: string) => {
     if (!currentUser) return;

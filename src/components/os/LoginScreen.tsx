@@ -1,3 +1,4 @@
+
 "use client"
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -50,6 +51,7 @@ export const LoginScreen: React.FC = () => {
 
   // Sound Effects
   const playSound = (type: 'click' | 'success') => {
+    if (typeof window === 'undefined') return;
     const urls = {
       click: 'https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3',
       success: 'https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3'
@@ -76,6 +78,7 @@ export const LoginScreen: React.FC = () => {
         setProgress(prev => {
           if (prev >= 100) {
             clearInterval(interval);
+            // Finalize account creation after a short delay for visual polish
             setTimeout(() => {
               playSound('success');
               createAccount(newUsername, newPassword || undefined);
@@ -84,7 +87,7 @@ export const LoginScreen: React.FC = () => {
           }
           return prev + 1;
         });
-      }, 40);
+      }, 30); // Slightly faster initialization
 
       const logInterval = setInterval(() => {
         setLogIndex(prev => {
@@ -92,7 +95,7 @@ export const LoginScreen: React.FC = () => {
           setCurrentLog(SETUP_LOGS[next]);
           return next;
         });
-      }, 600);
+      }, 500);
 
       return () => {
         clearInterval(interval);
