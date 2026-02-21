@@ -499,7 +499,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const restoreEmail = (id: string) => {
-    setEmails(prev => prev.map(e => e.id === id ? { ...e, folder: 'inbox' } : e));
+    setEmails(prev => prev.filter(e => e.id !== id));
   };
 
   const permanentlyDeleteEmail = (id: string) => {
@@ -668,11 +668,12 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
         stroke = '#fff';
       }
 
-      const size = 32 * mouserScale;
-      // High-fidelity vector path matching the requested sharp chunky pointer
+      const baseScale = 32 * mouserScale;
+      // High-fidelity vector path perfectly matching the requested chunky winged pointer
+      // viewBox="0 0 24 24"
       const svg = `
-        <svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M3,3 L3,19 L8,14 L13,23 L16,21 L11,12 L18,12 Z" fill="${fill}" stroke="${stroke}" stroke-width="2" stroke-linejoin="round"/>
+        <svg width="${baseScale}" height="${baseScale}" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M2,2 L2,18 L6,14 L9,21 L12,20 L9,13 L15,13 Z" fill="${fill}" stroke="${stroke}" stroke-width="3.0" stroke-linejoin="miter"/>
         </svg>`;
       
       return `url("data:image/svg+xml;base64,${window.btoa(svg)}") 2 2, auto`;
