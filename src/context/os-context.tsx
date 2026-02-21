@@ -210,11 +210,11 @@ const INITIAL_DESKTOP: DesktopShortcut[] = [
 ];
 
 const RANDOM_NOTIFICATIONS: Omit<SystemNotification, 'id' | 'timestamp'>[] = [
-  { title: "Security Scan Complete", message: "Nebula Defender found 0 threats. Your system is secure.", type: 'security' },
-  { title: "New Trending Story", message: "Nebula Labs reveals breakthrough in quantum browser speed.", type: 'news' },
+  { title: "Security Scan Complete", message: "Nebulabs Defender found 0 threats. Your system is secure.", type: 'security' },
+  { title: "New Trending Story", message: "Nebulabs reveals breakthrough in quantum browser speed.", type: 'news' },
   { title: "System Tip", message: "Try dragging a window past the screen edge to hop between displays.", type: 'app' },
-  { title: "Update Available", message: "Kernel v4.2.1 is ready for installation. Restart to apply.", type: 'system' },
-  { title: "Nebula Drive Sync", message: "Your recent documents have been successfully backed up.", type: 'app' },
+  { title: "Update Available", message: "Kernel v4.5.2 is ready for installation. Restart to apply.", type: 'system' },
+  { title: "Nebulabs Drive Sync", message: "Your recent documents have been successfully backed up.", type: 'app' },
   { title: "Network Stability", message: "Connected to Nebula_Secure_5G with optimal signal strength.", type: 'system' },
   { title: "Performance Note", message: "System Monitor detected high idle efficiency. Battery saved.", type: 'system' },
 ];
