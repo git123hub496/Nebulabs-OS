@@ -588,7 +588,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
 
     const timer = setTimeout(() => {
       setPowerStatusState('on');
-    }, 2500);
+    }, 800);
     return () => clearTimeout(timer);
   }, []);
 
@@ -918,7 +918,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
 
   const powerOn = () => {
     setPowerStatusState('booting');
-    setTimeout(() => setPowerStatusState('on'), 2600);
+    setTimeout(() => setPowerStatusState('on'), 1000);
   };
 
   const restart = () => {
@@ -927,7 +927,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     setActiveWindowId(null);
     setIsLocked(false);
     setPowerStatusState('booting');
-    setTimeout(() => setPowerStatusState('on'), 2600);
+    setTimeout(() => setPowerStatusState('on'), 1000);
   };
 
   const shutDown = () => {

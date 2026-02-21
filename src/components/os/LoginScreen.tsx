@@ -1,4 +1,3 @@
-
 "use client"
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -141,20 +140,19 @@ export const LoginScreen: React.FC = () => {
                 } else {
                   if (selectedAccount) {
                     resetUserPassword(selectedAccount.id, newPassword);
-                    // Return to login with the selected account
                     setStep('select');
                     setPasswordInput("");
                     hasCreated.current = false;
                     setProgress(0);
                   }
                 }
-              }, 800);
+              }, 400);
             }
             return 100;
           }
-          return prev + 1;
+          return prev + 2; // Accelerated progress
         });
-      }, step === 'initialize' ? 30 : 50);
+      }, step === 'initialize' ? 10 : 15);
 
       const logInterval = setInterval(() => {
         setLogIndex(prev => {
@@ -162,7 +160,7 @@ export const LoginScreen: React.FC = () => {
           setCurrentLog(sequenceLogs[next]);
           return next;
         });
-      }, 500);
+      }, 200);
 
       return () => {
         clearInterval(interval);

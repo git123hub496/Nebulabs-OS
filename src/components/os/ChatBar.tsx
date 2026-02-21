@@ -1,4 +1,3 @@
-
 "use client"
 
 import React, { useState, useRef, useEffect } from 'react';
@@ -17,7 +16,16 @@ const COLLEAGUES = [
 ];
 
 export const ChatBar: React.FC = () => {
-  const { isChatOpen, setIsChatOpen, chatMessages, sendChatMessage, currentUser, openApp } = useOS();
+  // Call hooks at the top level ONLY
+  const { 
+    isChatOpen, 
+    setIsChatOpen, 
+    chatMessages, 
+    sendChatMessage, 
+    currentUser, 
+    openApp 
+  } = useOS();
+  
   const [inputText, setInputText] = useState("");
   const [selectedColleague, setSelectedColleague] = useState(COLLEAGUES[0]);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -39,11 +47,16 @@ export const ChatBar: React.FC = () => {
     await sendChatMessage(text, selectedColleague.name, selectedColleague.role);
   };
 
+  const handleUpdateCredentials = () => {
+    openApp('settings', 'Settings');
+    setIsChatOpen(false);
+  };
+
   // Filter messages to show only welcome message or messages involving the selected colleague
   const filteredMessages = chatMessages.filter(msg => {
-    if (msg.sender === 'Nebulabs Onboarding') return true; // Global system greeting
-    if (msg.isBot) return msg.sender === selectedColleague.name; // Messages FROM selected colleague
-    return msg.recipient === selectedColleague.name; // Messages TO selected colleague
+    if (msg.sender === 'Nebulabs Onboarding') return true;
+    if (msg.isBot) return msg.sender === selectedColleague.name;
+    return msg.recipient === selectedColleague.name;
   });
 
   return (
@@ -117,10 +130,7 @@ export const ChatBar: React.FC = () => {
             </div>
             <Button 
               className="bg-accent text-primary-foreground font-black px-8 rounded-xl h-12 gap-2"
-              onClick={() => {
-                openApp('settings', 'Settings');
-                setIsChatOpen(false);
-              }}
+              onClick={handleUpdateCredentials}
             >
               Update Credentials
             </Button>
