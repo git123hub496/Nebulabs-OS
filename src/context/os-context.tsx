@@ -710,12 +710,15 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   const restart = () => {
     setOpenWindows([]);
     setActiveWindowId(null);
+    setCurrentUser(null);
     setPowerStatusState('booting');
     setTimeout(() => setPowerStatusState('on'), 2600);
   };
 
   const shutDown = () => {
     setOpenWindows([]);
+    setActiveWindowId(null);
+    setCurrentUser(null);
     setPowerStatusState('off');
   };
 

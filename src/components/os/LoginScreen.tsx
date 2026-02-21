@@ -1,3 +1,4 @@
+
 "use client"
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -60,7 +61,12 @@ const ACCENT_COLORS: { id: AccentColor; color: string }[] = [
 ];
 
 export const LoginScreen: React.FC = () => {
-  const { accounts, login, createAccount, deleteAccount, wallpaper, setTheme, setAccentColor, shutDown, restart } = useOS();
+  const { 
+    accounts, login, createAccount, deleteAccount, wallpaper, 
+    setTheme, theme, setAccentColor, shutDown, restart,
+    isInverted, setInverted, glassEnabled, setGlassEnabled
+  } = useOS();
+  
   const [step, setStep] = useState<'select' | 'create' | 'customize' | 'initialize'>('select');
   const [newUsername, setNewUsername] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -503,9 +509,30 @@ export const LoginScreen: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-4 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-100">
-            <button className="p-2.5 rounded-full hover:bg-white/10 text-white/40 transition-all" title="Accessibility">
-              <Accessibility size={20} />
-            </button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="p-2.5 rounded-full hover:bg-white/10 text-white/40 transition-all group" title="Accessibility">
+                  <Accessibility size={20} className="group-hover:text-accent transition-colors" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56 glass border-white/10 p-2 rounded-xl backdrop-blur-3xl shadow-2xl text-foreground">
+                <div className="px-2 py-1.5 text-[10px] font-black uppercase text-muted-foreground tracking-widest">Accessibility Options</div>
+                <DropdownMenuItem onClick={() => setInverted(!isInverted)} className="gap-3 cursor-pointer p-3 rounded-lg hover:bg-accent/10">
+                  <Check size={14} className={cn("text-accent", !isInverted && "opacity-0")} />
+                  <span className="font-medium text-xs">High Contrast Mode</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setGlassEnabled(!glassEnabled)} className="gap-3 cursor-pointer p-3 rounded-lg hover:bg-accent/10">
+                  <Check size={14} className={cn("text-accent", !glassEnabled && "opacity-0")} />
+                  <span className="font-medium text-xs">Glass Effects</span>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator className="bg-white/5" />
+                <DropdownMenuItem onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')} className="gap-3 cursor-pointer p-3 rounded-lg hover:bg-accent/10">
+                  {theme === 'dark' ? <Sun size={14} className="text-accent" /> : <Moon size={14} className="text-accent" />}
+                  <span className="font-medium text-xs">Switch to {theme === 'dark' ? 'Light' : 'Dark'} Mode</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
             <button className="p-2.5 rounded-full hover:bg-white/10 text-white/40 transition-all" title="Keyboard Layout">
               <Languages size={20} />
             </button>
@@ -517,12 +544,12 @@ export const LoginScreen: React.FC = () => {
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48 glass border-white/10 p-2 rounded-xl backdrop-blur-3xl shadow-2xl text-foreground">
-                <DropdownMenuItem onClick={restart} className="gap-3 cursor-pointer p-3 rounded-lg hover:bg-accent/10">
+                <DropdownMenuItem onClick={() => { playSound('click'); restart(); }} className="gap-3 cursor-pointer p-3 rounded-lg hover:bg-accent/10">
                   <RefreshCw size={16} className="text-accent" />
                   <span className="font-bold uppercase text-[10px] tracking-widest">Restart System</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator className="bg-white/5" />
-                <DropdownMenuItem onClick={shutDown} className="gap-3 cursor-pointer p-3 rounded-lg hover:bg-destructive/10 text-destructive">
+                <DropdownMenuItem onClick={() => { playSound('click'); shutDown(); }} className="gap-3 cursor-pointer p-3 rounded-lg hover:bg-destructive/10 text-destructive">
                   <Power size={16} />
                   <span className="font-bold uppercase text-[10px] tracking-widest">Shut Down</span>
                 </DropdownMenuItem>
