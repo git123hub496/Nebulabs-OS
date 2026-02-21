@@ -333,6 +333,12 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   }, [accentColor]);
 
   useEffect(() => {
+    const html = document.documentElement;
+    html.classList.remove('light', 'dark');
+    html.classList.add(theme);
+  }, [theme]);
+
+  useEffect(() => {
     if (typeof window === 'undefined') return;
 
     const getCursorValue = () => {

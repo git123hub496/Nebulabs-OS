@@ -58,6 +58,15 @@
     --border: 0 0% 85%;
     --input: 0 0% 85%;
     --ring: 210 29% 40%;
+    
+    --sidebar-background: 0 0% 95%;
+    --sidebar-foreground: 210 28% 19%;
+    --sidebar-primary: 210 29% 40%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 210 29% 40%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 0 0% 90%;
+    --sidebar-ring: 210 29% 40%;
   }
 }
 

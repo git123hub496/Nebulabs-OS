@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useRef } from 'react';
@@ -106,7 +105,7 @@ export const Settings: React.FC = () => {
                 <h2 className="text-lg font-bold">Theme & Style</h2>
               </div>
               <div className="space-y-6">
-                <div className="flex items-center justify-between p-5 bg-white/5 rounded-2xl border border-border/50">
+                <div className="flex items-center justify-between p-5 bg-foreground/5 rounded-2xl border border-border/50">
                   <div className="flex items-center gap-4">
                     <div className="p-2.5 rounded-xl bg-accent/10 text-accent">
                       {theme === 'light' ? <Sun size={20} /> : <Moon size={20} />}
@@ -136,7 +135,7 @@ export const Settings: React.FC = () => {
                         className={cn(
                           "group relative aspect-square rounded-2xl flex items-center justify-center border-2 transition-all",
                           color.class,
-                          accentColor === color.id ? "border-white scale-110 shadow-xl shadow-black/30" : "border-transparent opacity-80 hover:opacity-100"
+                          accentColor === color.id ? "border-foreground scale-110 shadow-xl shadow-black/30" : "border-transparent opacity-80 hover:opacity-100"
                         )}
                       >
                         {accentColor === color.id && <Check size={20} className="text-white drop-shadow-md" />}
@@ -163,11 +162,11 @@ export const Settings: React.FC = () => {
                     onClick={() => setCursorColor(option.id)}
                     className={cn(
                       "p-4 rounded-2xl border-2 flex flex-col items-center gap-3 transition-all",
-                      cursorColor === option.id ? "bg-accent/10 border-accent scale-105 shadow-lg" : "bg-white/5 border-white/5 hover:bg-white/10"
+                      cursorColor === option.id ? "bg-accent/10 border-accent scale-105 shadow-lg" : "bg-foreground/5 border-border/50 hover:bg-foreground/10"
                     )}
                   >
                     <div className={cn("w-8 h-8 rounded-lg shadow-inner", option.class)} />
-                    <span className={cn("text-[10px] font-black uppercase tracking-widest", cursorColor === option.id ? "text-accent" : "text-white/40")}>
+                    <span className={cn("text-[10px] font-black uppercase tracking-widest", cursorColor === option.id ? "text-accent" : "text-foreground/40")}>
                       {option.label}
                     </span>
                   </button>
@@ -181,13 +180,13 @@ export const Settings: React.FC = () => {
                 <h2 className="text-lg font-bold">Desktop Layout</h2>
               </div>
               <div className="grid gap-4">
-                <div className="flex items-center justify-between p-5 bg-white/5 rounded-2xl border border-border/50">
+                <div className="flex items-center justify-between p-5 bg-foreground/5 rounded-2xl border border-border/50">
                   <Label className="text-sm font-bold">Taskbar Position</Label>
                   <Select value={taskbarPosition} onValueChange={(v) => setTaskbarPosition(v as TaskbarPosition)}>
-                    <SelectTrigger className="w-[120px] bg-black/20 border-white/10 text-xs">
+                    <SelectTrigger className="w-[120px] bg-foreground/5 border-border/50 text-xs text-foreground">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent className="glass border-white/10">
+                    <SelectContent className="glass border-border/50">
                       <SelectItem value="top">Top</SelectItem>
                       <SelectItem value="bottom">Bottom</SelectItem>
                       <SelectItem value="left">Left</SelectItem>
@@ -196,7 +195,7 @@ export const Settings: React.FC = () => {
                   </Select>
                 </div>
 
-                <div className="space-y-4 p-5 bg-white/5 rounded-2xl border border-border/50">
+                <div className="space-y-4 p-5 bg-foreground/5 rounded-2xl border border-border/50">
                   <div className="flex items-center justify-between">
                     <Label className="text-sm font-bold">Taskbar Scale</Label>
                     <span className="text-xs font-mono text-accent">{taskbarSize}px</span>
@@ -211,7 +210,7 @@ export const Settings: React.FC = () => {
                   />
                 </div>
 
-                <div className="space-y-4 p-5 bg-white/5 rounded-2xl border border-border/50">
+                <div className="space-y-4 p-5 bg-foreground/5 rounded-2xl border border-border/50">
                   <div className="flex items-center justify-between">
                     <Label className="text-sm font-bold">Desktop Icon Scale</Label>
                     <span className="text-xs font-mono text-accent">{iconSize}%</span>
@@ -276,7 +275,7 @@ export const Settings: React.FC = () => {
                 </div>
               </div>
 
-              <div className="bg-white/5 border border-white/10 rounded-3xl p-8 text-center space-y-6">
+              <div className="bg-foreground/5 border border-border/50 rounded-3xl p-8 text-center space-y-6">
                 <div className="flex justify-center gap-4">
                   {['1', '2', '3'].map(id => (
                     <div 
@@ -284,7 +283,7 @@ export const Settings: React.FC = () => {
                       onClick={() => setCurrentDisplayId(id)}
                       className={cn(
                         "w-24 h-16 rounded-xl border-2 flex flex-col items-center justify-center cursor-pointer transition-all",
-                        currentDisplayId === id ? "bg-accent/20 border-accent text-accent scale-110 shadow-lg" : "bg-black/40 border-white/10 text-white/20 hover:border-white/40"
+                        currentDisplayId === id ? "bg-accent/20 border-accent text-accent scale-110 shadow-lg" : "bg-foreground/5 border-border/50 text-foreground/20 hover:border-foreground/40"
                       )}
                     >
                       <Monitor size={20} />
@@ -292,17 +291,17 @@ export const Settings: React.FC = () => {
                     </div>
                   ))}
                 </div>
-                <p className="text-xs text-white/40 max-w-sm mx-auto leading-relaxed">
+                <p className="text-xs text-foreground/40 max-w-sm mx-auto leading-relaxed">
                   Select a monitor ID to identify this browser tab. Disconnect displays by setting their position to <strong>"None"</strong> or use the reset button.
                 </p>
               </div>
             </section>
 
             <section>
-              <h3 className="text-xs font-bold uppercase tracking-widest text-white/30 mb-4">Physical Arrangement</h3>
+              <h3 className="text-xs font-bold uppercase tracking-widest text-foreground/30 mb-4">Physical Arrangement</h3>
               <div className="grid gap-4">
                 {['1', '2', '3'].map(id => (
-                  <div key={id} className="p-5 bg-white/5 rounded-2xl border border-white/5 flex items-center justify-between">
+                  <div key={id} className="p-5 bg-foreground/5 rounded-2xl border border-border/50 flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center text-accent font-bold text-xs">{id}</div>
                       <span className="text-sm font-medium">Display {id} Layout</span>
@@ -310,10 +309,10 @@ export const Settings: React.FC = () => {
                     <div className="flex gap-2">
                       {['left', 'right', 'top', 'bottom'].map(dir => (
                         <Select key={dir} value={displayLayout[id]?.[dir as any] || 'none'} onValueChange={(v) => updateDisplayLayout(id, dir as any, v)}>
-                          <SelectTrigger className="w-24 bg-black/20 border-white/10 text-[10px] uppercase font-bold">
+                          <SelectTrigger className="w-24 bg-foreground/5 border-border/50 text-[10px] uppercase font-bold text-foreground">
                             <SelectValue placeholder={dir} />
                           </SelectTrigger>
-                          <SelectContent className="glass border-white/10">
+                          <SelectContent className="glass border-border/50">
                             <SelectItem value="none">None</SelectItem>
                             {['1', '2', '3'].filter(toId => toId !== id).map(toId => (
                               <SelectItem key={toId} value={toId}>{dir} is {toId}</SelectItem>
@@ -338,14 +337,14 @@ export const Settings: React.FC = () => {
                 <h2 className="text-lg font-bold">Visual Assistance</h2>
               </div>
               <div className="grid gap-4">
-                <div className="flex items-center justify-between p-5 bg-white/5 rounded-2xl border border-border/50">
+                <div className="flex items-center justify-between p-5 bg-foreground/5 rounded-2xl border border-border/50">
                   <div className="space-y-0.5">
                     <Label className="text-sm font-bold">Invert System Colors</Label>
                     <p className="text-[11px] opacity-40">High-contrast mode for improved readability</p>
                   </div>
                   <Switch checked={isInverted} onCheckedChange={setInverted} />
                 </div>
-                <div className="flex items-center justify-between p-5 bg-white/5 rounded-2xl border border-border/50">
+                <div className="flex items-center justify-between p-5 bg-foreground/5 rounded-2xl border border-border/50">
                   <div className="space-y-0.5">
                     <Label className="text-sm font-bold">Glass & Transparency</Label>
                     <p className="text-[11px] opacity-40">Enable sophisticated backdrop blur effects</p>
@@ -371,27 +370,27 @@ export const Settings: React.FC = () => {
                 </Button>
               </div>
               
-              <ScrollArea className="h-[400px] rounded-2xl border border-white/5 bg-black/20 p-4">
+              <ScrollArea className="h-[400px] rounded-2xl border border-border/50 bg-foreground/5 p-4">
                 {notifications.length > 0 ? (
                   <div className="space-y-3">
                     {notifications.map((notif) => (
-                      <div key={notif.id} className="p-4 bg-white/5 border border-white/5 rounded-xl hover:border-accent/20 transition-colors">
+                      <div key={notif.id} className="p-4 bg-foreground/5 border border-border/50 rounded-xl hover:border-accent/20 transition-colors">
                         <div className="flex items-center justify-between mb-1">
                           <div className="flex items-center gap-2">
                             {getNotifIcon(notif.type)}
-                            <span className="text-xs font-bold text-white/80">{notif.title}</span>
+                            <span className="text-xs font-bold text-foreground/80">{notif.title}</span>
                           </div>
-                          <span className="text-[10px] text-white/20 font-mono">{notif.timestamp}</span>
+                          <span className="text-[10px] text-foreground/20 font-mono">{notif.timestamp}</span>
                         </div>
-                        <p className="text-[11px] text-white/40 leading-relaxed pl-6">{notif.message}</p>
+                        <p className="text-[11px] text-foreground/40 leading-relaxed pl-6">{notif.message}</p>
                       </div>
                     ))}
                   </div>
                 ) : (
                   <div className="h-full flex flex-col items-center justify-center text-center opacity-20 py-20">
-                    <Bell size={48} className="mb-4" />
-                    <p className="text-sm font-medium">No recent notifications</p>
-                    <p className="text-[10px] uppercase tracking-widest mt-1">Everything is quiet</p>
+                    <Bell size={48} className="mb-4 text-foreground" />
+                    <p className="text-sm font-medium text-foreground">No recent notifications</p>
+                    <p className="text-[10px] uppercase tracking-widest mt-1 text-foreground">Everything is quiet</p>
                   </div>
                 )}
               </ScrollArea>
@@ -422,13 +421,13 @@ export const Settings: React.FC = () => {
                 <h2 className="text-lg font-bold">Nebula Update</h2>
               </div>
               
-              <div className="p-8 bg-white/5 rounded-3xl border border-white/10 flex flex-col items-center text-center gap-6">
+              <div className="p-8 bg-foreground/5 rounded-3xl border border-border/50 flex flex-col items-center text-center gap-6">
                 <div className="w-20 h-20 bg-accent/10 rounded-3xl flex items-center justify-center animate-pulse">
                   <RefreshCw size={40} className="text-accent" />
                 </div>
                 <div className="space-y-2">
                   <h3 className="text-xl font-bold">System Build 4.5.2</h3>
-                  <p className="text-xs text-white/40 max-w-xs mx-auto">Your system is currently running the latest stable build of Nebulabs WebOS Core.</p>
+                  <p className="text-xs text-foreground/40 max-w-xs mx-auto">Your system is currently running the latest stable build of Nebulabs WebOS Core.</p>
                 </div>
                 <div className="flex flex-col w-full gap-2">
                   <Button 
@@ -437,7 +436,7 @@ export const Settings: React.FC = () => {
                   >
                     Check for Updates
                   </Button>
-                  <Button variant="ghost" className="text-[10px] font-bold uppercase tracking-widest text-white/20">
+                  <Button variant="ghost" className="text-[10px] font-bold uppercase tracking-widest text-foreground/20">
                     View Update History
                   </Button>
                 </div>
@@ -456,14 +455,14 @@ export const Settings: React.FC = () => {
               </div>
               
               <div className="flex flex-col gap-6">
-                <div className="flex items-center gap-6 p-6 bg-white/5 rounded-3xl border border-white/5">
+                <div className="flex items-center gap-6 p-6 bg-foreground/5 rounded-3xl border border-border/50">
                   <div 
                     className="w-20 h-20 rounded-full flex items-center justify-center text-3xl font-black shadow-2xl relative"
                     style={{ backgroundColor: currentUser?.avatarColor || 'var(--accent)' }}
                   >
                     {currentUser?.username[0].toUpperCase() || 'G'}
                     {currentUser?.password && (
-                      <div className="absolute -bottom-1 -right-1 w-7 h-7 bg-accent rounded-full border-4 border-[#1e2731] flex items-center justify-center">
+                      <div className="absolute -bottom-1 -right-1 w-7 h-7 bg-accent rounded-full border-4 border-background flex items-center justify-center">
                         <Lock size={12} className="text-primary" />
                       </div>
                     )}
@@ -472,23 +471,23 @@ export const Settings: React.FC = () => {
                     <h3 className="text-2xl font-bold">{currentUser?.username || 'Guest User'}</h3>
                     <div className="flex items-center gap-2">
                       <Badge className="bg-accent text-primary font-bold uppercase text-[9px]">Administrator</Badge>
-                      <span className="text-xs text-white/40">Local System Account</span>
+                      <span className="text-xs text-foreground/40">Local System Account</span>
                     </div>
                   </div>
-                  <Button variant="outline" className="border-white/10 text-destructive hover:bg-destructive/10" onClick={logout}>Sign Out</Button>
+                  <Button variant="outline" className="border-border/50 text-destructive hover:bg-destructive/10" onClick={logout}>Sign Out</Button>
                 </div>
 
-                <div className="bg-white/5 rounded-2xl border border-white/5 p-6 space-y-6">
+                <div className="bg-foreground/5 rounded-2xl border border-border/50 p-6 space-y-6">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <KeyRound size={18} className="text-accent" />
                       <div>
                         <p className="text-sm font-bold">Account Protection</p>
-                        <p className="text-[10px] text-white/40">{currentUser?.password ? "Your identity is secured by a password." : "Your identity is currently unprotected."}</p>
+                        <p className="text-[10px] text-foreground/40">{currentUser?.password ? "Your identity is secured by a password." : "Your identity is currently unprotected."}</p>
                       </div>
                     </div>
                     {!isChangingPass && (
-                      <Button variant="outline" size="sm" className="rounded-xl border-white/10" onClick={() => setIsChangingPass(true)}>
+                      <Button variant="outline" size="sm" className="rounded-xl border-border/50" onClick={() => setIsChangingPass(true)}>
                         {currentUser?.password ? "Change Password" : "Add Password"}
                       </Button>
                     )}
@@ -503,12 +502,12 @@ export const Settings: React.FC = () => {
                           placeholder="Enter secure password"
                           value={newPassword}
                           onChange={(e) => setNewPassword(e.target.value)}
-                          className="bg-black/20 border-white/10 h-11 focus-visible:ring-accent"
+                          className="bg-foreground/5 border-border/50 h-11 focus-visible:ring-accent text-foreground"
                         />
                       </div>
                       <div className="flex gap-2">
                         <Button className="bg-accent text-primary font-bold flex-1" onClick={handleUpdatePass}>Update Protection</Button>
-                        <Button variant="ghost" className="text-white/40" onClick={() => { setIsChangingPass(false); setNewPassword(""); }}>Cancel</Button>
+                        <Button variant="ghost" className="text-foreground/40" onClick={() => { setIsChangingPass(false); setNewPassword(""); }}>Cancel</Button>
                       </div>
                     </div>
                   )}
@@ -529,7 +528,7 @@ export const Settings: React.FC = () => {
               <div className="grid gap-4">
                 <div className={cn(
                   "p-5 rounded-2xl border transition-all flex items-center justify-between",
-                  isSecurityEnabled ? "bg-white/5 border-green-500/20" : "bg-destructive/5 border-destructive/20"
+                  isSecurityEnabled ? "bg-foreground/5 border-green-500/20" : "bg-destructive/5 border-destructive/20"
                 )}>
                   <div className="flex items-center gap-4">
                     {isSecurityEnabled ? (
@@ -539,7 +538,7 @@ export const Settings: React.FC = () => {
                     )}
                     <div>
                       <p className="text-sm font-bold">Nebula Defender</p>
-                      <p className="text-[10px] text-white/40">
+                      <p className="text-[10px] text-foreground/40">
                         {isSecurityEnabled ? "Real-time workspace isolation is active." : "System is currently vulnerable to external threats."}
                       </p>
                     </div>
@@ -574,12 +573,12 @@ export const Settings: React.FC = () => {
                 <span className="text-4xl font-black text-accent tracking-tighter">N</span>
               </div>
               <div className="space-y-2">
-                <h2 className="text-3xl font-black tracking-tight">Nebulabs WebOS</h2>
-                <p className="text-xs text-white/40 font-mono uppercase tracking-[0.3em]">Version 1.0.4 Stable-Channel</p>
+                <h2 className="text-3xl font-black tracking-tight text-foreground">Nebulabs WebOS</h2>
+                <p className="text-xs text-foreground/40 font-mono uppercase tracking-[0.3em]">Version 1.0.4 Stable-Channel</p>
               </div>
               <div className="flex justify-center gap-4">
-                <Badge variant="secondary" className="bg-white/5 text-white/40 border-white/10">Kernel: React 19.x</Badge>
-                <Badge variant="secondary" className="bg-white/5 text-white/40 border-white/10">UI: Tailwind v4</Badge>
+                <Badge variant="secondary" className="bg-foreground/5 text-foreground/40 border-border/50">Kernel: React 19.x</Badge>
+                <Badge variant="secondary" className="bg-foreground/5 text-foreground/40 border-border/50">UI: Tailwind v4</Badge>
               </div>
             </section>
           </div>
@@ -592,40 +591,40 @@ export const Settings: React.FC = () => {
 
   return (
     <div className="flex h-full bg-background text-foreground overflow-hidden">
-      <div className="w-64 border-r border-border bg-black/5 flex flex-col p-4 gap-1 shrink-0 overflow-y-auto">
+      <div className="w-64 border-r border-border bg-foreground/5 flex flex-col p-4 gap-1 shrink-0 overflow-y-auto">
         <h2 className="px-4 py-4 text-[10px] font-black text-accent uppercase tracking-[0.2em] mb-2 opacity-60">System Configuration</h2>
         
         <button 
           onClick={() => setActiveTab('personalization')}
-          className={cn("w-full flex items-center gap-3 px-4 h-11 rounded-xl transition-all text-sm", activeTab === 'personalization' ? "bg-accent/10 text-accent font-bold shadow-sm shadow-accent/5" : "text-white/40 hover:bg-white/5")}
+          className={cn("w-full flex items-center gap-3 px-4 h-11 rounded-xl transition-all text-sm", activeTab === 'personalization' ? "bg-accent/10 text-accent font-bold shadow-sm shadow-accent/5" : "text-foreground/40 hover:bg-foreground/5")}
         >
           <Palette size={16} /> Personalization
         </button>
         
         <button 
           onClick={() => setActiveTab('display')}
-          className={cn("w-full flex items-center gap-3 px-4 h-11 rounded-xl transition-all text-sm", activeTab === 'display' ? "bg-accent/10 text-accent font-bold shadow-sm shadow-accent/5" : "text-white/40 hover:bg-white/5")}
+          className={cn("w-full flex items-center gap-3 px-4 h-11 rounded-xl transition-all text-sm", activeTab === 'display' ? "bg-accent/10 text-accent font-bold shadow-sm shadow-accent/5" : "text-foreground/40 hover:bg-foreground/5")}
         >
           <Monitor size={16} /> Display & Screens
         </button>
         
         <button 
           onClick={() => setActiveTab('accessibility')}
-          className={cn("w-full flex items-center gap-3 px-4 h-11 rounded-xl transition-all text-sm", activeTab === 'accessibility' ? "bg-accent/10 text-accent font-bold shadow-sm shadow-accent/5" : "text-white/40 hover:bg-white/5")}
+          className={cn("w-full flex items-center gap-3 px-4 h-11 rounded-xl transition-all text-sm", activeTab === 'accessibility' ? "bg-accent/10 text-accent font-bold shadow-sm shadow-accent/5" : "text-foreground/40 hover:bg-foreground/5")}
         >
           <Eye size={16} /> Accessibility
         </button>
         
         <button 
           onClick={() => setActiveTab('notifications')}
-          className={cn("w-full flex items-center gap-3 px-4 h-11 rounded-xl transition-all text-sm", activeTab === 'notifications' ? "bg-accent/10 text-accent font-bold shadow-sm shadow-accent/5" : "text-white/40 hover:bg-white/5")}
+          className={cn("w-full flex items-center gap-3 px-4 h-11 rounded-xl transition-all text-sm", activeTab === 'notifications' ? "bg-accent/10 text-accent font-bold shadow-sm shadow-accent/5" : "text-foreground/40 hover:bg-foreground/5")}
         >
           <Bell size={16} /> Notifications
         </button>
         
         <button 
           onClick={() => setActiveTab('updates')}
-          className={cn("w-full flex items-center gap-3 px-4 h-11 rounded-xl transition-all text-sm", activeTab === 'updates' ? "bg-accent/10 text-accent font-bold shadow-sm shadow-accent/5" : "text-white/40 hover:bg-white/5")}
+          className={cn("w-full flex items-center gap-3 px-4 h-11 rounded-xl transition-all text-sm", activeTab === 'updates' ? "bg-accent/10 text-accent font-bold shadow-sm shadow-accent/5" : "text-foreground/40 hover:bg-foreground/5")}
         >
           <RefreshCw size={16} /> Updates
         </button>
@@ -634,21 +633,21 @@ export const Settings: React.FC = () => {
         
         <button 
           onClick={() => setActiveTab('accounts')}
-          className={cn("w-full flex items-center gap-3 px-4 h-11 rounded-xl transition-all text-sm", activeTab === 'accounts' ? "bg-accent/10 text-accent font-bold shadow-sm shadow-accent/5" : "text-white/40 hover:bg-white/5")}
+          className={cn("w-full flex items-center gap-3 px-4 h-11 rounded-xl transition-all text-sm", activeTab === 'accounts' ? "bg-accent/10 text-accent font-bold shadow-sm shadow-accent/5" : "text-foreground/40 hover:bg-foreground/5")}
         >
           <User size={16} /> User Accounts
         </button>
         
         <button 
           onClick={() => setActiveTab('security')}
-          className={cn("w-full flex items-center gap-3 px-4 h-11 rounded-xl transition-all text-sm", activeTab === 'security' ? "bg-accent/10 text-accent font-bold shadow-sm shadow-accent/5" : "text-white/40 hover:bg-white/5")}
+          className={cn("w-full flex items-center gap-3 px-4 h-11 rounded-xl transition-all text-sm", activeTab === 'security' ? "bg-accent/10 text-accent font-bold shadow-sm shadow-accent/5" : "text-foreground/40 hover:bg-foreground/5")}
         >
           <Shield size={16} /> System Security
         </button>
         
         <button 
           onClick={() => setActiveTab('about')}
-          className={cn("w-full flex items-center gap-3 px-4 h-11 rounded-xl transition-all text-sm", activeTab === 'about' ? "bg-accent/10 text-accent font-bold shadow-sm shadow-accent/5" : "text-white/40 hover:bg-white/5")}
+          className={cn("w-full flex items-center gap-3 px-4 h-11 rounded-xl transition-all text-sm", activeTab === 'about' ? "bg-accent/10 text-accent font-bold shadow-sm shadow-accent/5" : "text-foreground/40 hover:bg-foreground/5")}
         >
           <HelpCircle size={16} /> About WebOS
         </button>
