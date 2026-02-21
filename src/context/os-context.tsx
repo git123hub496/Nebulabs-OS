@@ -31,11 +31,12 @@ import {
   Palette,
   Monitor,
   Camera as CameraIcon,
-  Presentation
+  Presentation,
+  Mail as MailIcon
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
-export type AppId = 'store' | 'files' | 'settings' | 'assistant' | 'google-drive' | 'notes' | 'calc' | 'terminal' | 'browser' | 'trash' | 'news' | 'maps' | 'monitor' | 'calendar' | 'snake' | 'minesweeper' | 'image-viewer' | 'update' | 'virus' | 'paint' | 'info' | 'camera' | 'slides';
+export type AppId = 'store' | 'files' | 'settings' | 'assistant' | 'google-drive' | 'notes' | 'calc' | 'terminal' | 'browser' | 'trash' | 'news' | 'maps' | 'monitor' | 'calendar' | 'snake' | 'minesweeper' | 'image-viewer' | 'update' | 'virus' | 'paint' | 'info' | 'camera' | 'slides' | 'mail';
 export type ThemeMode = 'dark' | 'light';
 export type PowerStatus = 'on' | 'off' | 'booting';
 export type TaskbarPosition = 'top' | 'bottom' | 'left' | 'right';
@@ -50,6 +51,16 @@ export interface LocalUser {
   avatarColor: string;
   avatarUrl?: string;
   password?: string;
+}
+
+export interface Email {
+  id: string;
+  from: string;
+  subject: string;
+  content: string;
+  timestamp: string;
+  isRead: boolean;
+  isSystem?: boolean;
 }
 
 export interface WindowInstance {
@@ -112,6 +123,8 @@ interface OSContextType {
   trash: FileSystemItem[];
   desktopApps: DesktopShortcut[];
   notifications: SystemNotification[];
+  emails: Email[];
+  markEmailRead: (id: string) => void;
   wallpaper: string;
   notes: string;
   theme: ThemeMode;
@@ -226,12 +239,19 @@ export const APP_INFO: Record<AppId, { icon: any; label: string }> = {
   'info': { icon: Info, label: 'System Info' },
   'camera': { icon: CameraIcon, label: 'Nebula Camera' },
   'slides': { icon: Presentation, label: 'Nebula Slides' },
+  'mail': { icon: MailIcon, label: 'NebulaMail' },
 };
 
 const INITIAL_FILES: FileSystemItem[] = [
   { id: '1', name: 'Documents', type: 'folder', parentId: null },
   { id: '2', name: 'Pictures', type: 'folder', parentId: null },
   { id: '3', name: 'README.md', type: 'file', parentId: null },
+  { id: '4', name: 'Nebula Shared Assets', type: 'folder', parentId: null },
+  { id: '5', name: 'Project_Aura_Schematic.png', type: 'file', parentId: '4', size: 1024 * 450 },
+  { id: '6', name: 'System_Logs.txt', type: 'file', parentId: '4', size: 1024 * 12 },
+  { id: '7', name: 'Kernel_Source', type: 'folder', parentId: '4' },
+  { id: '8', name: 'main.sys', type: 'file', parentId: '7', size: 1024 * 890 },
+  { id: '9', name: 'User_Manual.pdf', type: 'file', parentId: '1', size: 1024 * 2100 },
 ];
 
 const INITIAL_DESKTOP: DesktopShortcut[] = [
@@ -242,8 +262,37 @@ const INITIAL_DESKTOP: DesktopShortcut[] = [
   { id: 'trash', label: 'Recycling Bin', icon: Trash2, x: PADDING, y: PADDING + (GRID_Y * 4) },
 ];
 
-const INITIAL_APPS: AppId[] = ['store', 'files', 'settings', 'assistant', 'notes', 'calc', 'terminal', 'browser', 'trash', 'news', 'maps', 'monitor', 'calendar', 'snake', 'minesweeper', 'update', 'paint', 'info', 'camera', 'slides'];
-const INITIAL_PINNED: AppId[] = ['files', 'store', 'assistant', 'browser', 'settings', 'monitor', 'paint', 'camera', 'slides'];
+const MOCK_EMAILS: Email[] = [
+  {
+    id: '1',
+    from: 'Nebulabs Corp',
+    subject: 'Welcome to your NebulaBook 180 Pro',
+    content: 'Dear User,\n\nCongratulations on your new hardware! Your NebulaBook 180 Pro is the latest in quantum-threaded mobile workstations. We have pre-installed Nebula-Core v4.5.2 for maximum performance.\n\nBest regards,\nNebulabs Hardware Division',
+    timestamp: 'Today, 10:00 AM',
+    isRead: false,
+    isSystem: true
+  },
+  {
+    id: '2',
+    from: 'Sarah (Dev Team)',
+    subject: 'Project Aura Updates',
+    content: 'Hey! I\'ve uploaded the latest schematics to the Shared Assets drive. Take a look when you get a chance. The new kernel-level threading is looking sharp.',
+    timestamp: 'Today, 11:45 AM',
+    isRead: false
+  },
+  {
+    id: '3',
+    from: 'System Security',
+    subject: 'Security Protocol Verification',
+    content: 'ALERT: Nebula Defender has completed its initial sweep. Your virtual partition is 100% encrypted and secured against external script execution.',
+    timestamp: 'Yesterday, 4:20 PM',
+    isRead: true,
+    isSystem: true
+  }
+];
+
+const INITIAL_APPS: AppId[] = ['store', 'files', 'settings', 'assistant', 'notes', 'calc', 'terminal', 'browser', 'trash', 'news', 'maps', 'monitor', 'calendar', 'snake', 'minesweeper', 'update', 'paint', 'info', 'camera', 'slides', 'mail'];
+const INITIAL_PINNED: AppId[] = ['files', 'store', 'assistant', 'browser', 'settings', 'mail', 'camera', 'slides'];
 
 const AVATAR_COLORS = ['#9333ea', '#3b82f6', '#e11d48', '#f97316', '#16a34a'];
 const OFFLINE_WIFI = "Public_Guest_No_Internet";
@@ -284,6 +333,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   const [fileSystem, setFileSystem] = useState<FileSystemItem[]>(INITIAL_FILES);
   const [trash, setTrash] = useState<FileSystemItem[]>([]);
   const [notes, setNotesInternal] = useState("");
+  const [emails, setEmails] = useState<Email[]>(MOCK_EMAILS);
 
   const [currentWifi, setCurrentWifiState] = useState("Nebula_Secure_5G");
   const [isWifiConnecting, setIsWifiConnecting] = useState(false);
@@ -291,6 +341,10 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   const [currentDisplayId, setDisplayIdState] = useState('1');
   const [displayLayout, setDisplayLayoutState] = useState<DisplayLayout>({ '1': { right: '2' }, '2': { left: '1' } });
   const [isSecurityEnabled, setSecurityEnabledState] = useState(true);
+
+  const markEmailRead = (id: string) => {
+    setEmails(prev => prev.map(email => email.id === id ? { ...email, isRead: true } : email));
+  };
 
   const addNotification = useCallback((title: string, message: string, type: SystemNotification['type'] = 'system') => {
     const newNotif: SystemNotification = {
@@ -533,6 +587,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     else if (appId === 'paint') { initialWidth = 900; initialHeight = 700; }
     else if (appId === 'camera') { initialWidth = 640; initialHeight = 520; }
     else if (appId === 'slides') { initialWidth = 950; initialHeight = 650; }
+    else if (appId === 'mail') { initialWidth = 900; initialHeight = 600; }
 
     const newId = `${appId}-${Date.now()}`;
     const newWindow: WindowInstance = {
@@ -799,7 +854,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   return (
     <OSContext.Provider value={{
       currentUser, accounts, openWindows, activeWindowId, installedApps, pinnedApps,
-      fileSystem, trash, desktopApps, notifications, wallpaper, notes, theme, accentColor,
+      fileSystem, trash, desktopApps, notifications, emails, markEmailRead, wallpaper, notes, theme, accentColor,
       customAccentHex, cursorColor, isInverted, glassEnabled, powerStatus,
       taskbarPosition, taskbarSize, iconSize, currentWifi, isWifiConnecting,
       isOnline, volume, brightness, isWidgetsOpen, isQuickSettingsOpen, 

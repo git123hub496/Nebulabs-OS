@@ -1,14 +1,16 @@
+
 "use client"
 
 import React from 'react';
 import { useOS, AppId } from '@/context/os-context';
-import { ShoppingBag, Star, Download, CheckCircle2, FileText, Calculator, Terminal, Cloud, MessageSquare, Globe, Map as MapIcon, Activity, Calendar as CalendarIcon, Gamepad2, Bomb, Palette, Info, Camera, Presentation } from 'lucide-react';
+import { ShoppingBag, Star, Download, CheckCircle2, FileText, Calculator, Terminal, Cloud, MessageSquare, Globe, Map as MapIcon, Activity, Calendar as CalendarIcon, Gamepad2, Bomb, Palette, Info, Camera, Presentation, Mail } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 
 const STORE_APPS: { id: AppId; name: string; description: string; category: string; rating: number; icon: any }[] = [
   { id: 'browser', name: 'Nebula Browser', description: 'Fast and secure web browsing.', category: 'Utilities', rating: 4.9, icon: Globe },
+  { id: 'mail', name: 'NebulaMail', description: 'Unified system communication suite.', category: 'Productivity', rating: 4.8, icon: Mail },
   { id: 'camera', name: 'Nebula Camera', description: 'Capture hardware imaging data.', category: 'Creative', rating: 4.8, icon: Camera },
   { id: 'slides', name: 'Nebula Slides', description: 'Craft professional presentations.', category: 'Productivity', rating: 4.9, icon: Presentation },
   { id: 'google-drive', name: 'Google Drive', description: 'Cloud storage and file sync.', category: 'Productivity', rating: 4.8, icon: Cloud },

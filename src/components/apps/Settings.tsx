@@ -102,7 +102,6 @@ export const Settings: React.FC = () => {
       const reader = new FileReader();
       reader.onload = async (event) => {
         const result = event.target?.result as string;
-        // Optimization: Wallpapers scaled to 1920px max width at 0.7 quality
         const optimized = await compressAndResize(result, 1920, 1080, 0.7);
         updateWallpaper(optimized);
       };
@@ -116,7 +115,6 @@ export const Settings: React.FC = () => {
       const reader = new FileReader();
       reader.onload = async (event) => {
         const result = event.target?.result as string;
-        // Optimization: Avatars scaled to 256px max at 0.8 quality to fit in localStorage
         const optimized = await compressAndResize(result, 256, 256, 0.8);
         updateUserAvatar(optimized);
       };
@@ -318,7 +316,7 @@ export const Settings: React.FC = () => {
                   <Button variant="outline" size="sm" onClick={resetDisplayLayout} className="rounded-xl gap-2 border-destructive/20 text-destructive hover:bg-destructive/10">
                     <XCircle size={14} /> Reset All
                   </Button>
-                  <Button size="sm" onClick={addDisplay} className="bg-accent text-primary font-bold rounded-xl gap-2">
+                  <Button size="sm" onClick={addDisplay} className="bg-accent text-primary-foreground font-bold rounded-xl gap-2">
                     <Plus size={16} /> Connect Display
                   </Button>
                 </div>
@@ -451,7 +449,7 @@ export const Settings: React.FC = () => {
                 </div>
                 <Button 
                   size="sm" 
-                  className="h-7 bg-accent text-primary font-bold text-[10px]"
+                  className="h-7 bg-accent text-primary-foreground font-bold text-[10px]"
                   onClick={() => addNotification("Test Alert", "This is a manually triggered system verification alert.", 'system')}
                 >
                   Trigger
@@ -480,7 +478,7 @@ export const Settings: React.FC = () => {
                 </div>
                 <div className="flex flex-col w-full gap-2">
                   <Button 
-                    className="bg-accent text-primary font-bold rounded-xl h-12"
+                    className="bg-accent text-primary-foreground font-bold rounded-xl h-12"
                     onClick={() => openApp('update', 'System Update')}
                   >
                     Check for Updates
@@ -530,7 +528,7 @@ export const Settings: React.FC = () => {
                     />
                     {currentUser?.password && (
                       <div className="absolute -bottom-1 -right-1 w-7 h-7 bg-accent rounded-full border-4 border-background flex items-center justify-center">
-                        <Lock size={12} className="text-primary" />
+                        <Lock size={12} className="text-primary-foreground" />
                       </div>
                     )}
                   </div>
@@ -538,7 +536,7 @@ export const Settings: React.FC = () => {
                   <div className="space-y-1 flex-1">
                     <h3 className="text-2xl font-bold text-foreground">{currentUser?.username || 'Guest User'}</h3>
                     <div className="flex items-center gap-2">
-                      <Badge className="bg-accent text-primary font-bold uppercase text-[9px]">Administrator</Badge>
+                      <Badge className="bg-accent text-primary-foreground font-bold uppercase text-[9px]">Administrator</Badge>
                       <span className="text-xs text-muted-foreground">Local System Account</span>
                     </div>
                     <Button 
@@ -581,7 +579,7 @@ export const Settings: React.FC = () => {
                         />
                       </div>
                       <div className="flex gap-2">
-                        <Button className="bg-accent text-primary font-bold flex-1" onClick={handleUpdatePass}>Update Protection</Button>
+                        <Button className="bg-accent text-primary-foreground font-bold flex-1" onClick={handleUpdatePass}>Update Protection</Button>
                         <Button variant="ghost" className="text-muted-foreground" onClick={() => { setIsChangingPass(false); setNewPassword(""); }}>Cancel</Button>
                       </div>
                     </div>
@@ -648,12 +646,26 @@ export const Settings: React.FC = () => {
                 <span className="text-4xl font-black text-accent tracking-tighter">N</span>
               </div>
               <div className="space-y-2">
-                <h2 className="text-3xl font-black tracking-tight text-foreground">Nebulabs WebOS</h2>
+                <h2 className="text-3xl font-black tracking-tight text-foreground">{currentUser?.username || 'User'}'s NebulaBook 180 Pro</h2>
                 <p className="text-xs text-muted-foreground font-mono uppercase tracking-[0.3em]">Version 1.0.4 Stable-Channel</p>
               </div>
               <div className="flex justify-center gap-4">
                 <Badge variant="secondary" className="bg-foreground/5 text-muted-foreground border-border/50">Kernel: React 19.x</Badge>
                 <Badge variant="secondary" className="bg-foreground/5 text-muted-foreground border-border/50">UI: Tailwind v4</Badge>
+              </div>
+              <div className="max-w-md mx-auto p-6 bg-foreground/5 border border-border/50 rounded-3xl text-left space-y-4">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-muted-foreground uppercase font-bold tracking-widest">Device Name</span>
+                  <span className="text-foreground font-bold">NEBULA-LP-{currentUser?.id.slice(0, 4).toUpperCase()}</span>
+                </div>
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-muted-foreground uppercase font-bold tracking-widest">Product ID</span>
+                  <span className="text-foreground font-bold">180-PRO-2024-X</span>
+                </div>
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-muted-foreground uppercase font-bold tracking-widest">Manufacturer</span>
+                  <span className="text-accent font-black tracking-tight italic">NEBULABS CORP</span>
+                </div>
               </div>
             </section>
           </div>

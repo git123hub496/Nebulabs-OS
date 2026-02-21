@@ -39,7 +39,8 @@ import {
   Presentation,
   Monitor as MonitorIcon,
   Cpu,
-  Zap
+  Zap,
+  Mail
 } from 'lucide-react';
 import { FileExplorer } from '../apps/FileExplorer';
 import { AppStore } from '../apps/AppStore';
@@ -63,6 +64,7 @@ import { VirusPopup } from '../apps/VirusPopup';
 import { Paint } from '../apps/Paint';
 import { Camera } from '../apps/Camera';
 import { PresentationMaker } from '../apps/PresentationMaker';
+import { NebulaMail } from '../apps/NebulaMail';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -90,6 +92,7 @@ const APP_COMPONENTS: Record<AppId, (win: WindowInstance) => React.ReactNode> = 
   'paint': (win) => <Paint />,
   'camera': (win) => <Camera />,
   'slides': (win) => <PresentationMaker />,
+  'mail': (win) => <NebulaMail />,
   'info': (win) => (
     <div className="p-8 space-y-6 bg-[#161d25] h-full text-white/80 overflow-auto">
       <div className="flex items-center gap-4 mb-8">
@@ -273,7 +276,6 @@ export const Desktop: React.FC = () => {
   if (powerStatus === 'off') {
     return (
       <div className="fixed inset-0 bg-[#020202] flex flex-col items-center justify-center gap-12 animate-in fade-in duration-1000 overflow-hidden">
-        {/* Subtle Monitor CRT Effect */}
         <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.02)_0%,transparent_70%)]" />
         
         <div className="relative group">
@@ -308,7 +310,6 @@ export const Desktop: React.FC = () => {
           </div>
         </div>
 
-        {/* Floating No Signal Style Badge */}
         <div className="fixed top-12 right-12 opacity-5 pointer-events-none group-hover:opacity-20 transition-opacity">
           <div className="border border-white p-4 space-y-2">
             <div className="font-mono text-xs font-bold text-white">AUTO-SLEEP: ACTIVE</div>
@@ -398,7 +399,6 @@ export const Desktop: React.FC = () => {
 
       <WidgetsPanel />
       
-      {/* Global OS Search Bar */}
       <GlobalSearch />
 
       {currentDisplayId === '1' && desktopApps.map(shortcut => {
@@ -485,7 +485,7 @@ export const Desktop: React.FC = () => {
             />
           </form>
           <div className="mt-4 flex gap-2 overflow-x-auto pb-2 scrollbar-none">
-            {['paint', 'terminal', 'calc', 'browser', 'camera', 'slides'].map(app => (
+            {['paint', 'terminal', 'calc', 'browser', 'camera', 'slides', 'mail'].map(app => (
               <button 
                 key={app}
                 onClick={() => { setRunQuery(app); }}
