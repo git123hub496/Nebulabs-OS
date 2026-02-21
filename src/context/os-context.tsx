@@ -27,11 +27,13 @@ import {
   Image as ImageIcon,
   RefreshCw,
   Skull,
-  ShieldAlert
+  ShieldAlert,
+  Palette,
+  Monitor
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
-export type AppId = 'store' | 'files' | 'settings' | 'assistant' | 'google-drive' | 'notes' | 'calc' | 'terminal' | 'browser' | 'trash' | 'news' | 'maps' | 'monitor' | 'calendar' | 'snake' | 'minesweeper' | 'image-viewer' | 'update' | 'virus';
+export type AppId = 'store' | 'files' | 'settings' | 'assistant' | 'google-drive' | 'notes' | 'calc' | 'terminal' | 'browser' | 'trash' | 'news' | 'maps' | 'monitor' | 'calendar' | 'snake' | 'minesweeper' | 'image-viewer' | 'update' | 'virus' | 'paint' | 'info';
 export type ThemeMode = 'dark' | 'light';
 export type PowerStatus = 'on' | 'off' | 'booting';
 export type TaskbarPosition = 'top' | 'bottom' | 'left' | 'right';
@@ -127,6 +129,7 @@ interface OSContextType {
   isWidgetsOpen: boolean;
   isQuickSettingsOpen: boolean;
   isStartOpen: boolean;
+  isLocked: boolean;
   systemStats: { cpu: number; ram: number; net: number };
   currentDisplayId: string;
   displayLayout: DisplayLayout;
@@ -134,6 +137,8 @@ interface OSContextType {
   
   login: (userId: string, password?: string) => boolean;
   logout: () => void;
+  lock: () => void;
+  unlock: (password?: string) => boolean;
   createAccount: (username: string, password?: string) => void;
   updateUserPassword: (password: string) => void;
   openApp: (appId: AppId, title: string, params?: any) => void;
@@ -212,6 +217,8 @@ export const APP_INFO: Record<AppId, { icon: any; label: string }> = {
   'image-viewer': { icon: ImageIcon, label: 'Image Viewer' },
   'update': { icon: RefreshCw, label: 'System Update' },
   'virus': { icon: Skull, label: 'CRITICAL_THREAT' },
+  'paint': { icon: Palette, label: 'Nebula Paint' },
+  'info': { icon: Info, label: 'System Info' },
 };
 
 const INITIAL_FILES: FileSystemItem[] = [
@@ -228,8 +235,8 @@ const INITIAL_DESKTOP: DesktopShortcut[] = [
   { id: 'trash', label: 'Recycling Bin', icon: Trash2, x: PADDING, y: PADDING + (GRID_Y * 4) },
 ];
 
-const INITIAL_APPS: AppId[] = ['store', 'files', 'settings', 'assistant', 'notes', 'calc', 'terminal', 'browser', 'trash', 'news', 'maps', 'monitor', 'calendar', 'snake', 'minesweeper', 'update'];
-const INITIAL_PINNED: AppId[] = ['files', 'store', 'assistant', 'browser', 'settings', 'monitor'];
+const INITIAL_APPS: AppId[] = ['store', 'files', 'settings', 'assistant', 'notes', 'calc', 'terminal', 'browser', 'trash', 'news', 'maps', 'monitor', 'calendar', 'snake', 'minesweeper', 'update', 'paint', 'info'];
+const INITIAL_PINNED: AppId[] = ['files', 'store', 'assistant', 'browser', 'settings', 'monitor', 'paint'];
 
 const AVATAR_COLORS = ['#9333ea', '#3b82f6', '#e11d48', '#f97316', '#16a34a'];
 const OFFLINE_WIFI = "Public_Guest_No_Internet";
@@ -240,6 +247,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   const [accounts, setAccounts] = useState<LocalUser[]>([]);
   const [powerStatus, setPowerStatusState] = useState<PowerStatus>('booting');
   const [systemStats] = useState({ cpu: 12, ram: 42, net: 2 });
+  const [isLocked, setIsLocked] = useState(false);
 
   // --- UI SHELL STATE ---
   const [isWidgetsOpen, setIsWidgetsOpenState] = useState(false);
@@ -317,6 +325,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       if (user.password && user.password !== password) return false;
       setCurrentUser(user);
       localStorage.setItem('nebula_current_user_id', userId);
+      setIsLocked(false);
       return true;
     }
     return false;
@@ -327,6 +336,20 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     localStorage.removeItem('nebula_current_user_id');
     setOpenWindows([]);
     setActiveWindowId(null);
+    setIsLocked(false);
+  };
+
+  const lock = () => {
+    if (currentUser) setIsLocked(true);
+  };
+
+  const unlock = (password?: string): boolean => {
+    if (currentUser) {
+      if (currentUser.password && currentUser.password !== password) return false;
+      setIsLocked(false);
+      return true;
+    }
+    return false;
   };
 
   const createAccount = (username: string, password?: string) => {
@@ -380,6 +403,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     else if (appId === 'notes') { initialWidth = 500; initialHeight = 600; }
     else if (appId === 'assistant') { initialWidth = 400; initialHeight = 650; }
     else if (appId === 'virus') { initialWidth = 300; initialHeight = 250; }
+    else if (appId === 'paint') { initialWidth = 900; initialHeight = 700; }
 
     const newId = `${appId}-${Date.now()}`;
     const newWindow: WindowInstance = {
@@ -643,9 +667,9 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       customAccentHex, cursorColor, isInverted, glassEnabled, powerStatus,
       taskbarPosition, taskbarSize, iconSize, currentWifi, isWifiConnecting,
       isOnline, volume, brightness, isWidgetsOpen, isQuickSettingsOpen, 
-      isStartOpen, systemStats,
+      isStartOpen, isLocked, systemStats,
       currentDisplayId, displayLayout, isSecurityEnabled,
-      login, logout, createAccount, updateUserPassword, openApp, closeWindow, minimizeWindow,
+      login, logout, lock, unlock, createAccount, updateUserPassword, openApp, closeWindow, minimizeWindow,
       maximizeWindow, snapWindow, focusWindow, updateWindowPosition, moveWindowToDisplay,
       updateDisplayLayout, resetDisplayLayout, installApp, addNotification, clearNotifications,
       updateWallpaper, setNotes, setTheme, setAccentColor, setCustomAccentHex,

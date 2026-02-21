@@ -1,3 +1,4 @@
+
 "use client"
 
 import React, { useEffect, useRef } from 'react';
@@ -16,6 +17,9 @@ import {
   MessageSquare,
   Globe,
   Map as MapIcon,
+  Lock,
+  Palette,
+  Info
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -26,7 +30,7 @@ interface ContextMenuProps {
 }
 
 export const ContextMenu: React.FC<ContextMenuProps> = ({ x, y, onClose }) => {
-  const { restart, openApp, createFolder, setTaskbarPosition, taskbarPosition, toggleDesktopApp, desktopApps } = useOS();
+  const { restart, openApp, createFolder, setTaskbarPosition, taskbarPosition, toggleDesktopApp, desktopApps, lock } = useOS();
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -51,6 +55,7 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({ x, y, onClose }) => {
     { id: 'assistant', label: 'AI', icon: MessageSquare },
     { id: 'terminal', label: 'Terminal', icon: Terminal },
     { id: 'maps', label: 'Maps', icon: MapIcon },
+    { id: 'paint', label: 'Paint', icon: Palette },
     { id: 'settings', label: 'Settings', icon: Settings },
   ];
 
@@ -115,34 +120,17 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({ x, y, onClose }) => {
         </div>
       </div>
 
-      <div className="relative group/sub">
-        <button 
-          className="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-accent/20 text-xs font-medium text-white/80 hover:text-accent transition-colors group"
-        >
-          <div className="flex items-center gap-3">
-            <Layout size={14} className="text-accent/60 group-hover:text-accent" />
-            <span>Taskbar Position</span>
-          </div>
-          <ChevronRight size={12} className="opacity-40" />
-        </button>
-        
-        <div className="absolute left-full top-0 ml-1 hidden group-hover/sub:flex flex-col glass rounded-xl border border-white/10 shadow-2xl backdrop-blur-3xl p-1.5 w-32 gap-0.5">
-          {['top', 'bottom', 'left', 'right'].map((pos) => (
-            <button 
-              key={pos}
-              onClick={() => handleAction(() => setTaskbarPosition(pos as any))}
-              className={cn(
-                "w-full px-3 py-2 rounded-lg text-[10px] font-bold uppercase tracking-wider text-left transition-colors",
-                taskbarPosition === pos ? "bg-accent/20 text-accent" : "hover:bg-accent/10 text-white/60 hover:text-white"
-              )}
-            >
-              {pos}
-            </button>
-          ))}
-        </div>
-      </div>
-
       <div className="my-1 border-t border-white/5 mx-2" />
+
+      <button 
+        onClick={() => handleAction(lock)}
+        className="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-destructive/20 text-xs font-medium text-white/80 hover:text-destructive transition-colors group"
+      >
+        <div className="flex items-center gap-3">
+          <Lock size={14} className="text-destructive/60 group-hover:text-destructive" />
+          <span>Lock System</span>
+        </div>
+      </button>
 
       <button 
         onClick={() => handleAction(restart)}

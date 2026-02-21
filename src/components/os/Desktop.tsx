@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
@@ -26,7 +27,12 @@ import {
   Gamepad2,
   Bomb,
   RefreshCw,
-  Skull
+  Skull,
+  Command,
+  Search,
+  Lock,
+  Palette,
+  Info
 } from 'lucide-react';
 import { FileExplorer } from '../apps/FileExplorer';
 import { AppStore } from '../apps/AppStore';
@@ -47,8 +53,10 @@ import { Minesweeper } from '../apps/Minesweeper';
 import { ImageViewer } from '../apps/ImageViewer';
 import { SystemUpdate } from '../apps/SystemUpdate';
 import { VirusPopup } from '../apps/VirusPopup';
+import { Paint } from '../apps/Paint';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
 const APP_COMPONENTS: Record<AppId, (win: WindowInstance) => React.ReactNode> = {
   'store': (win) => <AppStore />,
@@ -70,6 +78,35 @@ const APP_COMPONENTS: Record<AppId, (win: WindowInstance) => React.ReactNode> = 
   'image-viewer': (win) => <ImageViewer src={win.params?.src} />,
   'update': (win) => <SystemUpdate />,
   'virus': (win) => <VirusPopup />,
+  'paint': (win) => <Paint />,
+  'info': (win) => (
+    <div className="p-8 space-y-6 bg-[#161d25] h-full text-white/80 overflow-auto">
+      <div className="flex items-center gap-4 mb-8">
+        <div className="w-16 h-16 rounded-3xl bg-accent/20 flex items-center justify-center">
+          <Info size={32} className="text-accent" />
+        </div>
+        <div>
+          <h1 className="text-2xl font-black">Nebula System Info</h1>
+          <p className="text-xs uppercase tracking-widest text-white/40">Kernel Build v4.5.2-STABLE</p>
+        </div>
+      </div>
+      <div className="grid gap-4">
+        {[
+          { label: "OS Platform", value: "Nebulabs WebOS Web Edition" },
+          { label: "Kernel Engine", value: "React 19 + Turbopack" },
+          { label: "Memory Type", value: "64GB Virtual LPDDR5" },
+          { label: "Storage", value: "256GB Cloud Partition" },
+          { label: "Processor", value: "Nebulabs Quantum-X Threaded Core" },
+          { label: "UI Framework", value: "Tailwind v4 Precision Engine" }
+        ].map((spec, i) => (
+          <div key={i} className="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/5">
+            <span className="text-xs font-bold text-white/40 uppercase tracking-widest">{spec.label}</span>
+            <span className="text-sm font-medium text-accent">{spec.value}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  ),
 };
 
 export const Desktop: React.FC = () => {
@@ -79,12 +116,15 @@ export const Desktop: React.FC = () => {
     cursorColor, isInverted, glassEnabled, desktopApps, updateDesktopAppPosition, toggleDesktopApp,
     isWidgetsOpen, setIsWidgetsOpen, isQuickSettingsOpen, setIsQuickSettingsOpen,
     isStartOpen, setIsStartOpen, activeWindowId, closeWindow, minimizeAllWindows,
-    brightness, currentDisplayId, displayLayout, isSecurityEnabled, addNotification
+    brightness, currentDisplayId, displayLayout, isSecurityEnabled, addNotification,
+    isLocked, lock
   } = useOS();
   
   const [bootOpacity, setBootOpacity] = useState(1);
   const [shouldRenderBoot, setShouldRenderBoot] = useState(true);
   const [contextMenu, setContextMenu] = useState<{ x: number, y: number } | null>(null);
+  const [runQuery, setRunQuery] = useState("");
+  const [isRunOpen, setIsRunOpen] = useState(false);
   
   const [draggingAppId, setDraggingAppId] = useState<AppId | null>(null);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
@@ -104,22 +144,6 @@ export const Desktop: React.FC = () => {
       setBootOpacity(0);
     }
   }, [powerStatus]);
-
-  // Virus Spawning Logic
-  useEffect(() => {
-    if (powerStatus !== 'on' || isSecurityEnabled || currentDisplayId !== '1') return;
-
-    const spawnVirus = () => {
-      // 30% chance to spawn every interval when security is off
-      if (Math.random() < 0.3) {
-        openApp('virus', 'CRITICAL_THREAT');
-        addNotification("MALWARE_INCURSION", "Unauthorized script execution detected. Enable Nebula Defender immediately.", 'security');
-      }
-    };
-
-    const interval = setInterval(spawnVirus, 30000); // Check every 30 seconds
-    return () => clearInterval(interval);
-  }, [powerStatus, isSecurityEnabled, currentDisplayId, openApp, addNotification]);
 
   // Global Keyboard Shortcuts
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
@@ -161,6 +185,14 @@ export const Desktop: React.FC = () => {
           e.preventDefault();
           if (activeWindowId) closeWindow(activeWindowId);
           break;
+        case 'l':
+          e.preventDefault();
+          lock();
+          break;
+        case 'r':
+          e.preventDefault();
+          setIsRunOpen(true);
+          break;
         case 'q': 
           e.preventDefault();
           setIsQuickSettingsOpen(!isQuickSettingsOpen);
@@ -174,9 +206,10 @@ export const Desktop: React.FC = () => {
       setIsStartOpen(false);
       setIsWidgetsOpen(false);
       setIsQuickSettingsOpen(false);
+      setIsRunOpen(false);
       setContextMenu(null);
     }
-  }, [powerStatus, currentUser, isStartOpen, isWidgetsOpen, isQuickSettingsOpen, activeWindowId, openApp, setIsStartOpen, setIsWidgetsOpen, setIsQuickSettingsOpen, closeWindow, minimizeAllWindows]);
+  }, [powerStatus, currentUser, isStartOpen, isWidgetsOpen, isQuickSettingsOpen, activeWindowId, openApp, setIsStartOpen, setIsWidgetsOpen, setIsQuickSettingsOpen, closeWindow, minimizeAllWindows, lock]);
 
   useEffect(() => {
     window.addEventListener('keydown', handleKeyDown);
@@ -186,6 +219,15 @@ export const Desktop: React.FC = () => {
   const handleContextMenu = (e: React.MouseEvent) => {
     e.preventDefault();
     setContextMenu({ x: e.clientX, y: e.clientY });
+  };
+
+  const handleRunSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (runQuery.trim()) {
+      openApp(runQuery.trim().toLowerCase() as any, runQuery.trim().toUpperCase());
+      setRunQuery("");
+      setIsRunOpen(false);
+    }
   };
 
   const handleMouseDown = (e: React.MouseEvent, appId: AppId) => {
@@ -234,7 +276,7 @@ export const Desktop: React.FC = () => {
     );
   }
 
-  if (powerStatus === 'on' && !currentUser && !shouldRenderBoot) {
+  if ((powerStatus === 'on' && !currentUser && !shouldRenderBoot) || isLocked) {
     return <LoginScreen />;
   }
 
@@ -261,7 +303,6 @@ export const Desktop: React.FC = () => {
       hex = accentHexes[accentColor] || accentHexes['default'];
     }
 
-    // Standard pointer path encoded with the dynamic hex color
     const svg = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
       <path d="M 4 3 L 4 21 L 8.5 16.5 L 11.5 23 L 14.5 22 L 11.5 15.5 L 18 15.5 L 4 3 Z" fill="${hex}" stroke="white" stroke-width="0.8" stroke-linejoin="round"/>
     </svg>`;
@@ -297,21 +338,6 @@ export const Desktop: React.FC = () => {
 
   const currentScale = iconSize / 100;
 
-  const displayWindows = openWindows.filter(win => {
-    if ((win.displayId || '1') === currentDisplayId) return true;
-    const layout = displayLayout[currentDisplayId];
-    if (!layout) return false;
-    const screenWidth = typeof window !== 'undefined' ? window.innerWidth : 1920;
-    const screenHeight = typeof window !== 'undefined' ? window.innerHeight : 1080;
-    const winWidth = win.initialWidth || 800;
-    const winHeight = win.initialHeight || 600;
-    if (layout.left === win.displayId && win.x + winWidth > screenWidth) return true;
-    if (layout.right === win.displayId && win.x < 0) return true;
-    if (layout.top === win.displayId && win.y + winHeight > screenHeight) return true;
-    if (layout.bottom === win.displayId && win.y < 0) return true;
-    return false;
-  });
-
   return (
     <div 
       ref={desktopRef}
@@ -341,16 +367,12 @@ export const Desktop: React.FC = () => {
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
     >
-      {!isSecurityEnabled && (
-        <div className="absolute inset-0 pointer-events-none z-[9996] opacity-5 bg-red-500 animate-pulse mix-blend-overlay" />
-      )}
-
       <div 
         className="absolute inset-0 bg-black pointer-events-none z-[10000] transition-opacity duration-300" 
         style={{ opacity: 1 - (brightness / 100) }}
       />
 
-      {(isWidgetsOpen || isQuickSettingsOpen || isStartOpen) && (
+      {(isWidgetsOpen || isQuickSettingsOpen || isStartOpen || isRunOpen) && (
         <div 
           className="absolute inset-0 bg-black/20 backdrop-blur-sm z-[9997] animate-in fade-in duration-300" 
           onClick={(e) => {
@@ -358,6 +380,7 @@ export const Desktop: React.FC = () => {
             setIsWidgetsOpen(false);
             setIsQuickSettingsOpen(false);
             setIsStartOpen(false);
+            setIsRunOpen(false);
           }}
         />
       )}
@@ -413,7 +436,7 @@ export const Desktop: React.FC = () => {
         );
       })}
 
-      {displayWindows.map(window => (
+      {openWindows.filter(w => (w.displayId || '1') === currentDisplayId).map(window => (
         <Window key={window.id} window={window}>
           {APP_COMPONENTS[window.appId](window)}
         </Window>
@@ -427,6 +450,38 @@ export const Desktop: React.FC = () => {
           y={contextMenu.y} 
           onClose={() => setContextMenu(null)} 
         />
+      )}
+
+      {isRunOpen && (
+        <div className="fixed top-1/4 left-1/2 -translate-x-1/2 z-[10001] w-[400px] glass p-6 rounded-3xl border border-white/10 shadow-2xl animate-in zoom-in-95 slide-in-from-top-4">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-8 h-8 rounded-lg bg-accent/20 flex items-center justify-center">
+              <Command size={16} className="text-accent" />
+            </div>
+            <h2 className="text-sm font-bold uppercase tracking-widest text-white/60">Run Intelligence</h2>
+          </div>
+          <form onSubmit={handleRunSubmit} className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-white/20" size={16} />
+            <Input 
+              autoFocus
+              value={runQuery}
+              onChange={(e) => setRunQuery(e.target.value)}
+              placeholder="Enter application ID (e.g. paint, terminal)"
+              className="pl-10 h-12 bg-black/20 border-white/10 text-white rounded-xl focus-visible:ring-accent"
+            />
+          </form>
+          <div className="mt-4 flex gap-2 overflow-x-auto pb-2 scrollbar-none">
+            {['paint', 'terminal', 'calc', 'browser'].map(app => (
+              <button 
+                key={app}
+                onClick={() => { setRunQuery(app); }}
+                className="px-3 py-1.5 rounded-lg bg-white/5 border border-white/5 text-[9px] font-bold uppercase tracking-wider text-white/40 hover:bg-accent/10 hover:text-accent transition-all"
+              >
+                {app}
+              </button>
+            ))}
+          </div>
+        </div>
       )}
 
       {shouldRenderBoot && (

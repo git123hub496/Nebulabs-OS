@@ -3,7 +3,7 @@
 
 import React from 'react';
 import { useOS, AppId } from '@/context/os-context';
-import { ShoppingBag, Star, Download, CheckCircle2, FileText, Calculator, Terminal, Cloud, MessageSquare, Globe, Map as MapIcon, Activity, Calendar as CalendarIcon, Gamepad2, Bomb } from 'lucide-react';
+import { ShoppingBag, Star, Download, CheckCircle2, FileText, Calculator, Terminal, Cloud, MessageSquare, Globe, Map as MapIcon, Activity, Calendar as CalendarIcon, Gamepad2, Bomb, Palette, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
@@ -12,11 +12,13 @@ const STORE_APPS: { id: AppId; name: string; description: string; category: stri
   { id: 'browser', name: 'Nebula Browser', description: 'Fast and secure web browsing.', category: 'Utilities', rating: 4.9, icon: Globe },
   { id: 'google-drive', name: 'Google Drive', description: 'Cloud storage and file sync.', category: 'Productivity', rating: 4.8, icon: Cloud },
   { id: 'notes', name: 'Nebula Notes', description: 'Lightweight text editor.', category: 'Productivity', rating: 4.6, icon: FileText },
+  { id: 'paint', name: 'Nebula Paint', description: 'Advanced creative canvas suite.', category: 'Creative', rating: 4.7, icon: Palette },
   { id: 'calc', name: 'Calculator', description: 'Standard system calculator.', category: 'Utilities', rating: 4.4, icon: Calculator },
   { id: 'terminal', name: 'Terminal', icon: Terminal, description: 'Direct access to system shell.', category: 'Utilities', rating: 4.9 },
   { id: 'assistant', name: 'Nebula AI', description: 'Smart assistant for your OS.', category: 'AI', rating: 5.0, icon: MessageSquare },
   { id: 'maps', name: 'Nebula Maps', description: 'World navigation and intelligence.', category: 'Navigation', rating: 4.7, icon: MapIcon },
   { id: 'monitor', name: 'System Monitor', description: 'Real-time telemetry and stats.', category: 'System', rating: 4.8, icon: Activity },
+  { id: 'info', name: 'System Info', description: 'View kernel and hardware specs.', category: 'System', rating: 4.5, icon: Info },
   { id: 'calendar', name: 'Calendar', description: 'Unified OS scheduling.', category: 'Productivity', rating: 4.6, icon: CalendarIcon },
   { id: 'snake', name: 'Nebula Snake', description: 'Classic arcade survival.', category: 'Entertainment', rating: 4.9, icon: Gamepad2 },
   { id: 'minesweeper', name: 'Minesweeper', description: 'Strategic mine disposal.', category: 'Entertainment', rating: 4.5, icon: Bomb },
