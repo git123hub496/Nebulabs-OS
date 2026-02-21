@@ -416,17 +416,63 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [currentDisplayId, playSound]);
 
+  // Communication Simulation Loop
   useEffect(() => {
-    if (!currentUser || powerStatus !== 'on') return;
+    if (!currentUser || powerStatus !== 'on' || isLocked || !isOnline) return;
 
     const interval = setInterval(() => {
-      if (currentUser.isSchoolAccount && Math.random() > 0.95) {
-        addNotification("District Update", "Academic filters updated by NHU-7 Admin.", 'security');
+      if (Math.random() > 0.95) {
+        // Occasional ambient communication
+        const type = Math.random() > 0.5 ? 'chat' : 'email';
+        
+        if (type === 'chat') {
+          const contacts = currentUser.isSchoolAccount 
+            ? ['Mr. Henderson', 'Ms. Garcia', 'IT Desk'] 
+            : (currentUser.isWorkAccount ? ['Sarah', 'Admin', 'HR'] : ['Mom', 'Best Friend', 'Pizza Planet']);
+          
+          const sender = contacts[Math.floor(Math.random() * contacts.length)];
+          const messages = [
+            "Just checking in on the latest progress.",
+            "Are we still on for the sync later?",
+            "Don't forget to review the documents I sent.",
+            "Hope your day is going well!",
+            "System update scheduled for tonight."
+          ];
+          
+          const botMsg: ChatMessage = {
+            id: Math.random().toString(36).substr(2, 9),
+            sender,
+            recipient: currentUser.username,
+            text: messages[Math.floor(Math.random() * messages.length)],
+            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            isBot: true
+          };
+          setChatMessages(prev => [...prev, botMsg]);
+          if (!isChatOpen) {
+            addNotification(`Chat: ${sender}`, botMsg.text.slice(0, 30) + '...', 'app');
+          }
+        } else {
+          // Email
+          const subjects = ["Update required", "Weekly Digest", "New document shared", "System Alert", "Invitation"];
+          const bodies = ["Please review the attached file.", "Your weekly stats are ready.", "Check out the new feature release.", "Action required on your account."];
+          const newEmail: Email = {
+            id: Math.random().toString(36).substr(2, 9),
+            from: "Nebula Core",
+            to: currentUser.username,
+            subject: subjects[Math.floor(Math.random() * subjects.length)],
+            content: bodies[Math.floor(Math.random() * bodies.length)],
+            timestamp: 'Just now',
+            isRead: false,
+            folder: 'inbox'
+          };
+          setEmails(prev => [newEmail, ...prev]);
+          addNotification("New Email", newEmail.subject, 'app');
+        }
       }
-    }, 60000);
+    }, 45000); // Check every 45 seconds for simulated life
 
     return () => clearInterval(interval);
-  }, [currentUser, powerStatus, addNotification]);
+  }, [currentUser, powerStatus, isLocked, isOnline, isChatOpen, addNotification]);
 
   const markEmailRead = (id: string) => {
     setEmails(prev => prev.map(email => email.id === id ? { ...email, isRead: true } : email));

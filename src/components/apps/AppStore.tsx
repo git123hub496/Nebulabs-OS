@@ -1,4 +1,3 @@
-
 "use client"
 
 import React from 'react';
@@ -32,59 +31,65 @@ export const AppStore: React.FC = () => {
 
   return (
     <div className="flex flex-col h-full bg-[#161d25]">
-      <div className="p-8 bg-gradient-to-br from-accent/20 to-primary/40 shrink-0">
+      <div className="p-8 bg-gradient-to-br from-accent/20 to-primary/40 shrink-0 border-b border-white/5">
         <div className="flex items-center gap-4 mb-2">
-          <ShoppingBag className="text-accent" size={32} />
-          <h1 className="text-3xl font-bold tracking-tight text-white">Nebula App Store</h1>
+          <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center border border-white/10">
+            <ShoppingBag className="text-accent" size={32} />
+          </div>
+          <h1 className="text-3xl font-black tracking-tight text-white">Nebula App Store</h1>
         </div>
-        <p className="text-white/60 max-w-md">Discover and install applications to personalize your Nebulabs WebOS experience.</p>
+        <p className="text-white/80 max-w-md font-medium text-sm">Discover and install applications to personalize your Nebulabs WebOS experience.</p>
       </div>
 
       <div className="flex-1 p-8 overflow-auto">
-        <h2 className="text-xl font-semibold mb-6 text-white">Featured Apps</h2>
+        <h2 className="text-xl font-bold mb-6 text-white tracking-tight">Featured Applications</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {STORE_APPS.map(app => (
-            <div key={app.id} className="bg-white/5 border border-white/10 rounded-2xl p-6 flex flex-col gap-4 hover:border-accent/40 transition-colors">
+            <div key={app.id} className="bg-white/5 border border-white/10 rounded-2xl p-6 flex flex-col gap-4 hover:border-accent/40 transition-all hover:bg-white/[0.07] group">
               <div className="flex justify-between items-start">
-                <div className="w-14 h-14 bg-accent/20 rounded-xl flex items-center justify-center">
+                <div className="w-14 h-14 bg-accent/20 rounded-xl flex items-center justify-center border border-accent/20 group-hover:scale-110 transition-transform">
                   <app.icon size={28} className="text-accent" />
                 </div>
-                <Badge variant="secondary" className="bg-white/10 text-white/60 border-none">
+                <Badge variant="secondary" className="bg-white/10 text-white/80 border-none font-bold uppercase text-[9px] tracking-widest">
                   {app.category}
                 </Badge>
               </div>
               
               <div>
-                <h3 className="text-lg font-bold text-white">{app.name}</h3>
-                <p className="text-sm text-white/50 line-clamp-2">{app.description}</p>
+                <h3 className="text-lg font-black text-white leading-none mb-2">{app.name}</h3>
+                <p className="text-sm text-white/60 line-clamp-2 leading-relaxed font-medium">{app.description}</p>
               </div>
 
               <div className="flex items-center gap-1">
                 {[...Array(5)].map((_, i) => (
                   <Star key={i} size={14} className={cn(i < Math.floor(app.rating) ? "text-accent fill-accent" : "text-white/20")} />
                 ))}
-                <span className="text-xs text-white/40 ml-2">{app.rating}</span>
+                <span className="text-xs text-white/60 ml-2 font-bold">{app.rating}</span>
               </div>
 
               <div className="mt-auto pt-4 border-t border-white/5 flex items-center justify-between">
                 {installedApps.includes(app.id) ? (
-                  <div className="flex items-center gap-2 text-accent text-sm font-medium">
+                  <div className="flex items-center gap-2 text-accent text-sm font-black uppercase tracking-widest">
                     <CheckCircle2 size={16} />
                     <span>Installed</span>
                   </div>
                 ) : (
                   <Button 
-                    className="w-full bg-accent text-primary-foreground hover:bg-accent/80 font-bold"
+                    className="w-full bg-accent text-primary-foreground hover:bg-accent/80 font-black uppercase tracking-[0.1em] rounded-xl"
                     onClick={() => installApp(app.id)}
                   >
                     <Download size={16} className="mr-2" />
-                    Install
+                    Get App
                   </Button>
                 )}
               </div>
             </div>
           ))}
         </div>
+      </div>
+      
+      <div className="p-4 bg-black/20 border-t border-white/5 text-center text-[10px] text-white/40 font-bold uppercase tracking-widest">
+        Nebulabs Cloud Distribution Platform • © 2026
       </div>
     </div>
   );

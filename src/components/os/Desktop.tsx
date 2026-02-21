@@ -95,14 +95,14 @@ const APP_COMPONENTS: Record<AppId, (win: WindowInstance) => React.ReactNode> = 
   'slides': (win) => <PresentationMaker />,
   'mail': (win) => <NebulaMail />,
   'info': (win) => (
-    <div className="p-8 space-y-6 bg-[#161d25] h-full text-white/80 overflow-auto">
+    <div className="p-8 space-y-6 bg-[#161d25] h-full text-white/90 overflow-auto">
       <div className="flex items-center gap-4 mb-8">
-        <div className="w-16 h-16 rounded-3xl bg-accent/20 flex items-center justify-center">
+        <div className="w-16 h-16 rounded-3xl bg-accent/20 flex items-center justify-center border border-accent/20">
           <Info size={32} className="text-accent" />
         </div>
         <div>
           <h1 className="text-2xl font-black">Nebula System Info</h1>
-          <p className="text-xs uppercase tracking-widest text-white/40">Kernel Build v4.5.2-STABLE</p>
+          <p className="text-xs uppercase tracking-widest text-white/60 font-bold">Kernel Build v4.5.2-STABLE • 2026</p>
         </div>
       </div>
       <div className="grid gap-4">
@@ -114,9 +114,9 @@ const APP_COMPONENTS: Record<AppId, (win: WindowInstance) => React.ReactNode> = 
           { label: "Processor", value: "Nebulabs Quantum-X Threaded Core" },
           { label: "UI Framework", value: "Tailwind v4 Precision Engine" }
         ].map((spec, i) => (
-          <div key={i} className="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/5">
-            <span className="text-xs font-bold text-white/40 uppercase tracking-widest">{spec.label}</span>
-            <span className="text-sm font-medium text-accent">{spec.value}</span>
+          <div key={i} className="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/10 hover:border-accent/40 transition-colors group">
+            <span className="text-xs font-bold text-white/60 uppercase tracking-widest">{spec.label}</span>
+            <span className="text-sm font-bold text-accent group-hover:text-white transition-colors">{spec.value}</span>
           </div>
         ))}
       </div>
@@ -290,7 +290,7 @@ export const Desktop: React.FC = () => {
         <Button 
           variant="outline" 
           size="icon" 
-          className="w-24 h-24 rounded-full border-white/5 bg-white/5 hover:bg-white/10 hover:border-accent hover:text-accent transition-all duration-500 group relative z-10 shadow-2xl"
+          className="w-24 h-24 rounded-full border-white/10 bg-white/5 hover:bg-white/10 hover:border-accent hover:text-accent transition-all duration-500 group relative z-10 shadow-2xl"
           onClick={powerOn}
         >
           <Power size={40} className="group-hover:scale-110 transition-transform duration-500 group-active:scale-90" />
@@ -366,7 +366,7 @@ export const Desktop: React.FC = () => {
 
       {(isWidgetsOpen || isQuickSettingsOpen || isStartOpen || isChatOpen || isRunOpen) && (
         <div 
-          className="absolute inset-0 bg-black/20 backdrop-blur-sm z-[9997] animate-in fade-in duration-300" 
+          className="absolute inset-0 bg-black/30 backdrop-blur-md z-[9997] animate-in fade-in duration-300" 
           onClick={(e) => {
             e.stopPropagation();
             setIsWidgetsOpen(false);
@@ -429,7 +429,7 @@ export const Desktop: React.FC = () => {
                 </button>
               )}
             </div>
-            <span className="text-white text-[11px] font-medium drop-shadow-md text-center line-clamp-2 px-1">
+            <span className="text-white text-[11px] font-bold drop-shadow-md text-center line-clamp-2 px-1">
               {shortcut.label}
             </span>
           </div>
@@ -458,16 +458,16 @@ export const Desktop: React.FC = () => {
             <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center", isSchool ? "bg-blue-500/20" : "bg-accent/20")}>
               <Command size={16} className={isSchool ? "text-blue-400" : "text-accent"} />
             </div>
-            <h2 className="text-sm font-bold uppercase tracking-widest text-white/60">Run Intelligence</h2>
+            <h2 className="text-sm font-bold uppercase tracking-widest text-white/80">Run Intelligence</h2>
           </div>
           <form onSubmit={handleRunSubmit} className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-white/20" size={16} />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40" size={16} />
             <Input 
               autoFocus
               value={runQuery}
               onChange={(e) => setRunQuery(e.target.value)}
               placeholder="Enter application ID"
-              className="pl-10 h-12 bg-black/20 border-white/10 text-white rounded-xl"
+              className="pl-10 h-12 bg-black/40 border-white/10 text-white rounded-xl focus-visible:ring-accent"
             />
           </form>
         </div>
@@ -478,16 +478,17 @@ export const Desktop: React.FC = () => {
           className="fixed inset-0 bg-[#0a0f14] z-[20000] flex flex-col items-center justify-center transition-opacity duration-1000 pointer-events-none"
           style={{ opacity: bootOpacity }}
         >
-          <div className="w-24 h-24 bg-accent/20 rounded-3xl flex items-center justify-center mb-8 animate-pulse">
-            <div className="w-12 h-12 bg-accent rounded-full" />
+          <div className="w-24 h-24 bg-accent/20 rounded-3xl flex items-center justify-center mb-8 animate-pulse border border-accent/20">
+            <div className="w-12 h-12 bg-accent rounded-full shadow-[0_0_20px_rgba(var(--accent),0.5)]" />
           </div>
-          <h1 className="text-2xl font-bold tracking-widest text-white/40 uppercase">Nebula WebOS</h1>
+          <h1 className="text-2xl font-black tracking-[0.3em] text-white/60 uppercase">Nebula WebOS</h1>
           {!biosSettings.secureBoot && (
-            <p className="text-[10px] text-red-500 font-bold uppercase tracking-[0.3em] animate-pulse">Warning: Secure Boot Disabled</p>
+            <p className="text-[10px] text-red-500 font-bold uppercase tracking-[0.3em] animate-pulse mt-4">Warning: Secure Boot Disabled</p>
           )}
           <div className="mt-8 w-48 h-1 bg-white/10 rounded-full overflow-hidden">
             <div className="h-full bg-accent animate-[loading_2s_ease-in-out_infinite]" />
           </div>
+          <p className="fixed bottom-12 text-[10px] text-white/20 font-bold tracking-widest uppercase">Proprietary Kernel v4.5.2 • © 2026</p>
         </div>
       )}
     </div>

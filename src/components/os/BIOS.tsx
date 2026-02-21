@@ -1,4 +1,3 @@
-
 "use client"
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -97,13 +96,13 @@ export const BIOS: React.FC<{ onClose: () => void }> = ({ onClose }) => {
       case 'Main':
         return (
           <div className="space-y-4 animate-in fade-in duration-200">
-            <div className="grid grid-cols-2 gap-4 text-sm">
+            <div className="grid grid-cols-2 gap-4 text-sm font-bold">
               <span className="text-[#aaa]">System Time:</span>
               <span className="text-white">[{new Date().toLocaleTimeString()}]</span>
               <span className="text-[#aaa]">System Date:</span>
               <span className="text-white">[{new Date().toLocaleDateString()}]</span>
             </div>
-            <div className="border-t border-white/20 pt-4 space-y-2 text-xs">
+            <div className="border-t border-white/20 pt-4 space-y-2 text-xs font-bold">
               <div className="flex justify-between">
                 <span>BIOS Version:</span>
                 <span className="text-white">Nebulabs-v4.5.2-PRO</span>
@@ -125,7 +124,7 @@ export const BIOS: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                 <span className="text-white">L3: 32 MB / L2: 8 MB</span>
               </div>
             </div>
-            <div className="mt-8 p-4 border border-white/10 bg-white/5 rounded italic text-[10px] text-[#888]">
+            <div className="mt-8 p-4 border border-white/10 bg-white/5 rounded italic text-[10px] text-[#ccc] leading-relaxed">
               "Nebulabs firmware provides the foundation for your virtual workspace environment. 
               Always ensure secure boot is enabled for kernel integrity."
             </div>
@@ -143,7 +142,7 @@ export const BIOS: React.FC<{ onClose: () => void }> = ({ onClose }) => {
               <div 
                 key={i} 
                 className={cn(
-                  "p-1 px-2 transition-colors flex justify-between",
+                  "p-1 px-2 transition-colors flex justify-between font-bold",
                   selectedItem === i ? "bg-[#aaaaaa] text-[#0000aa]" : "text-white"
                 )}
               >
@@ -165,7 +164,7 @@ export const BIOS: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                 <div 
                   key={i} 
                   className={cn(
-                    "p-1 px-2 transition-colors flex justify-between",
+                    "p-1 px-2 transition-colors flex justify-between font-bold",
                     selectedItem === i ? "bg-[#aaaaaa] text-[#0000aa]" : "text-white"
                   )}
                 >
@@ -174,7 +173,7 @@ export const BIOS: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                 </div>
               ))}
             </div>
-            <div className="border-t border-white/20 pt-4 text-[10px] text-[#aaa]">
+            <div className="border-t border-white/20 pt-4 text-[10px] text-[#aaa] font-bold">
               <div className="flex justify-between mb-1">
                 <span>TPM 2.0 Module Status:</span>
                 <span className="text-green-400">ACTIVE & READY</span>
@@ -191,8 +190,8 @@ export const BIOS: React.FC<{ onClose: () => void }> = ({ onClose }) => {
       case 'Boot':
         return (
           <div className="space-y-2">
-            <div className="text-[#aaa] mb-2 uppercase text-[10px] tracking-widest font-bold">Boot Priority Order (Press +/- to move):</div>
-            <div className="space-y-1">
+            <div className="text-[#aaa] mb-2 uppercase text-[10px] tracking-widest font-black">Boot Priority Order (Press +/- to move):</div>
+            <div className="space-y-1 font-bold">
               {bootOrder.map((device, i) => (
                 <div 
                   key={i} 
@@ -206,7 +205,7 @@ export const BIOS: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                 </div>
               ))}
             </div>
-            <div className="mt-6 p-3 border border-dashed border-white/20 text-[10px] italic text-[#888] leading-relaxed">
+            <div className="mt-6 p-3 border border-dashed border-white/20 text-[10px] italic text-[#ccc] leading-relaxed">
               Note: Disabling the Network Stack will prevent the OS from initializing WiFi and all communication apps.
             </div>
           </div>
@@ -223,9 +222,9 @@ export const BIOS: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                 key={i}
                 onClick={() => setSelectedItem(i)}
                 className={cn(
-                  "block w-full p-2 border transition-all font-bold uppercase",
+                  "block w-full p-2 border transition-all font-black uppercase",
                   selectedItem === i 
-                    ? "bg-[#aaaaaa] text-[#0000aa] border-[#ffffff] scale-105" 
+                    ? "bg-[#aaaaaa] text-[#0000aa] border-[#ffffff] scale-105 shadow-[4px_4px_0px_#000]" 
                     : "bg-transparent text-white border-white/20 hover:bg-white/5"
                 )}
               >
@@ -244,7 +243,7 @@ export const BIOS: React.FC<{ onClose: () => void }> = ({ onClose }) => {
         <div className="w-64 h-1 bg-white/10 rounded-full overflow-hidden">
           <div className="h-full bg-white animate-[loading_1.5s_ease-in-out_infinite]" />
         </div>
-        <p className="text-[10px] text-white/40 uppercase">Updating Nebulabs Firmware Parameters</p>
+        <p className="text-[10px] text-white/60 uppercase font-black tracking-[0.3em]">Updating Nebulabs Firmware Parameters</p>
       </div>
     );
   }
@@ -256,7 +255,7 @@ export const BIOS: React.FC<{ onClose: () => void }> = ({ onClose }) => {
       
       {/* BIOS Header */}
       <div className="border-4 border-[#aaaaaa] p-1 mb-4 shadow-[4px_4px_0px_#000]">
-        <div className="bg-[#aaaaaa] text-[#0000aa] px-4 py-1 flex justify-between items-center font-bold">
+        <div className="bg-[#aaaaaa] text-[#0000aa] px-4 py-1 flex justify-between items-center font-black">
           <span>Nebulabs Setup Utility - Version 4.5.2 (C) 2026 Nebulabs Corp.</span>
           <span className="text-[10px] animate-pulse">FIRMWARE SETUP</span>
         </div>
@@ -269,7 +268,7 @@ export const BIOS: React.FC<{ onClose: () => void }> = ({ onClose }) => {
             key={sec}
             onClick={() => { setActiveSection(sec as BIOSSection); setSelectedItem(0); }}
             className={cn(
-              "px-6 py-1 transition-all border-t-2 border-x-2 text-xs font-bold",
+              "px-6 py-1 transition-all border-t-2 border-x-2 text-xs font-black uppercase",
               activeSection === sec 
                 ? "bg-[#aaaaaa] text-[#0000aa] border-[#ffffff]" 
                 : "bg-transparent text-[#aaaaaa] border-transparent hover:text-white"
@@ -288,16 +287,16 @@ export const BIOS: React.FC<{ onClose: () => void }> = ({ onClose }) => {
         </div>
 
         {/* Right Info Sidebar */}
-        <div className="w-80 p-6 bg-[#000088] text-[10px]">
-          <div className="text-white font-bold mb-4 uppercase tracking-tighter border-b border-white/20 pb-2">Item Specific Help</div>
-          <div className="leading-relaxed opacity-80 h-40 overflow-hidden">
+        <div className="w-80 p-6 bg-[#000088] text-[10px] font-bold">
+          <div className="text-white font-black mb-4 uppercase tracking-widest border-b border-white/20 pb-2">Item Specific Help</div>
+          <div className="leading-relaxed opacity-90 h-40 overflow-hidden text-[#ccc]">
             {activeSection === 'Main' && "Displays general system information including the current Nebulabs Firmware version and processor specifications."}
             {activeSection === 'Advanced' && "Configure specialized hardware parameters. Warning: Improper settings may lead to virtual hardware instability."}
             {activeSection === 'Security' && "Manage system access and boot security. Enabling Secure Boot prevents unauthorized code execution."}
             {activeSection === 'Boot' && "Specify the device search order. The device at the top of the list will be checked for a bootable OS first."}
             {activeSection === 'Exit' && "Commit settings to the Nebulabs Virtual CMOS memory and restart the system."}
           </div>
-          <div className="mt-auto space-y-1 opacity-60 border-t border-white/20 pt-4">
+          <div className="mt-auto space-y-1 opacity-80 border-t border-white/20 pt-4 text-white">
             <div className="flex justify-between"><span>↑↓</span> <span>Select Item</span></div>
             <div className="flex justify-between"><span>←→</span> <span>Select Menu</span></div>
             <div className="flex justify-between"><span>Enter</span> <span>Execute Action</span></div>
@@ -312,9 +311,9 @@ export const BIOS: React.FC<{ onClose: () => void }> = ({ onClose }) => {
       <div className="mt-8 flex items-end justify-between">
         <div className="space-y-1">
           <div className="text-4xl font-black italic tracking-tighter text-white drop-shadow-[4px_4px_0px_#000]">NEBULABS</div>
-          <div className="text-[10px] uppercase font-bold opacity-40">Proprietary Virtual BIOS Architecture</div>
+          <div className="text-[10px] uppercase font-black opacity-60 tracking-[0.3em]">Proprietary Virtual BIOS Architecture</div>
         </div>
-        <div className="text-right text-[10px] opacity-40 font-mono">
+        <div className="text-right text-[10px] opacity-60 font-black tracking-widest uppercase">
           <div>Display: {typeof window !== 'undefined' ? `${window.innerWidth}x${window.innerHeight}` : '1920x1080'}</div>
           <div>VRAM: {systemStats.ram * 512} KB Buffer</div>
           <div>CPU State: {settings.cpuTurbo ? 'P-STATE_MAX' : 'P-STATE_BASE'}</div>
