@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
@@ -364,17 +363,6 @@ export const Desktop: React.FC = () => {
       )}
 
       <WidgetsPanel />
-
-      <div className="absolute top-4 right-4 z-[9999] pointer-events-none">
-        <div className="bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/10 flex items-center gap-2">
-          {isSecurityEnabled ? (
-            <Activity size={12} className="text-accent" />
-          ) : (
-            <Skull size={12} className="text-destructive animate-bounce" />
-          )}
-          <span className="text-[10px] font-black uppercase tracking-widest text-white/80">Display {currentDisplayId}</span>
-        </div>
-      </div>
 
       {currentDisplayId === '1' && desktopApps.map(shortcut => {
         const Icon = shortcut.icon;
