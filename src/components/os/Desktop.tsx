@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
@@ -126,44 +125,43 @@ export const Desktop: React.FC = () => {
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     if (powerStatus !== 'on' || !currentUser) return;
 
-    // Alt key is used as the primary modifier for shortcuts
     if (e.altKey) {
       switch (e.key.toLowerCase()) {
-        case ' ': // Alt + Space: Toggle Start
+        case ' ': 
           e.preventDefault();
           setIsStartOpen(!isStartOpen);
           setIsWidgetsOpen(false);
           setIsQuickSettingsOpen(false);
           break;
-        case 'e': // Alt + E: Files
+        case 'e': 
           e.preventDefault();
           openApp('files', 'File Explorer');
           break;
-        case 's': // Alt + S: Settings
+        case 's': 
           e.preventDefault();
           openApp('settings', 'Settings');
           break;
-        case 't': // Alt + T: Terminal
+        case 't': 
           e.preventDefault();
           openApp('terminal', 'Terminal');
           break;
-        case 'a': // Alt + A: AI Assistant
+        case 'a': 
           e.preventDefault();
           openApp('assistant', 'AI Assistant');
           break;
-        case 'g': // Alt + G: App Store
+        case 'g': 
           e.preventDefault();
           openApp('store', 'App Store');
           break;
-        case 'd': // Alt + D: Show Desktop
+        case 'd': 
           e.preventDefault();
           minimizeAllWindows();
           break;
-        case 'x': // Alt + X: Close active window
+        case 'x': 
           e.preventDefault();
           if (activeWindowId) closeWindow(activeWindowId);
           break;
-        case 'q': // Alt + Q: Quick Settings
+        case 'q': 
           e.preventDefault();
           setIsQuickSettingsOpen(!isQuickSettingsOpen);
           setIsStartOpen(false);
@@ -242,13 +240,33 @@ export const Desktop: React.FC = () => {
 
   const accentClass = accentColor !== 'default' && accentColor !== 'custom' ? `accent-${accentColor}` : '';
   
+  // Custom Cursor Logic
   const getCursorVariable = () => {
     if (cursorColor === 'black') return 'var(--cursor-black)';
     if (cursorColor === 'white') return 'var(--cursor-white)';
+    
+    // Accent Color Cursor Generation
     let hex = customAccentHex;
-    const accentHexes: Record<string, string> = { blue: '#3b82f6', rose: '#e11d48', orange: '#f97316', green: '#16a34a', purple: '#9333ea', grey: '#64748b', default: '#9333ea' };
-    if (accentColor !== 'custom') hex = accentHexes[accentColor];
-    return `url("data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cGF0aCBkPSJNIDQgMyBMIDQgMjEgTCA4LjUgMTYuNSBMIDExLjUgMjMgTCAxNC41IDIyIEwgMTEuNSAxNS41IEwgMTggMTUuNSBMIDQgMyBaIiBmaWxsPSI${hex.replace('#', '')}\"IHN0cm9rZT0id2hpdGUiIHN0cm9rZS13aWR0aD0iMC44IiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+Cjwvc3ZnPg==")`;
+    const accentHexes: Record<string, string> = {
+      blue: '#3b82f6',
+      rose: '#e11d48',
+      orange: '#f97316',
+      green: '#16a34a',
+      purple: '#9333ea',
+      grey: '#64748b',
+      default: '#9333ea'
+    };
+    
+    if (accentColor !== 'custom') {
+      hex = accentHexes[accentColor] || accentHexes['default'];
+    }
+
+    // Standard pointer path encoded with the dynamic hex color
+    const svg = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M 4 3 L 4 21 L 8.5 16.5 L 11.5 23 L 14.5 22 L 11.5 15.5 L 18 15.5 L 4 3 Z" fill="${hex}" stroke="white" stroke-width="0.8" stroke-linejoin="round"/>
+    </svg>`;
+    const base64 = typeof window !== 'undefined' ? btoa(svg) : '';
+    return `url("data:image/svg+xml;base64,${base64}")`;
   };
 
   const hexToHslString = (hex: string) => {
@@ -280,7 +298,6 @@ export const Desktop: React.FC = () => {
   const iconScaleMap = { sm: 0.8, md: 1, lg: 1.25 };
   const currentScale = iconScaleMap[iconSize];
 
-  // MULTI-DISPLAY LOGIC
   const displayWindows = openWindows.filter(win => {
     if ((win.displayId || '1') === currentDisplayId) return true;
     const layout = displayLayout[currentDisplayId];
@@ -305,8 +322,7 @@ export const Desktop: React.FC = () => {
         accentClass,
         isInverted ? "system-inverted" : "",
         !glassEnabled ? "glass-disabled" : "",
-        powerStatus === 'booting' ? "opacity-0" : "opacity-100",
-        !isSecurityEnabled && "cursor-wait"
+        powerStatus === 'booting' ? "opacity-0" : "opacity-100"
       )}
       style={{
         backgroundImage: `url(${wallpaper})`,
@@ -326,18 +342,15 @@ export const Desktop: React.FC = () => {
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
     >
-      {/* Security Jitter Effect */}
       {!isSecurityEnabled && (
         <div className="absolute inset-0 pointer-events-none z-[9996] opacity-5 bg-red-500 animate-pulse mix-blend-overlay" />
       )}
 
-      {/* Brightness Overlay */}
       <div 
         className="absolute inset-0 bg-black pointer-events-none z-[10000] transition-opacity duration-300" 
         style={{ opacity: 1 - (brightness / 100) }}
       />
 
-      {/* Widgets Focus Overlay */}
       {(isWidgetsOpen || isQuickSettingsOpen || isStartOpen) && (
         <div 
           className="absolute inset-0 bg-black/20 backdrop-blur-sm z-[9997] animate-in fade-in duration-300" 
@@ -350,10 +363,8 @@ export const Desktop: React.FC = () => {
         />
       )}
 
-      {/* Widgets Panel */}
       <WidgetsPanel />
 
-      {/* Display Identity Overlay */}
       <div className="absolute top-4 right-4 z-[9999] pointer-events-none">
         <div className="bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/10 flex items-center gap-2">
           {isSecurityEnabled ? (
@@ -365,7 +376,6 @@ export const Desktop: React.FC = () => {
         </div>
       </div>
 
-      {/* Desktop Icons */}
       {currentDisplayId === '1' && desktopApps.map(shortcut => {
         const Icon = shortcut.icon;
         const isDragging = draggingAppId === shortcut.id;

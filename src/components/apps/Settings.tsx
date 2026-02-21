@@ -146,6 +146,34 @@ export const Settings: React.FC = () => {
 
             <section>
               <div className="flex items-center gap-2 mb-6">
+                <MousePointer2 size={18} className="text-accent" />
+                <h2 className="text-lg font-bold">Cursor Preferences</h2>
+              </div>
+              <div className="grid grid-cols-3 gap-4">
+                {[
+                  { id: 'black' as CursorColor, label: 'Midnight Black', class: 'bg-black border-white/20' },
+                  { id: 'white' as CursorColor, label: 'Arctic White', class: 'bg-white border-black/10' },
+                  { id: 'accent' as CursorColor, label: 'System Accent', class: 'bg-accent border-white/20' },
+                ].map((option) => (
+                  <button
+                    key={option.id}
+                    onClick={() => setCursorColor(option.id)}
+                    className={cn(
+                      "p-4 rounded-2xl border-2 flex flex-col items-center gap-3 transition-all",
+                      cursorColor === option.id ? "bg-accent/10 border-accent scale-105 shadow-lg" : "bg-white/5 border-white/5 hover:bg-white/10"
+                    )}
+                  >
+                    <div className={cn("w-8 h-8 rounded-lg shadow-inner", option.class)} />
+                    <span className={cn("text-[10px] font-black uppercase tracking-widest", cursorColor === option.id ? "text-accent" : "text-white/40")}>
+                      {option.label}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </section>
+
+            <section>
+              <div className="flex items-center gap-2 mb-6">
                 <Layout size={18} className="text-accent" />
                 <h2 className="text-lg font-bold">Desktop Layout</h2>
               </div>
@@ -534,71 +562,63 @@ export const Settings: React.FC = () => {
       <div className="w-64 border-r border-border bg-black/5 flex flex-col p-4 gap-1 shrink-0 overflow-y-auto">
         <h2 className="px-4 py-4 text-[10px] font-black text-accent uppercase tracking-[0.2em] mb-2 opacity-60">System Configuration</h2>
         
-        <Button 
-          variant="ghost" 
+        <button 
           onClick={() => setActiveTab('personalization')}
-          className={cn("justify-start gap-3 h-11 rounded-xl transition-all", activeTab === 'personalization' ? "bg-accent/10 text-accent font-bold shadow-sm shadow-accent/5" : "text-white/40 hover:bg-white/5")}
+          className={cn("w-full flex items-center gap-3 px-4 h-11 rounded-xl transition-all text-sm", activeTab === 'personalization' ? "bg-accent/10 text-accent font-bold shadow-sm shadow-accent/5" : "text-white/40 hover:bg-white/5")}
         >
           <Palette size={16} /> Personalization
-        </Button>
+        </button>
         
-        <Button 
-          variant="ghost" 
+        <button 
           onClick={() => setActiveTab('display')}
-          className={cn("justify-start gap-3 h-11 rounded-xl transition-all", activeTab === 'display' ? "bg-accent/10 text-accent font-bold shadow-sm shadow-accent/5" : "text-white/40 hover:bg-white/5")}
+          className={cn("w-full flex items-center gap-3 px-4 h-11 rounded-xl transition-all text-sm", activeTab === 'display' ? "bg-accent/10 text-accent font-bold shadow-sm shadow-accent/5" : "text-white/40 hover:bg-white/5")}
         >
           <Monitor size={16} /> Display & Screens
-        </Button>
+        </button>
         
-        <Button 
-          variant="ghost" 
+        <button 
           onClick={() => setActiveTab('accessibility')}
-          className={cn("justify-start gap-3 h-11 rounded-xl transition-all", activeTab === 'accessibility' ? "bg-accent/10 text-accent font-bold shadow-sm shadow-accent/5" : "text-white/40 hover:bg-white/5")}
+          className={cn("w-full flex items-center gap-3 px-4 h-11 rounded-xl transition-all text-sm", activeTab === 'accessibility' ? "bg-accent/10 text-accent font-bold shadow-sm shadow-accent/5" : "text-white/40 hover:bg-white/5")}
         >
           <Eye size={16} /> Accessibility
-        </Button>
+        </button>
         
-        <Button 
-          variant="ghost" 
+        <button 
           onClick={() => setActiveTab('notifications')}
-          className={cn("justify-start gap-3 h-11 rounded-xl transition-all", activeTab === 'notifications' ? "bg-accent/10 text-accent font-bold shadow-sm shadow-accent/5" : "text-white/40 hover:bg-white/5")}
+          className={cn("w-full flex items-center gap-3 px-4 h-11 rounded-xl transition-all text-sm", activeTab === 'notifications' ? "bg-accent/10 text-accent font-bold shadow-sm shadow-accent/5" : "text-white/40 hover:bg-white/5")}
         >
           <Bell size={16} /> Notifications
-        </Button>
+        </button>
         
-        <Button 
-          variant="ghost" 
+        <button 
           onClick={() => setActiveTab('updates')}
-          className={cn("justify-start gap-3 h-11 rounded-xl transition-all", activeTab === 'updates' ? "bg-accent/10 text-accent font-bold shadow-sm shadow-accent/5" : "text-white/40 hover:bg-white/5")}
+          className={cn("w-full flex items-center gap-3 px-4 h-11 rounded-xl transition-all text-sm", activeTab === 'updates' ? "bg-accent/10 text-accent font-bold shadow-sm shadow-accent/5" : "text-white/40 hover:bg-white/5")}
         >
           <RefreshCw size={16} /> Updates
-        </Button>
+        </button>
         
         <Separator className="my-4 opacity-5 mx-2" />
         
-        <Button 
-          variant="ghost" 
+        <button 
           onClick={() => setActiveTab('accounts')}
-          className={cn("justify-start gap-3 h-11 rounded-xl transition-all", activeTab === 'accounts' ? "bg-accent/10 text-accent font-bold shadow-sm shadow-accent/5" : "text-white/40 hover:bg-white/5")}
+          className={cn("w-full flex items-center gap-3 px-4 h-11 rounded-xl transition-all text-sm", activeTab === 'accounts' ? "bg-accent/10 text-accent font-bold shadow-sm shadow-accent/5" : "text-white/40 hover:bg-white/5")}
         >
           <User size={16} /> User Accounts
-        </Button>
+        </button>
         
-        <Button 
-          variant="ghost" 
+        <button 
           onClick={() => setActiveTab('security')}
-          className={cn("justify-start gap-3 h-11 rounded-xl transition-all", activeTab === 'security' ? "bg-accent/10 text-accent font-bold shadow-sm shadow-accent/5" : "text-white/40 hover:bg-white/5")}
+          className={cn("w-full flex items-center gap-3 px-4 h-11 rounded-xl transition-all text-sm", activeTab === 'security' ? "bg-accent/10 text-accent font-bold shadow-sm shadow-accent/5" : "text-white/40 hover:bg-white/5")}
         >
           <Shield size={16} /> System Security
-        </Button>
+        </button>
         
-        <Button 
-          variant="ghost" 
+        <button 
           onClick={() => setActiveTab('about')}
-          className={cn("justify-start gap-3 h-11 rounded-xl transition-all", activeTab === 'about' ? "bg-accent/10 text-accent font-bold shadow-sm shadow-accent/5" : "text-white/40 hover:bg-white/5")}
+          className={cn("w-full flex items-center gap-3 px-4 h-11 rounded-xl transition-all text-sm", activeTab === 'about' ? "bg-accent/10 text-accent font-bold shadow-sm shadow-accent/5" : "text-white/40 hover:bg-white/5")}
         >
           <HelpCircle size={16} /> About WebOS
-        </Button>
+        </button>
       </div>
 
       <div className="flex-1 overflow-hidden flex flex-col">

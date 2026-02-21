@@ -31,7 +31,7 @@
     --sidebar-border: 210 29% 30%;
     --sidebar-ring: 262.1 83.3% 57.8%;
 
-    /* Cursor SVGs */
+    /* Cursor SVGs - Standard Precision Shape */
     --cursor-black: url("data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cGF0aCBkPSJNIDQgMyBMIDQgMjEgTCA4LjUgMTYuNSBMIDExLjUgMjMgTCAxNC41IDIyIEwgMTEuNSAxNS41IEwgMTggMTUuNSBMIDQgMyBaIiBmaWxsPSJibGFjayIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSIwLjgiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz4KPC9zdmc+");
     --cursor-white: url("data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cGF0aCBkPSJNIDQgMyBMIDQgMjEgTCA4LjUgMTYuNSBMIDExLjUgMjMgTCAxNC41IDIyIEwgMTEuNSAxNS41IEwgMTggMTUuNSBMIDQgMyBaIiBmaWxsPSJ3aGl0ZSIgc3Ryb2tlPSJibGFjayIgc3Ryb2tlLXdpZHRoPSIwLjgiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz4KPC9zdmc+");
     
@@ -102,7 +102,15 @@
 @layer base {
   * {
     @apply border-border;
-    cursor: var(--cursor-url) 0 0, auto !important;
+  }
+
+  /* Apply cursor globally but allow pointers on interactive elements */
+  html, body, button, [role="button"], a, input, select, textarea {
+    cursor: var(--cursor-url) 0 0, auto;
+  }
+
+  button:hover, [role="button"]:hover, a:hover {
+    cursor: pointer;
   }
 
   body {
