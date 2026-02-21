@@ -35,6 +35,7 @@ import {
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { respondToEmail } from '@/ai/flows/mail-ai-flow';
+import { respondToChat } from '@/ai/flows/chat-ai-flow';
 
 export type AppId = 'store' | 'files' | 'settings' | 'assistant' | 'google-drive' | 'notes' | 'calc' | 'terminal' | 'browser' | 'trash' | 'news' | 'maps' | 'monitor' | 'calendar' | 'snake' | 'minesweeper' | 'image-viewer' | 'update' | 'virus' | 'paint' | 'info' | 'camera' | 'slides' | 'mail';
 export type ThemeMode = 'dark' | 'light';
@@ -51,6 +52,7 @@ export interface LocalUser {
   avatarColor: string;
   avatarUrl?: string;
   password?: string;
+  isWorkAccount?: boolean;
 }
 
 export type EmailFolder = 'inbox' | 'sent' | 'archive' | 'trash';
@@ -178,6 +180,7 @@ interface OSContextType {
   deleteAccount: (userId: string) => void;
   updateUserPassword: (password: string) => void;
   updateUserAvatar: (url: string) => void;
+  updateUserWorkStatus: (enabled: boolean) => void;
   openApp: (appId: AppId, title: string, params?: any) => void;
   closeWindow: (windowId: string) => void;
   minimizeWindow: (windowId: string) => void;
@@ -209,7 +212,7 @@ interface OSContextType {
   setIsQuickSettingsOpen: (isOpen: boolean) => void;
   setIsStartOpen: (isOpen: boolean) => void;
   setIsChatOpen: (isOpen: boolean) => void;
-  sendChatMessage: (text: string, recipient: string) => Promise<void>;
+  sendChatMessage: (text: string, recipient: string, role: string) => Promise<void>;
   setCurrentDisplayId: (id: string) => void;
   setSecurityEnabled: (enabled: boolean) => void;
   restart: () => void;
@@ -437,7 +440,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const sendChatMessage = async (text: string, recipient: string) => {
+  const sendChatMessage = async (text: string, recipient: string, role: string) => {
     const msg: ChatMessage = {
       id: Math.random().toString(36).substr(2, 9),
       sender: currentUser?.username || 'Me',
@@ -447,20 +450,32 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     };
     setChatMessages(prev => [...prev, msg]);
 
-    // Simulate AI Colleague response
-    setTimeout(() => {
-      const botMsg: ChatMessage = {
-        id: Math.random().toString(36).substr(2, 9),
-        sender: recipient,
-        text: `Hey ${currentUser?.username}, I received your message: "${text}". I'm looking into it right now.`,
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        isBot: true
-      };
-      setChatMessages(prev => [...prev, botMsg]);
-      if (!isChatOpen) {
-        addNotification(`Chat: ${recipient}`, text.slice(0, 30) + '...', 'app');
-      }
-    }, 1500 + Math.random() * 2000);
+    // Call unique AI chat responder
+    try {
+      const chatHistory = chatMessages.slice(-5).map(m => `${m.sender}: ${m.text}`);
+      const response = await respondToChat({ 
+        colleagueName: recipient, 
+        colleagueRole: role, 
+        message: text,
+        history: chatHistory
+      });
+
+      setTimeout(() => {
+        const botMsg: ChatMessage = {
+          id: Math.random().toString(36).substr(2, 9),
+          sender: recipient,
+          text: response.response,
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          isBot: true
+        };
+        setChatMessages(prev => [...prev, botMsg]);
+        if (!isChatOpen) {
+          addNotification(`Chat: ${recipient}`, response.response.slice(0, 30) + '...', 'app');
+        }
+      }, 1000 + Math.random() * 1000);
+    } catch (error) {
+      console.error("Chat AI Failure:", error);
+    }
   };
 
   const addNotification = useCallback((title: string, message: string, type: SystemNotification['type'] = 'system') => {
@@ -562,7 +577,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     const savedAccounts = localStorage.getItem('nebula_accounts');
     if (savedAccounts) setAccounts(JSON.parse(savedAccounts));
     else {
-      const defaultUser = { id: 'admin', username: 'Administrator', avatarColor: '#9333ea' };
+      const defaultUser = { id: 'admin', username: 'Administrator', avatarColor: '#9333ea', isWorkAccount: true };
       setAccounts([defaultUser]);
       localStorage.setItem('nebula_accounts', JSON.stringify([defaultUser]));
     }
@@ -612,7 +627,8 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       id: Math.random().toString(36).substr(2, 9),
       username,
       avatarColor: AVATAR_COLORS[Math.floor(Math.random() * AVATAR_COLORS.length)],
-      password: password || undefined
+      password: password || undefined,
+      isWorkAccount: false
     };
     
     setAccounts(prev => {
@@ -677,6 +693,16 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       console.error("Nebula Kernel: Avatar save failed.", e);
       addNotification("Identity Failed", "Storage limit reached. Profile picture could not be saved.", "security");
     }
+  };
+
+  const updateUserWorkStatus = (enabled: boolean) => {
+    if (!currentUser) return;
+    const updatedUser = { ...currentUser, isWorkAccount: enabled };
+    setCurrentUser(updatedUser);
+    const updatedAccounts = accounts.map(a => a.id === currentUser.id ? updatedUser : a);
+    setAccounts(updatedAccounts);
+    localStorage.setItem('nebula_accounts', JSON.stringify(updatedAccounts));
+    addNotification("Workspace Clearanced", enabled ? "Nebulabs Work privileges enabled." : "Professional clearance revoked.", "security");
   };
 
   const clearNotifications = () => setNotifications([]);
@@ -980,7 +1006,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       isOnline, volume, brightness, isWidgetsOpen, isQuickSettingsOpen, 
       isStartOpen, isChatOpen, isLocked, systemStats,
       currentDisplayId, displayLayout, isSecurityEnabled, chatMessages,
-      login, logout, lock, unlock, createAccount, deleteAccount, updateUserPassword, updateUserAvatar, openApp, closeWindow, minimizeWindow,
+      login, logout, lock, unlock, createAccount, deleteAccount, updateUserPassword, updateUserAvatar, updateUserWorkStatus, openApp, closeWindow, minimizeWindow,
       maximizeWindow, snapWindow, focusWindow, updateWindowPosition, moveWindowToDisplay,
       updateDisplayLayout, resetDisplayLayout, installApp, addNotification, clearNotifications,
       updateWallpaper, setNotes, setTheme, setAccentColor, setCustomAccentHex,

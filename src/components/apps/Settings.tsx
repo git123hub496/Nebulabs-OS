@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useRef } from 'react';
@@ -7,7 +6,7 @@ import {
   Monitor, Palette, User, Shield, Bell, HelpCircle, Upload, 
   Image as ImageIcon, Sun, Moon, Layout, Check, MousePointer2, 
   Eye, Zap, Layers, Pipette, Maximize2, Plus, ArrowUpRight,
-  Wifi, ShieldCheck, Activity, Trash2, Info, Newspaper, Clock, XCircle, RefreshCw, ChevronRight, ShieldAlert, ShieldX, Lock, KeyRound, Camera
+  Wifi, ShieldCheck, Activity, Trash2, Info, Newspaper, Clock, XCircle, RefreshCw, ChevronRight, ShieldAlert, ShieldX, Lock, KeyRound, Camera, Building2, Briefcase
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
@@ -57,7 +56,7 @@ export const Settings: React.FC = () => {
     glassEnabled, setGlassEnabled, brightness, setBrightness,
     currentDisplayId, setCurrentDisplayId, displayLayout, updateDisplayLayout, resetDisplayLayout,
     currentUser, logout, notifications, clearNotifications, addNotification, openApp,
-    isSecurityEnabled, setSecurityEnabled, updateUserPassword, updateUserAvatar
+    isSecurityEnabled, setSecurityEnabled, updateUserPassword, updateUserAvatar, updateUserWorkStatus
   } = useOS();
 
   const [activeTab, setActiveTab] = useState<SettingsTab>('personalization');
@@ -550,40 +549,67 @@ export const Settings: React.FC = () => {
                   <Button variant="outline" className="border-border/50 text-destructive hover:bg-destructive/10" onClick={logout}>Sign Out</Button>
                 </div>
 
-                <div className="bg-foreground/5 rounded-2xl border border-border/50 p-6 space-y-6">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <KeyRound size={18} className="text-accent" />
-                      <div>
-                        <p className="text-sm font-bold text-foreground">Account Protection</p>
-                        <p className="text-[10px] text-muted-foreground">{currentUser?.password ? "Your identity is secured by a password." : "Your identity is currently unprotected."}</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="bg-foreground/5 rounded-2xl border border-border/50 p-6 space-y-6">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <KeyRound size={18} className="text-accent" />
+                        <div>
+                          <p className="text-sm font-bold text-foreground">Account Protection</p>
+                          <p className="text-[10px] text-muted-foreground">{currentUser?.password ? "Your identity is secured by a password." : "Your identity is currently unprotected."}</p>
+                        </div>
                       </div>
+                      {!isChangingPass && (
+                        <Button variant="outline" size="sm" className="rounded-xl border-border/50 text-foreground" onClick={() => setIsChangingPass(true)}>
+                          {currentUser?.password ? "Change Password" : "Add Password"}
+                        </Button>
+                      )}
                     </div>
-                    {!isChangingPass && (
-                      <Button variant="outline" size="sm" className="rounded-xl border-border/50 text-foreground" onClick={() => setIsChangingPass(true)}>
-                        {currentUser?.password ? "Change Password" : "Add Password"}
-                      </Button>
+
+                    {isChangingPass && (
+                      <div className="space-y-4 pt-2 animate-in slide-in-from-top-2">
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-black uppercase tracking-widest text-accent pl-1">New Access Password</Label>
+                          <Input 
+                            type="password"
+                            placeholder="Enter secure password"
+                            value={newPassword}
+                            onChange={(e) => setNewPassword(e.target.value)}
+                            className="bg-foreground/5 border-border/50 h-11 focus-visible:ring-accent text-foreground"
+                          />
+                        </div>
+                        <div className="flex gap-2">
+                          <Button className="bg-accent text-primary-foreground font-bold flex-1" onClick={handleUpdatePass}>Update Protection</Button>
+                          <Button variant="ghost" className="text-muted-foreground" onClick={() => { setIsChangingPass(false); setNewPassword(""); }}>Cancel</Button>
+                        </div>
+                      </div>
                     )}
                   </div>
 
-                  {isChangingPass && (
-                    <div className="space-y-4 pt-2 animate-in slide-in-from-top-2">
-                      <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase tracking-widest text-accent pl-1">New Access Password</Label>
-                        <Input 
-                          type="password"
-                          placeholder="Enter secure password"
-                          value={newPassword}
-                          onChange={(e) => setNewPassword(e.target.value)}
-                          className="bg-foreground/5 border-border/50 h-11 focus-visible:ring-accent text-foreground"
-                        />
+                  <div className={cn(
+                    "rounded-2xl border p-6 space-y-6 transition-all",
+                    currentUser?.isWorkAccount ? "bg-accent/5 border-accent/20" : "bg-foreground/5 border-border/50"
+                  )}>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <Building2 size={18} className={currentUser?.isWorkAccount ? "text-accent" : "text-muted-foreground"} />
+                        <div>
+                          <p className="text-sm font-bold text-foreground">Work Account</p>
+                          <p className="text-[10px] text-muted-foreground">Grant access to professional communication tools.</p>
+                        </div>
                       </div>
-                      <div className="flex gap-2">
-                        <Button className="bg-accent text-primary-foreground font-bold flex-1" onClick={handleUpdatePass}>Update Protection</Button>
-                        <Button variant="ghost" className="text-muted-foreground" onClick={() => { setIsChangingPass(false); setNewPassword(""); }}>Cancel</Button>
-                      </div>
+                      <Switch 
+                        checked={currentUser?.isWorkAccount} 
+                        onCheckedChange={updateUserWorkStatus}
+                      />
                     </div>
-                  )}
+                    {currentUser?.isWorkAccount && (
+                      <div className="flex items-center gap-2 p-3 bg-accent/10 rounded-xl border border-accent/10 animate-in fade-in zoom-in-95">
+                        <ShieldCheck size={14} className="text-accent" />
+                        <span className="text-[9px] font-black uppercase text-accent tracking-widest">Clearance: NEBULA-L2</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </section>
