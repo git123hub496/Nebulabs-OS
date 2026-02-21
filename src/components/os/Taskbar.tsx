@@ -117,13 +117,29 @@ export const Taskbar: React.FC = () => {
 
   const handleTaskbarContextMenu = (e: React.MouseEvent) => {
     e.preventDefault();
-    setTaskbarMenu({ x: e.clientX, y: e.clientY, type: 'taskbar' });
+    const menuWidth = 208;
+    const menuHeight = 60;
+    let x = e.clientX;
+    let y = e.clientY;
+
+    if (x + menuWidth > window.innerWidth) x -= menuWidth;
+    if (y + menuHeight > window.innerHeight) y -= menuHeight;
+
+    setTaskbarMenu({ x, y, type: 'taskbar' });
   };
 
   const handleAppContextMenu = (e: React.MouseEvent, appId: AppId) => {
     e.preventDefault();
     e.stopPropagation();
-    setTaskbarMenu({ x: e.clientX, y: e.clientY, type: 'app', appId });
+    const menuWidth = 208;
+    const menuHeight = 60;
+    let x = e.clientX;
+    let y = e.clientY;
+
+    if (x + menuWidth > window.innerWidth) x -= menuWidth;
+    if (y + menuHeight > window.innerHeight) y -= menuHeight;
+
+    setTaskbarMenu({ x, y, type: 'app', appId });
   };
 
   const VolumeIcon = volume === 0 ? VolumeX : volume < 50 ? Volume1 : Volume2;
@@ -303,7 +319,7 @@ export const Taskbar: React.FC = () => {
       {taskbarMenu && (
         <div 
           className="fixed z-[10000] w-52 glass rounded-xl border border-white/10 shadow-2xl backdrop-blur-3xl p-1.5 flex flex-col gap-0.5 animate-in fade-in zoom-in-95 duration-100"
-          style={{ left: taskbarMenu.x, top: Math.min(taskbarMenu.y, typeof window !== 'undefined' ? window.innerHeight - 100 : 0) }}
+          style={{ left: taskbarMenu.x, top: taskbarMenu.y }}
           onClick={(e) => e.stopPropagation()}
         >
           {taskbarMenu.type === 'taskbar' ? (

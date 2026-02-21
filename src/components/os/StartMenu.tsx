@@ -34,7 +34,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
   DropdownMenuSeparator,
-} from "@/dropdown-menu-placeholder"; // Using local implementation or radix if available
+} from "@/components/ui/dropdown-menu";
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
@@ -111,7 +111,17 @@ export const StartMenu: React.FC<StartMenuProps> = ({ onClose }) => {
   const handleAppContextMenu = (e: React.MouseEvent, appId: AppId) => {
     e.preventDefault();
     e.stopPropagation();
-    setAppContextMenu({ x: e.clientX, y: e.clientY, appId });
+    
+    // Boundary check for context menu
+    const menuWidth = 208;
+    const menuHeight = 100;
+    let x = e.clientX;
+    let y = e.clientY;
+
+    if (x + menuWidth > window.innerWidth) x -= menuWidth;
+    if (y + menuHeight > window.innerHeight) y -= menuHeight;
+
+    setAppContextMenu({ x, y, appId });
   };
 
   const filteredApps = installedApps.filter(appId => {

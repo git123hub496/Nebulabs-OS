@@ -257,14 +257,32 @@ export const Desktop: React.FC = () => {
 
   const handleContextMenu = (e: React.MouseEvent) => {
     e.preventDefault();
-    setContextMenu({ x: e.clientX, y: e.clientY });
+    // Boundary check for context menu
+    const menuWidth = 224;
+    const menuHeight = 250;
+    let x = e.clientX;
+    let y = e.clientY;
+
+    if (x + menuWidth > window.innerWidth) x -= menuWidth;
+    if (y + menuHeight > window.innerHeight) y -= menuHeight;
+
+    setContextMenu({ x, y });
     setShortcutContextMenu(null);
   };
 
   const handleShortcutContextMenu = (e: React.MouseEvent, appId: AppId) => {
     e.preventDefault();
     e.stopPropagation();
-    setShortcutContextMenu({ x: e.clientX, y: e.clientY, appId });
+    // Boundary check for shortcut menu
+    const menuWidth = 224;
+    const menuHeight = 200;
+    let x = e.clientX;
+    let y = e.clientY;
+
+    if (x + menuWidth > window.innerWidth) x -= menuWidth;
+    if (y + menuHeight > window.innerHeight) y -= menuHeight;
+
+    setShortcutContextMenu({ x, y, appId });
     setContextMenu(null);
   };
 
