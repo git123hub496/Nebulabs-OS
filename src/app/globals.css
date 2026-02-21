@@ -61,50 +61,48 @@
   }
 }
 
-@layer components {
-  /* Accent Override Classes - Now robustly overriding variables */
-  .accent-blue {
-    --primary: 217.2 91.2% 59.8% !important;
-    --accent: 217.2 91.2% 59.8% !important;
-    --ring: 217.2 91.2% 59.8% !important;
-    --primary-foreground: 0 0% 100% !important;
-    --accent-foreground: 0 0% 100% !important;
-  }
-  .accent-purple {
-    --primary: 262.1 83.3% 57.8% !important;
-    --accent: 262.1 83.3% 57.8% !important;
-    --ring: 262.1 83.3% 57.8% !important;
-    --primary-foreground: 0 0% 100% !important;
-    --accent-foreground: 0 0% 100% !important;
-  }
-  .accent-rose {
-    --primary: 346.8 77.2% 49.8% !important;
-    --accent: 346.8 77.2% 49.8% !important;
-    --ring: 346.8 77.2% 49.8% !important;
-    --primary-foreground: 0 0% 100% !important;
-    --accent-foreground: 0 0% 100% !important;
-  }
-  .accent-orange {
-    --primary: 24.6 95% 53.1% !important;
-    --accent: 24.6 95% 53.1% !important;
-    --ring: 24.6 95% 53.1% !important;
-    --primary-foreground: 0 0% 100% !important;
-    --accent-foreground: 0 0% 100% !important;
-  }
-  .accent-green {
-    --primary: 142.1 76.2% 36.3% !important;
-    --accent: 142.1 76.2% 36.3% !important;
-    --ring: 142.1 76.2% 36.3% !important;
-    --primary-foreground: 0 0% 100% !important;
-    --accent-foreground: 0 0% 100% !important;
-  }
-  .accent-grey {
-    --primary: 210 20% 50% !important;
-    --accent: 210 20% 50% !important;
-    --ring: 210 20% 50% !important;
-    --primary-foreground: 0 0% 100% !important;
-    --accent-foreground: 0 0% 100% !important;
-  }
+/* Accent Override Classes - Globally scoped for maximum inheritance */
+.accent-blue {
+  --primary: 217.2 91.2% 59.8% !important;
+  --accent: 217.2 91.2% 59.8% !important;
+  --ring: 217.2 91.2% 59.8% !important;
+  --primary-foreground: 0 0% 100% !important;
+  --accent-foreground: 0 0% 100% !important;
+}
+.accent-purple {
+  --primary: 262.1 83.3% 57.8% !important;
+  --accent: 262.1 83.3% 57.8% !important;
+  --ring: 262.1 83.3% 57.8% !important;
+  --primary-foreground: 0 0% 100% !important;
+  --accent-foreground: 0 0% 100% !important;
+}
+.accent-rose {
+  --primary: 346.8 77.2% 49.8% !important;
+  --accent: 346.8 77.2% 49.8% !important;
+  --ring: 346.8 77.2% 49.8% !important;
+  --primary-foreground: 0 0% 100% !important;
+  --accent-foreground: 0 0% 100% !important;
+}
+.accent-orange {
+  --primary: 24.6 95% 53.1% !important;
+  --accent: 24.6 95% 53.1% !important;
+  --ring: 24.6 95% 53.1% !important;
+  --primary-foreground: 0 0% 100% !important;
+  --accent-foreground: 0 0% 100% !important;
+}
+.accent-green {
+  --primary: 142.1 76.2% 36.3% !important;
+  --accent: 142.1 76.2% 36.3% !important;
+  --ring: 142.1 76.2% 36.3% !important;
+  --primary-foreground: 0 0% 100% !important;
+  --accent-foreground: 0 0% 100% !important;
+}
+.accent-grey {
+  --primary: 210 20% 50% !important;
+  --accent: 210 20% 50% !important;
+  --ring: 210 20% 50% !important;
+  --primary-foreground: 0 0% 100% !important;
+  --accent-foreground: 0 0% 100% !important;
 }
 
 @layer base {

@@ -279,8 +279,6 @@ export const Desktop: React.FC = () => {
     return <LoginScreen />;
   }
 
-  const accentClass = accentColor !== 'default' && accentColor !== 'custom' ? `accent-${accentColor}` : '';
-  
   // Custom Cursor Logic
   const getCursorVariable = () => {
     if (cursorColor === 'black') return 'var(--cursor-black)';
@@ -344,7 +342,6 @@ export const Desktop: React.FC = () => {
       className={cn(
         "fixed inset-0 overflow-hidden select-none transition-all duration-1000",
         theme === 'light' ? "light" : "",
-        accentClass,
         isInverted ? "system-inverted" : "",
         !glassEnabled ? "glass-disabled" : "",
         powerStatus === 'booting' ? "opacity-0" : "opacity-100"
