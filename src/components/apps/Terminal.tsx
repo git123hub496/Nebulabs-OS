@@ -9,7 +9,14 @@ export const Terminal: React.FC = () => {
   const [history, setHistory] = useState<string[]>(["Welcome to Nebula Shell v1.1", "AI Integration Active. Type any command or question."]);
   const [input, setInput] = useState("");
   const [isThinking, setIsThinking] = useState(false);
-  const { fileSystem } = useOS();
+  const { 
+    fileSystem, 
+    setTaskbarSize, 
+    updateWallpaper, 
+    setAccentColor, 
+    setCustomAccentHex,
+    logout 
+  } = useOS();
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -26,7 +33,39 @@ export const Terminal: React.FC = () => {
     setHistory(newHistory);
     setInput("");
 
-    // Built-in commands logic
+    // --- SECRET OVERRIDE COMMANDS (Unadvertised) ---
+    if (cmdLower === 'nebula --titan') {
+      setTaskbarSize(500);
+      setHistory(prev => [...prev, "SYSTEM_OVERRIDE: Taskbar scale set to TITAN mode (500px)."]);
+      return;
+    }
+    if (cmdLower === 'nebula --void') {
+      setTaskbarSize(0);
+      setHistory(prev => [...prev, "SYSTEM_OVERRIDE: Stealth mode active. Taskbar suppressed (0px)."]);
+      return;
+    }
+    if (cmdLower === 'nebula --restore') {
+      setTaskbarSize(48);
+      setAccentColor('purple');
+      setHistory(prev => [...prev, "SYSTEM_RESTORE: Standard parameters re-established."]);
+      return;
+    }
+    if (cmdLower === 'nebula --chaos') {
+      const colors: any[] = ['blue', 'purple', 'rose', 'orange', 'green', 'grey'];
+      const randomColor = colors[Math.floor(Math.random() * colors.length)];
+      const randomWall = `https://picsum.photos/seed/${Math.random()}/1920/1080`;
+      setAccentColor(randomColor);
+      updateWallpaper(randomWall);
+      setHistory(prev => [...prev, "SYSTEM_CHAOS: Randomizing aesthetic matrices... DONE."]);
+      return;
+    }
+    if (cmdLower === 'sudo rm -rf /') {
+      setHistory(prev => [...prev, "CRITICAL: Wiping system registries...", "Session terminated."]);
+      setTimeout(logout, 1500);
+      return;
+    }
+
+    // --- BUILT-IN COMMANDS ---
     switch (cmdLower) {
       case 'help':
         setHistory(prev => [...prev, "Available commands:", " - ls: List virtual files", " - whoami: Current user", " - neofetch: System info", " - clear: Clear history", " - [anything]: Ask the Nebula AI assistant"]);
