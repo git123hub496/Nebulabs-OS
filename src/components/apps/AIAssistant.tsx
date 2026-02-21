@@ -60,7 +60,7 @@ export const AIAssistant: React.FC = () => {
           <Bot className="text-accent" size={24} />
         </div>
         <div>
-          <h2 className="text-sm font-bold">Nebula AI Assistant</h2>
+          <h2 className="text-sm font-bold text-white">Nebula AI Assistant</h2>
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
             <span className="text-[10px] text-white/40 font-medium">Powered by Gemini</span>
@@ -81,7 +81,7 @@ export const AIAssistant: React.FC = () => {
               <div className="flex flex-col gap-3 max-w-[80%]">
                 <div className={cn(
                   "p-4 rounded-2xl text-sm leading-relaxed",
-                  msg.type === 'user' ? "bg-accent text-primary font-medium" : "bg-white/5 border border-white/10 text-white/80"
+                  msg.type === 'user' ? "bg-accent text-primary-foreground font-medium" : "bg-white/5 border border-white/10 text-white/80"
                 )}>
                   {msg.text}
                 </div>
@@ -128,12 +128,12 @@ export const AIAssistant: React.FC = () => {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Ask anything or describe what you need..."
-            className="pr-12 bg-white/5 border-white/10 h-12 rounded-xl focus-visible:ring-accent"
+            className="pr-12 bg-white/5 border-white/10 h-12 rounded-xl focus-visible:ring-accent text-white"
             onKeyDown={(e) => e.key === 'Enter' && handleSend()}
           />
           <Button 
             size="icon" 
-            className="absolute right-1 top-1 bottom-1 bg-accent text-primary hover:bg-accent/80 rounded-lg h-auto aspect-square"
+            className="absolute right-1 top-1 bottom-1 bg-accent text-primary-foreground hover:bg-accent/80 rounded-lg h-auto aspect-square"
             onClick={handleSend}
             disabled={isLoading}
           >

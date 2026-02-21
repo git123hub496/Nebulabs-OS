@@ -1,4 +1,3 @@
-
 "use client"
 
 import React from 'react';
@@ -34,13 +33,13 @@ export const AppStore: React.FC = () => {
       <div className="p-8 bg-gradient-to-br from-accent/20 to-primary/40 shrink-0">
         <div className="flex items-center gap-4 mb-2">
           <ShoppingBag className="text-accent" size={32} />
-          <h1 className="text-3xl font-bold tracking-tight">Nebula App Store</h1>
+          <h1 className="text-3xl font-bold tracking-tight text-white">Nebula App Store</h1>
         </div>
         <p className="text-white/60 max-w-md">Discover and install applications to personalize your Nebulabs WebOS experience.</p>
       </div>
 
       <div className="flex-1 p-8 overflow-auto">
-        <h2 className="text-xl font-semibold mb-6">Featured Apps</h2>
+        <h2 className="text-xl font-semibold mb-6 text-white">Featured Apps</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {STORE_APPS.map(app => (
             <div key={app.id} className="bg-white/5 border border-white/10 rounded-2xl p-6 flex flex-col gap-4 hover:border-accent/40 transition-colors">
@@ -48,13 +47,13 @@ export const AppStore: React.FC = () => {
                 <div className="w-14 h-14 bg-accent/20 rounded-xl flex items-center justify-center">
                   <app.icon size={28} className="text-accent" />
                 </div>
-                <Badge variant="secondary" className="bg-white/10 text-white/60">
+                <Badge variant="secondary" className="bg-white/10 text-white/60 border-none">
                   {app.category}
                 </Badge>
               </div>
               
               <div>
-                <h3 className="text-lg font-bold">{app.name}</h3>
+                <h3 className="text-lg font-bold text-white">{app.name}</h3>
                 <p className="text-sm text-white/50 line-clamp-2">{app.description}</p>
               </div>
 
@@ -73,7 +72,7 @@ export const AppStore: React.FC = () => {
                   </div>
                 ) : (
                   <Button 
-                    className="w-full bg-accent text-primary hover:bg-accent/80 font-bold"
+                    className="w-full bg-accent text-primary-foreground hover:bg-accent/80 font-bold"
                     onClick={() => installApp(app.id)}
                   >
                     <Download size={16} className="mr-2" />

@@ -1,4 +1,3 @@
-
 "use client"
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -282,7 +281,7 @@ export const LoginScreen: React.FC = () => {
                 >
                   Cancel
                 </Button>
-                <Button type="submit" className="flex-1 h-12 bg-accent text-primary font-black rounded-2xl hover:bg-accent/80 gap-2 uppercase tracking-widest">
+                <Button type="submit" className="flex-1 h-12 bg-accent text-primary-foreground font-black rounded-2xl hover:bg-accent/80 gap-2 uppercase tracking-widest">
                   Sign In
                 </Button>
               </div>
@@ -326,7 +325,7 @@ export const LoginScreen: React.FC = () => {
                   />
                 </div>
               </div>
-              <Button type="submit" className="w-full h-14 bg-accent text-primary font-black rounded-2xl hover:bg-accent/80 gap-2 uppercase tracking-[0.2em] shadow-lg shadow-accent/20">
+              <Button type="submit" className="w-full h-14 bg-accent text-primary-foreground font-black rounded-2xl hover:bg-accent/80 gap-2 uppercase tracking-[0.2em] shadow-lg shadow-accent/20">
                 Continue Setup
                 <ArrowRight size={18} />
               </Button>
@@ -394,7 +393,7 @@ export const LoginScreen: React.FC = () => {
 
             <Button 
               onClick={handleCustomizeSubmit} 
-              className="w-full h-14 bg-accent text-primary font-black rounded-2xl hover:bg-accent/80 gap-2 uppercase tracking-[0.2em]"
+              className="w-full h-14 bg-accent text-primary-foreground font-black rounded-2xl hover:bg-accent/80 gap-2 uppercase tracking-[0.2em]"
             >
               Complete Setup
               <Sparkles size={18} />

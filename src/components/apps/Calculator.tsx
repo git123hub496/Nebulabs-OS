@@ -1,4 +1,3 @@
-
 "use client"
 
 import React, { useState } from 'react';
@@ -59,7 +58,7 @@ export const Calculator: React.FC = () => {
         {[4, 5, 6].map(n => (
           <Button key={n} onClick={() => handleNumber(String(n))} variant="outline" className="h-full bg-white/5 border-white/10 text-white/80 hover:bg-white/10 rounded-xl text-xl font-medium">{n}</Button>
         ))}
-        <Button onClick={calculate} className="h-full row-span-2 bg-accent text-primary hover:bg-accent/90 rounded-xl text-3xl font-black shadow-lg shadow-accent/20">=</Button>
+        <Button onClick={calculate} className="h-full row-span-2 bg-accent text-primary-foreground hover:bg-accent/90 rounded-xl text-3xl font-black shadow-lg shadow-accent/20">=</Button>
 
         {[1, 2, 3].map(n => (
           <Button key={n} onClick={() => handleNumber(String(n))} variant="outline" className="h-full bg-white/5 border-white/10 text-white/80 hover:bg-white/10 rounded-xl text-xl font-medium">{n}</Button>
