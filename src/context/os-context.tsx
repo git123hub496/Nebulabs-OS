@@ -180,6 +180,7 @@ interface OSContextType {
   createAccount: (username: string, password?: string) => void;
   deleteAccount: (userId: string) => void;
   updateUserPassword: (password: string) => void;
+  resetUserPassword: (userId: string, password: string) => void;
   updateUserAvatar: (url: string) => void;
   updateUserWorkStatus: (enabled: boolean) => void;
   openApp: (appId: AppId, title: string, params?: any) => void;
@@ -683,6 +684,17 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const resetUserPassword = (userId: string, password: string) => {
+    const updatedAccounts = accounts.map(a => a.id === userId ? { ...a, password } : a);
+    setAccounts(updatedAccounts);
+    try {
+      localStorage.setItem('nebula_accounts', JSON.stringify(updatedAccounts));
+      addNotification("Identity Recovered", "Hardware-level password reset successful.", "security");
+    } catch (e) {
+      console.error("Nebula Kernel: Critical registry error during password reset.", e);
+    }
+  };
+
   const updateUserAvatar = (url: string) => {
     if (!currentUser) return;
     try {
@@ -1009,7 +1021,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       isOnline, volume, brightness, isWidgetsOpen, isQuickSettingsOpen, 
       isStartOpen, isChatOpen, isLocked, systemStats,
       currentDisplayId, displayLayout, isSecurityEnabled, chatMessages,
-      login, logout, lock, unlock, createAccount, deleteAccount, updateUserPassword, updateUserAvatar, updateUserWorkStatus, openApp, closeWindow, minimizeWindow,
+      login, logout, lock, unlock, createAccount, deleteAccount, updateUserPassword, resetUserPassword, updateUserAvatar, updateUserWorkStatus, openApp, closeWindow, minimizeWindow,
       maximizeWindow, snapWindow, focusWindow, updateWindowPosition, moveWindowToDisplay,
       updateDisplayLayout, resetDisplayLayout, installApp, addNotification, clearNotifications,
       updateWallpaper, setNotes, setTheme, setAccentColor, setCustomAccentHex,

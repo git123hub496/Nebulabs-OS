@@ -23,7 +23,9 @@ import {
   Accessibility, 
   Languages, 
   Info,
-  Clock as ClockIcon
+  Clock as ClockIcon,
+  ShieldAlert,
+  Fingerprint
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -52,6 +54,15 @@ const SETUP_LOGS = [
   "Workspace staging complete."
 ];
 
+const RECOVERY_LOGS = [
+  "Bypassing standard auth layer...",
+  "Establishing hardware handshake...",
+  "Verifying virtual motherboard signature...",
+  "Decrypting local registry pointers...",
+  "Initiating identity verification sequence...",
+  "Resetting credential hash..."
+];
+
 const ACCENT_COLORS: { id: AccentColor; color: string }[] = [
   { id: 'purple', color: '#9333ea' },
   { id: 'blue', color: '#3b82f6' },
@@ -62,12 +73,12 @@ const ACCENT_COLORS: { id: AccentColor; color: string }[] = [
 
 export const LoginScreen: React.FC = () => {
   const { 
-    accounts, login, createAccount, deleteAccount, wallpaper, 
+    accounts, login, createAccount, deleteAccount, resetUserPassword, wallpaper, 
     setTheme, theme, setAccentColor, shutDown, restart,
     isInverted, setInverted, glassEnabled, setGlassEnabled
   } = useOS();
   
-  const [step, setStep] = useState<'select' | 'create' | 'customize' | 'initialize'>('select');
+  const [step, setStep] = useState<'select' | 'create' | 'customize' | 'initialize' | 'recovery'>('select');
   const [newUsername, setNewUsername] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [selectedTheme, setSelectedTheme] = useState<ThemeMode>('dark');
@@ -78,7 +89,7 @@ export const LoginScreen: React.FC = () => {
   const [isError, setIsError] = useState(false);
   const [time, setTime] = useState(new Date());
   
-  // Initialization states
+  // Initialization & Recovery states
   const [progress, setProgress] = useState(0);
   const [currentLog, setCurrentLog] = useState("");
   const [logIndex, setLogIndex] = useState(0);
@@ -89,7 +100,6 @@ export const LoginScreen: React.FC = () => {
     return () => clearInterval(timer);
   }, []);
 
-  // Sound Effects with safety guard
   const playSound = (type: 'click' | 'success') => {
     if (typeof window === 'undefined') return;
     const urls = {
@@ -113,9 +123,11 @@ export const LoginScreen: React.FC = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [step, selectedAccount]);
 
-  // Initialization sequence
+  // Combined logic for Initialization and Recovery sequences
   useEffect(() => {
-    if (step === 'initialize' && !hasCreated.current) {
+    if ((step === 'initialize' || step === 'recovery') && !hasCreated.current) {
+      const sequenceLogs = step === 'initialize' ? SETUP_LOGS : RECOVERY_LOGS;
+      
       const interval = setInterval(() => {
         setProgress(prev => {
           if (prev >= 100) {
@@ -124,19 +136,30 @@ export const LoginScreen: React.FC = () => {
               hasCreated.current = true;
               setTimeout(() => {
                 playSound('success');
-                createAccount(newUsername, newPassword || undefined);
+                if (step === 'initialize') {
+                  createAccount(newUsername, newPassword || undefined);
+                } else {
+                  if (selectedAccount) {
+                    resetUserPassword(selectedAccount.id, newPassword);
+                    // Return to login with the selected account
+                    setStep('select');
+                    setPasswordInput("");
+                    hasCreated.current = false;
+                    setProgress(0);
+                  }
+                }
               }, 800);
             }
             return 100;
           }
           return prev + 1;
         });
-      }, 30);
+      }, step === 'initialize' ? 30 : 50);
 
       const logInterval = setInterval(() => {
         setLogIndex(prev => {
-          const next = (prev + 1) % SETUP_LOGS.length;
-          setCurrentLog(SETUP_LOGS[next]);
+          const next = (prev + 1) % sequenceLogs.length;
+          setCurrentLog(sequenceLogs[next]);
           return next;
         });
       }, 500);
@@ -146,7 +169,7 @@ export const LoginScreen: React.FC = () => {
         clearInterval(logInterval);
       };
     }
-  }, [step, newUsername, newPassword, createAccount]);
+  }, [step, newUsername, newPassword, createAccount, resetUserPassword, selectedAccount]);
 
   if (showBIOS) {
     return <BIOS onClose={() => setShowBIOS(false)} />;
@@ -165,6 +188,16 @@ export const LoginScreen: React.FC = () => {
     setTheme(selectedTheme);
     setAccentColor(selectedAccent);
     setStep('initialize');
+  };
+
+  const handleRecoverySubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newPassword.trim()) {
+      playSound('click');
+      hasCreated.current = false;
+      setProgress(0);
+      setStep('recovery');
+    }
   };
 
   const handleSelectAccount = (account: LocalUser) => {
@@ -217,7 +250,7 @@ export const LoginScreen: React.FC = () => {
         <div className="text-center space-y-2">
           <h1 className="text-4xl font-black text-white tracking-tighter">Nebulabs WebOS</h1>
           <p className="text-white/40 text-sm font-medium uppercase tracking-[0.2em]">
-            {step === 'initialize' ? "System Initialization" : step === 'customize' ? "Workspace Personalization" : selectedAccount ? "Identity Verification" : "Select an account to continue"}
+            {step === 'initialize' ? "System Initialization" : step === 'customize' ? "Workspace Personalization" : step === 'recovery' ? "Identity Recovery" : selectedAccount ? "Identity Verification" : "Select an account to continue"}
           </p>
         </div>
 
@@ -286,7 +319,7 @@ export const LoginScreen: React.FC = () => {
           </div>
         )}
 
-        {selectedAccount && (
+        {selectedAccount && step === 'select' && (
           <div className="glass p-10 rounded-[2.5rem] border border-white/10 w-full max-w-md flex flex-col items-center gap-8 animate-in zoom-in-95 duration-300 shadow-2xl">
             <Avatar className="w-24 h-24 border-4 border-accent shadow-xl shadow-accent/20">
               <AvatarImage src={selectedAccount.avatarUrl} className="object-cover" />
@@ -304,7 +337,7 @@ export const LoginScreen: React.FC = () => {
             </div>
 
             <form onSubmit={handleLoginSubmit} className="w-full space-y-6">
-              <div className="space-y-2">
+              <div className="space-y-4">
                 <div className="relative">
                   <KeyRound className="absolute left-4 top-1/2 -translate-y-1/2 text-accent" size={18} />
                   <Input 
@@ -325,7 +358,18 @@ export const LoginScreen: React.FC = () => {
                 {isError && (
                   <p className="text-destructive text-[10px] font-bold uppercase text-center tracking-widest animate-in fade-in">Access Denied: Incorrect Password</p>
                 )}
+                
+                <div className="text-center">
+                  <button 
+                    type="button"
+                    onClick={() => { playSound('click'); setStep('recovery'); }}
+                    className="text-[10px] font-black uppercase text-accent/60 hover:text-accent transition-colors tracking-[0.2em]"
+                  >
+                    Forgot Password?
+                  </button>
+                </div>
               </div>
+              
               <div className="flex gap-3 w-full">
                 <Button 
                   type="button" 
@@ -337,6 +381,48 @@ export const LoginScreen: React.FC = () => {
                 </Button>
                 <Button type="submit" className="flex-1 h-12 bg-accent text-primary-foreground font-black rounded-2xl hover:bg-accent/80 gap-2 uppercase tracking-widest">
                   Sign In
+                </Button>
+              </div>
+            </form>
+          </div>
+        )}
+
+        {selectedAccount && step === 'recovery' && progress === 0 && (
+          <div className="glass p-10 rounded-[2.5rem] border border-white/10 w-full max-w-md flex flex-col gap-8 animate-in slide-in-from-bottom-4 shadow-2xl">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center">
+                <ShieldAlert className="text-accent" size={20} />
+              </div>
+              <h2 className="text-xl font-bold text-white tracking-tight">Identity Recovery</h2>
+            </div>
+            
+            <p className="text-xs text-white/40 leading-relaxed bg-accent/5 p-4 rounded-xl border border-accent/10">
+              Identity Verification required for <strong>{selectedAccount.username}</strong>. Please enter a new access credential to establish a secure link.
+            </p>
+
+            <form onSubmit={handleRecoverySubmit} className="space-y-6">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-accent uppercase tracking-widest px-1">New Access Password</label>
+                <Input 
+                  type="password"
+                  autoFocus
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="Enter new secure password"
+                  className="bg-white/5 border-white/10 text-white h-12 rounded-xl focus-visible:ring-accent"
+                />
+              </div>
+              <div className="flex gap-3">
+                <Button 
+                  type="button"
+                  variant="ghost"
+                  className="flex-1 h-12 text-white/40 font-bold"
+                  onClick={() => setStep('select')}
+                >
+                  Back
+                </Button>
+                <Button type="submit" className="flex-2 h-12 bg-accent text-primary-foreground font-black rounded-xl hover:bg-accent/80 gap-2 uppercase tracking-widest">
+                  Reset & Verify
                 </Button>
               </div>
             </form>
@@ -455,11 +541,15 @@ export const LoginScreen: React.FC = () => {
           </div>
         )}
 
-        {step === 'initialize' && (
+        {(step === 'initialize' || (step === 'recovery' && progress > 0)) && (
           <div className="glass p-10 rounded-3xl border border-white/10 w-full max-w-lg flex flex-col items-center gap-8 animate-in fade-in shadow-2xl">
             <div className="relative">
               <div className="w-20 h-20 rounded-3xl bg-accent/20 flex items-center justify-center animate-pulse">
-                <Loader2 className="text-accent animate-spin" size={40} />
+                {step === 'initialize' ? (
+                  <Loader2 className="text-accent animate-spin" size={40} />
+                ) : (
+                  <Fingerprint className="text-accent animate-pulse" size={40} />
+                )}
               </div>
               <div className="absolute -top-2 -right-2 bg-green-500 w-6 h-6 rounded-full border-4 border-black flex items-center justify-center">
                 <ShieldCheck size={12} className="text-white" />
@@ -469,7 +559,7 @@ export const LoginScreen: React.FC = () => {
             <div className="w-full space-y-6">
               <div className="space-y-2">
                 <div className="flex justify-between text-[10px] font-black uppercase text-accent tracking-widest">
-                  <span>Preparing Workspace</span>
+                  <span>{step === 'initialize' ? "Preparing Workspace" : "Resetting Identity Tunnel"}</span>
                   <span>{progress}%</span>
                 </div>
                 <Progress value={progress} className="h-2 bg-white/5" />
@@ -477,14 +567,14 @@ export const LoginScreen: React.FC = () => {
 
               <div className="bg-black/20 rounded-xl p-4 h-32 overflow-hidden border border-white/5 font-mono text-[10px] space-y-1">
                 <div className="text-green-500 font-bold animate-pulse">{currentLog}</div>
-                <div className="text-white/20 opacity-40">{">> "}System check passed</div>
+                <div className="text-white/20 opacity-40">{">> "}Hardware link active</div>
                 <div className="text-white/20 opacity-40">{">> "}Kernel integrity verified</div>
-                <div className="text-white/20 opacity-40">{">> "}User partition initialized</div>
+                <div className="text-white/20 opacity-40">{">> "}Identity registry unlocked</div>
               </div>
             </div>
 
             <div className="text-center">
-              <p className="text-[9px] text-white/20 uppercase tracking-[0.3em] font-bold">Please do not power off your session</p>
+              <p className="text-[9px] text-white/20 uppercase tracking-[0.3em] font-bold">Hardware-level session in progress</p>
             </div>
           </div>
         )}
