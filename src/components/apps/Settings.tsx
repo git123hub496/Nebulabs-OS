@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useRef } from 'react';
@@ -65,18 +66,45 @@ export const Settings: React.FC = () => {
   const wallpaperInputRef = useRef<HTMLInputElement>(null);
   const avatarInputRef = useRef<HTMLInputElement>(null);
 
+  const compressAndResize = (dataUrl: string, maxWidth: number, maxHeight: number, quality: number): Promise<string> => {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > maxWidth) {
+            height *= maxWidth / width;
+            width = maxWidth;
+          }
+        } else {
+          if (height > maxHeight) {
+            width *= maxHeight / height;
+            height = maxHeight;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx?.drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.src = dataUrl;
+    });
+  };
+
   const handleWallpaperUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // 2MB limit for wallpapers
-      if (file.size > 2 * 1024 * 1024) {
-        addNotification("File Too Large", "Wallpapers must be under 2MB to ensure system stability.", "security");
-        return;
-      }
       const reader = new FileReader();
-      reader.onload = (event) => {
+      reader.onload = async (event) => {
         const result = event.target?.result as string;
-        updateWallpaper(result);
+        // Optimization: Wallpapers scaled to 1920px max width at 0.7 quality
+        const optimized = await compressAndResize(result, 1920, 1080, 0.7);
+        updateWallpaper(optimized);
       };
       reader.readAsDataURL(file);
     }
@@ -85,15 +113,12 @@ export const Settings: React.FC = () => {
   const handleAvatarUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // 1.5MB limit for avatars to prevent localStorage quota errors
-      if (file.size > 1.5 * 1024 * 1024) {
-        addNotification("File Too Large", "Profile photos must be under 1.5MB for virtual storage.", "security");
-        return;
-      }
       const reader = new FileReader();
-      reader.onload = (event) => {
+      reader.onload = async (event) => {
         const result = event.target?.result as string;
-        updateUserAvatar(result);
+        // Optimization: Avatars scaled to 256px max at 0.8 quality to fit in localStorage
+        const optimized = await compressAndResize(result, 256, 256, 0.8);
+        updateUserAvatar(optimized);
       };
       reader.readAsDataURL(file);
     }

@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { createContext, useContext, useState, ReactNode, useEffect, useCallback } from 'react';
@@ -447,6 +448,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       localStorage.setItem('nebula_accounts', JSON.stringify(updated));
     } catch (e) {
       console.warn("Nebula Kernel: Account creation storage failed.", e);
+      addNotification("Identity Failed", "Storage limit reached. Account data could not be saved.", "security");
     }
     login(newAcc.id, password);
   };
@@ -472,11 +474,12 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       setCurrentUser(updatedUser);
       const updatedAccounts = accounts.map(a => a.id === currentUser.id ? updatedUser : a);
       setAccounts(updatedAccounts);
+      // Wrapped in try-catch to handle localStorage QuotaExceededError robustly
       localStorage.setItem('nebula_accounts', JSON.stringify(updatedAccounts));
       addNotification("Identity Updated", "Your profile picture has been updated.", "system");
     } catch (e) {
       console.error("Nebula Kernel: Avatar save failed.", e);
-      addNotification("Identity Failed", "Profile picture is too large for virtual storage.", "security");
+      addNotification("Identity Failed", "Storage limit reached. Profile picture could not be saved.", "security");
     }
   };
 
