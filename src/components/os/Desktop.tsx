@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useOS, AppId, DesktopShortcut, WindowInstance } from '@/context/os-context';
 import { Window } from './Window';
 import { Taskbar } from './Taskbar';
@@ -79,6 +79,7 @@ export const Desktop: React.FC = () => {
     powerStatus, powerOn, taskbarPosition, iconSize, currentUser,
     cursorColor, isInverted, glassEnabled, desktopApps, updateDesktopAppPosition, toggleDesktopApp,
     isWidgetsOpen, setIsWidgetsOpen, isQuickSettingsOpen, setIsQuickSettingsOpen,
+    isStartOpen, setIsStartOpen, activeWindowId, closeWindow, minimizeAllWindows,
     brightness, currentDisplayId, displayLayout, isSecurityEnabled, addNotification
   } = useOS();
   
@@ -120,6 +121,69 @@ export const Desktop: React.FC = () => {
     const interval = setInterval(spawnVirus, 30000); // Check every 30 seconds
     return () => clearInterval(interval);
   }, [powerStatus, isSecurityEnabled, currentDisplayId, openApp, addNotification]);
+
+  // Global Keyboard Shortcuts
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    if (powerStatus !== 'on' || !currentUser) return;
+
+    // Alt key is used as the primary modifier for shortcuts
+    if (e.altKey) {
+      switch (e.key.toLowerCase()) {
+        case ' ': // Alt + Space: Toggle Start
+          e.preventDefault();
+          setIsStartOpen(!isStartOpen);
+          setIsWidgetsOpen(false);
+          setIsQuickSettingsOpen(false);
+          break;
+        case 'e': // Alt + E: Files
+          e.preventDefault();
+          openApp('files', 'File Explorer');
+          break;
+        case 's': // Alt + S: Settings
+          e.preventDefault();
+          openApp('settings', 'Settings');
+          break;
+        case 't': // Alt + T: Terminal
+          e.preventDefault();
+          openApp('terminal', 'Terminal');
+          break;
+        case 'a': // Alt + A: AI Assistant
+          e.preventDefault();
+          openApp('assistant', 'AI Assistant');
+          break;
+        case 'g': // Alt + G: App Store
+          e.preventDefault();
+          openApp('store', 'App Store');
+          break;
+        case 'd': // Alt + D: Show Desktop
+          e.preventDefault();
+          minimizeAllWindows();
+          break;
+        case 'x': // Alt + X: Close active window
+          e.preventDefault();
+          if (activeWindowId) closeWindow(activeWindowId);
+          break;
+        case 'q': // Alt + Q: Quick Settings
+          e.preventDefault();
+          setIsQuickSettingsOpen(!isQuickSettingsOpen);
+          setIsStartOpen(false);
+          setIsWidgetsOpen(false);
+          break;
+      }
+    }
+
+    if (e.key === 'Escape') {
+      setIsStartOpen(false);
+      setIsWidgetsOpen(false);
+      setIsQuickSettingsOpen(false);
+      setContextMenu(null);
+    }
+  }, [powerStatus, currentUser, isStartOpen, isWidgetsOpen, isQuickSettingsOpen, activeWindowId, openApp, setIsStartOpen, setIsWidgetsOpen, setIsQuickSettingsOpen, closeWindow, minimizeAllWindows]);
+
+  useEffect(() => {
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [handleKeyDown]);
 
   const handleContextMenu = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -257,6 +321,7 @@ export const Desktop: React.FC = () => {
         setContextMenu(null);
         if (isWidgetsOpen) setIsWidgetsOpen(false);
         if (isQuickSettingsOpen) setIsQuickSettingsOpen(false);
+        if (isStartOpen) setIsStartOpen(false);
       }}
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
@@ -273,13 +338,14 @@ export const Desktop: React.FC = () => {
       />
 
       {/* Widgets Focus Overlay */}
-      {(isWidgetsOpen || isQuickSettingsOpen) && (
+      {(isWidgetsOpen || isQuickSettingsOpen || isStartOpen) && (
         <div 
           className="absolute inset-0 bg-black/20 backdrop-blur-sm z-[9997] animate-in fade-in duration-300" 
           onClick={(e) => {
             e.stopPropagation();
             setIsWidgetsOpen(false);
             setIsQuickSettingsOpen(false);
+            setIsStartOpen(false);
           }}
         />
       )}

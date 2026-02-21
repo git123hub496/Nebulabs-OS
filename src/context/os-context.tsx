@@ -125,6 +125,7 @@ interface OSContextType {
   brightness: number;
   isWidgetsOpen: boolean;
   isQuickSettingsOpen: boolean;
+  isStartOpen: boolean;
   systemStats: { cpu: number; ram: number; net: number };
   currentDisplayId: string;
   displayLayout: DisplayLayout;
@@ -162,11 +163,13 @@ interface OSContextType {
   setBrightness: (b: number) => void;
   setIsWidgetsOpen: (isOpen: boolean) => void;
   setIsQuickSettingsOpen: (isOpen: boolean) => void;
+  setIsStartOpen: (isOpen: boolean) => void;
   setCurrentDisplayId: (id: string) => void;
   setSecurityEnabled: (enabled: boolean) => void;
   restart: () => void;
   shutDown: () => void;
   powerOn: () => void;
+  minimizeAllWindows: () => void;
   
   createFolder: (name: string, parentId: string | null) => void;
   importFile: (name: string, content: string, size: number, parentId: string | null) => void;
@@ -253,23 +256,24 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   const [notifications, setNotifications] = useState<SystemNotification[]>([]);
   const [wallpaper, setWallpaper] = useState("https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=1920");
   const [notes, setNotesState] = useState("");
-  const [theme, setThemeState] = useState<ThemeMode>('dark');
-  const [accentColor, setAccentColorState] = useState<AccentColor>('purple');
-  const [customAccentHex, setCustomAccentHexState] = useState("#9333ea");
-  const [cursorColor, setCursorColorState] = useState<CursorColor>('black');
-  const [isInverted, setIsInvertedState] = useState(false);
-  const [glassEnabled, setGlassEnabledState] = useState(true);
+  const [theme, setTheme] = useState<ThemeMode>('dark');
+  const [accentColor, setAccentColor] = useState<AccentColor>('purple');
+  const [customAccentHex, setCustomAccentHex] = useState("#9333ea");
+  const [cursorColor, setCursorColor] = useState<CursorColor>('black');
+  const [isInverted, setInverted] = useState(false);
+  const [glassEnabled, setGlassEnabled] = useState(true);
   const [powerStatus, setPowerStatus] = useState<PowerStatus>('booting');
-  const [taskbarPosition, setTaskbarPositionState] = useState<TaskbarPosition>('bottom');
-  const [taskbarSize, setTaskbarSizeState] = useState<TaskbarSize>('md');
-  const [iconSize, setIconSizeState] = useState<DesktopIconSize>('md');
+  const [taskbarPosition, setTaskbarPosition] = useState<TaskbarPosition>('bottom');
+  const [taskbarSize, setTaskbarSize] = useState<TaskbarSize>('md');
+  const [iconSize, setIconSize] = useState<DesktopIconSize>('md');
   const [currentWifi, setCurrentWifi] = useState("Nebula_Secure_5G");
   const [isWifiConnecting, setIsWifiConnecting] = useState(false);
   const [isOnline, setIsOnline] = useState(true);
-  const [volume, setVolumeState] = useState(75);
-  const [brightness, setBrightnessState] = useState(100);
+  const [volume, setVolume] = useState(75);
+  const [brightness, setBrightness] = useState(100);
   const [isWidgetsOpen, setIsWidgetsOpen] = useState(false);
   const [isQuickSettingsOpen, setIsQuickSettingsOpen] = useState(false);
+  const [isStartOpen, setIsStartOpen] = useState(false);
   const [nextZIndex, setNextZIndex] = useState(10);
   const [systemStats, setSystemStats] = useState({ cpu: 12, ram: 42, net: 2 });
   const [isSecurityEnabled, setSecurityEnabledState] = useState(true);
@@ -290,12 +294,12 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
           switch (key) {
             case 'windows': setOpenWindows(JSON.parse(val)); break;
             case 'active_window': setActiveWindowId(val); break;
-            case 'theme': setThemeState(val as ThemeMode); break;
-            case 'accent': setAccentColorState(val as AccentColor); break;
+            case 'theme': setTheme(val as ThemeMode); break;
+            case 'accent': setAccentColor(val as AccentColor); break;
             case 'wallpaper': setWallpaper(val); break;
             case 'pinned_apps': setPinnedApps(JSON.parse(val)); break;
-            case 'brightness': setBrightnessState(parseInt(val)); break;
-            case 'volume': setVolumeState(parseInt(val)); break;
+            case 'brightness': setBrightness(parseInt(val)); break;
+            case 'volume': setVolume(parseInt(val)); break;
             case 'power': setPowerStatus(val as PowerStatus); break;
             case 'display_layout': setDisplayLayoutState(JSON.parse(val)); break;
             case 'notifications': setNotifications(JSON.parse(val)); break;
@@ -368,15 +372,15 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     }
 
     setNotesState(load('notes', ""));
-    setThemeState(load('theme', 'dark') as ThemeMode);
-    setAccentColorState(load('accent', 'purple') as AccentColor);
-    setCustomAccentHexState(load('custom_accent', '#9333ea'));
-    setCursorColorState(load('cursor', 'black') as CursorColor);
-    setIsInvertedState(load('inverted', false));
-    setGlassEnabledState(load('glass', true));
-    setTaskbarPositionState(load('taskbar_pos', 'bottom') as TaskbarPosition);
-    setTaskbarSizeState(load('taskbar_size', 'md') as TaskbarSize);
-    setIconSizeState(load('icon_size', 'md') as DesktopIconSize);
+    setTheme(load('theme', 'dark') as ThemeMode);
+    setAccentColor(load('accent', 'purple') as AccentColor);
+    setCustomAccentHex(load('custom_accent', '#9333ea'));
+    setCursorColor(load('cursor', 'black') as CursorColor);
+    setInverted(load('inverted', false));
+    setGlassEnabled(load('glass', true));
+    setTaskbarPosition(load('taskbar_pos', 'bottom') as TaskbarPosition);
+    setTaskbarSize(load('taskbar_size', 'md') as TaskbarSize);
+    setIconSize(load('icon_size', 'md') as DesktopIconSize);
     setWallpaper(load('wallpaper', "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=1920"));
     setDesktopApps(load('desktop_apps', INITIAL_DESKTOP).map((app: any) => ({ ...app, icon: APP_INFO[app.id as AppId]?.icon || Globe })));
     setPinnedApps(load('pinned_apps', INITIAL_PINNED));
@@ -392,10 +396,10 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     setIsOnline(savedWifi !== OFFLINE_WIFI);
 
     const savedVol = load('volume', "75");
-    setVolumeState(parseInt(savedVol));
+    setVolume(parseInt(savedVol));
 
     const savedBrightness = load('brightness', "100");
-    setBrightnessState(parseInt(savedBrightness));
+    setBrightness(parseInt(savedBrightness));
 
   }, [currentUser]);
 
@@ -485,51 +489,6 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     saveSetting('notes', content);
   };
 
-  const setTheme = (newTheme: ThemeMode) => {
-    setThemeState(newTheme);
-    saveSetting('theme', newTheme);
-  };
-
-  const setAccentColor = (color: AccentColor) => {
-    setAccentColorState(color);
-    saveSetting('accent', color);
-  };
-
-  const setCustomAccentHex = (hex: string) => {
-    setCustomAccentHexState(hex);
-    saveSetting('custom_accent', hex);
-  };
-
-  const setCursorColor = (color: CursorColor) => {
-    setCursorColorState(color);
-    saveSetting('cursor', color);
-  };
-
-  const setInverted = (inverted: boolean) => {
-    setIsInvertedState(inverted);
-    saveSetting('inverted', inverted);
-  };
-
-  const setGlassEnabled = (enabled: boolean) => {
-    setGlassEnabledState(enabled);
-    saveSetting('glass', enabled);
-  };
-
-  const setTaskbarPosition = (position: TaskbarPosition) => {
-    setTaskbarPositionState(position);
-    saveSetting('taskbar_pos', position);
-  };
-
-  const setTaskbarSize = (size: TaskbarSize) => {
-    setTaskbarSizeState(size);
-    saveSetting('taskbar_size', size);
-  };
-
-  const setIconSize = (size: DesktopIconSize) => {
-    setIconSizeState(size);
-    saveSetting('icon_size', size);
-  };
-
   const connectToWifi = (ssid: string) => {
     setIsWifiConnecting(true);
     setTimeout(() => {
@@ -539,16 +498,6 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       saveSetting('wifi', ssid);
       addNotification("WiFi Connected", `Successfully joined ${ssid}.`, 'system');
     }, 2000);
-  };
-
-  const setVolume = (v: number) => {
-    setVolumeState(v);
-    saveSetting('volume', v);
-  };
-
-  const setBrightness = (b: number) => {
-    setBrightnessState(b);
-    saveSetting('brightness', b);
   };
 
   const setCurrentDisplayId = (id: string) => {
@@ -562,7 +511,6 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     setSecurityEnabledState(enabled);
     saveSetting('security_enabled', enabled);
     if (enabled) {
-      // Quarantine: Close all virus windows instantly
       const updated = openWindows.filter(w => w.appId !== 'virus');
       setOpenWindows(updated);
       saveSetting('windows', updated);
@@ -866,13 +814,21 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     saveSetting('pinned_apps', newOrder);
   };
 
+  const minimizeAllWindows = () => {
+    const updated = openWindows.map(w => ({ ...w, isMinimized: true }));
+    setOpenWindows(updated);
+    setActiveWindowId(null);
+    saveSetting('windows', updated);
+    saveSetting('active_window', null);
+  };
+
   return (
     <OSContext.Provider value={{
       currentUser, accounts, openWindows, activeWindowId, installedApps, pinnedApps,
       fileSystem, trash, desktopApps, notifications, wallpaper, notes, theme, accentColor,
       customAccentHex, cursorColor, isInverted, glassEnabled, powerStatus,
       taskbarPosition, taskbarSize, iconSize, currentWifi, isWifiConnecting,
-      isOnline, volume, brightness, isWidgetsOpen, isQuickSettingsOpen, systemStats,
+      isOnline, volume, brightness, isWidgetsOpen, isQuickSettingsOpen, isStartOpen, systemStats,
       currentDisplayId, displayLayout, isSecurityEnabled,
       login, logout, createAccount, openApp, closeWindow, minimizeWindow,
       maximizeWindow, snapWindow, focusWindow, updateWindowPosition, moveWindowToDisplay,
@@ -880,7 +836,8 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       updateWallpaper, setNotes, setTheme, setAccentColor, setCustomAccentHex,
       setCursorColor, setInverted, setGlassEnabled, setTaskbarPosition, setTaskbarSize,
       setIconSize, connectToWifi, setVolume, setBrightness, setIsWidgetsOpen,
-      setIsQuickSettingsOpen, setCurrentDisplayId, setSecurityEnabled, restart, shutDown, powerOn,
+      setIsQuickSettingsOpen, setIsStartOpen, setCurrentDisplayId, setSecurityEnabled, restart, shutDown, powerOn,
+      minimizeAllWindows,
       createFolder, importFile, moveToTrash, restoreFromTrash, emptyTrash, deleteItemPermanently,
       updateDesktopAppPosition, toggleDesktopApp, togglePinApp, reorderPinnedApps,
     }}>

@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -18,10 +19,9 @@ export const Taskbar: React.FC = () => {
     openWindows, activeWindowId, focusWindow, openApp, taskbarPosition, taskbarSize, 
     currentWifi, isWifiConnecting, connectToWifi, volume, setVolume, isOnline,
     isWidgetsOpen, setIsWidgetsOpen, pinnedApps, reorderPinnedApps,
-    isQuickSettingsOpen, setIsQuickSettingsOpen, setIsStartOpen: setIsStartOpenGlobal
+    isQuickSettingsOpen, setIsQuickSettingsOpen, isStartOpen, setIsStartOpen
   } = useOS();
   
-  const [isStartOpen, setIsStartOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [time, setTime] = useState<Date | null>(null);
   const [draggingAppId, setDraggingAppId] = useState<AppId | null>(null);
