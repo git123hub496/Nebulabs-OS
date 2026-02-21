@@ -189,7 +189,8 @@ export const Desktop: React.FC = () => {
 
     if (e.altKey) {
       switch (e.key.toLowerCase()) {
-        case ' ': 
+        case ' ':
+        case 'n': // Start Menu Toggle
           e.preventDefault();
           setIsStartOpen(!isStartOpen);
           setIsWidgetsOpen(false);
@@ -313,7 +314,7 @@ export const Desktop: React.FC = () => {
   const handleMouseDown = (e: React.MouseEvent, appId: AppId) => {
     if ((e.target as HTMLElement).closest('.delete-shortcut-btn')) return;
     
-    e.stopPropagation();
+    // Don't stop propagation immediately, let browser track clicks for double-click
     setContextMenu(null);
     setShortcutContextMenu(null);
     
