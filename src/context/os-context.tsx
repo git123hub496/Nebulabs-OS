@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, ReactNode, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect, useCallback, useRef } from 'react';
 import { 
   ShoppingBag, 
   FolderOpen, 
@@ -309,18 +309,34 @@ const MOCK_EMAILS: Email[] = [
     timestamp: 'Today, 11:45 AM',
     isRead: false,
     folder: 'inbox'
-  },
-  {
-    id: '3',
-    from: 'System Security',
-    to: 'user',
-    subject: 'Security Protocol Verification',
-    content: 'ALERT: Nebula Defender has completed its initial sweep. Your virtual partition is 100% encrypted and secured against external script execution.',
-    timestamp: 'Yesterday, 4:20 PM',
-    isRead: true,
-    isSystem: true,
-    folder: 'inbox'
   }
+];
+
+const PERSONAL_CONTACTS = [
+  { name: 'Mom', role: 'Family' },
+  { name: 'Dad', role: 'Family' },
+  { name: 'Best Friend', role: 'Social' },
+  { name: 'Pizza Planet', role: 'Business' },
+  { name: 'Nebula News Bot', role: 'Subscription' }
+];
+
+const PERSONAL_EMAIL_SUBJECTS = [
+  "Don't forget lunch!",
+  "Check out this cool photo",
+  "Your order is ready",
+  "Weekly Nebula Digest",
+  "Hey, how's it going?",
+  "Dinner on Sunday?",
+  "Important: Subscription Update"
+];
+
+const PERSONAL_EMAIL_BODIES = [
+  "Just wanted to check in and see how you like the new OS. Love you!",
+  "We are processing your order for a Large Nebula Supreme. It will be ready in 15 minutes.",
+  "Here are the top stories for this week. Nebula WebOS usage is up 200%!",
+  "Did you see that thing Sarah posted? Crazy stuff.",
+  "Let's catch up soon. It feels like forever.",
+  "I sent you some files to the Shared Assets folder. Let me know if they work."
 ];
 
 const INITIAL_APPS: AppId[] = ['store', 'files', 'settings', 'assistant', 'notes', 'calc', 'terminal', 'browser', 'trash', 'news', 'maps', 'monitor', 'calendar', 'snake', 'minesweeper', 'update', 'paint', 'info', 'camera', 'slides', 'mail'];
@@ -378,6 +394,66 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   const [displayLayout, setDisplayLayoutState] = useState<DisplayLayout>({ '1': { right: '2' }, '2': { left: '1' } });
   const [isSecurityEnabled, setSecurityEnabledState] = useState(true);
 
+  const addNotification = useCallback((title: string, message: string, type: SystemNotification['type'] = 'system') => {
+    const newNotif: SystemNotification = {
+      id: Math.random().toString(36).substr(2, 9),
+      title, message, type,
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    };
+    setNotifications(prev => [newNotif, ...prev].slice(0, 50));
+    if (currentDisplayId === '1') toast({ title, description: message });
+  }, [currentDisplayId]);
+
+  // Background activity simulator
+  useEffect(() => {
+    if (!currentUser || powerStatus !== 'on') return;
+
+    const simulateIncoming = () => {
+      const isEmail = Math.random() > 0.5;
+      const contacts = currentUser.isWorkAccount 
+        ? [...PERSONAL_CONTACTS, { name: 'Sarah (Dev Team)', role: 'Engineering' }] 
+        : PERSONAL_CONTACTS;
+      
+      const sender = contacts[Math.floor(Math.random() * contacts.length)];
+
+      if (isEmail) {
+        const subject = PERSONAL_EMAIL_SUBJECTS[Math.floor(Math.random() * PERSONAL_EMAIL_SUBJECTS.length)];
+        const content = PERSONAL_EMAIL_BODIES[Math.floor(Math.random() * PERSONAL_EMAIL_BODIES.length)];
+        const newMail: Email = {
+          id: Math.random().toString(36).substr(2, 9),
+          from: sender.name,
+          to: currentUser.username,
+          subject,
+          content,
+          timestamp: 'Just now',
+          isRead: false,
+          folder: 'inbox'
+        };
+        setEmails(prev => [newMail, ...prev]);
+        addNotification(`New Email: ${sender.name}`, subject, 'app');
+      } else {
+        const text = PERSONAL_EMAIL_BODIES[Math.floor(Math.random() * PERSONAL_EMAIL_BODIES.length)].slice(0, 50);
+        const newMsg: ChatMessage = {
+          id: Math.random().toString(36).substr(2, 9),
+          sender: sender.name,
+          recipient: currentUser.username,
+          text,
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          isBot: true
+        };
+        setChatMessages(prev => [...prev, newMsg]);
+        addNotification(`Chat: ${sender.name}`, text, 'app');
+      }
+    };
+
+    // Random trigger every 1-3 minutes
+    const interval = setInterval(() => {
+      if (Math.random() > 0.7) simulateIncoming();
+    }, 60000);
+
+    return () => clearInterval(interval);
+  }, [currentUser, powerStatus, addNotification]);
+
   const markEmailRead = (id: string) => {
     setEmails(prev => prev.map(email => email.id === id ? { ...email, isRead: true } : email));
   };
@@ -416,13 +492,10 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     setEmails(prev => [sentEmail, ...prev]);
     addNotification("Email Sent", `Message delivered to ${to}.`, 'app');
 
-    // Trigger AI response logic
     try {
-      // Pick first name if multiple recipients
       const firstRecipient = to.split(',')[0].trim();
       const response = await respondToEmail({ toName: firstRecipient, subject, content });
       
-      // Delay response to simulate realism
       setTimeout(() => {
         const replyEmail: Email = {
           id: Math.random().toString(36).substr(2, 9),
@@ -446,21 +519,21 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     const msg: ChatMessage = {
       id: Math.random().toString(36).substr(2, 9),
       sender: currentUser?.username || 'Me',
-      recipient: recipient, // Explicitly tag the recipient
+      recipient: recipient,
       text,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       isBot: false
     };
     setChatMessages(prev => [...prev, msg]);
 
-    // Call unique AI chat responder
     try {
       const chatHistory = chatMessages.slice(-5).map(m => `${m.sender}: ${m.text}`);
       const response = await respondToChat({ 
         colleagueName: recipient, 
         colleagueRole: role, 
         message: text,
-        history: chatHistory
+        history: chatHistory,
+        isWorkMode: currentUser?.isWorkAccount
       });
 
       setTimeout(() => {
@@ -482,23 +555,13 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const addNotification = useCallback((title: string, message: string, type: SystemNotification['type'] = 'system') => {
-    const newNotif: SystemNotification = {
-      id: Math.random().toString(36).substr(2, 9),
-      title, message, type,
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-    };
-    setNotifications(prev => [newNotif, ...prev].slice(0, 50));
-    if (currentDisplayId === '1') toast({ title, description: message });
-  }, [currentDisplayId]);
-
   const saveSetting = useCallback((key: string, value: any) => {
     if (currentUser) {
       try {
         const strValue = typeof value === 'object' ? JSON.stringify(value) : String(value);
         localStorage.setItem(`nebula_${currentUser.id}_${key}`, strValue);
       } catch (e) {
-        console.warn("Nebula Kernel: Local registry entry failed. Quota may be exceeded.", e);
+        console.warn("Nebula Kernel: Local registry entry failed.", e);
       }
     }
   }, [currentUser]);
@@ -534,7 +597,6 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     const html = document.documentElement;
     const classes = Array.from(html.classList).filter(c => c.startsWith('accent-'));
     classes.forEach(c => html.classList.remove(c));
-    
     if (accentColor !== 'default' && accentColor !== 'custom') {
       html.classList.add(`accent-${accentColor}`);
     }
@@ -548,32 +610,15 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
-
     const getCursorValue = () => {
       if (cursorColor === 'black') return 'var(--cursor-black)';
       if (cursorColor === 'white') return 'var(--cursor-white)';
-      
       let hex = customAccentHex;
-      const accentHexes: Record<string, string> = {
-        blue: '#3b82f6',
-        rose: '#e11d48',
-        orange: '#f97316',
-        green: '#16a34a',
-        purple: '#9333ea',
-        grey: '#64748b',
-        default: '#9333ea'
-      };
-      
-      if (accentColor !== 'custom') {
-        hex = accentHexes[accentColor] || accentHexes['default'];
-      }
-
-      const svg = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M 4 3 L 4 21 L 8.5 16.5 L 11.5 23 L 14.5 22 L 11.5 15.5 L 18 15.5 L 4 3 Z" fill="${hex}" stroke="white" stroke-width="0.8" stroke-linejoin="round"/>
-      </svg>`;
+      const accentHexes: Record<string, string> = { blue: '#3b82f6', rose: '#e11d48', orange: '#f97316', green: '#16a34a', purple: '#9333ea', grey: '#64748b', default: '#9333ea' };
+      if (accentColor !== 'custom') hex = accentHexes[accentColor] || accentHexes['default'];
+      const svg = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M 4 3 L 4 21 L 8.5 16.5 L 11.5 23 L 14.5 22 L 11.5 15.5 L 18 15.5 L 4 3 Z" fill="${hex}" stroke="white" stroke-width="0.8" stroke-linejoin="round"/></svg>`;
       return `url("data:image/svg+xml;base64,${window.btoa(svg)}")`;
     };
-
     document.documentElement.style.setProperty('--cursor-url', getCursorValue());
   }, [cursorColor, accentColor, customAccentHex]);
 
@@ -585,10 +630,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       setAccounts([defaultUser]);
       localStorage.setItem('nebula_accounts', JSON.stringify([defaultUser]));
     }
-
-    const timer = setTimeout(() => {
-      setPowerStatusState('on');
-    }, 800);
+    const timer = setTimeout(() => setPowerStatusState('on'), 800);
     return () => clearTimeout(timer);
   }, []);
 
@@ -613,9 +655,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     setIsLocked(false);
   }, []);
 
-  const lock = () => {
-    if (currentUser) setIsLocked(true);
-  };
+  const lock = () => { if (currentUser) setIsLocked(true); };
 
   const unlock = (password?: string): boolean => {
     if (currentUser) {
@@ -634,27 +674,19 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       password: password || undefined,
       isWorkAccount: false
     };
-    
     setAccounts(prev => {
       const updated = [...prev, newAcc];
-      try {
-        localStorage.setItem('nebula_accounts', JSON.stringify(updated));
-      } catch (e) {
-        console.warn("Nebula Kernel: Account creation storage failed.", e);
-      }
+      try { localStorage.setItem('nebula_accounts', JSON.stringify(updated)); } catch (e) {}
       return updated;
     });
-
     setCurrentUser(newAcc);
     localStorage.setItem('nebula_current_user_id', newAcc.id);
     setIsLocked(false);
-    
     try {
       localStorage.setItem(`nebula_${newAcc.id}_theme`, theme);
       localStorage.setItem(`nebula_${newAcc.id}_accent`, accentColor);
       localStorage.setItem(`nebula_${newAcc.id}_wallpaper`, wallpaper);
     } catch (e) {}
-    
     addNotification("Account Created", `Welcome, ${username}! System initialized.`);
   }, [theme, accentColor, wallpaper, addNotification]);
 
@@ -662,9 +694,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     if (userId === 'admin') return; 
     setAccounts(prev => {
       const updated = prev.filter(a => a.id !== userId);
-      try {
-        localStorage.setItem('nebula_accounts', JSON.stringify(updated));
-      } catch (e) {}
+      try { localStorage.setItem('nebula_accounts', JSON.stringify(updated)); } catch (e) {}
       return updated;
     });
     addNotification("Account Removed", "User identity purged from system registry.", "security");
@@ -679,9 +709,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     try {
       localStorage.setItem('nebula_accounts', JSON.stringify(updatedAccounts));
       addNotification("Security Updated", "Your account password has been changed.", "security");
-    } catch (e) {
-      addNotification("Storage Error", "Failed to save password change due to local storage quota.", "security");
-    }
+    } catch (e) {}
   };
 
   const resetUserPassword = (userId: string, password: string) => {
@@ -690,9 +718,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     try {
       localStorage.setItem('nebula_accounts', JSON.stringify(updatedAccounts));
       addNotification("Identity Recovered", "Hardware-level password reset successful.", "security");
-    } catch (e) {
-      console.error("Nebula Kernel: Critical registry error during password reset.", e);
-    }
+    } catch (e) {}
   };
 
   const updateUserAvatar = (url: string) => {
@@ -704,10 +730,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       setAccounts(updatedAccounts);
       localStorage.setItem('nebula_accounts', JSON.stringify(updatedAccounts));
       addNotification("Identity Updated", "Your profile picture has been updated.", "system");
-    } catch (e) {
-      console.error("Nebula Kernel: Avatar save failed.", e);
-      addNotification("Identity Failed", "Storage limit reached. Profile picture could not be saved.", "security");
-    }
+    } catch (e) {}
   };
 
   const updateUserWorkStatus = (enabled: boolean) => {
@@ -717,7 +740,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     const updatedAccounts = accounts.map(a => a.id === currentUser.id ? updatedUser : a);
     setAccounts(updatedAccounts);
     localStorage.setItem('nebula_accounts', JSON.stringify(updatedAccounts));
-    addNotification("Workspace Clearanced", enabled ? "Nebulabs Work privileges enabled." : "Professional clearance revoked.", "security");
+    addNotification("Workspace Mode Changed", enabled ? "Professional Work Account active." : "Personal Mode active.", "system");
   };
 
   const clearNotifications = () => setNotifications([]);
@@ -731,7 +754,6 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       }
       return;
     }
-
     let initialWidth = 800, initialHeight = 600;
     if (appId === 'calc') { initialWidth = 320; initialHeight = 480; }
     else if (appId === 'terminal') { initialWidth = 700; initialHeight = 450; }
@@ -742,7 +764,6 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     else if (appId === 'camera') { initialWidth = 640; initialHeight = 520; }
     else if (appId === 'slides') { initialWidth = 950; initialHeight = 650; }
     else if (appId === 'mail') { initialWidth = 900; initialHeight = 600; }
-
     const newId = `${appId}-${Date.now()}`;
     const newWindow: WindowInstance = {
       id: newId, appId, title, isMinimized: false, isMaximized: false, zIndex: nextZIndex,
@@ -751,7 +772,6 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       y: appId === 'virus' ? (Math.random() * (window.innerHeight - 250)) : 50 + (openWindows.length * 20),
       params
     };
-
     setOpenWindows(prev => [...prev, newWindow]);
     setActiveWindowId(newId);
     setNextZIndex(prev => prev + 1);
@@ -789,68 +809,18 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     setOpenWindows(prev => prev.map(w => w.id === windowId ? { ...w, displayId } : w));
   };
 
-  const setNotes = (content: string) => {
-    if (!isOnline) return;
-    setNotesInternal(content);
-    saveSetting('notes', content);
-  };
-
-  const setTheme = (t: ThemeMode) => {
-    setThemeState(t);
-    saveSetting('theme', t);
-  };
-
-  const setAccentColor = (c: AccentColor) => {
-    setAccentColorState(c);
-    saveSetting('accent', c);
-  };
-
-  const setCustomAccentHex = (h: string) => {
-    setCustomAccentHexState(h);
-    saveSetting('custom_accent', h);
-  };
-
-  const setCursorColor = (c: CursorColor) => {
-    setCursorColorState(c);
-    saveSetting('cursor', c);
-  };
-
-  const setInverted = (inv: boolean) => {
-    setInvertedState(inv);
-    saveSetting('inverted', inv);
-  };
-
-  const setGlassEnabled = (gl: boolean) => {
-    setGlassEnabledState(gl);
-    saveSetting('glass', gl);
-  };
-
-  const setTaskbarPosition = (p: TaskbarPosition) => {
-    setTaskbarPositionState(p);
-    saveSetting('taskbar_pos', p);
-  };
-
-  const setTaskbarSize = (s: number) => {
-    if (isNaN(s)) return;
-    setTaskbarSizeState(s);
-    saveSetting('taskbar_size', s);
-  };
-
-  const setIconSize = (s: number) => {
-    if (isNaN(s)) return;
-    setIconSizeState(s);
-    saveSetting('icon_size', s);
-  };
-
-  const setVolume = (v: number) => {
-    setVolumeState(v);
-    saveSetting('volume', v);
-  };
-
-  const setBrightness = (b: number) => {
-    setBrightnessState(b);
-    saveSetting('brightness', b);
-  };
+  const setNotes = (content: string) => { if (!isOnline) return; setNotesInternal(content); saveSetting('notes', content); };
+  const setTheme = (t: ThemeMode) => { setThemeState(t); saveSetting('theme', t); };
+  const setAccentColor = (c: AccentColor) => { setAccentColorState(c); saveSetting('accent', c); };
+  const setCustomAccentHex = (h: string) => { setCustomAccentHexState(h); saveSetting('custom_accent', h); };
+  const setCursorColor = (c: CursorColor) => { setCursorColorState(c); saveSetting('cursor', c); };
+  const setInverted = (inv: boolean) => { setInvertedState(inv); saveSetting('inverted', inv); };
+  const setGlassEnabled = (gl: boolean) => { setGlassEnabledState(gl); saveSetting('glass', gl); };
+  const setTaskbarPosition = (p: TaskbarPosition) => { setTaskbarPositionState(p); saveSetting('taskbar_pos', p); };
+  const setTaskbarSize = (s: number) => { if (isNaN(s)) return; setTaskbarSizeState(s); saveSetting('taskbar_size', s); };
+  const setIconSize = (s: number) => { if (isNaN(s)) return; setIconSizeState(s); saveSetting('icon_size', s); };
+  const setVolume = (v: number) => { setVolumeState(v); saveSetting('volume', v); };
+  const setBrightness = (b: number) => { setBrightnessState(b); saveSetting('brightness', b); };
 
   const setIsWidgetsOpen = (open: boolean) => {
     setIsWidgetsOpenState(open);
@@ -898,7 +868,6 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     const updated = { ...displayLayout };
     const reverseMap: Record<DisplayDirection, DisplayDirection> = { left: 'right', right: 'left', top: 'bottom', bottom: 'top' };
     const revDir = reverseMap[direction];
-
     if (toId !== 'none') {
       if (!updated[fromId]) updated[fromId] = {};
       updated[fromId][direction] = toId;
@@ -915,33 +884,10 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const resetDisplayLayout = () => setDisplayLayoutState({});
-
-  const powerOn = () => {
-    setPowerStatusState('booting');
-    setTimeout(() => setPowerStatusState('on'), 1000);
-  };
-
-  const restart = () => {
-    setCurrentUser(null);
-    setOpenWindows([]);
-    setActiveWindowId(null);
-    setIsLocked(false);
-    setPowerStatusState('booting');
-    setTimeout(() => setPowerStatusState('on'), 1000);
-  };
-
-  const shutDown = () => {
-    setCurrentUser(null);
-    setOpenWindows([]);
-    setActiveWindowId(null);
-    setIsLocked(false);
-    setPowerStatusState('off');
-  };
-
-  const minimizeAllWindows = () => {
-    setOpenWindows(prev => prev.map(w => ({ ...w, isMinimized: true })));
-    setActiveWindowId(null);
-  };
+  const powerOn = () => { setPowerStatusState('booting'); setTimeout(() => setPowerStatusState('on'), 800); };
+  const restart = () => { setCurrentUser(null); setOpenWindows([]); setActiveWindowId(null); setIsLocked(false); setPowerStatusState('booting'); setTimeout(() => setPowerStatusState('on'), 800); };
+  const shutDown = () => { setCurrentUser(null); setOpenWindows([]); setActiveWindowId(null); setIsLocked(false); setPowerStatusState('off'); };
+  const minimizeAllWindows = () => { setOpenWindows(prev => prev.map(w => ({ ...w, isMinimized: true }))); setActiveWindowId(null); };
 
   const createFolder = (name: string, parentId: string | null) => {
     const newFolder: FileSystemItem = { id: Math.random().toString(36).substr(2, 9), name, type: 'folder', parentId };
@@ -956,22 +902,15 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
 
   const moveToTrash = (id: string) => {
     const item = fileSystem.find(i => i.id === id);
-    if (item) {
-      setFileSystem(prev => prev.filter(i => i.id !== id));
-      setTrash(prev => [...prev, item]);
-    }
+    if (item) { setFileSystem(prev => prev.filter(i => i.id !== id)); setTrash(prev => [...prev, item]); }
   };
 
   const restoreFromTrash = (id: string) => {
     const item = trash.find(i => i.id === id);
-    if (item) {
-      setTrash(prev => prev.filter(i => i.id !== id));
-      setFileSystem(prev => [...prev, item]);
-    }
+    if (item) { setTrash(prev => prev.filter(i => i.id !== id)); setFileSystem(prev => [...prev, item]); }
   };
 
   const emptyTrash = () => setTrash([]);
-
   const deleteItemPermanently = (id: string) => setTrash(prev => prev.filter(item => item.id !== id));
 
   const installApp = (appId: AppId) => {

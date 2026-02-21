@@ -2,21 +2,28 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { useOS } from '@/context/os-context';
-import { Send, X, User, Bot, Sparkles, MessageCircle, MoreHorizontal, ShieldCheck, ShieldAlert, Lock } from 'lucide-react';
+import { Send, X, User, Bot, Sparkles, MessageCircle, MoreHorizontal, ShieldCheck, ShieldAlert, Lock, Heart, ShoppingBag, Bell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 
-const COLLEAGUES = [
+const WORK_COLLEAGUES = [
   { name: 'Dev Lead (Sarah)', role: 'Engineering', status: 'online', avatar: 'https://picsum.photos/seed/sarah/100/100' },
   { name: 'System Admin', role: 'Infrastructure', status: 'online', avatar: 'https://picsum.photos/seed/admin/100/100' },
   { name: 'Nebulabs HR', role: 'Personnel', status: 'away', avatar: 'https://picsum.photos/seed/hr/100/100' },
   { name: 'Nebulabs CEO', role: 'Executive', status: 'online', avatar: 'https://picsum.photos/seed/ceo/100/100' },
 ];
 
+const PERSONAL_CONTACTS = [
+  { name: 'Mom', role: 'Family', status: 'online', avatar: 'https://picsum.photos/seed/mom/100/100', icon: Heart },
+  { name: 'Dad', role: 'Family', status: 'away', avatar: 'https://picsum.photos/seed/dad/100/100', icon: Heart },
+  { name: 'Best Friend', role: 'Social', status: 'online', avatar: 'https://picsum.photos/seed/friend/100/100', icon: User },
+  { name: 'Pizza Planet', role: 'Business', status: 'online', avatar: 'https://picsum.photos/seed/pizza/100/100', icon: ShoppingBag },
+  { name: 'Nebula News Bot', role: 'Subscription', status: 'online', avatar: '', icon: Bell },
+];
+
 export const ChatBar: React.FC = () => {
-  // Call hooks at the top level ONLY
   const { 
     isChatOpen, 
     setIsChatOpen, 
@@ -26,11 +33,17 @@ export const ChatBar: React.FC = () => {
     openApp 
   } = useOS();
   
+  const isWorkAccount = currentUser?.isWorkAccount;
+  const currentContacts = isWorkAccount ? WORK_COLLEAGUES : PERSONAL_CONTACTS;
+  
   const [inputText, setInputText] = useState("");
-  const [selectedColleague, setSelectedColleague] = useState(COLLEAGUES[0]);
+  const [selectedColleague, setSelectedColleague] = useState(currentContacts[0]);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const isWorkAccount = currentUser?.isWorkAccount;
+  useEffect(() => {
+    // Sync selected colleague if mode changes
+    setSelectedColleague(currentContacts[0]);
+  }, [isWorkAccount]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -41,18 +54,13 @@ export const ChatBar: React.FC = () => {
   if (!isChatOpen) return null;
 
   const handleSend = async () => {
-    if (!inputText.trim() || !isWorkAccount) return;
+    if (!inputText.trim()) return;
     const text = inputText;
     setInputText("");
     await sendChatMessage(text, selectedColleague.name, selectedColleague.role);
   };
 
-  const handleUpdateCredentials = () => {
-    openApp('settings', 'Settings');
-    setIsChatOpen(false);
-  };
-
-  // Filter messages to show only welcome message or messages involving the selected colleague
+  // Filter messages to show only messages involving the selected colleague
   const filteredMessages = chatMessages.filter(msg => {
     if (msg.sender === 'Nebulabs Onboarding') return true;
     if (msg.isBot) return msg.sender === selectedColleague.name;
@@ -74,8 +82,10 @@ export const ChatBar: React.FC = () => {
               <MessageCircle className="text-accent" size={24} />
             </div>
             <div>
-              <h2 className="text-xl font-bold">Nebula Teams</h2>
-              <p className="text-[10px] text-white/40 font-medium uppercase tracking-widest">Internal Communication</p>
+              <h2 className="text-xl font-bold">{isWorkAccount ? "Nebula Teams" : "Personal Chat"}</h2>
+              <p className="text-[10px] text-white/40 font-medium uppercase tracking-widest">
+                {isWorkAccount ? "Internal Communication" : "Local Workspace Messaging"}
+              </p>
             </div>
           </div>
           <button 
@@ -86,9 +96,9 @@ export const ChatBar: React.FC = () => {
           </button>
         </div>
 
-        {/* Colleague Select */}
+        {/* Colleague/Contact Select */}
         <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none">
-          {COLLEAGUES.map((c) => (
+          {currentContacts.map((c) => (
             <button
               key={c.name}
               onClick={() => setSelectedColleague(c)}
@@ -102,7 +112,9 @@ export const ChatBar: React.FC = () => {
               <div className="relative">
                 <Avatar className="w-10 h-10 border border-white/10">
                   <AvatarImage src={c.avatar} />
-                  <AvatarFallback>{c.name[0]}</AvatarFallback>
+                  <AvatarFallback className="bg-white/5">
+                    {c.icon ? <c.icon size={16} /> : c.name[0]}
+                  </AvatarFallback>
                 </Avatar>
                 <div className={cn(
                   "absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-[#1e2731]",
@@ -117,62 +129,44 @@ export const ChatBar: React.FC = () => {
 
       {/* Messages */}
       <ScrollArea className="flex-1 p-6" viewportRef={scrollRef}>
-        {!isWorkAccount ? (
-          <div className="h-full flex flex-col items-center justify-center text-center p-8 space-y-6">
-            <div className="w-20 h-20 rounded-[2rem] bg-destructive/10 border border-destructive/20 flex items-center justify-center shadow-2xl animate-pulse">
-              <Lock className="text-destructive" size={32} />
-            </div>
-            <div className="space-y-2">
-              <h3 className="text-lg font-black text-white uppercase tracking-tighter">Security Clearance Required</h3>
-              <p className="text-xs text-white/40 leading-relaxed">
-                Nebula Teams is a restricted corporate service. Please enable your <strong>Nebulabs Work Account</strong> in System Settings to establish a secure link.
-              </p>
-            </div>
-            <Button 
-              className="bg-accent text-primary-foreground font-black px-8 rounded-xl h-12 gap-2"
-              onClick={handleUpdateCredentials}
-            >
-              Update Credentials
-            </Button>
+        <div className="space-y-6">
+          <div className="text-center">
+            <span className="px-3 py-1 bg-white/5 rounded-full text-[9px] font-bold text-white/20 uppercase tracking-widest">
+              Secure Channel established with {selectedColleague.name}
+            </span>
           </div>
-        ) : (
-          <div className="space-y-6">
-            <div className="text-center">
-              <span className="px-3 py-1 bg-white/5 rounded-full text-[9px] font-bold text-white/20 uppercase tracking-widest">
-                Secure Channel established with {selectedColleague.name}
-              </span>
-            </div>
 
-            {filteredMessages.map((msg) => (
-              <div key={msg.id} className={cn("flex gap-3", !msg.isBot ? "flex-row-reverse" : "")}>
-                <Avatar className="w-8 h-8 shrink-0 border border-white/10">
-                  {!msg.isBot ? (
-                    <>
-                      <AvatarImage src={currentUser?.avatarUrl} />
-                      <AvatarFallback className="bg-accent/20 text-accent font-bold text-[10px]">ME</AvatarFallback>
-                    </>
-                  ) : (
-                    <>
-                      <AvatarImage src={msg.sender === 'Nebulabs Onboarding' ? '' : selectedColleague.avatar} />
-                      <AvatarFallback className="bg-white/5 text-white font-bold text-[10px]">{msg.sender[0]}</AvatarFallback>
-                    </>
-                  )}
-                </Avatar>
-                <div className={cn("flex flex-col gap-1 max-w-[80%]", !msg.isBot ? "items-end" : "")}>
-                  <div className={cn(
-                    "p-3 rounded-2xl text-xs leading-relaxed",
-                    !msg.isBot 
-                      ? "bg-accent text-primary-foreground font-medium rounded-tr-none" 
-                      : "bg-white/5 border border-white/10 text-white/80 rounded-tl-none"
-                  )}>
-                    {msg.text}
-                  </div>
-                  <span className="text-[9px] text-white/20 font-mono">{msg.timestamp}</span>
+          {filteredMessages.map((msg) => (
+            <div key={msg.id} className={cn("flex gap-3", !msg.isBot ? "flex-row-reverse" : "")}>
+              <Avatar className="w-8 h-8 shrink-0 border border-white/10">
+                {!msg.isBot ? (
+                  <>
+                    <AvatarImage src={currentUser?.avatarUrl} />
+                    <AvatarFallback className="bg-accent/20 text-accent font-bold text-[10px]">ME</AvatarFallback>
+                  </>
+                ) : (
+                  <>
+                    <AvatarImage src={msg.sender === 'Nebulabs Onboarding' ? '' : selectedColleague.avatar} />
+                    <AvatarFallback className="bg-white/5 text-white font-bold text-[10px]">
+                      {selectedColleague.icon ? <selectedColleague.icon size={12} /> : msg.sender[0]}
+                    </AvatarFallback>
+                  </>
+                )}
+              </Avatar>
+              <div className={cn("flex flex-col gap-1 max-w-[80%]", !msg.isBot ? "items-end" : "")}>
+                <div className={cn(
+                  "p-3 rounded-2xl text-xs leading-relaxed",
+                  !msg.isBot 
+                    ? "bg-accent text-primary-foreground font-medium rounded-tr-none" 
+                    : "bg-white/5 border border-white/10 text-white/80 rounded-tl-none"
+                )}>
+                  {msg.text}
                 </div>
+                <span className="text-[9px] text-white/20 font-mono">{msg.timestamp}</span>
               </div>
-            ))}
-          </div>
-        )}
+            </div>
+          ))}
+        </div>
       </ScrollArea>
 
       {/* Input */}
@@ -181,28 +175,28 @@ export const ChatBar: React.FC = () => {
           <textarea
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
-            disabled={!isWorkAccount}
             onKeyDown={(e) => {
               if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
                 handleSend();
               }
             }}
-            placeholder={isWorkAccount ? `Message ${selectedColleague.name.split(' ')[0]}...` : "Input locked..."}
-            className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 pr-12 text-xs text-white placeholder:text-white/20 focus:outline-none focus:border-accent/40 resize-none h-20 disabled:opacity-50"
+            placeholder={`Message ${selectedColleague.name.split(' ')[0]}...`}
+            className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 pr-12 text-xs text-white placeholder:text-white/20 focus:outline-none focus:border-accent/40 resize-none h-20"
           />
-          <Button 
-            size="icon" 
-            className="absolute right-2 bottom-2 bg-accent text-primary-foreground hover:bg-accent/80 h-8 w-8 rounded-xl disabled:opacity-50"
+          <button 
+            className="absolute right-2 bottom-2 bg-accent text-primary-foreground hover:bg-accent/80 h-8 w-8 rounded-xl disabled:opacity-50 flex items-center justify-center transition-all"
             onClick={handleSend}
-            disabled={!isWorkAccount}
+            disabled={!inputText.trim()}
           >
             <Send size={14} />
-          </Button>
+          </button>
         </div>
         <div className="flex items-center gap-2 mt-3 opacity-20 justify-center">
           <ShieldCheck size={10} className="text-accent" />
-          <span className="text-[8px] font-black uppercase tracking-widest text-white">Encrypted Workspace Bridge</span>
+          <span className="text-[8px] font-black uppercase tracking-widest text-white">
+            {isWorkAccount ? "Encrypted Workspace Bridge" : "End-to-End Encrypted"}
+          </span>
         </div>
       </div>
     </div>
