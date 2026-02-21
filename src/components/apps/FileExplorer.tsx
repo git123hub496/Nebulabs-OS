@@ -3,12 +3,12 @@
 
 import React, { useState, useRef } from 'react';
 import { useOS } from '@/context/os-context';
-import { Folder, File, ChevronRight, Plus, Trash2, Search, Upload } from 'lucide-react';
+import { Folder, File, ChevronRight, Plus, Trash2, Search, Upload, ImageIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
 export const FileExplorer: React.FC = () => {
-  const { fileSystem, createFolder, importFile, moveToTrash } = useOS();
+  const { fileSystem, createFolder, importFile, moveToTrash, openApp } = useOS();
   const [currentFolderId, setCurrentFolderId] = useState<string | null>(null);
   const [newFolderName, setNewFolderName] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -39,6 +39,21 @@ export const FileExplorer: React.FC = () => {
     }
   };
 
+  const handleItemClick = (item: any) => {
+    if (item.type === 'folder') {
+      setCurrentFolderId(item.id);
+    } else {
+      const extension = item.name.split('.').pop()?.toLowerCase();
+      const isImage = ['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg'].includes(extension || '');
+      
+      if (isImage) {
+        openApp('image-viewer', item.name, { src: item.content });
+      } else {
+        alert("No application associated with this file type.");
+      }
+    }
+  };
+
   const getBreadcrumbs = () => {
     const crumbs = [];
     let current = fileSystem.find(i => i.id === currentFolderId);
@@ -53,6 +68,16 @@ export const FileExplorer: React.FC = () => {
     if (!bytes) return "0 KB";
     if (bytes < 1024) return bytes + " B";
     return (bytes / 1024).toFixed(1) + " KB";
+  };
+
+  const getItemIcon = (item: any) => {
+    if (item.type === 'folder') return <Folder size={48} className="text-accent/80 group-hover:text-accent fill-accent/10 transition-colors" />;
+    
+    const extension = item.name.split('.').pop()?.toLowerCase();
+    const isImage = ['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg'].includes(extension || '');
+    
+    if (isImage) return <ImageIcon size={40} className="text-accent/60 group-hover:text-accent transition-colors" />;
+    return <File size={40} className="text-white/40 group-hover:text-white/60 transition-colors" />;
   };
 
   return (
@@ -95,14 +120,10 @@ export const FileExplorer: React.FC = () => {
             <div 
               key={item.id}
               className="group flex flex-col items-center gap-2 p-3 rounded-xl hover:bg-white/5 transition-all cursor-pointer relative"
-              onDoubleClick={() => item.type === 'folder' && setCurrentFolderId(item.id)}
+              onDoubleClick={() => handleItemClick(item)}
             >
               <div className="w-16 h-16 flex items-center justify-center">
-                {item.type === 'folder' ? (
-                  <Folder size={48} className="text-accent/80 group-hover:text-accent fill-accent/10 transition-colors" />
-                ) : (
-                  <File size={40} className="text-white/40 group-hover:text-white/60 transition-colors" />
-                )}
+                {getItemIcon(item)}
               </div>
               <div className="flex flex-col items-center min-w-0 w-full px-2">
                 <span className="text-xs text-white/80 text-center truncate w-full">{item.name}</span>
@@ -139,6 +160,7 @@ export const FileExplorer: React.FC = () => {
                   ref={fileInputRef} 
                   onChange={handleFileUpload} 
                   className="hidden" 
+                  accept="image/*,.pdf,.txt"
                 />
                 <Button 
                   size="sm" 

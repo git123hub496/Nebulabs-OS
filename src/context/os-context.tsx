@@ -23,11 +23,12 @@ import {
   Wifi,
   Gamepad2,
   Bomb,
-  File as FileIcon
+  File as FileIcon,
+  Image as ImageIcon
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
-export type AppId = 'store' | 'files' | 'settings' | 'assistant' | 'google-drive' | 'notes' | 'calc' | 'terminal' | 'browser' | 'trash' | 'news' | 'maps' | 'monitor' | 'calendar' | 'snake' | 'minesweeper';
+export type AppId = 'store' | 'files' | 'settings' | 'assistant' | 'google-drive' | 'notes' | 'calc' | 'terminal' | 'browser' | 'trash' | 'news' | 'maps' | 'monitor' | 'calendar' | 'snake' | 'minesweeper' | 'image-viewer';
 export type ThemeMode = 'dark' | 'light';
 export type PowerStatus = 'on' | 'off' | 'booting';
 export type TaskbarPosition = 'top' | 'bottom' | 'left' | 'right';
@@ -55,6 +56,7 @@ export interface WindowInstance {
   displayId: string; 
   x: number;
   y: number;
+  params?: any;
 }
 
 export interface FileSystemItem {
@@ -127,7 +129,7 @@ interface OSContextType {
   login: (userId: string) => void;
   logout: () => void;
   createAccount: (username: string) => void;
-  openApp: (appId: AppId, title: string) => void;
+  openApp: (appId: AppId, title: string, params?: any) => void;
   closeWindow: (windowId: string) => void;
   minimizeWindow: (windowId: string) => void;
   maximizeWindow: (windowId: string) => void;
@@ -197,6 +199,7 @@ export const APP_INFO: Record<AppId, { icon: any; label: string }> = {
   'calendar': { icon: CalendarIcon, label: 'Calendar' },
   'snake': { icon: Gamepad2, label: 'Nebula Snake' },
   'minesweeper': { icon: Bomb, label: 'Minesweeper' },
+  'image-viewer': { icon: ImageIcon, label: 'Image Viewer' },
 };
 
 const INITIAL_FILES: FileSystemItem[] = [
@@ -612,8 +615,8 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     saveSetting('power', 'off');
   };
 
-  const openApp = (appId: AppId, title: string) => {
-    const existing = openWindows.find(w => w.appId === appId);
+  const openApp = (appId: AppId, title: string, params?: any) => {
+    const existing = openWindows.find(w => w.appId === appId && JSON.stringify(w.params) === JSON.stringify(params));
     if (existing) {
       focusWindow(existing.id);
       if (existing.isMinimized) {
@@ -638,6 +641,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     else if (appId === 'calendar') { initialWidth = 850; initialHeight = 600; }
     else if (appId === 'snake') { initialWidth = 400; initialHeight = 500; }
     else if (appId === 'minesweeper') { initialWidth = 350; initialHeight = 450; }
+    else if (appId === 'image-viewer') { initialWidth = 600; initialHeight = 500; }
 
     const newId = `${appId}-${Date.now()}`;
     const newWindow: WindowInstance = {
@@ -651,7 +655,8 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       initialHeight,
       displayId: currentDisplayId,
       x: 100 + (openWindows.length * 20),
-      y: 50 + (openWindows.length * 20)
+      y: 50 + (openWindows.length * 20),
+      params
     };
 
     const updated = [...openWindows, newWindow];

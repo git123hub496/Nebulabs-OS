@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { useOS, AppId, DesktopShortcut } from '@/context/os-context';
+import { useOS, AppId, DesktopShortcut, WindowInstance } from '@/context/os-context';
 import { Window } from './Window';
 import { Taskbar } from './Taskbar';
 import { ContextMenu } from './ContextMenu';
@@ -43,26 +43,28 @@ import { SystemMonitor } from '../apps/SystemMonitor';
 import { Calendar } from '../apps/Calendar';
 import { SnakeGame } from '../apps/SnakeGame';
 import { Minesweeper } from '../apps/Minesweeper';
+import { ImageViewer } from '../apps/ImageViewer';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 
-const APP_COMPONENTS: Record<AppId, React.ReactNode> = {
-  'store': <AppStore />,
-  'files': <FileExplorer />,
-  'settings': <Settings />,
-  'assistant': <AIAssistant />,
-  'google-drive': <GoogleAppPlaceholder type="drive" />,
-  'notes': <Notes />,
-  'calc': <Calculator />,
-  'terminal': <Terminal />,
-  'browser': <NebulaBrowser />,
-  'trash': <RecyclingBin />,
-  'news': <NebulaNews />,
-  'maps': <NebulaMaps />,
-  'monitor': <SystemMonitor />,
-  'calendar': <Calendar />,
-  'snake': <SnakeGame />,
-  'minesweeper': <Minesweeper />,
+const APP_COMPONENTS: Record<AppId, (win: WindowInstance) => React.ReactNode> = {
+  'store': (win) => <AppStore />,
+  'files': (win) => <FileExplorer />,
+  'settings': (win) => <Settings />,
+  'assistant': (win) => <AIAssistant />,
+  'google-drive': (win) => <GoogleAppPlaceholder type="drive" />,
+  'notes': (win) => <Notes />,
+  'calc': (win) => <Calculator />,
+  'terminal': (win) => <Terminal />,
+  'browser': (win) => <NebulaBrowser />,
+  'trash': (win) => <RecyclingBin />,
+  'news': (win) => <NebulaNews />,
+  'maps': (win) => <NebulaMaps />,
+  'monitor': (win) => <SystemMonitor />,
+  'calendar': (win) => <Calendar />,
+  'snake': (win) => <SnakeGame />,
+  'minesweeper': (win) => <Minesweeper />,
+  'image-viewer': (win) => <ImageViewer src={win.params?.src} />,
 };
 
 export const Desktop: React.FC = () => {
@@ -324,7 +326,7 @@ export const Desktop: React.FC = () => {
 
       {displayWindows.map(window => (
         <Window key={window.id} window={window}>
-          {APP_COMPONENTS[window.appId]}
+          {APP_COMPONENTS[window.appId](window)}
         </Window>
       ))}
 
