@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { createContext, useContext, useState, ReactNode, useEffect, useCallback, useRef } from 'react';
@@ -182,7 +181,7 @@ interface OSContextType {
   logout: () => void;
   lock: () => void;
   unlock: (password?: string) => boolean;
-  createAccount: (username: string, password?: string, isSchool?: boolean) => void;
+  createAccount: (username: string, password?: string, isSchool?: boolean, isWork?: boolean) => void;
   deleteAccount: (userId: string) => void;
   updateUserPassword: (password: string) => void;
   resetUserPassword: (userId: string, password: string) => void;
@@ -609,16 +608,16 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     return false;
   };
 
-  const createAccount = useCallback((username: string, password?: string, isSchool: boolean = false) => {
+  const createAccount = useCallback((username: string, password?: string, isSchool: boolean = false, isWork: boolean = false) => {
     const districtId = isSchool ? "NHU-7" : undefined;
-    const uniqueCode = `${districtId || 'USR'}-${Math.floor(1000 + Math.random() * 9000)}-X`;
+    const uniqueCode = `${districtId || (isWork ? 'WRK' : 'USR')}-${Math.floor(1000 + Math.random() * 9000)}-X`;
     
     const newAcc: LocalUser = {
       id: Math.random().toString(36).substr(2, 9),
       username,
       avatarColor: isSchool ? '#3b82f6' : AVATAR_COLORS[Math.floor(Math.random() * AVATAR_COLORS.length)],
       password: isSchool ? "NU" : (password || undefined),
-      isWorkAccount: false,
+      isWorkAccount: isWork,
       isSchoolAccount: isSchool,
       districtId,
       uniqueCode
@@ -636,7 +635,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       localStorage.setItem(`nebula_${newAcc.id}_accent`, isSchool ? 'blue' : accentColor);
       localStorage.setItem(`nebula_${newAcc.id}_wallpaper`, wallpaper);
     } catch (e) {}
-    addNotification("Account Created", `Welcome, ${username}! ${isSchool ? "District profile active." : "System initialized."}`);
+    addNotification("Account Created", `Welcome, ${username}! ${isSchool ? "District profile active." : (isWork ? "Professional workspace ready." : "System initialized.")}`);
   }, [theme, accentColor, wallpaper, addNotification]);
 
   const deleteAccount = useCallback((userId: string) => {

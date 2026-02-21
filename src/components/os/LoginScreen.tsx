@@ -1,4 +1,3 @@
-
 "use client"
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -27,7 +26,8 @@ import {
   ShieldAlert,
   Fingerprint,
   GraduationCap,
-  Building2
+  Building2,
+  Briefcase
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -74,6 +74,8 @@ const ACCENT_COLORS: { id: AccentColor; color: string }[] = [
   { id: 'green', color: '#16a34a' },
 ];
 
+type AccountType = 'personal' | 'school' | 'work';
+
 export const LoginScreen: React.FC = () => {
   const { 
     accounts, login, createAccount, deleteAccount, resetUserPassword, wallpaper, 
@@ -84,7 +86,7 @@ export const LoginScreen: React.FC = () => {
   const [step, setStep] = useState<'select' | 'create' | 'customize' | 'initialize' | 'recovery'>('select');
   const [newUsername, setNewUsername] = useState("");
   const [newPassword, setNewPassword] = useState("");
-  const [isSchoolMode, setIsSchoolMode] = useState(false);
+  const [creationAccountType, setCreationAccountType] = useState<AccountType>('personal');
   const [selectedTheme, setSelectedTheme] = useState<ThemeMode>('dark');
   const [selectedAccent, setSelectedAccent] = useState<AccentColor>('purple');
   const [showBIOS, setShowBIOS] = useState(false);
@@ -139,7 +141,12 @@ export const LoginScreen: React.FC = () => {
               setTimeout(() => {
                 playSound('success');
                 if (step === 'initialize') {
-                  createAccount(newUsername, newPassword || undefined, isSchoolMode);
+                  createAccount(
+                    newUsername, 
+                    newPassword || undefined, 
+                    creationAccountType === 'school',
+                    creationAccountType === 'work'
+                  );
                 } else {
                   if (selectedAccount) {
                     resetUserPassword(selectedAccount.id, newPassword);
@@ -170,7 +177,7 @@ export const LoginScreen: React.FC = () => {
         clearInterval(logInterval);
       };
     }
-  }, [step, newUsername, newPassword, createAccount, resetUserPassword, selectedAccount, isSchoolMode]);
+  }, [step, newUsername, newPassword, createAccount, resetUserPassword, selectedAccount, creationAccountType]);
 
   if (showBIOS) {
     return <BIOS onClose={() => setShowBIOS(false)} />;
@@ -180,7 +187,7 @@ export const LoginScreen: React.FC = () => {
     e.preventDefault();
     if (newUsername.trim()) {
       playSound('click');
-      if (isSchoolMode) {
+      if (creationAccountType === 'school') {
         setStep('initialize'); // Skip customization for schools
       } else {
         setStep('customize');
@@ -230,6 +237,9 @@ export const LoginScreen: React.FC = () => {
       }
     }
   };
+
+  const isSchoolMode = creationAccountType === 'school';
+  const isWorkMode = creationAccountType === 'work';
 
   return (
     <div 
@@ -282,6 +292,11 @@ export const LoginScreen: React.FC = () => {
                         <GraduationCap size={12} className="text-white" />
                       </div>
                     )}
+                    {account.isWorkAccount && !account.isSchoolAccount && (
+                      <div className="absolute top-0 right-0 bg-accent p-1.5 rounded-full border-2 border-[#1e2731]">
+                        <Briefcase size={12} className="text-white" />
+                      </div>
+                    )}
                   </div>
                   <div className="flex flex-col items-center gap-1">
                     <span className="text-white font-bold text-lg drop-shadow-md group-hover:text-accent transition-colors">
@@ -290,6 +305,11 @@ export const LoginScreen: React.FC = () => {
                     {account.isSchoolAccount && (
                       <span className="text-[10px] text-blue-400 uppercase font-black tracking-tighter flex items-center gap-1">
                         District NHU-7
+                      </span>
+                    )}
+                    {account.isWorkAccount && !account.isSchoolAccount && (
+                      <span className="text-[10px] text-accent uppercase font-black tracking-tighter">
+                        Work Account
                       </span>
                     )}
                   </div>
@@ -339,6 +359,11 @@ export const LoginScreen: React.FC = () => {
                   <GraduationCap size={14} className="text-blue-400" />
                   <span className="text-[10px] text-blue-400 font-black uppercase tracking-widest">NHU-7 Managed Account</span>
                 </div>
+              ) : selectedAccount.isWorkAccount ? (
+                <div className="flex items-center gap-2 justify-center py-1 px-3 bg-accent/20 rounded-full border border-accent/30">
+                  <Briefcase size={14} className="text-accent" />
+                  <span className="text-[10px] text-accent font-black uppercase tracking-widest">Work Account Active</span>
+                </div>
               ) : (
                 <p className="text-xs text-white/40 uppercase tracking-widest font-bold">Secure Environment</p>
               )}
@@ -367,7 +392,7 @@ export const LoginScreen: React.FC = () => {
                   <p className="text-destructive text-[10px] font-bold uppercase text-center tracking-widest">Access Denied: Incorrect Password</p>
                 )}
                 
-                {!selectedAccount.isSchoolAccount && (
+                {!selectedAccount.isSchoolMode && (
                   <div className="text-center">
                     <button 
                       type="button"
@@ -413,16 +438,22 @@ export const LoginScreen: React.FC = () => {
             
             <div className="flex gap-2 p-1 bg-white/5 rounded-xl border border-white/5">
               <button 
-                onClick={() => setIsSchoolMode(false)}
-                className={cn("flex-1 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all", !isSchoolMode ? "bg-accent text-white shadow-lg" : "text-white/40 hover:text-white/60")}
+                onClick={() => setCreationAccountType('personal')}
+                className={cn("flex-1 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all", creationAccountType === 'personal' ? "bg-accent text-white shadow-lg" : "text-white/40 hover:text-white/60")}
               >
                 Personal
               </button>
               <button 
-                onClick={() => setIsSchoolMode(true)}
-                className={cn("flex-1 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all", isSchoolMode ? "bg-blue-500 text-white shadow-lg" : "text-white/40 hover:text-white/60")}
+                onClick={() => setCreationAccountType('work')}
+                className={cn("flex-1 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all", creationAccountType === 'work' ? "bg-accent text-white shadow-lg" : "text-white/40 hover:text-white/60")}
               >
-                School District
+                Work
+              </button>
+              <button 
+                onClick={() => setCreationAccountType('school')}
+                className={cn("flex-1 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all", creationAccountType === 'school' ? "bg-blue-500 text-white shadow-lg" : "text-white/40 hover:text-white/60")}
+              >
+                School
               </button>
             </div>
 
@@ -434,7 +465,7 @@ export const LoginScreen: React.FC = () => {
                     autoFocus
                     value={newUsername}
                     onChange={(e) => setNewUsername(e.target.value)}
-                    placeholder={isSchoolMode ? "Student Name" : "e.g. Administrator"}
+                    placeholder={isSchoolMode ? "Student Name" : isWorkMode ? "Corporate Name" : "e.g. Administrator"}
                     className="bg-white/5 border-white/10 text-white h-12 rounded-xl focus-visible:ring-accent"
                   />
                 </div>
@@ -446,6 +477,24 @@ export const LoginScreen: React.FC = () => {
                       <span className="text-[10px] font-black uppercase text-blue-400 tracking-widest">District NHU-7 Policy</span>
                     </div>
                     <p className="text-[10px] text-white/40 leading-relaxed">Password will be set automatically to <strong>NU</strong>. Features will be managed by the district controller.</p>
+                  </div>
+                ) : isWorkMode ? (
+                  <div className="p-4 bg-accent/10 border border-accent/20 rounded-xl space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Briefcase size={14} className="text-accent" />
+                      <span className="text-[10px] font-black uppercase text-accent tracking-widest">Workplace Environment</span>
+                    </div>
+                    <p className="text-[10px] text-white/40 leading-relaxed">Enabling professional tools, Nebula Teams access, and high-priority AI threading.</p>
+                    <div className="space-y-2 pt-2">
+                      <label className="text-[10px] font-black text-accent uppercase tracking-widest px-1">Access Password</label>
+                      <Input 
+                        type="password"
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        placeholder="Workplace credentials"
+                        className="bg-white/5 border-white/10 text-white h-10 rounded-xl focus-visible:ring-accent"
+                      />
+                    </div>
                   </div>
                 ) : (
                   <div className="space-y-2">
@@ -550,7 +599,7 @@ export const LoginScreen: React.FC = () => {
             <div className="w-full space-y-6">
               <div className="space-y-2">
                 <div className="flex justify-between text-[10px] font-black uppercase tracking-widest">
-                  <span className={isSchoolMode ? "text-blue-400" : "text-accent"}>{isSchoolMode ? "Enrolling Managed Identity" : "Preparing Workspace"}</span>
+                  <span className={isSchoolMode ? "text-blue-400" : "text-accent"}>{isSchoolMode ? "Enrolling Managed Identity" : isWorkMode ? "Staging Workplace Assets" : "Preparing Workspace"}</span>
                   <span>{progress}%</span>
                 </div>
                 <Progress value={progress} className="h-2 bg-white/5" />
