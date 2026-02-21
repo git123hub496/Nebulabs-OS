@@ -1,4 +1,3 @@
-
 "use client"
 
 import React, { useState, useRef, useEffect } from 'react';
@@ -234,7 +233,7 @@ export const Window: React.FC<WindowProps> = ({ window: win, children }) => {
             className="p-1.5 hover:bg-destructive/80 group rounded-md transition-colors"
             title="Close"
           >
-            <X size={14} className="text-white/60 group-hover:text-white" />
+            <X size={14} className="text-white/60" />
           </button>
         </div>
       </div>
