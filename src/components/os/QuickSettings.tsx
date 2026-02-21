@@ -20,7 +20,8 @@ import {
   Check,
   ChevronRight,
   Plus,
-  Layout
+  Layout,
+  RefreshCcw
 } from 'lucide-react';
 import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
@@ -46,7 +47,7 @@ export const QuickSettings: React.FC = () => {
     currentWifi, isOnline, connectToWifi,
     currentUser, logout, shutDown, openApp,
     taskbarPosition, currentDisplayId, setCurrentDisplayId,
-    displayLayout, updateDisplayLayout
+    displayLayout, updateDisplayLayout, resetDisplayLayout
   } = useOS();
 
   if (!isQuickSettingsOpen) return null;
@@ -167,6 +168,10 @@ export const QuickSettings: React.FC = () => {
                       <DropdownMenuSub key={dir}>
                         <DropdownMenuSubTrigger className="text-[10px]">{dir} is...</DropdownMenuSubTrigger>
                         <DropdownMenuSubContent className="glass border-white/10 backdrop-blur-3xl">
+                          <DropdownMenuItem onClick={() => updateDisplayLayout(fromId, dir as any, 'none')} className="text-[10px]">
+                            None
+                            {!displayLayout[fromId]?.[dir as any] && <Check size={12} className="ml-auto text-accent" />}
+                          </DropdownMenuItem>
                           {['1', '2', '3'].filter(id => id !== fromId).map(toId => (
                             <DropdownMenuItem 
                               key={toId} 
@@ -188,6 +193,10 @@ export const QuickSettings: React.FC = () => {
              ))}
 
              <Separator className="my-1 bg-white/5" />
+             <DropdownMenuItem onClick={resetDisplayLayout} className="gap-2 text-destructive">
+               <RefreshCcw size={12} />
+               Reset All Arrangements
+             </DropdownMenuItem>
              <DropdownMenuItem onClick={addDisplay} className="gap-2 text-accent">
                <Plus size={12} />
                Connect New Display

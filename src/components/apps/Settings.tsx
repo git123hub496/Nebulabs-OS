@@ -7,7 +7,7 @@ import {
   Monitor, Palette, User, Shield, Bell, HelpCircle, Upload, 
   Image as ImageIcon, Sun, Moon, Layout, Check, MousePointer2, 
   Eye, Zap, Layers, Pipette, Maximize2, Plus, ArrowUpRight,
-  Wifi, ShieldCheck, Activity, Trash2, Info, Newspaper, Clock
+  Wifi, ShieldCheck, Activity, Trash2, Info, Newspaper, Clock, XCircle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
@@ -46,20 +46,13 @@ const ACCENT_COLORS: { id: AccentColor; class: string; label: string }[] = [
   { id: 'default', class: 'bg-black/20 border-white/10', label: 'Nebula' },
 ];
 
-const CURSOR_THEMES: { id: CursorColor; label: string; class: string }[] = [
-  { id: 'black', label: 'Classic Black', class: 'bg-black border-white' },
-  { id: 'white', label: 'Modern White', class: 'bg-white border-black' },
-  { id: 'accent', label: 'System Accent', class: 'bg-accent border-white/20' },
-];
-
 export const Settings: React.FC = () => {
   const { 
     wallpaper, updateWallpaper, theme, setTheme, taskbarPosition, setTaskbarPosition, 
-    taskbarSize, setTaskbarSize, iconSize, setIconSize,
-    accentColor, setAccentColor, customAccentHex, setCustomAccentHex,
+    accentColor, setAccentColor, customAccentHex, 
     cursorColor, setCursorColor, isInverted, setInverted,
     glassEnabled, setGlassEnabled, brightness, setBrightness,
-    currentDisplayId, setCurrentDisplayId, displayLayout, updateDisplayLayout,
+    currentDisplayId, setCurrentDisplayId, displayLayout, updateDisplayLayout, resetDisplayLayout,
     currentUser, notifications, clearNotifications, addNotification
   } = useOS();
 
@@ -204,9 +197,14 @@ export const Settings: React.FC = () => {
                   <Monitor size={18} className="text-accent" />
                   <h2 className="text-lg font-bold">Multi-Display Control</h2>
                 </div>
-                <Button onClick={addDisplay} className="bg-accent text-primary font-bold rounded-xl gap-2">
-                  <Plus size={16} /> Connect Display
-                </Button>
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" onClick={resetDisplayLayout} className="rounded-xl gap-2 border-destructive/20 text-destructive hover:bg-destructive/10">
+                    <XCircle size={14} /> Reset All
+                  </Button>
+                  <Button size="sm" onClick={addDisplay} className="bg-accent text-primary font-bold rounded-xl gap-2">
+                    <Plus size={16} /> Connect Display
+                  </Button>
+                </div>
               </div>
 
               <div className="bg-white/5 border border-white/10 rounded-3xl p-8 text-center space-y-6">
@@ -226,7 +224,7 @@ export const Settings: React.FC = () => {
                   ))}
                 </div>
                 <p className="text-xs text-white/40 max-w-sm mx-auto leading-relaxed">
-                  Select a monitor to identify this browser tab. Arrange displays to enable seamless <strong>Edge-Hopping</strong> window movement.
+                  Select a monitor ID to identify this browser tab. Disconnect displays by setting their position to <strong>"None"</strong> or use the reset button.
                 </p>
               </div>
             </section>

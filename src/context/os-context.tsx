@@ -131,6 +131,7 @@ interface OSContextType {
   updateWindowPosition: (windowId: string, x: number, y: number, displayId?: string) => void;
   moveWindowToDisplay: (windowId: string, displayId: string) => void;
   updateDisplayLayout: (fromId: string, direction: DisplayDirection, toId: string) => void;
+  resetDisplayLayout: () => void;
   installApp: (appId: AppId) => void;
   addNotification: (title: string, message: string, type?: SystemNotification['type']) => void;
   clearNotifications: () => void;
@@ -398,7 +399,6 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       return updated;
     });
 
-    // Only show visual toast on primary display to avoid duplication
     if (currentDisplayId === '1') {
       toast({
         title: title,
@@ -412,7 +412,6 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     saveSetting('notifications', []);
   };
 
-  // RANDOM BACKGROUND NOTIFICATIONS EFFECT
   useEffect(() => {
     if (powerStatus !== 'on' || currentDisplayId !== '1') return;
 
@@ -421,7 +420,6 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       addNotification(rand.title, rand.message, rand.type);
     };
 
-    // Initial random delay then every 45-90 seconds
     const initialDelay = 10000 + Math.random() * 20000;
     const timer = setTimeout(() => {
       generateRandomNotif();
@@ -540,15 +538,42 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
 
   const updateDisplayLayout = (fromId: string, direction: DisplayDirection, toId: string) => {
     const updated = { ...displayLayout };
-    if (!updated[fromId]) updated[fromId] = {};
-    updated[fromId][direction] = toId;
-    
-    const reverseMap: Record<DisplayDirection, DisplayDirection> = { left: 'right', right: 'left', top: 'bottom', bottom: 'top' };
-    if (!updated[toId]) updated[toId] = {};
-    updated[toId][reverseMap[direction]] = fromId;
+    const reverseMap: Record<DisplayDirection, DisplayDirection> = { 
+      left: 'right', right: 'left', top: 'bottom', bottom: 'top' 
+    };
+    const revDir = reverseMap[direction];
+
+    if (toId !== 'none') {
+      if (!updated[fromId]) updated[fromId] = {};
+      
+      const oldToId = updated[fromId][direction];
+      if (oldToId && updated[oldToId]) {
+        delete updated[oldToId][revDir];
+      }
+
+      updated[fromId][direction] = toId;
+      
+      if (!updated[toId]) updated[toId] = {};
+      updated[toId][revDir] = fromId;
+    } else {
+      if (updated[fromId]) {
+        const oldToId = updated[fromId][direction];
+        delete updated[fromId][direction];
+        
+        if (oldToId && updated[oldToId]) {
+          delete updated[oldToId][revDir];
+        }
+      }
+    }
     
     setDisplayLayoutState(updated);
     saveSetting('display_layout', updated);
+  };
+
+  const resetDisplayLayout = () => {
+    setDisplayLayoutState({});
+    saveSetting('display_layout', {});
+    addNotification("Display Reset", "All multi-display layout configurations have been cleared.", 'system');
   };
 
   const powerOn = () => {
@@ -794,7 +819,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       currentDisplayId, displayLayout,
       login, logout, createAccount, openApp, closeWindow, minimizeWindow,
       maximizeWindow, snapWindow, focusWindow, updateWindowPosition, moveWindowToDisplay,
-      updateDisplayLayout, installApp, addNotification, clearNotifications,
+      updateDisplayLayout, resetDisplayLayout, installApp, addNotification, clearNotifications,
       updateWallpaper, setNotes, setTheme, setAccentColor, setCustomAccentHex,
       setCursorColor, setInverted, setGlassEnabled, setTaskbarPosition, setTaskbarSize,
       setIconSize, connectToWifi, setVolume, setBrightness, setIsWidgetsOpen,
