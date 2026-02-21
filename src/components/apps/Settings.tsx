@@ -7,7 +7,7 @@ import {
   Monitor, Palette, User, Shield, Bell, HelpCircle, Upload, 
   Image as ImageIcon, Sun, Moon, Layout, Check, MousePointer2, 
   Eye, Zap, Layers, Pipette, Maximize2, Plus, ArrowUpRight,
-  Wifi, ShieldCheck, Activity, Trash2, Info, Newspaper, Clock, XCircle, RefreshCw, ChevronRight
+  Wifi, ShieldCheck, Activity, Trash2, Info, Newspaper, Clock, XCircle, RefreshCw, ChevronRight, ShieldAlert, ShieldX
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
@@ -53,7 +53,8 @@ export const Settings: React.FC = () => {
     cursorColor, setCursorColor, isInverted, setInverted,
     glassEnabled, setGlassEnabled, brightness, setBrightness,
     currentDisplayId, setCurrentDisplayId, displayLayout, updateDisplayLayout, resetDisplayLayout,
-    currentUser, notifications, clearNotifications, addNotification, openApp
+    currentUser, notifications, clearNotifications, addNotification, openApp,
+    isSecurityEnabled, setSecurityEnabled
   } = useOS();
 
   const [activeTab, setActiveTab] = useState<SettingsTab>('personalization');
@@ -443,16 +444,40 @@ export const Settings: React.FC = () => {
                 <h2 className="text-lg font-bold">System Protection</h2>
               </div>
               <div className="grid gap-4">
-                <div className="p-5 bg-white/5 rounded-2xl border border-green-500/20 flex items-center justify-between">
+                <div className={cn(
+                  "p-5 rounded-2xl border transition-all flex items-center justify-between",
+                  isSecurityEnabled ? "bg-white/5 border-green-500/20" : "bg-destructive/5 border-destructive/20"
+                )}>
                   <div className="flex items-center gap-4">
-                    <ShieldCheck size={20} className="text-green-500" />
+                    {isSecurityEnabled ? (
+                      <ShieldCheck size={24} className="text-green-500" />
+                    ) : (
+                      <ShieldX size={24} className="text-destructive animate-pulse" />
+                    )}
                     <div>
-                      <p className="text-sm font-bold">Nebula Defender Active</p>
-                      <p className="text-[10px] text-white/40">Real-time workspace isolation is enabled</p>
+                      <p className="text-sm font-bold">Nebula Defender</p>
+                      <p className="text-[10px] text-white/40">
+                        {isSecurityEnabled ? "Real-time workspace isolation is active." : "System is currently vulnerable to external threats."}
+                      </p>
                     </div>
                   </div>
-                  <Badge variant="outline" className="text-green-500 border-green-500/20">Secure</Badge>
+                  <Switch 
+                    checked={isSecurityEnabled} 
+                    onCheckedChange={setSecurityEnabled}
+                  />
                 </div>
+
+                {!isSecurityEnabled && (
+                  <div className="p-4 bg-destructive/10 border border-destructive/20 rounded-xl flex items-start gap-3 animate-in slide-in-from-top-2">
+                    <ShieldAlert className="text-destructive shrink-0 mt-0.5" size={16} />
+                    <div className="space-y-1">
+                      <p className="text-[11px] font-bold text-destructive uppercase tracking-widest">High Risk Alert</p>
+                      <p className="text-[10px] text-destructive/80 leading-relaxed">
+                        Disabling Nebula Defender exposes your kernel to simulated malware scripts. Unknown windows may appear without your permission.
+                      </p>
+                    </div>
+                  </div>
+                )}
               </div>
             </section>
           </div>

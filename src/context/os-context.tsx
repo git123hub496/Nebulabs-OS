@@ -25,11 +25,13 @@ import {
   Bomb,
   File as FileIcon,
   Image as ImageIcon,
-  RefreshCw
+  RefreshCw,
+  Skull,
+  ShieldAlert
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
-export type AppId = 'store' | 'files' | 'settings' | 'assistant' | 'google-drive' | 'notes' | 'calc' | 'terminal' | 'browser' | 'trash' | 'news' | 'maps' | 'monitor' | 'calendar' | 'snake' | 'minesweeper' | 'image-viewer' | 'update';
+export type AppId = 'store' | 'files' | 'settings' | 'assistant' | 'google-drive' | 'notes' | 'calc' | 'terminal' | 'browser' | 'trash' | 'news' | 'maps' | 'monitor' | 'calendar' | 'snake' | 'minesweeper' | 'image-viewer' | 'update' | 'virus';
 export type ThemeMode = 'dark' | 'light';
 export type PowerStatus = 'on' | 'off' | 'booting';
 export type TaskbarPosition = 'top' | 'bottom' | 'left' | 'right';
@@ -126,6 +128,7 @@ interface OSContextType {
   systemStats: { cpu: number; ram: number; net: number };
   currentDisplayId: string;
   displayLayout: DisplayLayout;
+  isSecurityEnabled: boolean;
   
   login: (userId: string) => void;
   logout: () => void;
@@ -160,6 +163,7 @@ interface OSContextType {
   setIsWidgetsOpen: (isOpen: boolean) => void;
   setIsQuickSettingsOpen: (isOpen: boolean) => void;
   setCurrentDisplayId: (id: string) => void;
+  setSecurityEnabled: (enabled: boolean) => void;
   restart: () => void;
   shutDown: () => void;
   powerOn: () => void;
@@ -202,6 +206,7 @@ export const APP_INFO: Record<AppId, { icon: any; label: string }> = {
   'minesweeper': { icon: Bomb, label: 'Minesweeper' },
   'image-viewer': { icon: ImageIcon, label: 'Image Viewer' },
   'update': { icon: RefreshCw, label: 'System Update' },
+  'virus': { icon: Skull, label: 'CRITICAL_THREAT' },
 };
 
 const INITIAL_FILES: FileSystemItem[] = [
@@ -267,6 +272,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   const [isQuickSettingsOpen, setIsQuickSettingsOpen] = useState(false);
   const [nextZIndex, setNextZIndex] = useState(10);
   const [systemStats, setSystemStats] = useState({ cpu: 12, ram: 42, net: 2 });
+  const [isSecurityEnabled, setSecurityEnabledState] = useState(true);
   
   const [currentDisplayId, setDisplayIdState] = useState('1');
   const [displayLayout, setDisplayLayoutState] = useState<DisplayLayout>({ '1': { right: '2' }, '2': { left: '1' } });
@@ -294,6 +300,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
             case 'display_layout': setDisplayLayoutState(JSON.parse(val)); break;
             case 'notifications': setNotifications(JSON.parse(val)); break;
             case 'file_system': setFileSystem(JSON.parse(val)); break;
+            case 'security_enabled': setSecurityEnabledState(val === 'true'); break;
           }
         } catch (err) {
           console.error('Sync Error:', err);
@@ -378,6 +385,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     setOpenWindows(load('windows', []));
     setNotifications(load('notifications', []));
     setDisplayLayoutState(load('display_layout', { '1': { right: '2' }, '2': { left: '1' } }));
+    setSecurityEnabledState(load('security_enabled', true));
 
     const savedWifi = load('wifi', "Nebula_Secure_5G");
     setCurrentWifi(savedWifi);
@@ -550,6 +558,20 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const setSecurityEnabled = (enabled: boolean) => {
+    setSecurityEnabledState(enabled);
+    saveSetting('security_enabled', enabled);
+    if (enabled) {
+      // Quarantine: Close all virus windows instantly
+      const updated = openWindows.filter(w => w.appId !== 'virus');
+      setOpenWindows(updated);
+      saveSetting('windows', updated);
+      addNotification("Security Restored", "Nebula Defender has quarantined all active threats.", 'security');
+    } else {
+      addNotification("Security Risk", "Nebula Defender has been disabled. System vulnerability detected.", 'security');
+    }
+  };
+
   const updateDisplayLayout = (fromId: string, direction: DisplayDirection, toId: string) => {
     const updated = { ...displayLayout };
     const reverseMap: Record<DisplayDirection, DisplayDirection> = { 
@@ -645,6 +667,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     else if (appId === 'minesweeper') { initialWidth = 350; initialHeight = 450; }
     else if (appId === 'image-viewer') { initialWidth = 600; initialHeight = 500; }
     else if (appId === 'update') { initialWidth = 500; initialHeight = 400; }
+    else if (appId === 'virus') { initialWidth = 300; initialHeight = 250; }
 
     const newId = `${appId}-${Date.now()}`;
     const newWindow: WindowInstance = {
@@ -657,8 +680,8 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       initialWidth,
       initialHeight,
       displayId: currentDisplayId,
-      x: 100 + (openWindows.length * 20),
-      y: 50 + (openWindows.length * 20),
+      x: appId === 'virus' ? (Math.random() * (window.innerWidth - 300)) : 100 + (openWindows.length * 20),
+      y: appId === 'virus' ? (Math.random() * (window.innerHeight - 250)) : 50 + (openWindows.length * 20),
       params
     };
 
@@ -850,14 +873,14 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       customAccentHex, cursorColor, isInverted, glassEnabled, powerStatus,
       taskbarPosition, taskbarSize, iconSize, currentWifi, isWifiConnecting,
       isOnline, volume, brightness, isWidgetsOpen, isQuickSettingsOpen, systemStats,
-      currentDisplayId, displayLayout,
+      currentDisplayId, displayLayout, isSecurityEnabled,
       login, logout, createAccount, openApp, closeWindow, minimizeWindow,
       maximizeWindow, snapWindow, focusWindow, updateWindowPosition, moveWindowToDisplay,
       updateDisplayLayout, resetDisplayLayout, installApp, addNotification, clearNotifications,
       updateWallpaper, setNotes, setTheme, setAccentColor, setCustomAccentHex,
       setCursorColor, setInverted, setGlassEnabled, setTaskbarPosition, setTaskbarSize,
       setIconSize, connectToWifi, setVolume, setBrightness, setIsWidgetsOpen,
-      setIsQuickSettingsOpen, setCurrentDisplayId, restart, shutDown, powerOn,
+      setIsQuickSettingsOpen, setCurrentDisplayId, setSecurityEnabled, restart, shutDown, powerOn,
       createFolder, importFile, moveToTrash, restoreFromTrash, emptyTrash, deleteItemPermanently,
       updateDesktopAppPosition, toggleDesktopApp, togglePinApp, reorderPinnedApps,
     }}>

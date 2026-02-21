@@ -26,7 +26,8 @@ import {
   Calendar as CalendarIcon,
   Gamepad2,
   Bomb,
-  RefreshCw
+  RefreshCw,
+  Skull
 } from 'lucide-react';
 import { FileExplorer } from '../apps/FileExplorer';
 import { AppStore } from '../apps/AppStore';
@@ -46,6 +47,7 @@ import { SnakeGame } from '../apps/SnakeGame';
 import { Minesweeper } from '../apps/Minesweeper';
 import { ImageViewer } from '../apps/ImageViewer';
 import { SystemUpdate } from '../apps/SystemUpdate';
+import { VirusPopup } from '../apps/VirusPopup';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 
@@ -68,6 +70,7 @@ const APP_COMPONENTS: Record<AppId, (win: WindowInstance) => React.ReactNode> = 
   'minesweeper': (win) => <Minesweeper />,
   'image-viewer': (win) => <ImageViewer src={win.params?.src} />,
   'update': (win) => <SystemUpdate />,
+  'virus': (win) => <VirusPopup />,
 };
 
 export const Desktop: React.FC = () => {
@@ -76,7 +79,7 @@ export const Desktop: React.FC = () => {
     powerStatus, powerOn, taskbarPosition, iconSize, currentUser,
     cursorColor, isInverted, glassEnabled, desktopApps, updateDesktopAppPosition, toggleDesktopApp,
     isWidgetsOpen, setIsWidgetsOpen, isQuickSettingsOpen, setIsQuickSettingsOpen,
-    brightness, currentDisplayId, displayLayout
+    brightness, currentDisplayId, displayLayout, isSecurityEnabled, addNotification
   } = useOS();
   
   const [bootOpacity, setBootOpacity] = useState(1);
@@ -101,6 +104,22 @@ export const Desktop: React.FC = () => {
       setBootOpacity(0);
     }
   }, [powerStatus]);
+
+  // Virus Spawning Logic
+  useEffect(() => {
+    if (powerStatus !== 'on' || isSecurityEnabled || currentDisplayId !== '1') return;
+
+    const spawnVirus = () => {
+      // 30% chance to spawn every interval when security is off
+      if (Math.random() < 0.3) {
+        openApp('virus', 'CRITICAL_THREAT');
+        addNotification("MALWARE_INCURSION", "Unauthorized script execution detected. Enable Nebula Defender immediately.", 'security');
+      }
+    };
+
+    const interval = setInterval(spawnVirus, 30000); // Check every 30 seconds
+    return () => clearInterval(interval);
+  }, [powerStatus, isSecurityEnabled, currentDisplayId, openApp, addNotification]);
 
   const handleContextMenu = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -197,26 +216,19 @@ export const Desktop: React.FC = () => {
   const iconScaleMap = { sm: 0.8, md: 1, lg: 1.25 };
   const currentScale = iconScaleMap[iconSize];
 
-  // MULTI-DISPLAY LOGIC: Filter windows for THIS display, but also include "overlapping" windows from neighbors
+  // MULTI-DISPLAY LOGIC
   const displayWindows = openWindows.filter(win => {
-    // 1. Direct match
     if ((win.displayId || '1') === currentDisplayId) return true;
-
-    // 2. Overlap check for neighboring displays
     const layout = displayLayout[currentDisplayId];
     if (!layout) return false;
-
     const screenWidth = typeof window !== 'undefined' ? window.innerWidth : 1920;
     const screenHeight = typeof window !== 'undefined' ? window.innerHeight : 1080;
     const winWidth = win.initialWidth || 800;
     const winHeight = win.initialHeight || 600;
-
-    // Check if the window is on a neighbor but is partially visible here
     if (layout.left === win.displayId && win.x + winWidth > screenWidth) return true;
     if (layout.right === win.displayId && win.x < 0) return true;
     if (layout.top === win.displayId && win.y + winHeight > screenHeight) return true;
     if (layout.bottom === win.displayId && win.y < 0) return true;
-
     return false;
   });
 
@@ -229,7 +241,8 @@ export const Desktop: React.FC = () => {
         accentClass,
         isInverted ? "system-inverted" : "",
         !glassEnabled ? "glass-disabled" : "",
-        powerStatus === 'booting' ? "opacity-0" : "opacity-100"
+        powerStatus === 'booting' ? "opacity-0" : "opacity-100",
+        !isSecurityEnabled && "cursor-wait"
       )}
       style={{
         backgroundImage: `url(${wallpaper})`,
@@ -248,6 +261,11 @@ export const Desktop: React.FC = () => {
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
     >
+      {/* Security Jitter Effect */}
+      {!isSecurityEnabled && (
+        <div className="absolute inset-0 pointer-events-none z-[9996] opacity-5 bg-red-500 animate-pulse mix-blend-overlay" />
+      )}
+
       {/* Brightness Overlay */}
       <div 
         className="absolute inset-0 bg-black pointer-events-none z-[10000] transition-opacity duration-300" 
@@ -269,15 +287,19 @@ export const Desktop: React.FC = () => {
       {/* Widgets Panel */}
       <WidgetsPanel />
 
-      {/* Display Identity Overlay (Indicator) */}
+      {/* Display Identity Overlay */}
       <div className="absolute top-4 right-4 z-[9999] pointer-events-none">
         <div className="bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/10 flex items-center gap-2">
-          <Activity size={12} className="text-accent" />
+          {isSecurityEnabled ? (
+            <Activity size={12} className="text-accent" />
+          ) : (
+            <Skull size={12} className="text-destructive animate-bounce" />
+          )}
           <span className="text-[10px] font-black uppercase tracking-widest text-white/80">Display {currentDisplayId}</span>
         </div>
       </div>
 
-      {/* Desktop Icons - Only show on primary display */}
+      {/* Desktop Icons */}
       {currentDisplayId === '1' && desktopApps.map(shortcut => {
         const Icon = shortcut.icon;
         const isDragging = draggingAppId === shortcut.id;
