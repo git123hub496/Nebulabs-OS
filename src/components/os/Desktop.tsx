@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
@@ -133,7 +132,7 @@ export const Desktop: React.FC = () => {
     isWidgetsOpen, setIsWidgetsOpen, isQuickSettingsOpen, setIsQuickSettingsOpen,
     isStartOpen, setIsStartOpen, isChatOpen, setIsChatOpen, activeWindowId, closeWindow, minimizeAllWindows,
     brightness, currentDisplayId, displayLayout, isSecurityEnabled, addNotification,
-    isLocked, lock
+    isLocked, lock, biosSettings
   } = useOS();
   
   const [bootOpacity, setBootOpacity] = useState(1);
@@ -483,6 +482,9 @@ export const Desktop: React.FC = () => {
             <div className="w-12 h-12 bg-accent rounded-full" />
           </div>
           <h1 className="text-2xl font-bold tracking-widest text-white/40 uppercase">Nebula WebOS</h1>
+          {!biosSettings.secureBoot && (
+            <p className="text-[10px] text-red-500 font-bold uppercase tracking-[0.3em] animate-pulse">Warning: Secure Boot Disabled</p>
+          )}
           <div className="mt-8 w-48 h-1 bg-white/10 rounded-full overflow-hidden">
             <div className="h-full bg-accent animate-[loading_2s_ease-in-out_infinite]" />
           </div>

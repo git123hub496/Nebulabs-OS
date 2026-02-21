@@ -1,33 +1,26 @@
 "use client"
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { useOS } from '@/context/os-context';
+import { useOS, BIOSSettings as KernelBIOSSettings } from '@/context/os-context';
 import { cn } from '@/lib/utils';
 
 type BIOSSection = 'Main' | 'Advanced' | 'Security' | 'Boot' | 'Exit';
 
-interface BIOSSettings {
-  cpuTurbo: boolean;
-  sataMode: 'AHCI' | 'IDE';
-  secureBoot: boolean;
-  bootOrder: string[];
-  fastBoot: boolean;
-}
-
 export const BIOS: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   const [activeSection, setActiveSection] = useState<BIOSSection>('Main');
   const [selectedItem, setSelectedItem] = useState(0);
-  const { systemStats, restart } = useOS();
+  const { systemStats, restart, biosSettings, updateBIOSSettings } = useOS();
   const [isSaving, setIsSaving] = useState(false);
 
-  // Firmware State
-  const [settings, setSettings] = useState<BIOSSettings>({
-    cpuTurbo: true,
-    sataMode: 'AHCI',
-    secureBoot: true,
-    bootOrder: ['Nebulabs Virtual SSD-0', 'Network PXE', 'USB Flash Device'],
-    fastBoot: false,
+  // Local state for changes before committing
+  const [settings, setSettings] = useState<KernelBIOSSettings>({
+    cpuTurbo: biosSettings.cpuTurbo,
+    networkStack: biosSettings.networkStack,
+    secureBoot: biosSettings.secureBoot,
+    fastBoot: biosSettings.fastBoot,
   });
+
+  const [bootOrder, setBootOrder] = useState(['Nebulabs Virtual SSD-0', 'Network PXE', 'USB Flash Device']);
 
   const handleAction = useCallback((direction: 'up' | 'down' | 'enter' | 'toggle') => {
     if (activeSection === 'Exit') return;
@@ -41,7 +34,7 @@ export const BIOS: React.FC<{ onClose: () => void }> = ({ onClose }) => {
     if (direction === 'toggle' || direction === 'enter') {
       if (activeSection === 'Advanced') {
         if (selectedItem === 0) setSettings(s => ({ ...s, cpuTurbo: !s.cpuTurbo }));
-        if (selectedItem === 1) setSettings(s => ({ ...s, sataMode: s.sataMode === 'AHCI' ? 'IDE' : 'AHCI' }));
+        if (selectedItem === 1) setSettings(s => ({ ...s, networkStack: !s.networkStack }));
         if (selectedItem === 3) setSettings(s => ({ ...s, fastBoot: !s.fastBoot }));
       }
       if (activeSection === 'Security') {
@@ -49,14 +42,14 @@ export const BIOS: React.FC<{ onClose: () => void }> = ({ onClose }) => {
       }
       if (activeSection === 'Boot' && selectedItem < 2) {
         // Swap boot order
-        const newOrder = [...settings.bootOrder];
+        const newOrder = [...bootOrder];
         const temp = newOrder[selectedItem];
         newOrder[selectedItem] = newOrder[selectedItem + 1];
         newOrder[selectedItem + 1] = temp;
-        setSettings(s => ({ ...s, bootOrder: newOrder }));
+        setBootOrder(newOrder);
       }
     }
-  }, [activeSection, selectedItem, settings.bootOrder]);
+  }, [activeSection, selectedItem, bootOrder]);
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     if (isSaving) return;
@@ -79,16 +72,19 @@ export const BIOS: React.FC<{ onClose: () => void }> = ({ onClose }) => {
       if (activeSection === 'Exit') {
         if (selectedItem === 0) {
           setIsSaving(true);
+          updateBIOSSettings(settings);
           setTimeout(() => { restart(); onClose(); }, 1500);
-        } else {
+        } else if (selectedItem === 1) {
           onClose();
+        } else {
+          setSettings({ cpuTurbo: true, networkStack: true, secureBoot: true, fastBoot: false });
         }
       } else {
         handleAction('enter');
       }
     }
     if (e.key === ' ' || e.key === '+') handleAction('toggle');
-  }, [activeSection, handleAction, onClose, restart, isSaving, selectedItem]);
+  }, [activeSection, handleAction, onClose, restart, isSaving, selectedItem, settings, updateBIOSSettings]);
 
   useEffect(() => {
     window.addEventListener('keydown', handleKeyDown);
@@ -139,7 +135,7 @@ export const BIOS: React.FC<{ onClose: () => void }> = ({ onClose }) => {
           <div className="space-y-1">
             {[
               { label: 'CPU Turbo Mode', value: settings.cpuTurbo ? '[Enabled]' : '[Disabled]' },
-              { label: 'SATA Controller Mode', value: `[${settings.sataMode}]` },
+              { label: 'Network Stack Stack', value: settings.networkStack ? '[Enabled]' : '[Disabled]' },
               { label: 'Virtualization Technology', value: '[Enabled]' },
               { label: 'Fast Boot Support', value: settings.fastBoot ? '[Enabled]' : '[Disabled]' },
             ].map((item, i) => (
@@ -184,7 +180,9 @@ export const BIOS: React.FC<{ onClose: () => void }> = ({ onClose }) => {
               </div>
               <div className="flex justify-between">
                 <span>Kernel Integrity Check:</span>
-                <span className="text-green-400">PASSED</span>
+                <span className={cn(settings.secureBoot ? "text-green-400" : "text-red-400")}>
+                  {settings.secureBoot ? "PASSED" : "UNVERIFIED"}
+                </span>
               </div>
             </div>
           </div>
@@ -194,7 +192,7 @@ export const BIOS: React.FC<{ onClose: () => void }> = ({ onClose }) => {
           <div className="space-y-2">
             <div className="text-[#aaa] mb-2 uppercase text-[10px] tracking-widest font-bold">Boot Priority Order (Press +/- to move):</div>
             <div className="space-y-1">
-              {settings.bootOrder.map((device, i) => (
+              {bootOrder.map((device, i) => (
                 <div 
                   key={i} 
                   className={cn(
@@ -208,7 +206,7 @@ export const BIOS: React.FC<{ onClose: () => void }> = ({ onClose }) => {
               ))}
             </div>
             <div className="mt-6 p-3 border border-dashed border-white/20 text-[10px] italic text-[#888] leading-relaxed">
-              Note: Changing boot priority may prevent the Nebulabs Kernel from loading if the primary SSD is not first.
+              Note: Disabling the Network Stack will prevent the OS from initializing WiFi and all communication apps.
             </div>
           </div>
         );

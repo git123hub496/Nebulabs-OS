@@ -1,18 +1,32 @@
-
 "use client"
 
 import React, { useState } from 'react';
-import { Globe, ArrowLeft, ArrowRight, RotateCcw, Home, ExternalLink, ShieldCheck, Search, Info, WifiOff } from 'lucide-react';
+import { Globe, ArrowLeft, ArrowRight, RotateCcw, Home, ExternalLink, ShieldCheck, Search, Info, WifiOff, ShieldAlert } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useOS } from '@/context/os-context';
 import { cn } from '@/lib/utils';
 
 export const NebulaBrowser: React.FC = () => {
-  const { isOnline } = useOS();
+  const { isOnline, biosSettings } = useOS();
   const [url, setUrl] = useState("https://www.wikipedia.org");
   const [inputUrl, setInputUrl] = useState("https://www.wikipedia.org");
   const [showHint, setShowHint] = useState(true);
+
+  if (!biosSettings.networkStack) {
+    return (
+      <div className="w-full h-full bg-[#161d25] flex flex-col items-center justify-center text-center p-8">
+        <div className="w-20 h-20 bg-destructive/10 rounded-full flex items-center justify-center mb-6 border border-destructive/40">
+          <ShieldAlert size={40} className="text-destructive" />
+        </div>
+        <h2 className="text-xl font-bold text-white mb-2">Network Stack Disabled</h2>
+        <p className="text-sm text-white/40 max-w-xs mb-8">
+          The physical network controller has been disabled in the Nebulabs BIOS. 
+          Please restart and enable the Network Stack in Advanced settings.
+        </p>
+      </div>
+    );
+  }
 
   const handleNavigate = (e: React.FormEvent) => {
     e.preventDefault();

@@ -56,7 +56,7 @@ export interface LocalUser {
   isWorkAccount?: boolean;
   isSchoolAccount?: boolean;
   districtId?: string;
-  uniqueCode?: string; // The "any device" login code
+  uniqueCode?: string;
 }
 
 export type EmailFolder = 'inbox' | 'sent' | 'archive' | 'trash';
@@ -131,6 +131,13 @@ export interface DisplayLayout {
   };
 }
 
+export interface BIOSSettings {
+  cpuTurbo: boolean;
+  networkStack: boolean;
+  secureBoot: boolean;
+  fastBoot: boolean;
+}
+
 interface OSContextType {
   currentUser: LocalUser | null;
   accounts: LocalUser[];
@@ -176,6 +183,7 @@ interface OSContextType {
   displayLayout: DisplayLayout;
   isSecurityEnabled: boolean;
   chatMessages: ChatMessage[];
+  biosSettings: BIOSSettings;
   
   login: (userId: string, password?: string) => boolean;
   logout: () => void;
@@ -221,6 +229,7 @@ interface OSContextType {
   sendChatMessage: (text: string, recipient: string, role: string) => Promise<void>;
   setCurrentDisplayId: (id: string) => void;
   setSecurityEnabled: (enabled: boolean) => void;
+  updateBIOSSettings: (settings: Partial<BIOSSettings>) => void;
   restart: () => void;
   shutDown: () => void;
   powerOn: () => void;
@@ -312,7 +321,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   const [currentUser, setCurrentUser] = useState<LocalUser | null>(null);
   const [accounts, setAccounts] = useState<LocalUser[]>([]);
   const [powerStatus, setPowerStatusState] = useState<PowerStatus>('booting');
-  const [systemStats] = useState({ cpu: 12, ram: 42, net: 2 });
+  const [systemStats, setSystemStats] = useState({ cpu: 12, ram: 42, net: 2 });
   const [isLocked, setIsLocked] = useState(false);
 
   const [isWidgetsOpen, setIsWidgetsOpenState] = useState(false);
@@ -356,6 +365,27 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   const [currentDisplayId, setDisplayIdState] = useState('1');
   const [displayLayout, setDisplayLayoutState] = useState<DisplayLayout>({ '1': { right: '2' }, '2': { left: '1' } });
   const [isSecurityEnabled, setSecurityEnabledState] = useState(true);
+
+  // Firmware/BIOS Persistence
+  const [biosSettings, setBiosSettings] = useState<BIOSSettings>({
+    cpuTurbo: true,
+    networkStack: true,
+    secureBoot: true,
+    fastBoot: false,
+  });
+
+  useEffect(() => {
+    const savedBios = localStorage.getItem('nebula_bios_settings');
+    if (savedBios) {
+      setBiosSettings(JSON.parse(savedBios));
+    }
+  }, []);
+
+  const updateBIOSSettings = (settings: Partial<BIOSSettings>) => {
+    const updated = { ...biosSettings, ...settings };
+    setBiosSettings(updated);
+    localStorage.setItem('nebula_bios_settings', JSON.stringify(updated));
+  };
 
   const playSound = useCallback((type: 'click' | 'open' | 'close' | 'notify') => {
     if (typeof window === 'undefined') return;
@@ -458,6 +488,11 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const sendChatMessage = async (text: string, recipient: string, role: string) => {
+    if (!biosSettings.networkStack) {
+      addNotification("Hardware Error", "Network stack is disabled in BIOS.", "security");
+      return;
+    }
+
     const msg: ChatMessage = {
       id: Math.random().toString(36).substr(2, 9),
       sender: currentUser?.username || 'Me',
@@ -661,7 +696,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
 
   const resetUserPassword = (userId: string, password: string) => {
     const user = accounts.find(a => a.id === userId);
-    if (user?.isSchoolAccount) return; // Prevent student password reset
+    if (user?.isSchoolAccount) return; 
     const updatedAccounts = accounts.map(a => a.id === userId ? { ...a, password } : a);
     setAccounts(updatedAccounts);
     try {
@@ -693,7 +728,6 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   const clearNotifications = () => setNotifications([]);
 
   const openApp = (appId: AppId, title: string, params?: any) => {
-    // School Restriction Logic
     if (currentUser?.isSchoolAccount && (appId === 'news' || appId === 'virus')) {
       addNotification("Access Restricted", "The Nebula News app is disabled by NHU-7 Policy.", "security");
       return;
@@ -813,6 +847,10 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const connectToWifi = (ssid: string) => {
+    if (!biosSettings.networkStack) {
+      addNotification("Hardware Locked", "WiFi cannot be enabled. Network Stack is disabled in BIOS.", "security");
+      return;
+    }
     setIsWifiConnecting(true);
     setTimeout(() => {
       setCurrentWifiState(ssid);
@@ -921,14 +959,14 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       taskbarPosition, taskbarSize, iconSize, currentWifi, isWifiConnecting,
       isOnline, volume, brightness, isWidgetsOpen, isQuickSettingsOpen, 
       isStartOpen, isChatOpen, isLocked, systemStats,
-      currentDisplayId, displayLayout, isSecurityEnabled, chatMessages,
+      currentDisplayId, displayLayout, isSecurityEnabled, chatMessages, biosSettings,
       login, logout, lock, unlock, createAccount, deleteAccount, updateUserPassword, resetUserPassword, updateUserAvatar, updateUserWorkStatus, openApp, closeWindow, minimizeWindow,
       maximizeWindow, snapWindow, focusWindow, updateWindowPosition, moveWindowToDisplay,
       updateDisplayLayout, resetDisplayLayout, installApp, addNotification, clearNotifications,
       updateWallpaper, setNotes, setTheme, setAccentColor, setCustomAccentHex,
       setCursorColor, setInverted, setGlassEnabled, setTaskbarPosition, setTaskbarSize,
       setIconSize, connectToWifi, setVolume, setBrightness, setIsWidgetsOpen,
-      setIsQuickSettingsOpen, setIsStartOpen, setIsChatOpen, sendChatMessage, setCurrentDisplayId, setSecurityEnabled, restart, shutDown, powerOn,
+      setIsQuickSettingsOpen, setIsStartOpen, setIsChatOpen, sendChatMessage, setCurrentDisplayId, setSecurityEnabled, updateBIOSSettings, restart, shutDown, powerOn,
       minimizeAllWindows, playSound,
       createFolder, importFile, moveToTrash, restoreFromTrash, emptyTrash, deleteItemPermanently,
       updateDesktopAppPosition, toggleDesktopApp, togglePinApp, reorderPinnedApps,

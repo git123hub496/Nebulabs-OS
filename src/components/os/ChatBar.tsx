@@ -1,9 +1,8 @@
-
 "use client"
 
 import React, { useState, useRef, useEffect } from 'react';
 import { useOS } from '@/context/os-context';
-import { Send, X, User, Bot, Sparkles, MessageCircle, MoreHorizontal, ShieldCheck, ShieldAlert, Lock, Heart, ShoppingBag, Bell, GraduationCap, School } from 'lucide-react';
+import { Send, X, User, Bot, Sparkles, MessageCircle, MoreHorizontal, ShieldCheck, ShieldAlert, Lock, Heart, ShoppingBag, Bell, GraduationCap, School, WifiOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -38,7 +37,9 @@ export const ChatBar: React.FC = () => {
     chatMessages, 
     sendChatMessage, 
     currentUser, 
-    openApp 
+    openApp,
+    biosSettings,
+    isOnline
   } = useOS();
   
   const isWorkAccount = currentUser?.isWorkAccount;
@@ -76,6 +77,21 @@ export const ChatBar: React.FC = () => {
     if (msg.isBot) return msg.sender === selectedColleague.name;
     return msg.recipient === selectedColleague.name;
   });
+
+  if (!biosSettings.networkStack) {
+    return (
+      <div className="fixed inset-y-0 right-0 w-[400px] z-[9998] glass border-l border-white/10 backdrop-blur-3xl flex flex-col items-center justify-center p-12 text-center shadow-2xl">
+        <WifiOff size={48} className="text-destructive mb-6" />
+        <h2 className="text-xl font-bold text-white mb-2">Network Stack Offline</h2>
+        <p className="text-sm text-white/40 leading-relaxed mb-8">
+          The kernel communication bridge is unavailable. The Network Stack hardware flag is disabled in BIOS.
+        </p>
+        <Button variant="outline" className="border-white/10 text-white/60" onClick={() => setIsChatOpen(false)}>
+          Close Workspace
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <div 
@@ -183,23 +199,30 @@ export const ChatBar: React.FC = () => {
 
       {/* Input */}
       <div className="p-6 border-t border-white/5 bg-black/10">
+        {!isOnline && (
+          <div className="flex items-center gap-2 justify-center py-2 mb-2 bg-destructive/10 border border-destructive/20 rounded-xl">
+            <WifiOff size={12} className="text-destructive" />
+            <span className="text-[10px] font-bold text-destructive uppercase tracking-widest">Network Interrupted</span>
+          </div>
+        )}
         <div className="relative">
           <textarea
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
+            disabled={!isOnline}
             onKeyDown={(e) => {
               if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
                 handleSend();
               }
             }}
-            placeholder={`Message ${selectedColleague.name.split(' ')[0]}...`}
-            className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 pr-12 text-xs text-white placeholder:text-white/20 focus:outline-none focus:border-accent/40 resize-none h-20"
+            placeholder={isOnline ? `Message ${selectedColleague.name.split(' ')[0]}...` : "Disconnected..."}
+            className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 pr-12 text-xs text-white placeholder:text-white/20 focus:outline-none focus:border-accent/40 resize-none h-20 disabled:opacity-50"
           />
           <button 
             className={cn("absolute right-2 bottom-2 h-8 w-8 rounded-xl disabled:opacity-50 flex items-center justify-center transition-all", isSchoolAccount ? "bg-blue-500 text-white hover:bg-blue-400" : "bg-accent text-primary-foreground hover:bg-accent/80")}
             onClick={handleSend}
-            disabled={!inputText.trim()}
+            disabled={!inputText.trim() || !isOnline}
           >
             <Send size={14} />
           </button>
