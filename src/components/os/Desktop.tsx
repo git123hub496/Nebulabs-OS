@@ -335,7 +335,8 @@ export const Desktop: React.FC = () => {
     '--sidebar-accent': hexToHslString(customAccentHex),
   } as React.CSSProperties : {};
 
-  const currentScale = iconSize / 100;
+  // Safeguard against NaN in scale values
+  const currentScale = isNaN(iconSize) ? 1.0 : iconSize / 100;
 
   return (
     <div 

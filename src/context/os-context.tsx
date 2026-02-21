@@ -241,7 +241,7 @@ const AVATAR_COLORS = ['#9333ea', '#3b82f6', '#e11d48', '#f97316', '#16a34a'];
 const OFFLINE_WIFI = "Public_Guest_No_Internet";
 
 export const OSProvider = ({ children }: { children: ReactNode }) => {
-  // --- CORE STATE ---
+  // --- CORE STATE (Renamed internal setters to prevent duplicates) ---
   const [currentUser, setCurrentUser] = useState<LocalUser | null>(null);
   const [accounts, setAccounts] = useState<LocalUser[]>([]);
   const [powerStatus, setPowerStatusState] = useState<PowerStatus>('booting');
@@ -320,9 +320,11 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     
     const size = localStorage.getItem(`nebula_${user.id}_taskbar_size`);
     if (size && !isNaN(Number(size))) setTaskbarSizeState(Number(size));
+    else setTaskbarSizeState(48); // Robust fallback
     
     const ics = localStorage.getItem(`nebula_${user.id}_icon_size`);
     if (ics && !isNaN(Number(ics))) setIconSizeState(Number(ics));
+    else setIconSizeState(100); // Robust fallback
     
     const n = localStorage.getItem(`nebula_${user.id}_notes`);
     if (n) setNotesInternal(n);
@@ -478,6 +480,8 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   const moveWindowToDisplay = (windowId: string, displayId: string) => {
     setOpenWindows(prev => prev.map(w => w.id === windowId ? { ...w, displayId } : w));
   };
+
+  // --- UNIQUE SETTER ACTIONS (Prevent logic duplication) ---
 
   const setNotes = (content: string) => {
     if (!isOnline) return;
