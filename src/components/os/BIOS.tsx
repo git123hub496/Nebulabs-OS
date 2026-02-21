@@ -1,3 +1,4 @@
+
 "use client"
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -256,7 +257,7 @@ export const BIOS: React.FC<{ onClose: () => void }> = ({ onClose }) => {
       {/* BIOS Header */}
       <div className="border-4 border-[#aaaaaa] p-1 mb-4 shadow-[4px_4px_0px_#000]">
         <div className="bg-[#aaaaaa] text-[#0000aa] px-4 py-1 flex justify-between items-center font-bold">
-          <span>Nebulabs Setup Utility - Version 4.5.2 (C) 2024 Nebulabs Corp.</span>
+          <span>Nebulabs Setup Utility - Version 4.5.2 (C) 2026 Nebulabs Corp.</span>
           <span className="text-[10px] animate-pulse">FIRMWARE SETUP</span>
         </div>
       </div>

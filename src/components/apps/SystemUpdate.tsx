@@ -185,7 +185,7 @@ export const SystemUpdate: React.FC = () => {
       </div>
 
       <div className="text-center">
-        <p className="text-[9px] text-white/20">Nebulabs Firmware Update Utility v4.5 • © 2024</p>
+        <p className="text-[9px] text-white/20">Nebulabs Firmware Update Utility v4.5 • © 2026</p>
       </div>
     </div>
   );
