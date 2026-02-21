@@ -51,12 +51,13 @@ export const Window: React.FC<WindowProps> = ({ window: win, children }) => {
         
         const screenWidth = window.innerWidth;
         const screenHeight = window.innerHeight;
-        const windowWidth = win.initialWidth || 800;
-        const windowHeight = win.initialHeight || 600;
+        const windowWidth = windowRef.current?.offsetWidth || 800;
+        const windowHeight = windowRef.current?.offsetHeight || 600;
 
         const currentLayout = displayLayout[currentDisplayId];
+        
         if (currentLayout) {
-          const threshold = 50; 
+          const threshold = 60; // Slightly larger threshold for smoother hopping
 
           // Check Left Hopping
           if (newX < -threshold && currentLayout.left) {
@@ -65,7 +66,7 @@ export const Window: React.FC<WindowProps> = ({ window: win, children }) => {
             return;
           }
           // Check Right Hopping
-          if (newX > screenWidth - threshold && currentLayout.right) {
+          if (newX > screenWidth - (windowWidth / 2) && currentLayout.right) {
             updateWindowPosition(win.id, 20, newY, currentLayout.right);
             setIsDragging(false);
             return;
@@ -77,7 +78,7 @@ export const Window: React.FC<WindowProps> = ({ window: win, children }) => {
             return;
           }
           // Check Bottom Hopping
-          if (newY > screenHeight - threshold && currentLayout.bottom) {
+          if (newY > screenHeight - (windowHeight / 2) && currentLayout.bottom) {
             updateWindowPosition(win.id, newX, 20, currentLayout.bottom);
             setIsDragging(false);
             return;
@@ -101,7 +102,7 @@ export const Window: React.FC<WindowProps> = ({ window: win, children }) => {
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleMouseUp);
     };
-  }, [isDragging, dragOffset, win.id, currentDisplayId, displayLayout, win.initialWidth, win.initialHeight, updateWindowPosition]);
+  }, [isDragging, dragOffset, win.id, currentDisplayId, displayLayout, updateWindowPosition]);
 
   if (win.isMinimized) return null;
 

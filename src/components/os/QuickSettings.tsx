@@ -19,7 +19,6 @@ import {
   Check,
   ChevronRight,
   Plus,
-  ArrowRightLeft,
   Layout
 } from 'lucide-react';
 import { Slider } from '@/components/ui/slider';
