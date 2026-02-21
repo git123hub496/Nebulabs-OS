@@ -295,7 +295,7 @@ export const LoginScreen: React.FC = () => {
                   </div>
                 </button>
 
-                {account.id !== 'admin' && !account.isSchoolAccount && (
+                {account.id !== 'admin' && (
                   <button 
                     onClick={(e) => { e.stopPropagation(); deleteAccount(account.id); }}
                     className="absolute -top-2 -right-2 bg-destructive text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100 hover:scale-110 transition-all z-20 border-2 border-white shadow-lg"
