@@ -225,7 +225,10 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   const [isQuickSettingsOpen, setIsQuickSettingsOpen] = useState(false);
   const [nextZIndex, setNextZIndex] = useState(10);
   const [systemStats, setSystemStats] = useState({ cpu: 12, ram: 42, net: 2 });
+  
+  // Display identity is unique per tab (sessionStorage)
   const [currentDisplayId, setDisplayIdState] = useState('1');
+  // Display layout is shared (localStorage)
   const [displayLayout, setDisplayLayoutState] = useState<DisplayLayout>({ '1': { right: '2' }, '2': { left: '1' } });
 
   // Handle Multi-Display Synchronization
@@ -308,6 +311,15 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       }
     };
 
+    // Load tab-specific display identity from sessionStorage
+    const sessionDisplayId = sessionStorage.getItem(`nebula_${uid}_display_id`);
+    if (sessionDisplayId) {
+      setDisplayIdState(sessionDisplayId);
+    } else {
+      setDisplayIdState('1');
+      sessionStorage.setItem(`nebula_${uid}_display_id`, '1');
+    }
+
     setNotesState(load('notes', ""));
     setThemeState(load('theme', 'dark') as ThemeMode);
     setAccentColorState(load('accent', 'purple') as AccentColor);
@@ -324,7 +336,6 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     setFileSystem(load('file_system', INITIAL_FILES));
     setTrash(load('trash_items', []));
     setOpenWindows(load('windows', []));
-    setDisplayIdState(load('display_id', '1'));
     setDisplayLayoutState(load('display_layout', { '1': { right: '2' }, '2': { left: '1' } }));
 
     const savedWifi = load('wifi', "Nebula_Secure_5G");
@@ -446,7 +457,9 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
 
   const setCurrentDisplayId = (id: string) => {
     setDisplayIdState(id);
-    saveSetting('display_id', id);
+    if (currentUser) {
+      sessionStorage.setItem(`nebula_${currentUser.id}_display_id`, id);
+    }
   };
 
   const updateDisplayLayout = (fromId: string, direction: DisplayDirection, toId: string) => {

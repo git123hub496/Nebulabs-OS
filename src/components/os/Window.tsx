@@ -57,21 +57,25 @@ export const Window: React.FC<WindowProps> = ({ window: win, children }) => {
         // Edge detection for multi-display hopping
         const currentLayout = displayLayout[currentDisplayId];
         if (currentLayout) {
+          // Check Left Hopping
           if (newX < -windowWidth / 2 && currentLayout.left) {
             updateWindowPosition(win.id, screenWidth - windowWidth / 2, newY, currentLayout.left);
             setIsDragging(false);
             return;
           }
+          // Check Right Hopping
           if (newX > screenWidth - windowWidth / 2 && currentLayout.right) {
             updateWindowPosition(win.id, -windowWidth / 2, newY, currentLayout.right);
             setIsDragging(false);
             return;
           }
+          // Check Top Hopping
           if (newY < -30 && currentLayout.top) {
             updateWindowPosition(win.id, newX, screenHeight - 60, currentLayout.top);
             setIsDragging(false);
             return;
           }
+          // Check Bottom Hopping
           if (newY > screenHeight - 60 && currentLayout.bottom) {
             updateWindowPosition(win.id, newX, -30, currentLayout.bottom);
             setIsDragging(false);
