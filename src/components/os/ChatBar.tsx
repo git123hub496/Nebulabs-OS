@@ -38,6 +38,13 @@ export const ChatBar: React.FC = () => {
     await sendChatMessage(text, selectedColleague.name, selectedColleague.role);
   };
 
+  // Filter messages to show only welcome message or messages involving the selected colleague
+  const filteredMessages = chatMessages.filter(msg => {
+    if (msg.sender === 'Nebulabs Onboarding') return true; // Global system greeting
+    if (msg.isBot) return msg.sender === selectedColleague.name; // Messages FROM selected colleague
+    return msg.recipient === selectedColleague.name; // Messages TO selected colleague
+  });
+
   return (
     <div 
       className={cn(
@@ -126,7 +133,7 @@ export const ChatBar: React.FC = () => {
               </span>
             </div>
 
-            {chatMessages.filter(m => m.sender === selectedColleague.name || !m.isBot).map((msg) => (
+            {filteredMessages.map((msg) => (
               <div key={msg.id} className={cn("flex gap-3", !msg.isBot ? "flex-row-reverse" : "")}>
                 <Avatar className="w-8 h-8 shrink-0 border border-white/10">
                   {!msg.isBot ? (
@@ -136,7 +143,7 @@ export const ChatBar: React.FC = () => {
                     </>
                   ) : (
                     <>
-                      <AvatarImage src={selectedColleague.avatar} />
+                      <AvatarImage src={msg.sender === 'Nebulabs Onboarding' ? '' : selectedColleague.avatar} />
                       <AvatarFallback className="bg-white/5 text-white font-bold text-[10px]">{msg.sender[0]}</AvatarFallback>
                     </>
                   )}

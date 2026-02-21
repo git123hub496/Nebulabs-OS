@@ -72,6 +72,7 @@ export interface Email {
 export interface ChatMessage {
   id: string;
   sender: string;
+  recipient?: string; // Target of the message
   text: string;
   timestamp: string;
   isBot: boolean;
@@ -444,6 +445,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     const msg: ChatMessage = {
       id: Math.random().toString(36).substr(2, 9),
       sender: currentUser?.username || 'Me',
+      recipient: recipient, // Explicitly tag the recipient
       text,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       isBot: false
@@ -464,6 +466,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
         const botMsg: ChatMessage = {
           id: Math.random().toString(36).substr(2, 9),
           sender: recipient,
+          recipient: currentUser?.username || 'user',
           text: response.response,
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           isBot: true
