@@ -29,11 +29,12 @@ import {
   Skull,
   ShieldAlert,
   Palette,
-  Monitor
+  Monitor,
+  Camera as CameraIcon
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
-export type AppId = 'store' | 'files' | 'settings' | 'assistant' | 'google-drive' | 'notes' | 'calc' | 'terminal' | 'browser' | 'trash' | 'news' | 'maps' | 'monitor' | 'calendar' | 'snake' | 'minesweeper' | 'image-viewer' | 'update' | 'virus' | 'paint' | 'info';
+export type AppId = 'store' | 'files' | 'settings' | 'assistant' | 'google-drive' | 'notes' | 'calc' | 'terminal' | 'browser' | 'trash' | 'news' | 'maps' | 'monitor' | 'calendar' | 'snake' | 'minesweeper' | 'image-viewer' | 'update' | 'virus' | 'paint' | 'info' | 'camera';
 export type ThemeMode = 'dark' | 'light';
 export type PowerStatus = 'on' | 'off' | 'booting';
 export type TaskbarPosition = 'top' | 'bottom' | 'left' | 'right';
@@ -221,6 +222,7 @@ export const APP_INFO: Record<AppId, { icon: any; label: string }> = {
   'virus': { icon: Skull, label: 'CRITICAL_THREAT' },
   'paint': { icon: Palette, label: 'Nebula Paint' },
   'info': { icon: Info, label: 'System Info' },
+  'camera': { icon: CameraIcon, label: 'Nebula Camera' },
 };
 
 const INITIAL_FILES: FileSystemItem[] = [
@@ -237,8 +239,8 @@ const INITIAL_DESKTOP: DesktopShortcut[] = [
   { id: 'trash', label: 'Recycling Bin', icon: Trash2, x: PADDING, y: PADDING + (GRID_Y * 4) },
 ];
 
-const INITIAL_APPS: AppId[] = ['store', 'files', 'settings', 'assistant', 'notes', 'calc', 'terminal', 'browser', 'trash', 'news', 'maps', 'monitor', 'calendar', 'snake', 'minesweeper', 'update', 'paint', 'info'];
-const INITIAL_PINNED: AppId[] = ['files', 'store', 'assistant', 'browser', 'settings', 'monitor', 'paint'];
+const INITIAL_APPS: AppId[] = ['store', 'files', 'settings', 'assistant', 'notes', 'calc', 'terminal', 'browser', 'trash', 'news', 'maps', 'monitor', 'calendar', 'snake', 'minesweeper', 'update', 'paint', 'info', 'camera'];
+const INITIAL_PINNED: AppId[] = ['files', 'store', 'assistant', 'browser', 'settings', 'monitor', 'paint', 'camera'];
 
 const AVATAR_COLORS = ['#9333ea', '#3b82f6', '#e11d48', '#f97316', '#16a34a'];
 const OFFLINE_WIFI = "Public_Guest_No_Internet";
@@ -474,7 +476,6 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       setCurrentUser(updatedUser);
       const updatedAccounts = accounts.map(a => a.id === currentUser.id ? updatedUser : a);
       setAccounts(updatedAccounts);
-      // Wrapped in try-catch to handle localStorage QuotaExceededError robustly
       localStorage.setItem('nebula_accounts', JSON.stringify(updatedAccounts));
       addNotification("Identity Updated", "Your profile picture has been updated.", "system");
     } catch (e) {
@@ -502,6 +503,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     else if (appId === 'assistant') { initialWidth = 400; initialHeight = 650; }
     else if (appId === 'virus') { initialWidth = 300; initialHeight = 250; }
     else if (appId === 'paint') { initialWidth = 900; initialHeight = 700; }
+    else if (appId === 'camera') { initialWidth = 640; initialHeight = 520; }
 
     const newId = `${appId}-${Date.now()}`;
     const newWindow: WindowInstance = {

@@ -3,13 +3,14 @@
 
 import React from 'react';
 import { useOS, AppId } from '@/context/os-context';
-import { ShoppingBag, Star, Download, CheckCircle2, FileText, Calculator, Terminal, Cloud, MessageSquare, Globe, Map as MapIcon, Activity, Calendar as CalendarIcon, Gamepad2, Bomb, Palette, Info } from 'lucide-react';
+import { ShoppingBag, Star, Download, CheckCircle2, FileText, Calculator, Terminal, Cloud, MessageSquare, Globe, Map as MapIcon, Activity, Calendar as CalendarIcon, Gamepad2, Bomb, Palette, Info, Camera } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 
 const STORE_APPS: { id: AppId; name: string; description: string; category: string; rating: number; icon: any }[] = [
   { id: 'browser', name: 'Nebula Browser', description: 'Fast and secure web browsing.', category: 'Utilities', rating: 4.9, icon: Globe },
+  { id: 'camera', name: 'Nebula Camera', description: 'Capture hardware imaging data.', category: 'Creative', rating: 4.8, icon: Camera },
   { id: 'google-drive', name: 'Google Drive', description: 'Cloud storage and file sync.', category: 'Productivity', rating: 4.8, icon: Cloud },
   { id: 'notes', name: 'Nebula Notes', description: 'Lightweight text editor.', category: 'Productivity', rating: 4.6, icon: FileText },
   { id: 'paint', name: 'Nebula Paint', description: 'Advanced creative canvas suite.', category: 'Creative', rating: 4.7, icon: Palette },

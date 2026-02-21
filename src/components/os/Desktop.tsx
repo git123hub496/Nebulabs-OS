@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
@@ -31,7 +32,8 @@ import {
   Search,
   Lock,
   Palette,
-  Info
+  Info,
+  Camera as CameraIcon
 } from 'lucide-react';
 import { FileExplorer } from '../apps/FileExplorer';
 import { AppStore } from '../apps/AppStore';
@@ -53,6 +55,7 @@ import { ImageViewer } from '../apps/ImageViewer';
 import { SystemUpdate } from '../apps/SystemUpdate';
 import { VirusPopup } from '../apps/VirusPopup';
 import { Paint } from '../apps/Paint';
+import { Camera } from '../apps/Camera';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -78,6 +81,7 @@ const APP_COMPONENTS: Record<AppId, (win: WindowInstance) => React.ReactNode> = 
   'update': (win) => <SystemUpdate />,
   'virus': (win) => <VirusPopup />,
   'paint': (win) => <Paint />,
+  'camera': (win) => <Camera />,
   'info': (win) => (
     <div className="p-8 space-y-6 bg-[#161d25] h-full text-white/80 overflow-auto">
       <div className="flex items-center gap-4 mb-8">
@@ -437,7 +441,7 @@ export const Desktop: React.FC = () => {
             />
           </form>
           <div className="mt-4 flex gap-2 overflow-x-auto pb-2 scrollbar-none">
-            {['paint', 'terminal', 'calc', 'browser'].map(app => (
+            {['paint', 'terminal', 'calc', 'browser', 'camera'].map(app => (
               <button 
                 key={app}
                 onClick={() => { setRunQuery(app); }}
