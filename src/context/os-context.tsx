@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { createContext, useContext, useState, ReactNode, useEffect, useCallback, useRef } from 'react';
@@ -167,13 +168,13 @@ interface OSContextType {
   accentColor: AccentColor;
   customAccentHex: string;
   cursorColor: CursorColor;
+  mouserScale: number;
   isInverted: boolean;
   isGrayscale: boolean;
   glassEnabled: boolean;
   powerStatus: PowerStatus;
   taskbarPosition: TaskbarPosition;
   taskbarSize: TaskbarSize;
-  taskbarAutoHide: boolean;
   iconSize: DesktopIconSize;
   currentWifi: string;
   isWifiConnecting: boolean;
@@ -222,12 +223,13 @@ interface OSContextType {
   setAccentColor: (color: AccentColor) => void;
   setCustomAccentHex: (hex: string) => void;
   setCursorColor: (color: CursorColor) => void;
+  setMouserScale: (scale: number) => void;
   setInverted: (inverted: boolean) => void;
   setGrayscale: (grayscale: boolean) => void;
   setGlassEnabled: (enabled: boolean) => void;
   setTaskbarPosition: (position: TaskbarPosition) => void;
+  rotateTaskbar: () => void;
   setTaskbarSize: (size: TaskbarSize) => void;
-  setTaskbarAutoHide: (hide: boolean) => void;
   setIconSize: (size: DesktopIconSize) => void;
   connectToWifi: (ssid: string) => void;
   setVolume: (v: number) => void;
@@ -349,6 +351,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   const [accentColor, setAccentColorState] = useState<AccentColor>('purple');
   const [customAccentHex, setCustomAccentHexState] = useState("#9333ea");
   const [cursorColor, setCursorColorState] = useState<CursorColor>('black');
+  const [mouserScale, setMouserScaleState] = useState<number>(1.0);
   const [isInverted, setInvertedState] = useState(false);
   const [isGrayscale, setGrayscaleState] = useState(false);
   const [glassEnabled, setGlassEnabledState] = useState(true);
@@ -357,7 +360,6 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
 
   const [taskbarPosition, setTaskbarPositionState] = useState<TaskbarPosition>('bottom');
   const [taskbarSize, setTaskbarSizeState] = useState<number>(48);
-  const [taskbarAutoHide, setTaskbarAutoHideState] = useState<boolean>(false);
   const [iconSize, setIconSizeState] = useState<number>(100);
 
   const [installedApps, setInstalledApps] = useState<AppId[]>(INITIAL_APPS);
@@ -379,7 +381,6 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   const [displayLayout, setDisplayLayoutState] = useState<DisplayLayout>({ '1': { right: '2' }, '2': { left: '1' } });
   const [isSecurityEnabled, setSecurityEnabledState] = useState(true);
 
-  // Firmware/BIOS Persistence
   const [biosSettings, setBiosSettings] = useState<BIOSSettings>({
     cpuTurbo: true,
     networkStack: true,
@@ -430,13 +431,11 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [currentDisplayId, playSound]);
 
-  // Communication Simulation Loop
   useEffect(() => {
     if (!currentUser || powerStatus !== 'on' || isLocked || !isOnline) return;
 
     const interval = setInterval(() => {
       if (Math.random() > 0.95) {
-        // Occasional ambient communication
         const type = Math.random() > 0.5 ? 'chat' : 'email';
         
         if (type === 'chat') {
@@ -466,7 +465,6 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
             addNotification(`Chat: ${sender}`, botMsg.text.slice(0, 30) + '...', 'app');
           }
         } else {
-          // Email
           const subjects = ["Update required", "Weekly Digest", "New document shared", "System Alert", "Invitation"];
           const bodies = ["Please review the attached file.", "Your weekly stats are ready.", "Check out the new feature release.", "Action required on your account."];
           const newEmail: Email = {
@@ -483,7 +481,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
           addNotification("New Email", newEmail.subject, 'app');
         }
       }
-    }, 45000); // Check every 45 seconds for simulated life
+    }, 45000);
 
     return () => clearInterval(interval);
   }, [currentUser, powerStatus, isLocked, isOnline, isChatOpen, addNotification]);
@@ -597,9 +595,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       try {
         const strValue = typeof value === 'object' ? JSON.stringify(value) : String(value);
         localStorage.setItem(`nebula_${currentUser.id}_${key}`, strValue);
-      } catch (e) {
-        console.warn("Nebula Kernel: Local registry entry failed.", e);
-      }
+      } catch (e) {}
     }
   }, [currentUser]);
 
@@ -618,16 +614,15 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     
     const curs = localStorage.getItem(`nebula_${user.id}_cursor`);
     if (curs) setCursorColorState(curs as CursorColor);
+
+    const scale = localStorage.getItem(`nebula_${user.id}_cursor_scale`);
+    if (scale) setMouserScaleState(Number(scale));
     
     const pos = localStorage.getItem(`nebula_${user.id}_taskbar_pos`);
     if (pos) setTaskbarPositionState(pos as TaskbarPosition);
     
     const size = localStorage.getItem(`nebula_${user.id}_taskbar_size`);
     if (size && !isNaN(Number(size))) setTaskbarSizeState(Number(size));
-    else setTaskbarSizeState(48);
-
-    const autoHide = localStorage.getItem(`nebula_${user.id}_taskbar_autohide`);
-    if (autoHide) setTaskbarAutoHideState(autoHide === 'true');
     
     const n = localStorage.getItem(`nebula_${user.id}_notes`);
     if (n) setNotesInternal(n);
@@ -653,17 +648,26 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
+    
     const getCursorValue = () => {
-      if (cursorColor === 'black') return 'var(--cursor-black)';
-      if (cursorColor === 'white') return 'var(--cursor-white)';
       let hex = customAccentHex;
       const accentHexes: Record<string, string> = { blue: '#3b82f6', rose: '#e11d48', orange: '#f97316', green: '#16a34a', purple: '#9333ea', grey: '#64748b', default: '#9333ea' };
-      if (accentColor !== 'custom') hex = accentHexes[accentColor] || accentHexes['default'];
-      const svg = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M 4 3 L 4 21 L 8.5 16.5 L 11.5 23 L 14.5 22 L 11.5 15.5 L 18 15.5 L 4 3 Z" fill="${hex}" stroke="white" stroke-width="0.8" stroke-linejoin="round"/></svg>`;
-      return `url("data:image/svg+xml;base64,${window.btoa(svg)}")`;
+      
+      if (cursorColor === 'black') hex = '#000000';
+      else if (cursorColor === 'white') hex = '#ffffff';
+      else if (accentColor !== 'custom') hex = accentHexes[accentColor] || accentHexes['default'];
+
+      const size = 24 * mouserScale;
+      const svg = `
+        <svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M2,2 L2,18 L6,14 L10,22 L13,20 L9,12 L15,12 L2,2 Z" fill="${hex}" stroke="${cursorColor === 'white' ? '#000' : '#fff'}" stroke-width="2.5" stroke-linejoin="round"/>
+        </svg>`;
+      
+      return `url("data:image/svg+xml;base64,${window.btoa(svg)}") 2 2, auto`;
     };
+    
     document.documentElement.style.setProperty('--cursor-url', getCursorValue());
-  }, [cursorColor, accentColor, customAccentHex]);
+  }, [cursorColor, accentColor, customAccentHex, mouserScale]);
 
   useEffect(() => {
     const savedAccounts = localStorage.getItem('nebula_accounts');
@@ -732,13 +736,9 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     setCurrentUser(newAcc);
     localStorage.setItem('nebula_current_user_id', newAcc.id);
     setIsLocked(false);
-    try {
-      localStorage.setItem(`nebula_${newAcc.id}_theme`, theme);
-      localStorage.setItem(`nebula_${newAcc.id}_accent`, isKid ? 'rose' : (isSchool ? 'blue' : accentColor));
-      localStorage.setItem(`nebula_${newAcc.id}_wallpaper`, wallpaper);
-    } catch (e) {}
-    addNotification("Account Created", `Welcome, ${username}! ${isKid ? "Home Managed profile active." : (isSchool ? "District profile active." : (isWork ? "Professional workspace ready." : "System initialized."))}`);
-  }, [theme, accentColor, wallpaper, addNotification]);
+    loadSettings(newAcc);
+    addNotification("Account Created", `Welcome, ${username}! System initialized.`);
+  }, [theme, accentColor, wallpaper, addNotification, loadSettings]);
 
   const deleteAccount = useCallback((userId: string) => {
     if (userId === 'admin') return; 
@@ -795,7 +795,6 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   const clearNotifications = () => setNotifications([]);
 
   const openApp = (appId: AppId, title: string, params?: any) => {
-    // Restrictions logic
     if (currentUser?.isSchoolAccount && (appId === 'virus')) {
       addNotification("Access Restricted", "Restricted app execution prevented by District Policy.", "security");
       return;
@@ -879,12 +878,17 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   const setAccentColor = (c: AccentColor) => { setAccentColorState(c); saveSetting('accent', c); };
   const setCustomAccentHex = (h: string) => { setCustomAccentHexState(h); saveSetting('custom_accent', h); };
   const setCursorColor = (c: CursorColor) => { setCursorColorState(c); saveSetting('cursor', c); };
+  const setMouserScale = (s: number) => { setMouserScaleState(s); saveSetting('cursor_scale', s); };
   const setInverted = (inv: boolean) => { setInvertedState(inv); saveSetting('inverted', inv); };
   const setGrayscale = (gr: boolean) => { setGrayscaleState(gr); saveSetting('grayscale', gr); };
   const setGlassEnabled = (gl: boolean) => { setGlassEnabledState(gl); saveSetting('glass', gl); };
   const setTaskbarPosition = (p: TaskbarPosition) => { setTaskbarPositionState(p); saveSetting('taskbar_pos', p); };
+  const rotateTaskbar = () => {
+    const cycle: TaskbarPosition[] = ['bottom', 'left', 'top', 'right'];
+    const next = cycle[(cycle.indexOf(taskbarPosition) + 1) % cycle.length];
+    setTaskbarPosition(next);
+  };
   const setTaskbarSize = (s: number) => { if (isNaN(s)) return; setTaskbarSizeState(s); saveSetting('taskbar_size', s); };
-  const setTaskbarAutoHide = (h: boolean) => { setTaskbarAutoHideState(h); saveSetting('taskbar_autohide', h); };
   const setIconSize = (s: number) => { if (isNaN(s)) return; setIconSizeState(s); saveSetting('icon_size', s); };
   const setVolume = (v: number) => { setVolumeState(v); saveSetting('volume', v); };
   const setBrightness = (b: number) => { setBrightnessState(b); saveSetting('brightness', b); };
@@ -958,8 +962,8 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
 
   const resetDisplayLayout = () => setDisplayLayoutState({});
   const powerOn = () => { setPowerStatusState('booting'); setTimeout(() => setPowerStatusState('on'), 800); };
-  const restart = () => { setCurrentUser(null); setOpenWindows([]); setActiveWindowId(null); setIsLocked(false); setPowerStatusState('booting'); setTimeout(() => setPowerStatusState('on'), 800); };
-  const shutDown = () => { setCurrentUser(null); setOpenWindows([]); setActiveWindowId(null); setIsLocked(false); setPowerStatusState('off'); };
+  const restart = () => { logout(); setPowerStatusState('booting'); setTimeout(() => setPowerStatusState('on'), 800); };
+  const shutDown = () => { logout(); setPowerStatusState('off'); };
   const minimizeAllWindows = () => { setOpenWindows(prev => prev.map(w => ({ ...w, isMinimized: true }))); setActiveWindowId(null); playSound('close'); };
 
   const createFolder = (name: string, parentId: string | null) => {
@@ -993,7 +997,6 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const uninstallApp = (appId: AppId) => {
-    // Protect system critical apps
     const SYSTEM_APPS: AppId[] = ['settings', 'store', 'files', 'assistant'];
     if (SYSTEM_APPS.includes(appId)) {
       addNotification("System Protection", "Cannot uninstall core system components.", "security");
@@ -1042,9 +1045,9 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       currentUser, accounts, openWindows, activeWindowId, installedApps, pinnedApps,
       fileSystem, trash, desktopApps, notifications, emails, markEmailRead, sendEmail, 
       archiveEmail, deleteEmail, restoreEmail, permanentlyDeleteEmail,
-      wallpaper, notes, theme, accentColor,
+      wallpaper, notes, theme, accentColor, mouserScale,
       customAccentHex, cursorColor, isInverted, isGrayscale, glassEnabled, powerStatus,
-      taskbarPosition, taskbarSize, taskbarAutoHide, iconSize, currentWifi, isWifiConnecting,
+      taskbarPosition, taskbarSize, iconSize, currentWifi, isWifiConnecting,
       isOnline, volume, brightness, isWidgetsOpen, isQuickSettingsOpen, 
       isStartOpen, isChatOpen, isLocked, systemStats,
       currentDisplayId, displayLayout, isSecurityEnabled, chatMessages, biosSettings,
@@ -1052,7 +1055,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       maximizeWindow, snapWindow, focusWindow, updateWindowPosition, moveWindowToDisplay,
       updateDisplayLayout, resetDisplayLayout, installApp, uninstallApp, addNotification, clearNotifications,
       updateWallpaper, setNotes, setTheme, setAccentColor, setCustomAccentHex,
-      setCursorColor, setInverted, setGrayscale, setGlassEnabled, setTaskbarPosition, setTaskbarSize, setTaskbarAutoHide,
+      setCursorColor, setMouserScale, setInverted, setGrayscale, setGlassEnabled, setTaskbarPosition, rotateTaskbar, setTaskbarSize,
       setIconSize, connectToWifi, setVolume, setBrightness, setIsWidgetsOpen,
       setIsQuickSettingsOpen, setIsStartOpen, setIsChatOpen, sendChatMessage, setCurrentDisplayId, setSecurityEnabled, updateBIOSSettings, restart, shutDown, powerOn,
       minimizeAllWindows, playSound,

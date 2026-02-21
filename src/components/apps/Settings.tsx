@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useRef, useMemo } from 'react';
@@ -61,7 +62,7 @@ export const Settings: React.FC = () => {
     wallpaper, updateWallpaper, theme, setTheme, taskbarPosition, setTaskbarPosition, 
     taskbarSize, setTaskbarSize, iconSize, setIconSize,
     accentColor, setAccentColor, customAccentHex, 
-    cursorColor, setCursorColor, isInverted, setInverted,
+    cursorColor, setCursorColor, mouserScale, setMouserScale, isInverted, setInverted,
     isGrayscale, setGrayscale,
     glassEnabled, setGlassEnabled, brightness, setBrightness,
     currentDisplayId, setCurrentDisplayId, displayLayout, updateDisplayLayout, resetDisplayLayout,
@@ -79,13 +80,12 @@ export const Settings: React.FC = () => {
   const isSchool = currentUser?.isSchoolAccount;
   const isKid = currentUser?.isKidAccount;
 
-  // Filter tabs based on search
   const tabs = useMemo(() => {
     const allTabs: { id: SettingsTab; label: string; icon: any; keywords: string[] }[] = [
       { id: 'personalization', label: 'Personalization', icon: Palette, keywords: ['theme', 'wallpaper', 'taskbar', 'accent', 'color', 'dark mode', 'light mode'] },
       { id: 'display', label: 'Display', icon: Monitor, keywords: ['brightness', 'monitor', 'screen', 'resolution', 'multi-display'] },
       { id: 'apps', label: 'Apps', icon: AppWindow, keywords: ['installed', 'applications', 'software', 'management', 'uninstall'] },
-      { id: 'accessibility', label: 'Accessibility', icon: Eye, keywords: ['contrast', 'grayscale', 'glass', 'transparency', 'cursor', 'pointer', 'mouse'] },
+      { id: 'accessibility', label: 'Accessibility', icon: Eye, keywords: ['contrast', 'grayscale', 'glass', 'transparency', 'cursor', 'pointer', 'mouse', 'scale'] },
       { id: 'notifications', label: 'Notifications', icon: Bell, keywords: ['alerts', 'messages', 'activity', 'dnd'] },
       { id: 'accounts', label: 'Accounts', icon: User, keywords: ['profile', 'identity', 'password', 'avatar', 'user', 'sign out'] },
       { id: 'security', label: 'Security', icon: Shield, keywords: ['encryption', 'lockdown', 'defender', 'kernel'] },
@@ -354,7 +354,7 @@ export const Settings: React.FC = () => {
                 <MousePointer2 size={18} className="text-accent" />
                 <h2 className="text-lg font-bold text-foreground">Cursor Personalization</h2>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
                 {CURSOR_COLORS.map(c => (
                   <button 
                     key={c.id}
@@ -370,6 +370,24 @@ export const Settings: React.FC = () => {
                     <span className="text-[10px] font-bold uppercase tracking-widest">{c.label}</span>
                   </button>
                 ))}
+              </div>
+
+              <div className="p-6 bg-foreground/5 rounded-2xl border border-border/50 space-y-6">
+                <div className="flex justify-between items-center mb-2">
+                  <Label className="text-sm font-bold">Mouser Scale Meter</Label>
+                  <span className="text-xs font-mono text-accent">{mouserScale.toFixed(1)}x</span>
+                </div>
+                <Slider 
+                  value={[mouserScale]} 
+                  max={3} 
+                  min={1} 
+                  step={0.1} 
+                  onValueChange={(v) => setMouserScale(v[0])} 
+                />
+                <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+                  <Info size={12} />
+                  <span>Increase cursor size for high-DPI virtual monitors.</span>
+                </div>
               </div>
             </section>
           </div>

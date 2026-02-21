@@ -1,8 +1,9 @@
+
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useOS, AppId, APP_INFO } from '@/context/os-context';
-import { Wifi, Volume2, FolderOpen, ShoppingBag, MessageSquare, Settings, Lock, Check, Loader2, VolumeX, Volume1, LayoutGrid, Battery, BatteryMedium, MessageCircle, GraduationCap, PinOff, EyeOff, Smile, Home } from 'lucide-react';
+import { Wifi, Volume2, FolderOpen, ShoppingBag, MessageSquare, Settings, Lock, Check, Loader2, VolumeX, Volume1, LayoutGrid, Battery, BatteryMedium, MessageCircle, GraduationCap, PinOff, EyeOff, Smile, Home, RotateCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { StartMenu } from './StartMenu';
 import { QuickSettings } from './QuickSettings';
@@ -15,7 +16,7 @@ import { Slider } from "@/components/ui/slider";
 
 export const Taskbar: React.FC = () => {
   const { 
-    openWindows, activeWindowId, focusWindow, openApp, taskbarPosition, taskbarSize, taskbarAutoHide, setTaskbarAutoHide,
+    openWindows, activeWindowId, focusWindow, openApp, taskbarPosition, taskbarSize, rotateTaskbar,
     currentWifi, isWifiConnecting, connectToWifi, volume, setVolume, isOnline,
     isWidgetsOpen, setIsWidgetsOpen, pinnedApps, reorderPinnedApps, togglePinApp,
     isQuickSettingsOpen, setIsQuickSettingsOpen, isStartOpen, setIsStartOpen,
@@ -27,9 +28,7 @@ export const Taskbar: React.FC = () => {
   const [draggingAppId, setDraggingAppId] = useState<AppId | null>(null);
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [targetIndex, setTargetIndex] = useState<number | null>(null);
-  const [isForcedVisible, setIsForcedVisible] = useState(false);
   
-  // Taskbar-specific context menu state
   const [taskbarMenu, setTaskbarMenu] = useState<{ x: number, y: number, type: 'taskbar' | 'app', appId?: AppId } | null>(null);
 
   useEffect(() => {
@@ -39,16 +38,6 @@ export const Taskbar: React.FC = () => {
     return () => clearInterval(timer);
   }, []);
 
-  // Force taskbar to be visible if a menu is open
-  useEffect(() => {
-    if (isStartOpen || isQuickSettingsOpen || isWidgetsOpen || isChatOpen) {
-      setIsForcedVisible(true);
-    } else {
-      setIsForcedVisible(false);
-    }
-  }, [isStartOpen, isQuickSettingsOpen, isWidgetsOpen, isChatOpen]);
-
-  // Close context menu on click outside
   useEffect(() => {
     const handleClickOutside = () => setTaskbarMenu(null);
     if (taskbarMenu) {
@@ -70,22 +59,6 @@ export const Taskbar: React.FC = () => {
     top: `top-0 left-0 right-0 border-b`,
     left: `left-0 top-0 bottom-0 border-r`,
     right: `right-0 top-0 bottom-0 border-l`,
-  };
-
-  // Expanded hit areas (hot zones)
-  const autoHideClasses = {
-    bottom: isForcedVisible 
-      ? 'translate-y-0' 
-      : 'translate-y-[calc(100%-4px)] hover:translate-y-0 before:absolute before:bottom-full before:inset-x-0 before:h-6 before:content-[""]',
-    top: isForcedVisible 
-      ? 'translate-y-0' 
-      : '-translate-y-[calc(100%-4px)] hover:translate-y-0 before:absolute before:top-full before:inset-x-0 before:h-6 before:content-[""]',
-    left: isForcedVisible 
-      ? 'translate-x-0' 
-      : '-translate-x-[calc(100%-4px)] hover:translate-x-0 before:absolute before:left-full before:inset-y-0 before:w-6 before:content-[""]',
-    right: isForcedVisible 
-      ? 'translate-x-0' 
-      : 'translate-x-[calc(100%-4px)] hover:translate-x-0 before:absolute before:right-full before:inset-y-0 before:w-6 before:content-[""]',
   };
 
   const safeTaskbarSize = isNaN(taskbarSize) ? 48 : taskbarSize;
@@ -159,7 +132,6 @@ export const Taskbar: React.FC = () => {
         className={cn(
           "fixed glass flex z-[9999] transition-all duration-500 ease-in-out",
           positionClasses[taskbarPosition],
-          taskbarAutoHide && autoHideClasses[taskbarPosition],
           isVertical ? "flex-col py-2" : "items-center px-2",
           isSchool && "border-blue-500/20",
           isKid && "border-pink-500/20"
@@ -169,7 +141,6 @@ export const Taskbar: React.FC = () => {
         }}
         onContextMenu={handleTaskbarContextMenu}
       >
-        {/* Start & Widgets Buttons */}
         <div className={cn("flex", isVertical ? "flex-col gap-1" : "gap-1")}>
           <button
             onClick={handleStartToggle}
@@ -210,13 +181,11 @@ export const Taskbar: React.FC = () => {
           {isStartOpen && <StartMenu onClose={() => setIsStartOpen(false)} />}
         </div>
 
-        {/* Centered App Container */}
         <div className={cn(
           "flex-1 flex gap-2 overflow-hidden",
           isVertical ? "flex-col items-center justify-center" : "items-center justify-center"
         )}>
           {pinnedApps.map((appId, index) => {
-            // Kid restrictions
             if (isKid && (appId === 'terminal' || appId === 'virus')) return null;
 
             const info = APP_INFO[appId];
@@ -268,7 +237,6 @@ export const Taskbar: React.FC = () => {
           })}
         </div>
 
-        {/* System Tray (Right Side) */}
         <div className={cn(
           "flex gap-3 text-white/70 z-10",
           isVertical ? "flex-col items-center pb-2" : "items-center px-1"
@@ -327,7 +295,6 @@ export const Taskbar: React.FC = () => {
         {isQuickSettingsOpen && <QuickSettings />}
       </div>
 
-      {/* Taskbar Context Menu */}
       {taskbarMenu && (
         <div 
           className="fixed z-[100000] w-52 glass rounded-xl border border-white/10 shadow-2xl backdrop-blur-3xl p-1.5 flex flex-col gap-0.5 animate-in fade-in zoom-in-95 duration-100"
@@ -338,17 +305,16 @@ export const Taskbar: React.FC = () => {
           {taskbarMenu.type === 'taskbar' ? (
             <button 
               onClick={() => {
-                setTaskbarAutoHide(!taskbarAutoHide);
+                rotateTaskbar();
                 setTaskbarMenu(null);
                 playSound('click');
               }}
               className="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-accent/20 text-xs font-medium text-white/80 hover:text-accent transition-colors group"
             >
               <div className="flex items-center gap-3">
-                <EyeOff size={14} className="text-accent/60 group-hover:text-accent" />
-                <span>Auto-hide Taskbar</span>
+                <RotateCw size={14} className="text-accent/60 group-hover:text-accent" />
+                <span>Rotate Taskbar</span>
               </div>
-              {taskbarAutoHide && <Check size={12} className="text-accent" />}
             </button>
           ) : (
             <button 

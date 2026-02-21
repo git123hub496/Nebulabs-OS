@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -30,12 +31,8 @@
     --sidebar-accent-foreground: 0 0% 100%;
     --sidebar-border: 210 29% 30%;
     --sidebar-ring: 262.1 83.3% 57.8%;
-
-    /* Cursor SVGs */
-    --cursor-black: url("data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cGF0aCBkPSJNIDQgMyBMIDQgMjEgTCA4LjUgMTYuNSBMIDExLjUgMjMgTCAxNC41IDIyIEwgMTEuNSAxNS41IEwgMTggMTUuNSBMIDQgMyBaIiBmaWxsPSJibGFjayIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSIwLjgiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz4KPC9zdmc+");
-    --cursor-white: url("data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cGF0aCBkPSJNIDQgMyBMIDQgMjEgTCA4LjUgMTYuNSBMIDExLjUgMjMgTCAxNC41IDIyIEwgMTEuNSAxNS41IEwgMTggMTUuNSBMIDQgMyBaIiBmaWxsPSJ3aGl0ZSIgc3Ryb2tlPSJibGFjayIgc3Ryb2tlLXdpZHRoPSIwLjgiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz4KPC9zdmc+");
     
-    --cursor-url: var(--cursor-black);
+    --cursor-url: auto;
   }
 
   .light {
@@ -70,61 +67,17 @@
   }
 }
 
-/* Accent Override Classes - Globally scoped for maximum inheritance */
-.accent-blue {
-  --primary: 217.2 91.2% 59.8% !important;
-  --accent: 217.2 91.2% 59.8% !important;
-  --ring: 217.2 91.2% 59.8% !important;
-  --primary-foreground: 0 0% 100% !important;
-  --accent-foreground: 0 0% 100% !important;
-}
-.accent-purple {
-  --primary: 262.1 83.3% 57.8% !important;
-  --accent: 262.1 83.3% 57.8% !important;
-  --ring: 262.1 83.3% 57.8% !important;
-  --primary-foreground: 0 0% 100% !important;
-  --accent-foreground: 0 0% 100% !important;
-}
-.accent-rose {
-  --primary: 346.8 77.2% 49.8% !important;
-  --accent: 346.8 77.2% 49.8% !important;
-  --ring: 346.8 77.2% 49.8% !important;
-  --primary-foreground: 0 0% 100% !important;
-  --accent-foreground: 0 0% 100% !important;
-}
-.accent-orange {
-  --primary: 24.6 95% 53.1% !important;
-  --accent: 24.6 95% 53.1% !important;
-  --ring: 24.6 95% 53.1% !important;
-  --primary-foreground: 0 0% 100% !important;
-  --accent-foreground: 0 0% 100% !important;
-}
-.accent-green {
-  --primary: 142.1 76.2% 36.3% !important;
-  --accent: 142.1 76.2% 36.3% !important;
-  --ring: 142.1 76.2% 36.3% !important;
-  --primary-foreground: 0 0% 100% !important;
-  --accent-foreground: 0 0% 100% !important;
-}
-.accent-grey {
-  --primary: 210 20% 50% !important;
-  --accent: 210 20% 50% !important;
-  --ring: 210 20% 50% !important;
-  --primary-foreground: 0 0% 100% !important;
-  --accent-foreground: 0 0% 100% !important;
-}
+.accent-blue { --primary: 217.2 91.2% 59.8% !important; --accent: 217.2 91.2% 59.8% !important; --ring: 217.2 91.2% 59.8% !important; }
+.accent-purple { --primary: 262.1 83.3% 57.8% !important; --accent: 262.1 83.3% 57.8% !important; --ring: 262.1 83.3% 57.8% !important; }
+.accent-rose { --primary: 346.8 77.2% 49.8% !important; --accent: 346.8 77.2% 49.8% !important; --ring: 346.8 77.2% 49.8% !important; }
+.accent-orange { --primary: 24.6 95% 53.1% !important; --accent: 24.6 95% 53.1% !important; --ring: 24.6 95% 53.1% !important; }
+.accent-green { --primary: 142.1 76.2% 36.3% !important; --accent: 142.1 76.2% 36.3% !important; --ring: 142.1 76.2% 36.3% !important; }
+.accent-grey { --primary: 210 20% 50% !important; --accent: 210 20% 50% !important; --ring: 210 20% 50% !important; }
 
 @layer base {
   * {
     @apply border-border;
-  }
-
-  html, body, button, [role="button"], a, input, select, textarea {
-    cursor: var(--cursor-url) 0 0, auto;
-  }
-
-  button:hover, [role="button"]:hover, a:hover {
-    cursor: pointer;
+    cursor: var(--cursor-url) !important;
   }
 
   body {
@@ -132,30 +85,13 @@
   }
 }
 
-.glass {
-  @apply bg-background/80 backdrop-blur-3xl border-white/10 shadow-2xl;
-}
+.glass { @apply bg-background/80 backdrop-blur-3xl border-white/10 shadow-2xl; }
+.glass-disabled .glass { backdrop-filter: none !important; @apply bg-background/95; }
+.light .glass { @apply bg-white/80 border-black/5; }
 
-.glass-disabled .glass {
-  backdrop-filter: none !important;
-  @apply bg-background/95;
-}
-
-.light .glass {
-  @apply bg-white/80 border-black/5;
-}
-
-.desktop-icon {
-  @apply flex flex-col items-center gap-1 p-2 rounded-lg hover:bg-white/10 transition-colors cursor-pointer w-24 text-center;
-}
-
-.window-shadow {
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-}
-
-.system-inverted {
-  filter: invert(1) hue-rotate(180deg);
-}
+.desktop-icon { @apply flex flex-col items-center gap-1 p-2 rounded-lg hover:bg-white/10 transition-colors cursor-pointer w-24 text-center; }
+.window-shadow { box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); }
+.system-inverted { filter: invert(1) hue-rotate(180deg); }
 
 @keyframes loading {
   0% { width: 0; transform: translateX(-100%); }

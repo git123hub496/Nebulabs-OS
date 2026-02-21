@@ -151,9 +151,13 @@ export const Desktop: React.FC = () => {
   const [runQuery, setRunQuery] = useState("");
   const [isRunOpen, setIsRunOpen] = useState(false);
   
+  // Drag threshold state
+  const [pendingDragAppId, setPendingDragAppId] = useState<AppId | null>(null);
+  const [dragStartPos, setDragStartPos] = useState({ x: 0, y: 0 });
   const [draggingAppId, setDraggingAppId] = useState<AppId | null>(null);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [currentDragPos, setCurrentDragPos] = useState({ x: 0, y: 0 });
+  
   const desktopRef = useRef<HTMLDivElement>(null);
 
   const isSchool = currentUser?.isSchoolAccount;
@@ -174,7 +178,6 @@ export const Desktop: React.FC = () => {
   }, [powerStatus]);
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
-    // BIOS Key Listener
     if (e.key.toLowerCase() === 'b') {
       const isBooting = powerStatus === 'booting' || shouldRenderBoot;
       const isOff = powerStatus === 'off';
@@ -189,8 +192,7 @@ export const Desktop: React.FC = () => {
 
     if (e.altKey) {
       switch (e.key.toLowerCase()) {
-        case ' ':
-        case 'n': // Start Menu Toggle
+        case 'n': 
           e.preventDefault();
           setIsStartOpen(!isStartOpen);
           setIsWidgetsOpen(false);
@@ -314,13 +316,13 @@ export const Desktop: React.FC = () => {
   const handleMouseDown = (e: React.MouseEvent, appId: AppId) => {
     if ((e.target as HTMLElement).closest('.delete-shortcut-btn')) return;
     
-    // Don't stop propagation immediately, let browser track clicks for double-click
     setContextMenu(null);
     setShortcutContextMenu(null);
     
     const app = desktopApps.find(a => a.id === appId);
     if (app) {
-      setDraggingAppId(appId);
+      setPendingDragAppId(appId);
+      setDragStartPos({ x: e.clientX, y: e.clientY });
       setDragOffset({
         x: e.clientX - app.x,
         y: e.clientY - app.y
@@ -330,6 +332,17 @@ export const Desktop: React.FC = () => {
   };
 
   const handleMouseMove = (e: React.MouseEvent) => {
+    if (pendingDragAppId && !draggingAppId) {
+      const dx = e.clientX - dragStartPos.x;
+      const dy = e.clientY - dragStartPos.y;
+      const distance = Math.hypot(dx, dy);
+      
+      // Threshold: 5 pixels of movement before entering drag state
+      if (distance > 5) {
+        setDraggingAppId(pendingDragAppId);
+      }
+    }
+
     if (draggingAppId) {
       const newX = e.clientX - dragOffset.x;
       const newY = e.clientY - dragOffset.y;
@@ -340,8 +353,9 @@ export const Desktop: React.FC = () => {
   const handleMouseUp = () => {
     if (draggingAppId) {
       updateDesktopAppPosition(draggingAppId, currentDragPos.x, currentDragPos.y);
-      setDraggingAppId(null);
     }
+    setPendingDragAppId(null);
+    setDraggingAppId(null);
   };
 
   if (showBIOS) {
@@ -434,7 +448,7 @@ export const Desktop: React.FC = () => {
 
       {(isWidgetsOpen || isQuickSettingsOpen || isStartOpen || isChatOpen || isRunOpen) && (
         <div 
-          className="absolute inset-0 bg-black/30 backdrop-blur-md z-[9997] animate-in fade-in duration-300" 
+          className="absolute inset-0 bg-black/30 backdrop-blur-md z-[9997]" 
           onClick={(e) => {
             e.stopPropagation();
             setIsWidgetsOpen(false);
@@ -453,7 +467,6 @@ export const Desktop: React.FC = () => {
       <ChatBar />
 
       {currentDisplayId === '1' && desktopApps.map(shortcut => {
-        // Kid Restrictions
         if (isKid && (shortcut.id === 'terminal' || shortcut.id === 'virus')) return null;
 
         const Icon = shortcut.icon;
