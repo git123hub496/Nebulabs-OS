@@ -19,7 +19,7 @@ export const Taskbar: React.FC = () => {
     currentWifi, isWifiConnecting, connectToWifi, volume, setVolume, isOnline,
     isWidgetsOpen, setIsWidgetsOpen, pinnedApps, reorderPinnedApps,
     isQuickSettingsOpen, setIsQuickSettingsOpen, isStartOpen, setIsStartOpen,
-    isChatOpen, setIsChatOpen
+    isChatOpen, setIsChatOpen, playSound
   } = useOS();
   
   const [mounted, setMounted] = useState(false);
@@ -101,9 +101,6 @@ export const Taskbar: React.FC = () => {
           onClick={(e) => {
             e.stopPropagation();
             setIsStartOpen(!isStartOpen);
-            setIsWidgetsOpen(false);
-            setIsQuickSettingsOpen(false);
-            setIsChatOpen(false);
           }}
           className={cn(
             "p-2 rounded-md hover:bg-white/10 transition-all active:scale-95 group flex items-center justify-center min-w-[32px] min-h-[32px]",
@@ -122,9 +119,6 @@ export const Taskbar: React.FC = () => {
           onClick={(e) => {
             e.stopPropagation();
             setIsWidgetsOpen(!isWidgetsOpen);
-            setIsStartOpen(false);
-            setIsQuickSettingsOpen(false);
-            setIsChatOpen(false);
           }}
           className={cn(
             "p-2 rounded-md hover:bg-white/10 transition-all active:scale-95 group flex items-center justify-center min-w-[32px] min-h-[32px]",
@@ -230,9 +224,6 @@ export const Taskbar: React.FC = () => {
           onClick={(e) => {
             e.stopPropagation();
             setIsChatOpen(!isChatOpen);
-            setIsQuickSettingsOpen(false);
-            setIsStartOpen(false);
-            setIsWidgetsOpen(false);
           }}
           className={cn(
             "p-2 rounded-md hover:bg-white/10 transition-all active:scale-95 group flex items-center justify-center min-w-[32px] min-h-[32px]",
@@ -247,16 +238,17 @@ export const Taskbar: React.FC = () => {
           onClick={(e) => {
             e.stopPropagation();
             setIsQuickSettingsOpen(!isQuickSettingsOpen);
-            setIsStartOpen(false);
-            setIsWidgetsOpen(false);
-            setIsChatOpen(false);
           }}
           className={cn(
             "flex items-center gap-2 px-3 py-1.5 rounded-xl hover:bg-white/10 transition-all active:scale-95 group",
-            isQuickSettingsOpen && "bg-accent/20 text-accent"
+            isQuickSettingsOpen && "bg-accent/20 text-accent",
+            isVertical ? "flex-col py-3 px-1.5" : ""
           )}
         >
-          <div className="flex items-center gap-2 mr-2 border-r border-white/10 pr-2">
+          <div className={cn(
+            "flex items-center gap-2 mr-2 border-white/10 pr-2",
+            isVertical ? "flex-col mr-0 pr-0 mb-2 border-b pb-2 border-r-0" : "border-r"
+          )}>
             {isWifiConnecting ? (
               <Loader2 size={14} className="animate-spin text-accent" />
             ) : (
@@ -266,15 +258,16 @@ export const Taskbar: React.FC = () => {
             <BatteryMedium size={14} className={cn(isQuickSettingsOpen ? "text-accent" : "text-white/60")} />
           </div>
           
-          {!isVertical && (
-            <div className="flex flex-col items-end leading-none min-w-[50px]">
-              {mounted && time ? (
-                <span className="text-[11px] font-bold whitespace-nowrap">{formatTime(time)}</span>
-              ) : (
-                <div className="h-3 w-10 bg-white/10 rounded animate-pulse" />
-              )}
-            </div>
-          )}
+          <div className={cn(
+            "flex flex-col leading-none",
+            isVertical ? "items-center" : "items-end min-w-[50px]"
+          )}>
+            {mounted && time ? (
+              <span className="text-[11px] font-bold whitespace-nowrap">{formatTime(time)}</span>
+            ) : (
+              <div className="h-3 w-10 bg-white/10 rounded animate-pulse" />
+            )}
+          </div>
         </button>
       </div>
 

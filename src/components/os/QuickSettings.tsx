@@ -46,12 +46,15 @@ export const QuickSettings: React.FC = () => {
     currentWifi, isOnline, connectToWifi,
     currentUser, logout, shutDown, openApp,
     taskbarPosition, currentDisplayId, setCurrentDisplayId,
-    displayLayout, updateDisplayLayout, resetDisplayLayout
+    displayLayout, updateDisplayLayout, resetDisplayLayout,
+    playSound
   } = useOS();
 
   if (!isQuickSettingsOpen) return null;
 
   const [isDND, setIsDND] = React.useState(false);
+
+  const isVertical = taskbarPosition === 'left' || taskbarPosition === 'right';
 
   const positionClasses = {
     bottom: 'bottom-14 right-4 animate-in slide-in-from-bottom-2 origin-bottom-right',
@@ -60,10 +63,14 @@ export const QuickSettings: React.FC = () => {
     right: 'right-14 bottom-4 animate-in slide-in-from-right-2 origin-bottom-right',
   };
 
-  const handleToggleTheme = () => setTheme(theme === 'dark' ? 'light' : 'dark');
+  const handleToggleTheme = () => {
+    setTheme(theme === 'dark' ? 'light' : 'dark');
+    playSound('click');
+  };
 
   const addDisplay = () => {
     window.open(window.location.href, '_blank', 'width=1280,height=720');
+    playSound('click');
   };
 
   const VolumeIcon = volume === 0 ? VolumeX : volume < 50 ? Volume1 : Volume2;
@@ -71,12 +78,13 @@ export const QuickSettings: React.FC = () => {
   return (
     <div 
       className={cn(
-        "fixed w-[380px] glass rounded-2xl border border-white/10 shadow-2xl z-[9999] p-6 flex flex-col gap-6",
+        "fixed glass rounded-2xl border border-white/10 shadow-2xl z-[9999] p-6 flex flex-col gap-6",
+        isVertical ? "w-[320px]" : "w-[380px]",
         positionClasses[taskbarPosition]
       )}
       onClick={(e) => e.stopPropagation()}
     >
-      <div className="flex items-center justify-between">
+      <div className={cn("flex items-center justify-between", isVertical ? "flex-col gap-4 items-start" : "")}>
         <div className="flex items-center gap-3 overflow-hidden">
           <Avatar className="w-10 h-10 border-2 border-accent/20 shrink-0">
             <AvatarImage src={currentUser?.avatarUrl} className="object-cover" />
@@ -92,7 +100,7 @@ export const QuickSettings: React.FC = () => {
             <span className="text-[10px] text-accent font-medium uppercase tracking-tighter">System Administrator</span>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className={cn("flex items-center gap-2", isVertical ? "w-full justify-between border-t border-white/5 pt-4" : "")}>
           <Button 
             variant="ghost" 
             size="icon" 
@@ -109,16 +117,22 @@ export const QuickSettings: React.FC = () => {
             variant="ghost" 
             size="icon" 
             className="h-9 w-9 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-xl"
-            onClick={shutDown}
+            onClick={() => {
+              playSound('click');
+              shutDown();
+            }}
           >
             <Power size={18} />
           </Button>
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className={cn("grid gap-3", isVertical ? "grid-cols-1" : "grid-cols-2")}>
         <button 
-          onClick={() => connectToWifi(isOnline ? 'Public_Guest_No_Internet' : 'Nebula_Secure_5G')}
+          onClick={() => {
+            playSound('click');
+            connectToWifi(isOnline ? 'Public_Guest_No_Internet' : 'Nebula_Secure_5G');
+          }}
           className={cn(
             "flex items-center gap-3 p-3 rounded-xl border transition-all text-left",
             isOnline ? "bg-accent/20 border-accent/30 text-accent" : "bg-white/5 border-white/5 text-muted-foreground hover:bg-white/10"
@@ -133,7 +147,10 @@ export const QuickSettings: React.FC = () => {
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="flex items-center gap-3 p-3 rounded-xl border bg-white/5 border-white/5 text-muted-foreground hover:bg-white/10 transition-all text-left">
+            <button 
+              className="flex items-center gap-3 p-3 rounded-xl border bg-white/5 border-white/5 text-muted-foreground hover:bg-white/10 transition-all text-left"
+              onClick={() => playSound('click')}
+            >
               <Monitor size={18} className="text-accent" />
               <div className="flex flex-col min-w-0">
                 <span className="text-[11px] font-bold text-foreground">Displays</span>
@@ -146,7 +163,10 @@ export const QuickSettings: React.FC = () => {
              {['1', '2', '3'].map(id => (
                <DropdownMenuItem 
                  key={id} 
-                 onClick={() => setCurrentDisplayId(id)}
+                 onClick={() => {
+                   playSound('click');
+                   setCurrentDisplayId(id);
+                 }}
                  className="gap-2"
                >
                  <Monitor size={12} className={id === currentDisplayId ? "text-accent" : ""} />
@@ -168,7 +188,7 @@ export const QuickSettings: React.FC = () => {
                       <DropdownMenuSub key={dir}>
                         <DropdownMenuSubTrigger className="text-[10px]">{dir} is...</DropdownMenuSubTrigger>
                         <DropdownMenuSubContent className="glass border-white/10 backdrop-blur-3xl">
-                          <DropdownMenuItem onClick={() => updateDisplayLayout(fromId, dir as any, 'none')} className="text-[10px]">
+                          <DropdownMenuItem onClick={() => { playSound('click'); updateDisplayLayout(fromId, dir as any, 'none'); }} className="text-[10px]">
                             None
                             {!displayLayout[fromId]?.[dir as any] && <Check size={12} className="ml-auto text-accent" />}
                           </DropdownMenuItem>
@@ -177,6 +197,7 @@ export const QuickSettings: React.FC = () => {
                               key={toId} 
                               onClick={(e) => {
                                 e.stopPropagation();
+                                playSound('click');
                                 updateDisplayLayout(fromId, dir as any, toId);
                               }}
                               className="text-[10px]"
@@ -193,7 +214,7 @@ export const QuickSettings: React.FC = () => {
              ))}
 
              <Separator className="my-1 bg-white/5" />
-             <DropdownMenuItem onClick={resetDisplayLayout} className="gap-2 text-destructive">
+             <DropdownMenuItem onClick={() => { playSound('click'); resetDisplayLayout(); }} className="gap-2 text-destructive">
                <RefreshCcw size={12} />
                Reset All Arrangements
              </DropdownMenuItem>
@@ -219,7 +240,10 @@ export const QuickSettings: React.FC = () => {
         </button>
 
         <button 
-          onClick={() => setIsDND(!isDND)}
+          onClick={() => {
+            playSound('click');
+            setIsDND(!isDND);
+          }}
           className={cn(
             "flex items-center gap-3 p-3 rounded-xl border transition-all text-left",
             isDND ? "bg-accent/20 border-accent/30 text-accent" : "bg-white/5 border-white/5 text-muted-foreground hover:bg-white/10"
@@ -272,7 +296,7 @@ export const QuickSettings: React.FC = () => {
 
       <Separator className="bg-white/5" />
 
-      <div className="flex items-center justify-between">
+      <div className={cn("flex items-center justify-between", isVertical ? "flex-col items-start gap-4" : "")}>
         <div className="flex flex-col">
           <span className="text-xs font-bold text-foreground">
             {new Date().toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' })}
@@ -283,7 +307,10 @@ export const QuickSettings: React.FC = () => {
           variant="outline" 
           size="sm" 
           className="h-8 text-[10px] font-bold gap-2 border-border/50 hover:bg-destructive hover:text-white hover:border-destructive transition-all rounded-xl text-foreground"
-          onClick={logout}
+          onClick={() => {
+            playSound('click');
+            logout();
+          }}
         >
           <LogOut size={12} />
           Sign Out

@@ -221,6 +221,7 @@ interface OSContextType {
   shutDown: () => void;
   powerOn: () => void;
   minimizeAllWindows: () => void;
+  playSound: (type: 'click' | 'open' | 'close' | 'notify') => void;
   
   createFolder: (name: string, parentId: string | null) => void;
   importFile: (name: string, content: string, size: number, parentId: string | null) => void;
@@ -394,15 +395,34 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   const [displayLayout, setDisplayLayoutState] = useState<DisplayLayout>({ '1': { right: '2' }, '2': { left: '1' } });
   const [isSecurityEnabled, setSecurityEnabledState] = useState(true);
 
+  const playSound = useCallback((type: 'click' | 'open' | 'close' | 'notify') => {
+    if (typeof window === 'undefined') return;
+    const urls = {
+      click: 'https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3',
+      open: 'https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3',
+      close: 'https://assets.mixkit.co/active_storage/sfx/2570/2570-preview.mp3',
+      notify: 'https://assets.mixkit.co/active_storage/sfx/2350/2350-preview.mp3'
+    };
+    try {
+      const audio = new Audio(urls[type]);
+      audio.volume = 0.2;
+      audio.play().catch(() => {});
+    } catch (e) {}
+  }, []);
+
   const addNotification = useCallback((title: string, message: string, type: SystemNotification['type'] = 'system') => {
+    const newId = Math.random().toString(36).substr(2, 9);
     const newNotif: SystemNotification = {
-      id: Math.random().toString(36).substr(2, 9),
+      id: newId,
       title, message, type,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     };
     setNotifications(prev => [newNotif, ...prev].slice(0, 50));
-    if (currentDisplayId === '1') toast({ title, description: message });
-  }, [currentDisplayId]);
+    if (currentDisplayId === '1') {
+      toast({ title, description: message });
+      playSound('notify');
+    }
+  }, [currentDisplayId, playSound]);
 
   // Background activity simulator
   useEffect(() => {
@@ -775,24 +795,29 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     setOpenWindows(prev => [...prev, newWindow]);
     setActiveWindowId(newId);
     setNextZIndex(prev => prev + 1);
+    playSound('click');
   };
 
   const closeWindow = (windowId: string) => {
     setOpenWindows(prev => prev.filter(w => w.id !== windowId));
     if (activeWindowId === windowId) setActiveWindowId(null);
+    playSound('click');
   };
 
   const minimizeWindow = (windowId: string) => {
     setOpenWindows(prev => prev.map(w => w.id === windowId ? { ...w, isMinimized: true } : w));
     setActiveWindowId(null);
+    playSound('click');
   };
 
   const maximizeWindow = (windowId: string) => {
     setOpenWindows(prev => prev.map(w => w.id === windowId ? { ...w, isMaximized: !w.isMaximized, isSnapped: null } : w));
+    playSound('click');
   };
 
   const snapWindow = (windowId: string, side: 'left' | 'right' | null) => {
     setOpenWindows(prev => prev.map(w => w.id === windowId ? { ...w, isSnapped: side, isMaximized: false } : w));
+    playSound('click');
   };
 
   const focusWindow = (windowId: string) => {
@@ -824,22 +849,26 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
 
   const setIsWidgetsOpen = (open: boolean) => {
     setIsWidgetsOpenState(open);
-    if (open) { setIsStartOpenState(false); setIsQuickSettingsOpenState(false); setIsChatOpenState(false); }
+    if (open) { setIsStartOpenState(false); setIsQuickSettingsOpenState(false); setIsChatOpenState(false); playSound('open'); }
+    else { playSound('close'); }
   };
 
   const setIsQuickSettingsOpen = (open: boolean) => {
     setIsQuickSettingsOpenState(open);
-    if (open) { setIsStartOpenState(false); setIsWidgetsOpenState(false); setIsChatOpenState(false); }
+    if (open) { setIsStartOpenState(false); setIsWidgetsOpenState(false); setIsChatOpenState(false); playSound('open'); }
+    else { playSound('close'); }
   };
 
   const setIsStartOpen = (open: boolean) => {
     setIsStartOpenState(open);
-    if (open) { setIsQuickSettingsOpenState(false); setIsWidgetsOpenState(false); setIsChatOpenState(false); }
+    if (open) { setIsQuickSettingsOpenState(false); setIsWidgetsOpenState(false); setIsChatOpenState(false); playSound('open'); }
+    else { playSound('close'); }
   };
 
   const setIsChatOpen = (open: boolean) => {
     setIsChatOpenState(open);
-    if (open) { setIsStartOpenState(false); setIsQuickSettingsOpenState(false); setIsWidgetsOpenState(false); }
+    if (open) { setIsStartOpenState(false); setIsQuickSettingsOpenState(false); setIsWidgetsOpenState(false); playSound('open'); }
+    else { playSound('close'); }
   };
 
   const connectToWifi = (ssid: string) => {
@@ -887,7 +916,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   const powerOn = () => { setPowerStatusState('booting'); setTimeout(() => setPowerStatusState('on'), 800); };
   const restart = () => { setCurrentUser(null); setOpenWindows([]); setActiveWindowId(null); setIsLocked(false); setPowerStatusState('booting'); setTimeout(() => setPowerStatusState('on'), 800); };
   const shutDown = () => { setCurrentUser(null); setOpenWindows([]); setActiveWindowId(null); setIsLocked(false); setPowerStatusState('off'); };
-  const minimizeAllWindows = () => { setOpenWindows(prev => prev.map(w => ({ ...w, isMinimized: true }))); setActiveWindowId(null); };
+  const minimizeAllWindows = () => { setOpenWindows(prev => prev.map(w => ({ ...w, isMinimized: true }))); setActiveWindowId(null); playSound('close'); };
 
   const createFolder = (name: string, parentId: string | null) => {
     const newFolder: FileSystemItem = { id: Math.random().toString(36).substr(2, 9), name, type: 'folder', parentId };
@@ -967,7 +996,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       setCursorColor, setInverted, setGlassEnabled, setTaskbarPosition, setTaskbarSize,
       setIconSize, connectToWifi, setVolume, setBrightness, setIsWidgetsOpen,
       setIsQuickSettingsOpen, setIsStartOpen, setIsChatOpen, sendChatMessage, setCurrentDisplayId, setSecurityEnabled, restart, shutDown, powerOn,
-      minimizeAllWindows,
+      minimizeAllWindows, playSound,
       createFolder, importFile, moveToTrash, restoreFromTrash, emptyTrash, deleteItemPermanently,
       updateDesktopAppPosition, toggleDesktopApp, togglePinApp, reorderPinnedApps,
     }}>
