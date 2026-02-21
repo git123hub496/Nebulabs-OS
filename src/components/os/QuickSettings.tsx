@@ -1,3 +1,4 @@
+
 "use client"
 
 import React from 'react';
@@ -95,7 +96,8 @@ export const QuickSettings: React.FC = () => {
             variant="ghost" 
             size="icon" 
             className="h-9 w-9 text-white/40 hover:text-accent hover:bg-accent/10 rounded-xl"
-            onClick={() => {
+            onClick={(e) => {
+              e.stopPropagation();
               openApp('settings', 'Settings');
               setIsQuickSettingsOpen(false);
             }}
@@ -138,7 +140,7 @@ export const QuickSettings: React.FC = () => {
               </div>
             </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent className="glass border-white/10 w-56">
+          <DropdownMenuContent className="glass border-white/10 w-56 backdrop-blur-3xl shadow-2xl">
              <div className="px-2 py-1.5 text-[10px] font-black uppercase text-white/30 tracking-widest">Identify This Screen</div>
              {['1', '2', '3'].map(id => (
                <DropdownMenuItem 
@@ -160,11 +162,11 @@ export const QuickSettings: React.FC = () => {
                    <Layout size={12} />
                    Arrange Display {fromId}
                  </DropdownMenuSubTrigger>
-                 <DropdownMenuSubContent className="glass border-white/10 w-48">
+                 <DropdownMenuSubContent className="glass border-white/10 w-48 backdrop-blur-3xl shadow-2xl">
                     {['left', 'right', 'top', 'bottom'].map(dir => (
                       <DropdownMenuSub key={dir}>
                         <DropdownMenuSubTrigger className="text-[10px]">{dir} is...</DropdownMenuSubTrigger>
-                        <DropdownMenuSubContent className="glass border-white/10">
+                        <DropdownMenuSubContent className="glass border-white/10 backdrop-blur-3xl">
                           {['1', '2', '3'].filter(id => id !== fromId).map(toId => (
                             <DropdownMenuItem 
                               key={toId} 

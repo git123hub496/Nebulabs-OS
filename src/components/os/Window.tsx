@@ -1,3 +1,4 @@
+
 "use client"
 
 import React, { useState, useRef, useEffect } from 'react';
@@ -28,11 +29,15 @@ export const Window: React.FC<WindowProps> = ({ window: win, children }) => {
   const windowRef = useRef<HTMLDivElement>(null);
 
   const isActive = activeWindowId === win.id;
+  const isLocalDisplay = (win.displayId || '1') === currentDisplayId;
 
   const handleMouseDown = (e: React.MouseEvent) => {
     focusWindow(win.id);
     if (win.isMaximized || win.isSnapped) return;
     
+    // Only handle mouse down if it's the "Master" version of the window on this tab
+    if (!isLocalDisplay) return;
+
     setIsDragging(true);
     const rect = windowRef.current?.getBoundingClientRect();
     if (rect) {
@@ -57,29 +62,29 @@ export const Window: React.FC<WindowProps> = ({ window: win, children }) => {
         const currentLayout = displayLayout[currentDisplayId];
         
         if (currentLayout) {
-          const threshold = 60; // Slightly larger threshold for smoother hopping
+          const threshold = 10; 
 
-          // Check Left Hopping
-          if (newX < -threshold && currentLayout.left) {
-            updateWindowPosition(win.id, screenWidth - windowWidth - 20, newY, currentLayout.left);
-            setIsDragging(false);
-            return;
-          }
           // Check Right Hopping
-          if (newX > screenWidth - (windowWidth / 2) && currentLayout.right) {
-            updateWindowPosition(win.id, 20, newY, currentLayout.right);
+          if (newX > screenWidth - threshold && currentLayout.right) {
+            updateWindowPosition(win.id, -windowWidth + 20, newY, currentLayout.right);
             setIsDragging(false);
             return;
           }
-          // Check Top Hopping
-          if (newY < -threshold && currentLayout.top) {
-            updateWindowPosition(win.id, newX, screenHeight - windowHeight - 20, currentLayout.top);
+          // Check Left Hopping
+          if (newX < -windowWidth + threshold && currentLayout.left) {
+            updateWindowPosition(win.id, screenWidth - 20, newY, currentLayout.left);
             setIsDragging(false);
             return;
           }
           // Check Bottom Hopping
-          if (newY > screenHeight - (windowHeight / 2) && currentLayout.bottom) {
-            updateWindowPosition(win.id, newX, 20, currentLayout.bottom);
+          if (newY > screenHeight - threshold && currentLayout.bottom) {
+            updateWindowPosition(win.id, newX, -windowHeight + 20, currentLayout.bottom);
+            setIsDragging(false);
+            return;
+          }
+          // Check Top Hopping
+          if (newY < -windowHeight + threshold && currentLayout.top) {
+            updateWindowPosition(win.id, newX, screenHeight - 20, currentLayout.top);
             setIsDragging(false);
             return;
           }
@@ -142,9 +147,30 @@ export const Window: React.FC<WindowProps> = ({ window: win, children }) => {
       };
     }
 
+    // MULTI-DISPLAY COORDINATE MAPPING
+    let finalX = win.x;
+    let finalY = win.y;
+
+    if (!isLocalDisplay) {
+      const layout = displayLayout[currentDisplayId];
+      const screenWidth = typeof window !== 'undefined' ? window.innerWidth : 1920;
+      const screenHeight = typeof window !== 'undefined' ? window.innerHeight : 1080;
+      const winWidth = win.initialWidth || 800;
+      const winHeight = win.initialHeight || 600;
+
+      // If the window is on my LEFT neighbor, but overlapping me from the right
+      if (layout?.left === win.displayId) finalX = win.x - screenWidth;
+      // If the window is on my RIGHT neighbor, but overlapping me from the left
+      if (layout?.right === win.displayId) finalX = win.x + screenWidth;
+      // If the window is on my TOP neighbor, but overlapping me from the bottom
+      if (layout?.top === win.displayId) finalY = win.y - screenHeight;
+      // If the window is on my BOTTOM neighbor, but overlapping me from the top
+      if (layout?.bottom === win.displayId) finalY = win.y + screenHeight;
+    }
+
     return {
-      left: win.x,
-      top: win.y,
+      left: finalX,
+      top: finalY,
       width: win.initialWidth || 800,
       height: win.initialHeight || 600,
     };
@@ -156,9 +182,10 @@ export const Window: React.FC<WindowProps> = ({ window: win, children }) => {
     <div
       ref={windowRef}
       className={cn(
-        "fixed flex flex-col glass rounded-xl border overflow-hidden window-shadow transition-all duration-300",
+        "fixed flex flex-col glass rounded-xl border overflow-hidden window-shadow",
         isActive ? "z-[100] border-accent/40 ring-1 ring-accent/20" : "z-10 opacity-90",
-        win.isMaximized || win.isSnapped ? "rounded-none" : ""
+        win.isMaximized || win.isSnapped ? "rounded-none" : "",
+        isDragging ? "transition-none" : "transition-all duration-300"
       )}
       style={{
         ...dimensions,
@@ -243,7 +270,7 @@ export const Window: React.FC<WindowProps> = ({ window: win, children }) => {
         </div>
       </div>
 
-      <div className="flex-1 bg-background/40 overflow-hidden">
+      <div className="flex-1 bg-background/40 overflow-hidden pointer-events-auto">
         {children}
       </div>
     </div>

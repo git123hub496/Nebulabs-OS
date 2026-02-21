@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -64,7 +65,7 @@ export const Desktop: React.FC = () => {
     powerStatus, powerOn, taskbarPosition, iconSize, currentUser,
     cursorColor, isInverted, glassEnabled, desktopApps, updateDesktopAppPosition, toggleDesktopApp,
     isWidgetsOpen, setIsWidgetsOpen, isQuickSettingsOpen, setIsQuickSettingsOpen,
-    brightness, currentDisplayId
+    brightness, currentDisplayId, displayLayout
   } = useOS();
   
   const [bootOpacity, setBootOpacity] = useState(1);
@@ -185,8 +186,28 @@ export const Desktop: React.FC = () => {
   const iconScaleMap = { sm: 0.8, md: 1, lg: 1.25 };
   const currentScale = iconScaleMap[iconSize];
 
-  // Filter windows based on current display identity
-  const displayWindows = openWindows.filter(w => (w.displayId || '1') === currentDisplayId);
+  // MULTI-DISPLAY LOGIC: Filter windows for THIS display, but also include "overlapping" windows from neighbors
+  const displayWindows = openWindows.filter(win => {
+    // 1. Direct match
+    if ((win.displayId || '1') === currentDisplayId) return true;
+
+    // 2. Overlap check for neighboring displays
+    const layout = displayLayout[currentDisplayId];
+    if (!layout) return false;
+
+    const screenWidth = typeof window !== 'undefined' ? window.innerWidth : 1920;
+    const screenHeight = typeof window !== 'undefined' ? window.innerHeight : 1080;
+    const winWidth = win.initialWidth || 800;
+    const winHeight = win.initialHeight || 600;
+
+    // Check if the window is on a neighbor but is partially visible here
+    if (layout.left === win.displayId && win.x + winWidth > screenWidth) return true;
+    if (layout.right === win.displayId && win.x < 0) return true;
+    if (layout.top === win.displayId && win.y + winHeight > screenHeight) return true;
+    if (layout.bottom === win.displayId && win.y < 0) return true;
+
+    return false;
+  });
 
   return (
     <div 
