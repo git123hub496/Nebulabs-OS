@@ -1,18 +1,33 @@
-
 "use client"
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useOS } from '@/context/os-context';
 import { User, Plus, ArrowRight, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { BIOS } from './BIOS';
 import { cn } from '@/lib/utils';
 
 export const LoginScreen: React.FC = () => {
   const { accounts, login, createAccount, wallpaper } = useOS();
   const [isCreating, setIsCreating] = useState(false);
   const [newUsername, setNewUsername] = useState("");
+  const [showBIOS, setShowBIOS] = useState(false);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key.toLowerCase() === 'b' && !isCreating) {
+        setShowBIOS(true);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isCreating]);
+
+  if (showBIOS) {
+    return <BIOS onClose={() => setShowBIOS(false)} />;
+  }
 
   const handleCreate = (e: React.FormEvent) => {
     e.preventDefault();
@@ -107,9 +122,9 @@ export const LoginScreen: React.FC = () => {
             </div>
           </div>
           <div className="w-px h-8 bg-white/10" />
-          <div className="flex flex-col items-center gap-1">
+          <div className="flex flex-col items-center gap-1 text-center">
             <span className="text-[10px] font-bold uppercase tracking-widest">System</span>
-            <span className="text-[10px] font-mono">v1.0.4-stable</span>
+            <span className="text-[10px] font-mono">Press 'B' for BIOS</span>
           </div>
         </div>
       </div>
