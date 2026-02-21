@@ -283,27 +283,27 @@ export const LoginScreen: React.FC = () => {
                   className="flex flex-col items-center gap-4"
                 >
                   <div 
-                    className="w-24 h-24 rounded-full border-4 border-white/10 group-hover:border-accent transition-colors flex items-center justify-center shadow-2xl overflow-hidden relative"
+                    className="w-24 h-24 rounded-full border-4 border-white/10 group-hover:border-accent transition-colors flex items-center justify-center shadow-2xl relative"
                     style={{ backgroundColor: account.avatarColor }}
                   >
-                    <Avatar className="w-full h-full">
+                    <Avatar className="w-full h-full border-none">
                       <AvatarImage src={account.avatarUrl} className="object-cover" />
                       <AvatarFallback className="bg-transparent text-white text-3xl font-bold">
                         {account.username[0].toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
                     {account.isSchoolAccount && (
-                      <div className="absolute top-0 right-0 bg-blue-500 p-1.5 rounded-full border-2 border-[#1e2731]">
+                      <div className="absolute -top-1 -right-1 bg-blue-500 p-1.5 rounded-full border-2 border-[#1e2731] z-10 shadow-lg">
                         <GraduationCap size={12} className="text-white" />
                       </div>
                     )}
                     {account.isKidAccount && (
-                      <div className="absolute top-0 right-0 bg-pink-500 p-1.5 rounded-full border-2 border-[#1e2731]">
+                      <div className="absolute -top-1 -right-1 bg-pink-500 p-1.5 rounded-full border-2 border-[#1e2731] z-10 shadow-lg">
                         <Smile size={12} className="text-white" />
                       </div>
                     )}
                     {account.isWorkAccount && !account.isSchoolAccount && !account.isKidAccount && (
-                      <div className="absolute top-0 right-0 bg-accent p-1.5 rounded-full border-2 border-[#1e2731]">
+                      <div className="absolute -top-1 -right-1 bg-accent p-1.5 rounded-full border-2 border-[#1e2731] z-10 shadow-lg">
                         <Briefcase size={12} className="text-white" />
                       </div>
                     )}
@@ -357,15 +357,32 @@ export const LoginScreen: React.FC = () => {
 
         {selectedAccount && step === 'select' && (
           <div className="glass p-10 rounded-[2.5rem] border border-white/10 w-full max-md flex flex-col items-center gap-8 animate-in zoom-in-95 duration-300 shadow-2xl">
-            <Avatar className="w-24 h-24 border-4 border-accent shadow-xl shadow-accent/20">
-              <AvatarImage src={selectedAccount.avatarUrl} className="object-cover" />
-              <AvatarFallback 
-                className="text-4xl font-black text-white"
-                style={{ backgroundColor: selectedAccount.avatarColor }}
-              >
-                {selectedAccount.username[0].toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
+            <div className="relative">
+              <Avatar className="w-24 h-24 border-4 border-accent shadow-xl shadow-accent/20">
+                <AvatarImage src={selectedAccount.avatarUrl} className="object-cover" />
+                <AvatarFallback 
+                  className="text-4xl font-black text-white"
+                  style={{ backgroundColor: selectedAccount.avatarColor }}
+                >
+                  {selectedAccount.username[0].toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              {selectedAccount.isSchoolAccount && (
+                <div className="absolute -top-1 -right-1 bg-blue-500 p-2 rounded-full border-2 border-[#1e2731] z-10 shadow-lg">
+                  <GraduationCap size={16} className="text-white" />
+                </div>
+              )}
+              {selectedAccount.isKidAccount && (
+                <div className="absolute -top-1 -right-1 bg-pink-500 p-2 rounded-full border-2 border-[#1e2731] z-10 shadow-lg">
+                  <Smile size={16} className="text-white" />
+                </div>
+              )}
+              {selectedAccount.isWorkAccount && !selectedAccount.isSchoolAccount && !selectedAccount.isKidAccount && (
+                <div className="absolute -top-1 -right-1 bg-accent p-2 rounded-full border-2 border-[#1e2731] z-10 shadow-lg">
+                  <Briefcase size={16} className="text-white" />
+                </div>
+              )}
+            </div>
             
             <div className="text-center space-y-1">
               <h2 className="text-2xl font-bold text-white">{selectedAccount.username}</h2>
