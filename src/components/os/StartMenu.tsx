@@ -1,4 +1,3 @@
-
 "use client"
 
 import React, { useState } from 'react';
@@ -35,9 +34,56 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
   DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu";
+} from "@/dropdown-menu-placeholder"; // Using local implementation or radix if available
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+
+// Local implementation of Dropdown for Context Menu behavior in Start Menu
+const StartAppContextMenu: React.FC<{ x: number, y: number, appId: AppId, onClose: () => void }> = ({ x, y, appId, onClose }) => {
+  const { togglePinApp, pinnedApps, openApp } = useOS();
+  
+  return (
+    <div 
+      className="fixed z-[100001] w-52 glass rounded-xl border border-white/10 shadow-2xl backdrop-blur-3xl p-1.5 flex flex-col gap-0.5 animate-in fade-in zoom-in-95 duration-100"
+      style={{ left: x, top: y }}
+      onClick={(e) => e.stopPropagation()}
+    >
+      <button 
+        onClick={() => {
+          openApp(appId, APP_INFO[appId].label);
+          onClose();
+        }}
+        className="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-accent/20 text-xs font-bold text-white/80 hover:text-accent transition-colors"
+      >
+        <div className="flex items-center gap-3">
+          <RefreshCw size={14} className="text-accent/60" />
+          <span>Launch</span>
+        </div>
+      </button>
+      <button 
+        onClick={() => {
+          togglePinApp(appId);
+          onClose();
+        }}
+        className="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-accent/20 text-xs font-bold text-white/80 hover:text-accent transition-colors"
+      >
+        <div className="flex items-center gap-3">
+          {pinnedApps.includes(appId) ? (
+            <>
+              <PinOff size={14} className="text-accent/60" />
+              <span>Unpin from Taskbar</span>
+            </>
+          ) : (
+            <>
+              <Pin size={14} className="text-accent/60" />
+              <span>Pin to Taskbar</span>
+            </>
+          )}
+        </div>
+      </button>
+    </div>
+  );
+};
 
 interface StartMenuProps {
   onClose: () => void;
@@ -50,6 +96,7 @@ export const StartMenu: React.FC<StartMenuProps> = ({ onClose }) => {
   } = useOS();
 
   const [searchQuery, setSearchQuery] = useState("");
+  const [appContextMenu, setAppContextMenu] = useState<{ x: number, y: number, appId: AppId } | null>(null);
 
   const isSchool = currentUser?.isSchoolAccount;
 
@@ -59,6 +106,12 @@ export const StartMenu: React.FC<StartMenuProps> = ({ onClose }) => {
   const handleAppClick = (appId: AppId) => {
     openApp(appId, APP_INFO[appId]?.label || appId);
     onClose();
+  };
+
+  const handleAppContextMenu = (e: React.MouseEvent, appId: AppId) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setAppContextMenu({ x: e.clientX, y: e.clientY, appId });
   };
 
   const filteredApps = installedApps.filter(appId => {
@@ -75,10 +128,13 @@ export const StartMenu: React.FC<StartMenuProps> = ({ onClose }) => {
   };
 
   return (
-    <div className={cn(
-      "absolute w-[360px] h-[520px] glass rounded-2xl border window-shadow p-6 flex flex-col gap-6 z-[10000] shadow-2xl",
-      positionClasses[taskbarPosition]
-    )}>
+    <div 
+      className={cn(
+        "absolute w-[360px] h-[520px] glass rounded-2xl border window-shadow p-6 flex flex-col gap-6 z-[10000] shadow-2xl",
+        positionClasses[taskbarPosition]
+      )}
+      onClick={() => setAppContextMenu(null)}
+    >
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-accent/60" size={16} />
         <Input 
@@ -106,6 +162,7 @@ export const StartMenu: React.FC<StartMenuProps> = ({ onClose }) => {
                     key={appId}
                     className="flex flex-col items-center gap-2 group transition-all"
                     onClick={() => handleAppClick(appId)}
+                    onContextMenu={(e) => handleAppContextMenu(e, appId)}
                   >
                     <div className="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center group-hover:scale-105 transition-all border border-white/5 group-hover:bg-accent/20 group-hover:border-accent/20">
                       <Icon className="text-muted-foreground transition-colors group-hover:text-accent" size={24} />
@@ -160,30 +217,23 @@ export const StartMenu: React.FC<StartMenuProps> = ({ onClose }) => {
         </div>
         
         <div className="flex items-center gap-1">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-10 w-10 text-muted-foreground hover:text-accent hover:bg-accent/10 rounded-xl">
-                <Power size={20} />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48 glass border-white/10 text-foreground p-2 rounded-xl backdrop-blur-3xl shadow-2xl">
-              <DropdownMenuItem onClick={restart} className="gap-3 cursor-pointer p-3 rounded-lg">
-                <RefreshCw size={16} className="text-accent" />
-                <span className="font-medium">Restart</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={shutDown} className="gap-3 cursor-pointer p-3 rounded-lg">
-                <Power size={16} className="text-accent" />
-                <span className="font-medium">Shut Down</span>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator className="bg-white/10" />
-              <DropdownMenuItem onClick={logout} className="gap-3 cursor-pointer p-3 rounded-lg hover:bg-destructive/10 text-destructive font-medium">
-                <LogOut size={16} />
-                <span>Log Out</span>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <Button variant="ghost" size="icon" className="h-10 w-10 text-muted-foreground hover:text-accent hover:bg-accent/10 rounded-xl" onClick={restart}>
+            <RefreshCw size={20} />
+          </Button>
+          <Button variant="ghost" size="icon" className="h-10 w-10 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-xl" onClick={shutDown}>
+            <Power size={20} />
+          </Button>
         </div>
       </div>
+
+      {appContextMenu && (
+        <StartAppContextMenu 
+          x={appContextMenu.x} 
+          y={appContextMenu.y} 
+          appId={appContextMenu.appId} 
+          onClose={() => setAppContextMenu(null)} 
+        />
+      )}
     </div>
   );
 };

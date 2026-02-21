@@ -25,7 +25,6 @@ import {
   Newspaper,
   Map as MapIcon,
   Activity,
-  Activity as ActivityIcon,
   Calendar as CalendarIcon,
   Gamepad2,
   Bomb,
@@ -42,7 +41,9 @@ import {
   Cpu,
   Zap,
   Mail,
-  GraduationCap
+  GraduationCap,
+  Pin,
+  PinOff
 } from 'lucide-react';
 import { FileExplorer } from '../apps/FileExplorer';
 import { AppStore } from '../apps/AppStore';
@@ -133,13 +134,14 @@ export const Desktop: React.FC = () => {
     isWidgetsOpen, setIsWidgetsOpen, isQuickSettingsOpen, setIsQuickSettingsOpen,
     isStartOpen, setIsStartOpen, isChatOpen, setIsChatOpen, activeWindowId, closeWindow, minimizeAllWindows,
     brightness, currentDisplayId, displayLayout, isSecurityEnabled, addNotification,
-    isLocked, lock, biosSettings
+    isLocked, lock, biosSettings, pinnedApps, togglePinApp
   } = useOS();
   
   const [bootOpacity, setBootOpacity] = useState(1);
   const [shouldRenderBoot, setShouldRenderBoot] = useState(true);
   const [showBIOS, setShowBIOS] = useState(false);
   const [contextMenu, setContextMenu] = useState<{ x: number, y: number } | null>(null);
+  const [shortcutContextMenu, setShortcutContextMenu] = useState<{ x: number, y: number, appId: AppId } | null>(null);
   const [runQuery, setRunQuery] = useState("");
   const [isRunOpen, setIsRunOpen] = useState(false);
   
@@ -244,6 +246,7 @@ export const Desktop: React.FC = () => {
       setIsChatOpen(false);
       setIsRunOpen(false);
       setContextMenu(null);
+      setShortcutContextMenu(null);
     }
   }, [powerStatus, currentUser, isStartOpen, isWidgetsOpen, isQuickSettingsOpen, isChatOpen, activeWindowId, openApp, setIsStartOpen, setIsWidgetsOpen, setIsQuickSettingsOpen, setIsChatOpen, closeWindow, minimizeAllWindows, lock, isSchool, addNotification, shouldRenderBoot]);
 
@@ -255,6 +258,14 @@ export const Desktop: React.FC = () => {
   const handleContextMenu = (e: React.MouseEvent) => {
     e.preventDefault();
     setContextMenu({ x: e.clientX, y: e.clientY });
+    setShortcutContextMenu(null);
+  };
+
+  const handleShortcutContextMenu = (e: React.MouseEvent, appId: AppId) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setShortcutContextMenu({ x: e.clientX, y: e.clientY, appId });
+    setContextMenu(null);
   };
 
   const handleRunSubmit = (e: React.FormEvent) => {
@@ -270,6 +281,9 @@ export const Desktop: React.FC = () => {
     if ((e.target as HTMLElement).closest('.delete-shortcut-btn')) return;
     
     e.stopPropagation();
+    setContextMenu(null);
+    setShortcutContextMenu(null);
+    
     const app = desktopApps.find(a => a.id === appId);
     if (app) {
       setDraggingAppId(appId);
@@ -370,6 +384,7 @@ export const Desktop: React.FC = () => {
       onContextMenu={handleContextMenu}
       onClick={() => {
         setContextMenu(null);
+        setShortcutContextMenu(null);
         if (isWidgetsOpen) setIsWidgetsOpen(false);
         if (isQuickSettingsOpen) setIsQuickSettingsOpen(false);
         if (isStartOpen) setIsStartOpen(false);
@@ -428,9 +443,7 @@ export const Desktop: React.FC = () => {
               e.stopPropagation();
               openApp(shortcut.id, shortcut.label);
             }}
-            onContextMenu={(e) => {
-              e.stopPropagation();
-            }}
+            onContextMenu={(e) => handleShortcutContextMenu(e, shortcut.id)}
           >
             <div className={cn("w-14 h-14 glass rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform mb-1 shadow-lg border-white/20 relative", isSchool && "border-blue-500/20 shadow-blue-500/10")}>
               <Icon size={28} className={isSchool ? "text-blue-400" : "text-accent"} />
@@ -469,6 +482,66 @@ export const Desktop: React.FC = () => {
           y={contextMenu.y} 
           onClose={() => setContextMenu(null)} 
         />
+      )}
+
+      {shortcutContextMenu && (
+        <div 
+          className="fixed z-[100000] w-56 glass rounded-xl border border-white/10 shadow-2xl backdrop-blur-3xl p-1.5 flex flex-col gap-0.5 animate-in fade-in zoom-in-95 duration-100"
+          style={{ left: shortcutContextMenu.x, top: shortcutContextMenu.y }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <button 
+            onClick={() => {
+              openApp(shortcutContextMenu.appId, APP_INFO[shortcutContextMenu.appId].label);
+              setShortcutContextMenu(null);
+            }}
+            className="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-accent/20 text-xs font-bold text-white/80 hover:text-accent transition-colors group"
+          >
+            <div className="flex items-center gap-3">
+              <RefreshCw size={14} className="text-accent/60 group-hover:text-accent" />
+              <span>Launch Application</span>
+            </div>
+          </button>
+          
+          <div className="my-1 border-t border-white/5 mx-2" />
+
+          <button 
+            onClick={() => {
+              togglePinApp(shortcutContextMenu.appId);
+              setShortcutContextMenu(null);
+            }}
+            className="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-accent/20 text-xs font-bold text-white/80 hover:text-accent transition-colors group"
+          >
+            <div className="flex items-center gap-3">
+              {pinnedApps.includes(shortcutContextMenu.appId) ? (
+                <>
+                  <PinOff size={14} className="text-accent/60 group-hover:text-accent" />
+                  <span>Unpin from Taskbar</span>
+                </>
+              ) : (
+                <>
+                  <Pin size={14} className="text-accent/60 group-hover:text-accent" />
+                  <span>Pin to Taskbar</span>
+                </>
+              )}
+            </div>
+          </button>
+
+          {!['trash', 'files', 'store'].includes(shortcutContextMenu.appId) && (
+            <button 
+              onClick={() => {
+                toggleDesktopApp(shortcutContextMenu.appId);
+                setShortcutContextMenu(null);
+              }}
+              className="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-destructive/20 text-xs font-bold text-white/80 hover:text-destructive transition-colors group"
+            >
+              <div className="flex items-center gap-3">
+                <Trash2 size={14} className="text-destructive/60 group-hover:text-destructive" />
+                <span>Delete Shortcut</span>
+              </div>
+            </button>
+          )}
+        </div>
       )}
 
       {isRunOpen && (
