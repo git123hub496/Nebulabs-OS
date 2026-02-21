@@ -1,52 +1,131 @@
 "use client"
 
-import React, { useState, useEffect } from 'react';
-import { useOS, LocalUser } from '@/context/os-context';
-import { User, Plus, ArrowRight, X, Lock, ShieldCheck, KeyRound } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { useOS, LocalUser, ThemeMode, AccentColor } from '@/context/os-context';
+import { User, Plus, ArrowRight, X, Lock, ShieldCheck, KeyRound, Sun, Moon, Check, Loader2, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { BIOS } from './BIOS';
 import { cn } from '@/lib/utils';
+import { Progress } from '@/components/ui/progress';
+
+const SETUP_LOGS = [
+  "Initializing Nebulabs Kernel v4.5.2...",
+  "Mounting virtual cloud partition...",
+  "Calibrating multi-display bridge interface...",
+  "Establishing secure workspace tunnel...",
+  "Building system icon cache...",
+  "Patching security vulnerabilities in BIOS...",
+  "Applying UI transparency optimizations...",
+  "Optimizing virtual threading support...",
+  "Finalizing system registry changes...",
+  "Workspace staging complete."
+];
+
+const ACCENT_COLORS: { id: AccentColor; color: string }[] = [
+  { id: 'purple', color: '#9333ea' },
+  { id: 'blue', color: '#3b82f6' },
+  { id: 'rose', color: '#e11d48' },
+  { id: 'orange', color: '#f97316' },
+  { id: 'green', color: '#16a34a' },
+];
 
 export const LoginScreen: React.FC = () => {
-  const { accounts, login, createAccount, wallpaper } = useOS();
-  const [isCreating, setIsCreating] = useState(false);
+  const { accounts, login, createAccount, wallpaper, setTheme, setAccentColor } = useOS();
+  const [step, setStep] = useState<'select' | 'create' | 'customize' | 'initialize'>('select');
   const [newUsername, setNewUsername] = useState("");
   const [newPassword, setNewPassword] = useState("");
+  const [selectedTheme, setSelectedTheme] = useState<ThemeMode>('dark');
+  const [selectedAccent, setSelectedAccent] = useState<AccentColor>('purple');
   const [showBIOS, setShowBIOS] = useState(false);
   const [selectedAccount, setSelectedAccount] = useState<LocalUser | null>(null);
   const [passwordInput, setPasswordInput] = useState("");
   const [isError, setIsError] = useState(false);
+  
+  // Initialization states
+  const [progress, setProgress] = useState(0);
+  const [currentLog, setCurrentLog] = useState("");
+  const [logIndex, setLogIndex] = useState(0);
+
+  // Sound Effects
+  const playSound = (type: 'click' | 'success') => {
+    const urls = {
+      click: 'https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3',
+      success: 'https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3'
+    };
+    const audio = new Audio(urls[type]);
+    audio.volume = 0.4;
+    audio.play().catch(() => {}); // Catch silent play blocks
+  };
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key.toLowerCase() === 'b' && !isCreating && !selectedAccount) {
+      if (e.key.toLowerCase() === 'b' && step === 'select' && !selectedAccount) {
         setShowBIOS(true);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isCreating, selectedAccount]);
+  }, [step, selectedAccount]);
+
+  // Initialization sequence
+  useEffect(() => {
+    if (step === 'initialize') {
+      const interval = setInterval(() => {
+        setProgress(prev => {
+          if (prev >= 100) {
+            clearInterval(interval);
+            setTimeout(() => {
+              playSound('success');
+              createAccount(newUsername, newPassword || undefined);
+            }, 800);
+            return 100;
+          }
+          return prev + 1;
+        });
+      }, 40);
+
+      const logInterval = setInterval(() => {
+        setLogIndex(prev => {
+          const next = (prev + 1) % SETUP_LOGS.length;
+          setCurrentLog(SETUP_LOGS[next]);
+          return next;
+        });
+      }, 600);
+
+      return () => {
+        clearInterval(interval);
+        clearInterval(logInterval);
+      };
+    }
+  }, [step, newUsername, newPassword, createAccount]);
 
   if (showBIOS) {
     return <BIOS onClose={() => setShowBIOS(false)} />;
   }
 
-  const handleCreate = (e: React.FormEvent) => {
+  const handleCreateSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (newUsername.trim()) {
-      createAccount(newUsername, newPassword || undefined);
-      setNewUsername("");
-      setNewPassword("");
-      setIsCreating(false);
+      playSound('click');
+      setStep('customize');
     }
+  };
+
+  const handleCustomizeSubmit = () => {
+    playSound('click');
+    setTheme(selectedTheme);
+    setAccentColor(selectedAccent);
+    setStep('initialize');
   };
 
   const handleSelectAccount = (account: LocalUser) => {
     if (!account.password) {
+      playSound('success');
       login(account.id);
     } else {
+      playSound('click');
       setSelectedAccount(account);
       setPasswordInput("");
       setIsError(false);
@@ -58,6 +137,7 @@ export const LoginScreen: React.FC = () => {
     if (selectedAccount) {
       const success = login(selectedAccount.id, passwordInput);
       if (success) {
+        playSound('success');
         setSelectedAccount(null);
       } else {
         setIsError(true);
@@ -77,11 +157,11 @@ export const LoginScreen: React.FC = () => {
         <div className="text-center space-y-2">
           <h1 className="text-4xl font-black text-white tracking-tighter">Nebulabs WebOS</h1>
           <p className="text-white/40 text-sm font-medium uppercase tracking-[0.2em]">
-            {selectedAccount ? "Identity Verification" : "Select an account to continue"}
+            {step === 'initialize' ? "System Initialization" : step === 'customize' ? "Workspace Personalization" : selectedAccount ? "Identity Verification" : "Select an account to continue"}
           </p>
         </div>
 
-        {!isCreating && !selectedAccount && (
+        {step === 'select' && !selectedAccount && (
           <div className="flex flex-wrap justify-center gap-8 max-w-2xl px-8">
             {accounts.map(account => (
               <button
@@ -119,7 +199,7 @@ export const LoginScreen: React.FC = () => {
             ))}
 
             <button
-              onClick={() => setIsCreating(true)}
+              onClick={() => { playSound('click'); setStep('create'); }}
               className="group flex flex-col items-center gap-4 transition-all hover:scale-105"
             >
               <div className="w-24 h-24 rounded-full border-4 border-dashed border-white/20 group-hover:border-white/40 group-hover:bg-white/5 transition-all flex items-center justify-center">
@@ -189,7 +269,7 @@ export const LoginScreen: React.FC = () => {
           </div>
         )}
 
-        {isCreating && (
+        {step === 'create' && (
           <div className="glass p-8 rounded-3xl border border-white/10 w-full max-w-md flex flex-col gap-8 animate-in slide-in-from-bottom-4 shadow-2xl">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -198,11 +278,11 @@ export const LoginScreen: React.FC = () => {
                 </div>
                 <h2 className="text-xl font-bold text-white tracking-tight">Create Identity</h2>
               </div>
-              <Button variant="ghost" size="icon" onClick={() => setIsCreating(false)} className="text-white/40 hover:text-white">
+              <Button variant="ghost" size="icon" onClick={() => setStep('select')} className="text-white/40 hover:text-white">
                 <X size={20} />
               </Button>
             </div>
-            <form onSubmit={handleCreate} className="space-y-6">
+            <form onSubmit={handleCreateSubmit} className="space-y-6">
               <div className="space-y-4">
                 <div className="space-y-2">
                   <label className="text-[10px] font-black text-accent uppercase tracking-widest px-1">User Identifier</label>
@@ -226,10 +306,112 @@ export const LoginScreen: React.FC = () => {
                 </div>
               </div>
               <Button type="submit" className="w-full h-14 bg-accent text-primary font-black rounded-2xl hover:bg-accent/80 gap-2 uppercase tracking-[0.2em] shadow-lg shadow-accent/20">
-                Initialize Account
+                Continue Setup
                 <ArrowRight size={18} />
               </Button>
             </form>
+          </div>
+        )}
+
+        {step === 'customize' && (
+          <div className="glass p-8 rounded-3xl border border-white/10 w-full max-w-lg flex flex-col gap-8 animate-in zoom-in-95 shadow-2xl">
+            <div className="text-center space-y-1">
+              <h2 className="text-2xl font-bold text-white">Choose Your Style</h2>
+              <p className="text-xs text-white/40 uppercase tracking-widest font-bold">Personalize your Nebulabs experience</p>
+            </div>
+
+            <div className="space-y-8">
+              <div className="space-y-4">
+                <label className="text-[10px] font-black text-accent uppercase tracking-widest text-center block">System Theme</label>
+                <div className="grid grid-cols-2 gap-4">
+                  <button 
+                    onClick={() => { playSound('click'); setSelectedTheme('dark'); }}
+                    className={cn(
+                      "p-6 rounded-2xl border-2 flex flex-col items-center gap-3 transition-all",
+                      selectedTheme === 'dark' ? "bg-accent/10 border-accent scale-105" : "bg-white/5 border-white/5 hover:bg-white/10"
+                    )}
+                  >
+                    <div className="w-12 h-12 rounded-full bg-slate-900 flex items-center justify-center border border-white/10 shadow-xl">
+                      <Moon size={24} className="text-white" />
+                    </div>
+                    <span className="text-xs font-bold text-white uppercase tracking-widest">Dark Mode</span>
+                  </button>
+                  <button 
+                    onClick={() => { playSound('click'); setSelectedTheme('light'); }}
+                    className={cn(
+                      "p-6 rounded-2xl border-2 flex flex-col items-center gap-3 transition-all",
+                      selectedTheme === 'light' ? "bg-accent/10 border-accent scale-105" : "bg-white/5 border-white/5 hover:bg-white/10"
+                    )}
+                  >
+                    <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center border border-black/5 shadow-xl">
+                      <Sun size={24} className="text-slate-900" />
+                    </div>
+                    <span className="text-xs font-bold text-white uppercase tracking-widest">Light Mode</span>
+                  </button>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <label className="text-[10px] font-black text-accent uppercase tracking-widest text-center block">Accent Color</label>
+                <div className="flex justify-center gap-4">
+                  {ACCENT_COLORS.map(color => (
+                    <button
+                      key={color.id}
+                      onClick={() => { playSound('click'); setSelectedAccent(color.id); }}
+                      className={cn(
+                        "w-10 h-10 rounded-full border-4 flex items-center justify-center transition-all hover:scale-110",
+                        selectedAccent === color.id ? "border-white scale-110 shadow-lg" : "border-transparent opacity-60"
+                      )}
+                      style={{ backgroundColor: color.color }}
+                    >
+                      {selectedAccent === color.id && <Check size={16} className="text-white" />}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <Button 
+              onClick={handleCustomizeSubmit} 
+              className="w-full h-14 bg-accent text-primary font-black rounded-2xl hover:bg-accent/80 gap-2 uppercase tracking-[0.2em]"
+            >
+              Complete Setup
+              <Sparkles size={18} />
+            </Button>
+          </div>
+        )}
+
+        {step === 'initialize' && (
+          <div className="glass p-10 rounded-3xl border border-white/10 w-full max-w-lg flex flex-col items-center gap-8 animate-in fade-in shadow-2xl">
+            <div className="relative">
+              <div className="w-20 h-20 rounded-3xl bg-accent/20 flex items-center justify-center animate-pulse">
+                <Loader2 className="text-accent animate-spin" size={40} />
+              </div>
+              <div className="absolute -top-2 -right-2 bg-green-500 w-6 h-6 rounded-full border-4 border-black flex items-center justify-center">
+                <ShieldCheck size={12} className="text-white" />
+              </div>
+            </div>
+
+            <div className="w-full space-y-6">
+              <div className="space-y-2">
+                <div className="flex justify-between text-[10px] font-black uppercase text-accent tracking-widest">
+                  <span>Preparing Workspace</span>
+                  <span>{progress}%</span>
+                </div>
+                <Progress value={progress} className="h-2 bg-white/5" />
+              </div>
+
+              <div className="bg-black/20 rounded-xl p-4 h-32 overflow-hidden border border-white/5 font-mono text-[10px] space-y-1">
+                <div className="text-green-500 font-bold animate-pulse">{currentLog}</div>
+                <div className="text-white/20 opacity-40">{" >> "}System check passed</div>
+                <div className="text-white/20 opacity-40">{" >> "}Kernel integrity verified</div>
+                <div className="text-white/20 opacity-40">{" >> "}User partition initialized</div>
+              </div>
+            </div>
+
+            <div className="text-center">
+              <p className="text-[9px] text-white/20 uppercase tracking-[0.3em] font-bold">Please do not power off your session</p>
+            </div>
           </div>
         )}
 
