@@ -190,7 +190,7 @@ interface OSContextType {
   logout: () => void;
   lock: () => void;
   unlock: (password?: string) => boolean;
-  createAccount: (username: string, password?: string, isSchool?: boolean, isWork?: boolean) => void;
+  createAccount: (username: string, password?: string, isSchool?: boolean, isWork?: boolean, districtId?: string) => void;
   deleteAccount: (userId: string) => void;
   updateUserPassword: (password: string) => void;
   resetUserPassword: (userId: string, password: string) => void;
@@ -695,18 +695,18 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     return false;
   };
 
-  const createAccount = useCallback((username: string, password?: string, isSchool: boolean = false, isWork: boolean = false) => {
-    const districtId = isSchool ? "NHU-7" : undefined;
-    const uniqueCode = `${districtId || (isWork ? 'WRK' : 'USR')}-${Math.floor(1000 + Math.random() * 9000)}-X`;
+  const createAccount = useCallback((username: string, password?: string, isSchool: boolean = false, isWork: boolean = false, districtId?: string) => {
+    const effectiveDistrictId = districtId || (isSchool ? "NHU-7" : undefined);
+    const uniqueCode = `${effectiveDistrictId || (isWork ? 'WRK' : 'USR')}-${Math.floor(1000 + Math.random() * 9000)}-X`;
     
     const newAcc: LocalUser = {
       id: Math.random().toString(36).substr(2, 9),
       username,
       avatarColor: isSchool ? '#3b82f6' : AVATAR_COLORS[Math.floor(Math.random() * AVATAR_COLORS.length)],
-      password: isSchool ? "NU" : (password || undefined),
+      password: password || (isSchool ? "NU" : undefined),
       isWorkAccount: isWork,
       isSchoolAccount: isSchool,
-      districtId,
+      districtId: effectiveDistrictId,
       uniqueCode
     };
     setAccounts(prev => {
@@ -781,7 +781,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
 
   const openApp = (appId: AppId, title: string, params?: any) => {
     if (currentUser?.isSchoolAccount && (appId === 'news' || appId === 'virus')) {
-      addNotification("Access Restricted", "The Nebula News app is disabled by NHU-7 Policy.", "security");
+      addNotification("Access Restricted", "The Nebula News app is disabled by District Policy.", "security");
       return;
     }
 

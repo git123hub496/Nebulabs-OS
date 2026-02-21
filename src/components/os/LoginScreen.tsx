@@ -85,6 +85,7 @@ export const LoginScreen: React.FC = () => {
   const [step, setStep] = useState<'select' | 'create' | 'customize' | 'initialize' | 'recovery'>('select');
   const [newUsername, setNewUsername] = useState("");
   const [newPassword, setNewPassword] = useState("");
+  const [newDistrict, setNewDistrict] = useState("");
   const [creationAccountType, setCreationAccountType] = useState<AccountType>('personal');
   const [selectedTheme, setSelectedTheme] = useState<ThemeMode>('dark');
   const [selectedAccent, setSelectedAccent] = useState<AccentColor>('purple');
@@ -129,11 +130,16 @@ export const LoginScreen: React.FC = () => {
               setTimeout(() => {
                 playSound('success');
                 if (step === 'initialize') {
+                  const effectivePassword = creationAccountType === 'school' 
+                    ? newDistrict.slice(0, 2).toUpperCase() 
+                    : (newPassword || undefined);
+
                   createAccount(
                     newUsername, 
-                    newPassword || undefined, 
+                    effectivePassword, 
                     creationAccountType === 'school',
-                    creationAccountType === 'work'
+                    creationAccountType === 'work',
+                    creationAccountType === 'school' ? newDistrict : undefined
                   );
                 } else {
                   if (selectedAccount) {
@@ -165,14 +171,17 @@ export const LoginScreen: React.FC = () => {
         clearInterval(logInterval);
       };
     }
-  }, [step, newUsername, newPassword, createAccount, resetUserPassword, selectedAccount, creationAccountType]);
+  }, [step, newUsername, newPassword, newDistrict, creationAccountType, createAccount, resetUserPassword, selectedAccount]);
 
   const handleCreateSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (newUsername.trim()) {
+      if (creationAccountType === 'school' && !newDistrict.trim()) {
+        return;
+      }
       playSound('click');
       if (creationAccountType === 'school') {
-        setStep('initialize'); // Skip customization for schools
+        setStep('initialize'); 
       } else {
         setStep('customize');
       }
@@ -288,7 +297,7 @@ export const LoginScreen: React.FC = () => {
                     </span>
                     {account.isSchoolAccount && (
                       <span className="text-[10px] text-blue-400 uppercase font-black tracking-tighter flex items-center gap-1">
-                        District NHU-7
+                        {account.districtId || "NHU-7"}
                       </span>
                     )}
                     {account.isWorkAccount && !account.isSchoolAccount && (
@@ -341,7 +350,7 @@ export const LoginScreen: React.FC = () => {
               {selectedAccount.isSchoolAccount ? (
                 <div className="flex items-center gap-2 justify-center py-1 px-3 bg-blue-500/20 rounded-full border border-blue-500/30">
                   <GraduationCap size={14} className="text-blue-400" />
-                  <span className="text-[10px] text-blue-400 font-black uppercase tracking-widest">NHU-7 Managed Account</span>
+                  <span className="text-[10px] text-blue-400 font-black uppercase tracking-widest">{selectedAccount.districtId || "Managed Account"}</span>
                 </div>
               ) : selectedAccount.isWorkAccount ? (
                 <div className="flex items-center gap-2 justify-center py-1 px-3 bg-accent/20 rounded-full border border-accent/30">
@@ -365,7 +374,7 @@ export const LoginScreen: React.FC = () => {
                       setPasswordInput(e.target.value);
                       setIsError(false);
                     }}
-                    placeholder={selectedAccount.isSchoolAccount ? "NU" : "Enter Password"}
+                    placeholder={selectedAccount.isSchoolAccount ? "ID" : "Enter Password"}
                     className={cn(
                       "bg-white/5 border-white/10 text-white h-14 pl-12 rounded-2xl focus-visible:ring-accent text-center tracking-[0.5em] text-xl font-black",
                       isError ? "border-destructive animate-shake" : ""
@@ -376,7 +385,7 @@ export const LoginScreen: React.FC = () => {
                   <p className="text-destructive text-[10px] font-bold uppercase text-center tracking-widest">Access Denied: Incorrect Password</p>
                 )}
                 
-                {!selectedAccount.isSchoolMode && (
+                {!selectedAccount.isSchoolAccount && (
                   <div className="text-center">
                     <button 
                       type="button"
@@ -455,12 +464,27 @@ export const LoginScreen: React.FC = () => {
                 </div>
                 
                 {isSchoolMode ? (
-                  <div className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-xl space-y-2">
+                  <div className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-xl space-y-4">
                     <div className="flex items-center gap-2">
                       <Building2 size={14} className="text-blue-400" />
-                      <span className="text-[10px] font-black uppercase text-blue-400 tracking-widest">District NHU-7 Policy</span>
+                      <span className="text-[10px] font-black uppercase text-blue-400 tracking-widest">Managed Enrollment</span>
                     </div>
-                    <p className="text-[10px] text-white/40 leading-relaxed">Password will be set automatically to <strong>NU</strong>. Features will be managed by the district controller.</p>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-blue-400 uppercase tracking-widest px-1">District Identifier</label>
+                      <Input 
+                        value={newDistrict}
+                        onChange={(e) => setNewDistrict(e.target.value)}
+                        placeholder="e.g. Nebula-High"
+                        className="bg-white/5 border-white/10 text-white h-10 rounded-xl focus-visible:ring-blue-500"
+                      />
+                    </div>
+                    {newDistrict.length >= 2 && (
+                      <div className="p-2 bg-black/20 rounded-lg text-center">
+                        <p className="text-[9px] text-white/40 uppercase font-bold tracking-widest mb-1">Generated Access Code</p>
+                        <p className="text-lg font-black text-blue-400 tracking-[0.5em]">{newDistrict.slice(0, 2).toUpperCase()}</p>
+                      </div>
+                    )}
+                    <p className="text-[10px] text-white/40 leading-relaxed italic">The first 2 letters of your district will be your access password.</p>
                   </div>
                 ) : isWorkMode ? (
                   <div className="p-4 bg-accent/10 border border-accent/20 rounded-xl space-y-2">
