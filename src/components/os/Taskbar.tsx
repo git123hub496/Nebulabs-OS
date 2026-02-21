@@ -117,6 +117,8 @@ export const Taskbar: React.FC = () => {
 
   const handleTaskbarContextMenu = (e: React.MouseEvent) => {
     e.preventDefault();
+    e.stopPropagation(); // Prevent desktop context menu from appearing
+    
     const menuWidth = 208;
     const menuHeight = 60;
     let x = e.clientX;
@@ -131,6 +133,7 @@ export const Taskbar: React.FC = () => {
   const handleAppContextMenu = (e: React.MouseEvent, appId: AppId) => {
     e.preventDefault();
     e.stopPropagation();
+    
     const menuWidth = 208;
     const menuHeight = 60;
     let x = e.clientX;
@@ -318,9 +321,10 @@ export const Taskbar: React.FC = () => {
       {/* Taskbar Context Menu */}
       {taskbarMenu && (
         <div 
-          className="fixed z-[10000] w-52 glass rounded-xl border border-white/10 shadow-2xl backdrop-blur-3xl p-1.5 flex flex-col gap-0.5 animate-in fade-in zoom-in-95 duration-100"
+          className="fixed z-[100000] w-52 glass rounded-xl border border-white/10 shadow-2xl backdrop-blur-3xl p-1.5 flex flex-col gap-0.5 animate-in fade-in zoom-in-95 duration-100"
           style={{ left: taskbarMenu.x, top: taskbarMenu.y }}
           onClick={(e) => e.stopPropagation()}
+          onContextMenu={(e) => e.preventDefault()}
         >
           {taskbarMenu.type === 'taskbar' ? (
             <button 
