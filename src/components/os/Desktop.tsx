@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
@@ -287,7 +286,6 @@ export const Desktop: React.FC = () => {
     if (cursorColor === 'black') return 'var(--cursor-black)';
     if (cursorColor === 'white') return 'var(--cursor-white)';
     
-    // Accent Color Cursor Generation
     let hex = customAccentHex;
     const accentHexes: Record<string, string> = {
       blue: '#3b82f6',
@@ -332,6 +330,7 @@ export const Desktop: React.FC = () => {
 
   const customStyle = accentColor === 'custom' ? {
     '--accent': hexToHslString(customAccentHex),
+    '--primary': hexToHslString(customAccentHex),
     '--ring': hexToHslString(customAccentHex),
     '--sidebar-accent': hexToHslString(customAccentHex),
   } as React.CSSProperties : {};

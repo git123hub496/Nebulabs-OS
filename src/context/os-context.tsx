@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { createContext, useContext, useState, ReactNode, useEffect, useCallback } from 'react';
@@ -292,9 +291,45 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   const [displayLayout, setDisplayLayoutState] = useState<DisplayLayout>({ '1': { right: '2' }, '2': { left: '1' } });
   const [isSecurityEnabled, setSecurityEnabledState] = useState(true);
 
+  // --- PERSISTENCE UTILS ---
+  const saveSetting = useCallback((key: string, value: any) => {
+    if (currentUser) {
+      const strValue = typeof value === 'object' ? JSON.stringify(value) : String(value);
+      localStorage.setItem(`nebula_${currentUser.id}_${key}`, strValue);
+    }
+  }, [currentUser]);
+
+  const loadSettings = useCallback((user: LocalUser) => {
+    const wall = localStorage.getItem(`nebula_${user.id}_wallpaper`);
+    if (wall) setWallpaperState(wall);
+    
+    const th = localStorage.getItem(`nebula_${user.id}_theme`);
+    if (th) setThemeState(th as ThemeMode);
+    
+    const acc = localStorage.getItem(`nebula_${user.id}_accent`);
+    if (acc) setAccentColorState(acc as AccentColor);
+    
+    const cust = localStorage.getItem(`nebula_${user.id}_custom_accent`);
+    if (cust) setCustomAccentHexState(cust);
+    
+    const curs = localStorage.getItem(`nebula_${user.id}_cursor`);
+    if (curs) setCursorColorState(curs as CursorColor);
+    
+    const pos = localStorage.getItem(`nebula_${user.id}_taskbar_pos`);
+    if (pos) setTaskbarPositionState(pos as TaskbarPosition);
+    
+    const size = localStorage.getItem(`nebula_${user.id}_taskbar_size`);
+    if (size) setTaskbarSizeState(Number(size));
+    
+    const ics = localStorage.getItem(`nebula_${user.id}_icon_size`);
+    if (ics) setIconSizeState(Number(ics));
+    
+    const n = localStorage.getItem(`nebula_${user.id}_notes`);
+    if (n) setNotesInternal(n);
+  }, []);
+
   // --- INITIALIZATION ---
   useEffect(() => {
-    // Load accounts
     const savedAccounts = localStorage.getItem('nebula_accounts');
     if (savedAccounts) setAccounts(JSON.parse(savedAccounts));
     else {
@@ -303,19 +338,11 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       localStorage.setItem('nebula_accounts', JSON.stringify([defaultUser]));
     }
 
-    // Initial boot sequence
     const timer = setTimeout(() => {
       setPowerStatusState('on');
     }, 2500);
     return () => clearTimeout(timer);
   }, []);
-
-  const saveSetting = useCallback((key: string, value: any) => {
-    if (currentUser) {
-      const strValue = typeof value === 'object' ? JSON.stringify(value) : String(value);
-      localStorage.setItem(`nebula_${currentUser.id}_${key}`, strValue);
-    }
-  }, [currentUser]);
 
   // --- CORE ACTIONS ---
 
@@ -326,6 +353,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       setCurrentUser(user);
       localStorage.setItem('nebula_current_user_id', userId);
       setIsLocked(false);
+      loadSettings(user);
       return true;
     }
     return false;
