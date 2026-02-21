@@ -9,9 +9,9 @@ import { cn } from '@/lib/utils';
 
 export const NebulaMaps: React.FC = () => {
   const { isOnline } = useOS();
-  const [search, setSearch] = useState("San Francisco, CA");
+  const [search, setSearch] = useState("Plainfield, IL, USA");
   // Using the keyless embed fallback for the initial state to avoid API key errors
-  const [mapUrl, setMapUrl] = useState(`https://www.google.com/maps?q=San+Francisco,CA&output=embed`);
+  const [mapUrl, setMapUrl] = useState(`https://www.google.com/maps?q=Plainfield,IL,USA&output=embed`);
   const [isSecureView, setIsSecureView] = useState(true);
 
   const handleSearch = (e: React.FormEvent) => {

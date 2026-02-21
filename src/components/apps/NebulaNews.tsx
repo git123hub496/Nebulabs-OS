@@ -98,20 +98,20 @@ export const NebulaNews: React.FC = () => {
           <h2 className="text-2xl font-bold">Local News Ready</h2>
           <p className="text-sm text-muted-foreground">Nebula News uses your location to provide local headlines and weather-relevant stories.</p>
         </div>
-        <Button 
+        <button 
           onClick={requestLocation} 
           disabled={isRequesting}
           className="bg-accent text-primary font-bold px-8 h-12 rounded-xl hover:scale-105 transition-transform"
         >
           {isRequesting ? (
-            <>
-              <Loader2 className="mr-2 animate-spin" size={18} />
+            <div className="flex items-center gap-2">
+              <Loader2 className="animate-spin" size={18} />
               Authorizing...
-            </>
+            </div>
           ) : (
             "Allow Location Access"
           )}
-        </Button>
+        </button>
       </div>
     );
   }
@@ -127,7 +127,7 @@ export const NebulaNews: React.FC = () => {
           </div>
           <div className="hidden md:flex items-center gap-2 px-3 py-1 bg-accent/10 rounded-full">
             <MapPin size={12} className="text-accent" />
-            <span className="text-[10px] font-bold text-accent uppercase">San Francisco, CA</span>
+            <span className="text-[10px] font-bold text-accent uppercase">Plainfield, IL, USA</span>
           </div>
         </div>
         

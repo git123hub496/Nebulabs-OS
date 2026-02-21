@@ -54,7 +54,7 @@ export const WidgetsPanel: React.FC = () => {
                 <p className="text-[10px] font-bold text-blue-400 uppercase tracking-widest">Weather • Local</p>
                 <h3 className="text-3xl font-black">72°</h3>
                 <p className="text-sm font-medium">Mostly Sunny</p>
-                <p className="text-[11px] text-white/40">San Francisco, CA</p>
+                <p className="text-[11px] text-white/40">Plainfield, IL, USA</p>
               </div>
               <Sun className="text-yellow-400 animate-spin-slow" size={48} />
             </div>
@@ -123,7 +123,7 @@ export const WidgetsPanel: React.FC = () => {
                 </div>
               </div>
               <div className="absolute bottom-2 left-2 px-2 py-1 bg-black/60 backdrop-blur-md rounded text-[9px] font-bold text-white">
-                San Francisco, CA
+                Plainfield, IL, USA
               </div>
             </div>
           </div>
