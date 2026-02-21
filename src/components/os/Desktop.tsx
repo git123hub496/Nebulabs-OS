@@ -135,7 +135,7 @@ export const Desktop: React.FC = () => {
   const { 
     wallpaper, openWindows, openApp, theme, accentColor, customAccentHex,
     powerStatus, powerOn, taskbarPosition, iconSize, currentUser,
-    cursorColor, isInverted, isGrayscale, glassEnabled, desktopApps, updateDesktopAppPosition, toggleDesktopApp,
+    cursorColor, isInverted, setInverted, isGrayscale, setGrayscale, glassEnabled, setGlassEnabled, desktopApps, updateDesktopAppPosition, toggleDesktopApp,
     isWidgetsOpen, setIsWidgetsOpen, isQuickSettingsOpen, setIsQuickSettingsOpen,
     isStartOpen, setIsStartOpen, isChatOpen, setIsChatOpen, activeWindowId, closeWindow, minimizeAllWindows,
     brightness, currentDisplayId, displayLayout, isSecurityEnabled, addNotification,
@@ -213,7 +213,13 @@ export const Desktop: React.FC = () => {
           break;
         case 'g': 
           e.preventDefault();
-          openApp('store', 'App Store');
+          setGrayscale(!isGrayscale);
+          addNotification("System Filter", `Grayscale mode ${!isGrayscale ? 'enabled' : 'disabled'}.`, 'system');
+          break;
+        case 'i':
+          e.preventDefault();
+          setInverted(!isInverted);
+          addNotification("System Filter", `Color inversion ${!isInverted ? 'enabled' : 'disabled'}.`, 'system');
           break;
         case 'd': 
           e.preventDefault();
@@ -250,7 +256,7 @@ export const Desktop: React.FC = () => {
       setContextMenu(null);
       setShortcutContextMenu(null);
     }
-  }, [powerStatus, currentUser, isStartOpen, isWidgetsOpen, isQuickSettingsOpen, isChatOpen, activeWindowId, openApp, setIsStartOpen, setIsWidgetsOpen, setIsQuickSettingsOpen, setIsChatOpen, closeWindow, minimizeAllWindows, lock, isSchool, isKid, addNotification, shouldRenderBoot]);
+  }, [powerStatus, currentUser, isStartOpen, isWidgetsOpen, isQuickSettingsOpen, isChatOpen, activeWindowId, openApp, setIsStartOpen, setIsWidgetsOpen, setIsQuickSettingsOpen, setIsChatOpen, closeWindow, minimizeAllWindows, lock, isSchool, isKid, addNotification, shouldRenderBoot, isGrayscale, setGrayscale, isInverted, setInverted]);
 
   useEffect(() => {
     window.addEventListener('keydown', handleKeyDown);
