@@ -2,7 +2,7 @@
 "use client"
 
 import React, { useState, useEffect } from 'react';
-import { RefreshCw, CheckCircle2, AlertCircle, Loader2, Cpu, ShieldCheck, Zap } from 'lucide-react';
+import { RefreshCw, CheckCircle2, AlertCircle, Loader2, Cpu, ShieldCheck, Zap, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -27,6 +27,7 @@ export const SystemUpdate: React.FC = () => {
   const [status, setStatus] = useState<UpdateStatus>('idle');
   const [progress, setProgress] = useState(0);
   const [logs, setLogs] = useState<string[]>([]);
+  const [hasUpdateFound, setHasUpdateFound] = useState<boolean | null>(null);
 
   useEffect(() => {
     let interval: any;
@@ -35,8 +36,17 @@ export const SystemUpdate: React.FC = () => {
         setProgress(p => {
           if (p >= 100) {
             clearInterval(interval);
-            setStatus('downloading');
-            return 0;
+            // Simulate randomized update availability
+            const found = Math.random() > 0.5;
+            setHasUpdateFound(found);
+            
+            if (found) {
+              setStatus('downloading');
+              return 0;
+            } else {
+              setStatus('finished');
+              return 100;
+            }
           }
           return p + 10;
         });
@@ -81,6 +91,7 @@ export const SystemUpdate: React.FC = () => {
   const startUpdate = () => {
     setStatus('checking');
     setProgress(0);
+    setHasUpdateFound(null);
     setLogs(["Initiating system integrity check..."]);
   };
 
@@ -105,7 +116,7 @@ export const SystemUpdate: React.FC = () => {
                 {status === 'checking' && "Searching for updates..."}
                 {status === 'downloading' && "Downloading Nebula Core 5.0..."}
                 {status === 'installing' && "Installing system patches..."}
-                {status === 'finished' && "System is up to date"}
+                {status === 'finished' && (hasUpdateFound === false ? "System is up to date" : "Update Successful")}
               </h2>
               <p className="text-[10px] text-white/40">Last checked: Today at {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
             </div>
@@ -116,20 +127,27 @@ export const SystemUpdate: React.FC = () => {
             <div className="space-y-3">
               <Progress value={progress} className="h-2 bg-white/5" />
               <div className="flex justify-between text-[9px] font-mono text-accent uppercase font-bold tracking-tighter">
-                <span>Processing...</span>
+                <span>{status === 'checking' ? 'Connecting to Cluster...' : 'Processing...'}</span>
                 <span>{progress}%</span>
               </div>
             </div>
           )}
 
           {status === 'idle' && (
-            <Button onClick={startUpdate} className="w-full bg-accent text-primary font-bold h-12 rounded-xl hover:scale-[1.02] transition-transform">
+            <Button onClick={startUpdate} className="w-full bg-accent text-primary font-bold h-12 rounded-xl hover:scale-[1.02] transition-transform shadow-lg shadow-accent/10">
               Check for Updates
             </Button>
           )}
 
-          {status === 'finished' && (
-            <div className="grid grid-cols-3 gap-3 pt-2">
+          {status === 'finished' && hasUpdateFound === false && (
+            <div className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-xl flex items-center gap-3 animate-in fade-in slide-in-from-top-2">
+              <Info className="text-blue-400 shrink-0" size={18} />
+              <p className="text-xs text-blue-400 font-medium">Your hardware is running the latest stable build. No updates required.</p>
+            </div>
+          )}
+
+          {status === 'finished' && hasUpdateFound !== false && (
+            <div className="grid grid-cols-3 gap-3 pt-2 animate-in fade-in zoom-in-95">
               <div className="p-3 bg-accent/5 border border-accent/10 rounded-xl text-center">
                 <ShieldCheck size={16} className="text-accent mx-auto mb-2" />
                 <p className="text-[9px] font-bold text-white/60">Secure</p>
@@ -147,7 +165,7 @@ export const SystemUpdate: React.FC = () => {
         </div>
 
         {(status !== 'idle' && status !== 'finished') && (
-          <div className="flex-1 bg-black/40 rounded-xl p-4 font-mono text-[10px] text-white/30 space-y-1 overflow-hidden border border-white/5">
+          <div className="flex-1 bg-black/40 rounded-xl p-4 font-mono text-[10px] text-white/30 space-y-1 overflow-hidden border border-white/5 shadow-inner">
             {logs.map((log, i) => (
               <div key={i} className={cn("flex gap-2", i === 0 ? "text-accent font-bold" : "")}>
                 <span className="opacity-40">[{new Date().toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' })}]</span>
@@ -157,8 +175,8 @@ export const SystemUpdate: React.FC = () => {
           </div>
         )}
 
-        {status === 'finished' && (
-          <div className="space-y-4">
+        {status === 'finished' && hasUpdateFound !== false && (
+          <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2">
             <h3 className="text-[10px] font-black uppercase text-accent tracking-widest">Build Highlights</h3>
             <ScrollArea className="h-32 rounded-xl bg-white/5 p-4 border border-white/5">
               <ul className="space-y-2 text-[11px] text-white/60">
