@@ -6,7 +6,7 @@ import {
   Monitor, Palette, User, Shield, Bell, HelpCircle, Upload, 
   Image as ImageIcon, Sun, Moon, Layout, Check, MousePointer2, 
   Eye, Zap, Layers, Pipette, Maximize2, Plus, ArrowUpRight,
-  Wifi, ShieldCheck, Activity, Trash2, Info, Newspaper, Clock, XCircle, RefreshCw, ChevronRight, ShieldAlert, ShieldX, Lock, KeyRound
+  Wifi, ShieldCheck, Activity, Trash2, Info, Newspaper, Clock, XCircle, RefreshCw, ChevronRight, ShieldAlert, ShieldX, Lock, KeyRound, Camera
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
@@ -24,6 +24,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Slider } from '@/components/ui/slider';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 type SettingsTab = 'personalization' | 'display' | 'accessibility' | 'notifications' | 'accounts' | 'security' | 'updates' | 'about';
 
@@ -55,21 +56,34 @@ export const Settings: React.FC = () => {
     glassEnabled, setGlassEnabled, brightness, setBrightness,
     currentDisplayId, setCurrentDisplayId, displayLayout, updateDisplayLayout, resetDisplayLayout,
     currentUser, logout, notifications, clearNotifications, addNotification, openApp,
-    isSecurityEnabled, setSecurityEnabled, updateUserPassword
+    isSecurityEnabled, setSecurityEnabled, updateUserPassword, updateUserAvatar
   } = useOS();
 
   const [activeTab, setActiveTab] = useState<SettingsTab>('personalization');
   const [newPassword, setNewPassword] = useState("");
   const [isChangingPass, setIsChangingPass] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const wallpaperInputRef = useRef<HTMLInputElement>(null);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleWallpaperUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
       reader.onload = (event) => {
         const result = event.target?.result as string;
         updateWallpaper(result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleAvatarUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const result = event.target?.result as string;
+        updateUserAvatar(result);
       };
       reader.readAsDataURL(file);
     }
@@ -102,7 +116,7 @@ export const Settings: React.FC = () => {
             <section>
               <div className="flex items-center gap-2 mb-6">
                 <Zap size={18} className="text-accent" />
-                <h2 className="text-lg font-bold">Theme & Style</h2>
+                <h2 className="text-lg font-bold text-foreground">Theme & Style</h2>
               </div>
               <div className="space-y-6">
                 <div className="flex items-center justify-between p-5 bg-foreground/5 rounded-2xl border border-border/50">
@@ -111,22 +125,22 @@ export const Settings: React.FC = () => {
                       {theme === 'light' ? <Sun size={20} /> : <Moon size={20} />}
                     </div>
                     <div className="space-y-0.5">
-                      <Label className="text-sm font-bold">Interface Theme</Label>
-                      <p className="text-[11px] opacity-40">Switch between light and dark modes</p>
+                      <Label className="text-sm font-bold text-foreground">Interface Theme</Label>
+                      <p className="text-[11px] text-muted-foreground">Switch between light and dark modes</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
-                    <span className="text-[10px] font-bold opacity-30 uppercase tracking-widest">Dark</span>
+                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Dark</span>
                     <Switch 
                       checked={theme === 'light'} 
                       onCheckedChange={(checked) => setTheme(checked ? 'light' : 'dark')}
                     />
-                    <span className="text-[10px] font-bold opacity-30 uppercase tracking-widest">Light</span>
+                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Light</span>
                   </div>
                 </div>
 
                 <div className="space-y-4">
-                  <Label className="text-xs font-bold uppercase tracking-widest opacity-40">Accent Color</Label>
+                  <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Accent Color</Label>
                   <div className="grid grid-cols-7 gap-4">
                     {ACCENT_COLORS.map((color) => (
                       <button
@@ -149,7 +163,7 @@ export const Settings: React.FC = () => {
             <section>
               <div className="flex items-center gap-2 mb-6">
                 <MousePointer2 size={18} className="text-accent" />
-                <h2 className="text-lg font-bold">Cursor Preferences</h2>
+                <h2 className="text-lg font-bold text-foreground">Cursor Preferences</h2>
               </div>
               <div className="grid grid-cols-3 gap-4">
                 {[
@@ -166,7 +180,7 @@ export const Settings: React.FC = () => {
                     )}
                   >
                     <div className={cn("w-8 h-8 rounded-lg shadow-inner", option.class)} />
-                    <span className={cn("text-[10px] font-black uppercase tracking-widest", cursorColor === option.id ? "text-accent" : "text-foreground/40")}>
+                    <span className={cn("text-[10px] font-black uppercase tracking-widest", cursorColor === option.id ? "text-accent" : "text-muted-foreground")}>
                       {option.label}
                     </span>
                   </button>
@@ -177,11 +191,11 @@ export const Settings: React.FC = () => {
             <section>
               <div className="flex items-center gap-2 mb-6">
                 <Layout size={18} className="text-accent" />
-                <h2 className="text-lg font-bold">Desktop Layout</h2>
+                <h2 className="text-lg font-bold text-foreground">Desktop Layout</h2>
               </div>
               <div className="grid gap-4">
                 <div className="flex items-center justify-between p-5 bg-foreground/5 rounded-2xl border border-border/50">
-                  <Label className="text-sm font-bold">Taskbar Position</Label>
+                  <Label className="text-sm font-bold text-foreground">Taskbar Position</Label>
                   <Select value={taskbarPosition} onValueChange={(v) => setTaskbarPosition(v as TaskbarPosition)}>
                     <SelectTrigger className="w-[120px] bg-foreground/5 border-border/50 text-xs text-foreground">
                       <SelectValue />
@@ -197,7 +211,7 @@ export const Settings: React.FC = () => {
 
                 <div className="space-y-4 p-5 bg-foreground/5 rounded-2xl border border-border/50">
                   <div className="flex items-center justify-between">
-                    <Label className="text-sm font-bold">Taskbar Scale</Label>
+                    <Label className="text-sm font-bold text-foreground">Taskbar Scale</Label>
                     <span className="text-xs font-mono text-accent">{taskbarSize}px</span>
                   </div>
                   <Slider 
@@ -212,7 +226,7 @@ export const Settings: React.FC = () => {
 
                 <div className="space-y-4 p-5 bg-foreground/5 rounded-2xl border border-border/50">
                   <div className="flex items-center justify-between">
-                    <Label className="text-sm font-bold">Desktop Icon Scale</Label>
+                    <Label className="text-sm font-bold text-foreground">Desktop Icon Scale</Label>
                     <span className="text-xs font-mono text-accent">{iconSize}%</span>
                   </div>
                   <Slider 
@@ -231,12 +245,12 @@ export const Settings: React.FC = () => {
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-2">
                   <ImageIcon size={18} className="text-accent" />
-                  <h2 className="text-lg font-bold">Wallpapers</h2>
+                  <h2 className="text-lg font-bold text-foreground">Wallpapers</h2>
                 </div>
-                <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} className="rounded-xl gap-2 border-accent/20">
+                <Button variant="outline" size="sm" onClick={() => wallpaperInputRef.current?.click()} className="rounded-xl gap-2 border-accent/20 text-foreground">
                   <Upload size={14} /> Custom
                 </Button>
-                <input type="file" ref={fileInputRef} onChange={handleFileUpload} accept="image/*" className="hidden" />
+                <input type="file" ref={wallpaperInputRef} onChange={handleWallpaperUpload} accept="image/*" className="hidden" />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 {WALLPAPERS.map((url, i) => (
@@ -263,7 +277,7 @@ export const Settings: React.FC = () => {
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-2">
                   <Monitor size={18} className="text-accent" />
-                  <h2 className="text-lg font-bold">Multi-Display Control</h2>
+                  <h2 className="text-lg font-bold text-foreground">Multi-Display Control</h2>
                 </div>
                 <div className="flex gap-2">
                   <Button variant="outline" size="sm" onClick={resetDisplayLayout} className="rounded-xl gap-2 border-destructive/20 text-destructive hover:bg-destructive/10">
@@ -283,7 +297,7 @@ export const Settings: React.FC = () => {
                       onClick={() => setCurrentDisplayId(id)}
                       className={cn(
                         "w-24 h-16 rounded-xl border-2 flex flex-col items-center justify-center cursor-pointer transition-all",
-                        currentDisplayId === id ? "bg-accent/20 border-accent text-accent scale-110 shadow-lg" : "bg-foreground/5 border-border/50 text-foreground/20 hover:border-foreground/40"
+                        currentDisplayId === id ? "bg-accent/20 border-accent text-accent scale-110 shadow-lg" : "bg-foreground/5 border-border/50 text-muted-foreground hover:border-foreground/40"
                       )}
                     >
                       <Monitor size={20} />
@@ -291,20 +305,20 @@ export const Settings: React.FC = () => {
                     </div>
                   ))}
                 </div>
-                <p className="text-xs text-foreground/40 max-w-sm mx-auto leading-relaxed">
+                <p className="text-xs text-muted-foreground max-w-sm mx-auto leading-relaxed">
                   Select a monitor ID to identify this browser tab. Disconnect displays by setting their position to <strong>"None"</strong> or use the reset button.
                 </p>
               </div>
             </section>
 
             <section>
-              <h3 className="text-xs font-bold uppercase tracking-widest text-foreground/30 mb-4">Physical Arrangement</h3>
+              <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-4">Physical Arrangement</h3>
               <div className="grid gap-4">
                 {['1', '2', '3'].map(id => (
                   <div key={id} className="p-5 bg-foreground/5 rounded-2xl border border-border/50 flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center text-accent font-bold text-xs">{id}</div>
-                      <span className="text-sm font-medium">Display {id} Layout</span>
+                      <span className="text-sm font-medium text-foreground">Display {id} Layout</span>
                     </div>
                     <div className="flex gap-2">
                       {['left', 'right', 'top', 'bottom'].map(dir => (
@@ -334,20 +348,20 @@ export const Settings: React.FC = () => {
             <section>
               <div className="flex items-center gap-2 mb-6">
                 <Eye size={18} className="text-accent" />
-                <h2 className="text-lg font-bold">Visual Assistance</h2>
+                <h2 className="text-lg font-bold text-foreground">Visual Assistance</h2>
               </div>
               <div className="grid gap-4">
                 <div className="flex items-center justify-between p-5 bg-foreground/5 rounded-2xl border border-border/50">
                   <div className="space-y-0.5">
-                    <Label className="text-sm font-bold">Invert System Colors</Label>
-                    <p className="text-[11px] opacity-40">High-contrast mode for improved readability</p>
+                    <Label className="text-sm font-bold text-foreground">Invert System Colors</Label>
+                    <p className="text-[11px] text-muted-foreground">High-contrast mode for improved readability</p>
                   </div>
                   <Switch checked={isInverted} onCheckedChange={setInverted} />
                 </div>
                 <div className="flex items-center justify-between p-5 bg-foreground/5 rounded-2xl border border-border/50">
                   <div className="space-y-0.5">
-                    <Label className="text-sm font-bold">Glass & Transparency</Label>
-                    <p className="text-[11px] opacity-40">Enable sophisticated backdrop blur effects</p>
+                    <Label className="text-sm font-bold text-foreground">Glass & Transparency</Label>
+                    <p className="text-[11px] text-muted-foreground">Enable sophisticated backdrop blur effects</p>
                   </div>
                   <Switch checked={glassEnabled} onCheckedChange={setGlassEnabled} />
                 </div>
@@ -363,7 +377,7 @@ export const Settings: React.FC = () => {
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-2">
                   <Bell size={18} className="text-accent" />
-                  <h2 className="text-lg font-bold">Notification Center</h2>
+                  <h2 className="text-lg font-bold text-foreground">Notification Center</h2>
                 </div>
                 <Button variant="ghost" size="sm" onClick={clearNotifications} className="text-xs text-destructive hover:bg-destructive/10">
                   Clear All
@@ -380,9 +394,9 @@ export const Settings: React.FC = () => {
                             {getNotifIcon(notif.type)}
                             <span className="text-xs font-bold text-foreground/80">{notif.title}</span>
                           </div>
-                          <span className="text-[10px] text-foreground/20 font-mono">{notif.timestamp}</span>
+                          <span className="text-[10px] text-muted-foreground font-mono">{notif.timestamp}</span>
                         </div>
-                        <p className="text-[11px] text-foreground/40 leading-relaxed pl-6">{notif.message}</p>
+                        <p className="text-[11px] text-muted-foreground leading-relaxed pl-6">{notif.message}</p>
                       </div>
                     ))}
                   </div>
@@ -418,7 +432,7 @@ export const Settings: React.FC = () => {
             <section>
               <div className="flex items-center gap-2 mb-6">
                 <RefreshCw size={18} className="text-accent" />
-                <h2 className="text-lg font-bold">Nebula Update</h2>
+                <h2 className="text-lg font-bold text-foreground">Nebula Update</h2>
               </div>
               
               <div className="p-8 bg-foreground/5 rounded-3xl border border-border/50 flex flex-col items-center text-center gap-6">
@@ -426,8 +440,8 @@ export const Settings: React.FC = () => {
                   <RefreshCw size={40} className="text-accent" />
                 </div>
                 <div className="space-y-2">
-                  <h3 className="text-xl font-bold">System Build 4.5.2</h3>
-                  <p className="text-xs text-foreground/40 max-w-xs mx-auto">Your system is currently running the latest stable build of Nebulabs WebOS Core.</p>
+                  <h3 className="text-xl font-bold text-foreground">System Build 4.5.2</h3>
+                  <p className="text-xs text-muted-foreground max-w-xs mx-auto">Your system is currently running the latest stable build of Nebulabs WebOS Core.</p>
                 </div>
                 <div className="flex flex-col w-full gap-2">
                   <Button 
@@ -436,7 +450,7 @@ export const Settings: React.FC = () => {
                   >
                     Check for Updates
                   </Button>
-                  <Button variant="ghost" className="text-[10px] font-bold uppercase tracking-widest text-foreground/20">
+                  <Button variant="ghost" className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
                     View Update History
                   </Button>
                 </div>
@@ -451,28 +465,54 @@ export const Settings: React.FC = () => {
             <section>
               <div className="flex items-center gap-2 mb-6">
                 <User size={18} className="text-accent" />
-                <h2 className="text-lg font-bold">Identity & Authentication</h2>
+                <h2 className="text-lg font-bold text-foreground">Identity & Authentication</h2>
               </div>
               
               <div className="flex flex-col gap-6">
                 <div className="flex items-center gap-6 p-6 bg-foreground/5 rounded-3xl border border-border/50">
-                  <div 
-                    className="w-20 h-20 rounded-full flex items-center justify-center text-3xl font-black shadow-2xl relative"
-                    style={{ backgroundColor: currentUser?.avatarColor || 'var(--accent)' }}
-                  >
-                    {currentUser?.username[0].toUpperCase() || 'G'}
+                  <div className="relative group/avatar">
+                    <Avatar className="w-24 h-24 border-4 border-accent shadow-2xl">
+                      <AvatarImage src={currentUser?.avatarUrl} />
+                      <AvatarFallback 
+                        className="text-3xl font-black text-white"
+                        style={{ backgroundColor: currentUser?.avatarColor || 'var(--accent)' }}
+                      >
+                        {currentUser?.username[0].toUpperCase() || 'G'}
+                      </AvatarFallback>
+                    </Avatar>
+                    <button 
+                      onClick={() => avatarInputRef.current?.click()}
+                      className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover/avatar:opacity-100 transition-opacity cursor-pointer"
+                    >
+                      <Camera size={24} className="text-white" />
+                    </button>
+                    <input 
+                      type="file" 
+                      ref={avatarInputRef} 
+                      onChange={handleAvatarUpload} 
+                      accept="image/*" 
+                      className="hidden" 
+                    />
                     {currentUser?.password && (
                       <div className="absolute -bottom-1 -right-1 w-7 h-7 bg-accent rounded-full border-4 border-background flex items-center justify-center">
                         <Lock size={12} className="text-primary" />
                       </div>
                     )}
                   </div>
+                  
                   <div className="space-y-1 flex-1">
-                    <h3 className="text-2xl font-bold">{currentUser?.username || 'Guest User'}</h3>
+                    <h3 className="text-2xl font-bold text-foreground">{currentUser?.username || 'Guest User'}</h3>
                     <div className="flex items-center gap-2">
                       <Badge className="bg-accent text-primary font-bold uppercase text-[9px]">Administrator</Badge>
-                      <span className="text-xs text-foreground/40">Local System Account</span>
+                      <span className="text-xs text-muted-foreground">Local System Account</span>
                     </div>
+                    <Button 
+                      variant="link" 
+                      className="text-accent text-[10px] p-0 h-auto uppercase font-bold tracking-widest"
+                      onClick={() => avatarInputRef.current?.click()}
+                    >
+                      Update Photo
+                    </Button>
                   </div>
                   <Button variant="outline" className="border-border/50 text-destructive hover:bg-destructive/10" onClick={logout}>Sign Out</Button>
                 </div>
@@ -482,12 +522,12 @@ export const Settings: React.FC = () => {
                     <div className="flex items-center gap-3">
                       <KeyRound size={18} className="text-accent" />
                       <div>
-                        <p className="text-sm font-bold">Account Protection</p>
-                        <p className="text-[10px] text-foreground/40">{currentUser?.password ? "Your identity is secured by a password." : "Your identity is currently unprotected."}</p>
+                        <p className="text-sm font-bold text-foreground">Account Protection</p>
+                        <p className="text-[10px] text-muted-foreground">{currentUser?.password ? "Your identity is secured by a password." : "Your identity is currently unprotected."}</p>
                       </div>
                     </div>
                     {!isChangingPass && (
-                      <Button variant="outline" size="sm" className="rounded-xl border-border/50" onClick={() => setIsChangingPass(true)}>
+                      <Button variant="outline" size="sm" className="rounded-xl border-border/50 text-foreground" onClick={() => setIsChangingPass(true)}>
                         {currentUser?.password ? "Change Password" : "Add Password"}
                       </Button>
                     )}
@@ -507,7 +547,7 @@ export const Settings: React.FC = () => {
                       </div>
                       <div className="flex gap-2">
                         <Button className="bg-accent text-primary font-bold flex-1" onClick={handleUpdatePass}>Update Protection</Button>
-                        <Button variant="ghost" className="text-foreground/40" onClick={() => { setIsChangingPass(false); setNewPassword(""); }}>Cancel</Button>
+                        <Button variant="ghost" className="text-muted-foreground" onClick={() => { setIsChangingPass(false); setNewPassword(""); }}>Cancel</Button>
                       </div>
                     </div>
                   )}
@@ -523,7 +563,7 @@ export const Settings: React.FC = () => {
             <section>
               <div className="flex items-center gap-2 mb-6">
                 <Shield size={18} className="text-accent" />
-                <h2 className="text-lg font-bold">System Protection</h2>
+                <h2 className="text-lg font-bold text-foreground">System Protection</h2>
               </div>
               <div className="grid gap-4">
                 <div className={cn(
@@ -537,8 +577,8 @@ export const Settings: React.FC = () => {
                       <ShieldX size={24} className="text-destructive animate-pulse" />
                     )}
                     <div>
-                      <p className="text-sm font-bold">Nebula Defender</p>
-                      <p className="text-[10px] text-foreground/40">
+                      <p className="text-sm font-bold text-foreground">Nebula Defender</p>
+                      <p className="text-[10px] text-muted-foreground">
                         {isSecurityEnabled ? "Real-time workspace isolation is active." : "System is currently vulnerable to external threats."}
                       </p>
                     </div>
@@ -574,11 +614,11 @@ export const Settings: React.FC = () => {
               </div>
               <div className="space-y-2">
                 <h2 className="text-3xl font-black tracking-tight text-foreground">Nebulabs WebOS</h2>
-                <p className="text-xs text-foreground/40 font-mono uppercase tracking-[0.3em]">Version 1.0.4 Stable-Channel</p>
+                <p className="text-xs text-muted-foreground font-mono uppercase tracking-[0.3em]">Version 1.0.4 Stable-Channel</p>
               </div>
               <div className="flex justify-center gap-4">
-                <Badge variant="secondary" className="bg-foreground/5 text-foreground/40 border-border/50">Kernel: React 19.x</Badge>
-                <Badge variant="secondary" className="bg-foreground/5 text-foreground/40 border-border/50">UI: Tailwind v4</Badge>
+                <Badge variant="secondary" className="bg-foreground/5 text-muted-foreground border-border/50">Kernel: React 19.x</Badge>
+                <Badge variant="secondary" className="bg-foreground/5 text-muted-foreground border-border/50">UI: Tailwind v4</Badge>
               </div>
             </section>
           </div>
@@ -596,35 +636,35 @@ export const Settings: React.FC = () => {
         
         <button 
           onClick={() => setActiveTab('personalization')}
-          className={cn("w-full flex items-center gap-3 px-4 h-11 rounded-xl transition-all text-sm", activeTab === 'personalization' ? "bg-accent/10 text-accent font-bold shadow-sm shadow-accent/5" : "text-foreground/40 hover:bg-foreground/5")}
+          className={cn("w-full flex items-center gap-3 px-4 h-11 rounded-xl transition-all text-sm", activeTab === 'personalization' ? "bg-accent/10 text-accent font-bold shadow-sm shadow-accent/5" : "text-muted-foreground hover:bg-foreground/5")}
         >
           <Palette size={16} /> Personalization
         </button>
         
         <button 
           onClick={() => setActiveTab('display')}
-          className={cn("w-full flex items-center gap-3 px-4 h-11 rounded-xl transition-all text-sm", activeTab === 'display' ? "bg-accent/10 text-accent font-bold shadow-sm shadow-accent/5" : "text-foreground/40 hover:bg-foreground/5")}
+          className={cn("w-full flex items-center gap-3 px-4 h-11 rounded-xl transition-all text-sm", activeTab === 'display' ? "bg-accent/10 text-accent font-bold shadow-sm shadow-accent/5" : "text-muted-foreground hover:bg-foreground/5")}
         >
           <Monitor size={16} /> Display & Screens
         </button>
         
         <button 
           onClick={() => setActiveTab('accessibility')}
-          className={cn("w-full flex items-center gap-3 px-4 h-11 rounded-xl transition-all text-sm", activeTab === 'accessibility' ? "bg-accent/10 text-accent font-bold shadow-sm shadow-accent/5" : "text-foreground/40 hover:bg-foreground/5")}
+          className={cn("w-full flex items-center gap-3 px-4 h-11 rounded-xl transition-all text-sm", activeTab === 'accessibility' ? "bg-accent/10 text-accent font-bold shadow-sm shadow-accent/5" : "text-muted-foreground hover:bg-foreground/5")}
         >
           <Eye size={16} /> Accessibility
         </button>
         
         <button 
           onClick={() => setActiveTab('notifications')}
-          className={cn("w-full flex items-center gap-3 px-4 h-11 rounded-xl transition-all text-sm", activeTab === 'notifications' ? "bg-accent/10 text-accent font-bold shadow-sm shadow-accent/5" : "text-foreground/40 hover:bg-foreground/5")}
+          className={cn("w-full flex items-center gap-3 px-4 h-11 rounded-xl transition-all text-sm", activeTab === 'notifications' ? "bg-accent/10 text-accent font-bold shadow-sm shadow-accent/5" : "text-muted-foreground hover:bg-foreground/5")}
         >
           <Bell size={16} /> Notifications
         </button>
         
         <button 
           onClick={() => setActiveTab('updates')}
-          className={cn("w-full flex items-center gap-3 px-4 h-11 rounded-xl transition-all text-sm", activeTab === 'updates' ? "bg-accent/10 text-accent font-bold shadow-sm shadow-accent/5" : "text-foreground/40 hover:bg-foreground/5")}
+          className={cn("w-full flex items-center gap-3 px-4 h-11 rounded-xl transition-all text-sm", activeTab === 'updates' ? "bg-accent/10 text-accent font-bold shadow-sm shadow-accent/5" : "text-muted-foreground hover:bg-foreground/5")}
         >
           <RefreshCw size={16} /> Updates
         </button>
@@ -633,21 +673,21 @@ export const Settings: React.FC = () => {
         
         <button 
           onClick={() => setActiveTab('accounts')}
-          className={cn("w-full flex items-center gap-3 px-4 h-11 rounded-xl transition-all text-sm", activeTab === 'accounts' ? "bg-accent/10 text-accent font-bold shadow-sm shadow-accent/5" : "text-foreground/40 hover:bg-foreground/5")}
+          className={cn("w-full flex items-center gap-3 px-4 h-11 rounded-xl transition-all text-sm", activeTab === 'accounts' ? "bg-accent/10 text-accent font-bold shadow-sm shadow-accent/5" : "text-muted-foreground hover:bg-foreground/5")}
         >
           <User size={16} /> User Accounts
         </button>
         
         <button 
           onClick={() => setActiveTab('security')}
-          className={cn("w-full flex items-center gap-3 px-4 h-11 rounded-xl transition-all text-sm", activeTab === 'security' ? "bg-accent/10 text-accent font-bold shadow-sm shadow-accent/5" : "text-foreground/40 hover:bg-foreground/5")}
+          className={cn("w-full flex items-center gap-3 px-4 h-11 rounded-xl transition-all text-sm", activeTab === 'security' ? "bg-accent/10 text-accent font-bold shadow-sm shadow-accent/5" : "text-muted-foreground hover:bg-foreground/5")}
         >
           <Shield size={16} /> System Security
         </button>
         
         <button 
           onClick={() => setActiveTab('about')}
-          className={cn("w-full flex items-center gap-3 px-4 h-11 rounded-xl transition-all text-sm", activeTab === 'about' ? "bg-accent/10 text-accent font-bold shadow-sm shadow-accent/5" : "text-foreground/40 hover:bg-foreground/5")}
+          className={cn("w-full flex items-center gap-3 px-4 h-11 rounded-xl transition-all text-sm", activeTab === 'about' ? "bg-accent/10 text-accent font-bold shadow-sm shadow-accent/5" : "text-muted-foreground hover:bg-foreground/5")}
         >
           <HelpCircle size={16} /> About WebOS
         </button>

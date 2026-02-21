@@ -1,4 +1,3 @@
-
 "use client"
 
 import React from 'react';
@@ -25,7 +24,7 @@ import {
 } from 'lucide-react';
 import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
 import {
@@ -78,8 +77,9 @@ export const QuickSettings: React.FC = () => {
       onClick={(e) => e.stopPropagation()}
     >
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Avatar className="w-10 h-10 border-2 border-accent/20">
+        <div className="flex items-center gap-3 overflow-hidden">
+          <Avatar className="w-10 h-10 border-2 border-accent/20 shrink-0">
+            <AvatarImage src={currentUser?.avatarUrl} className="object-cover" />
             <AvatarFallback 
               className="text-white font-bold"
               style={{ backgroundColor: currentUser?.avatarColor || 'var(--accent)' }}
@@ -87,8 +87,8 @@ export const QuickSettings: React.FC = () => {
               {currentUser?.username[0].toUpperCase() || 'G'}
             </AvatarFallback>
           </Avatar>
-          <div className="flex flex-col">
-            <span className="text-sm font-bold text-white/90 truncate">{currentUser?.username || 'Guest'}</span>
+          <div className="flex flex-col min-w-0">
+            <span className="text-sm font-bold text-foreground truncate">{currentUser?.username || 'Guest'}</span>
             <span className="text-[10px] text-accent font-medium uppercase tracking-tighter">System Administrator</span>
           </div>
         </div>
@@ -96,7 +96,7 @@ export const QuickSettings: React.FC = () => {
           <Button 
             variant="ghost" 
             size="icon" 
-            className="h-9 w-9 text-white/40 hover:text-accent hover:bg-accent/10 rounded-xl"
+            className="h-9 w-9 text-muted-foreground hover:text-accent hover:bg-accent/10 rounded-xl"
             onClick={(e) => {
               e.stopPropagation();
               openApp('settings', 'Settings');
@@ -108,7 +108,7 @@ export const QuickSettings: React.FC = () => {
           <Button 
             variant="ghost" 
             size="icon" 
-            className="h-9 w-9 text-white/40 hover:text-destructive hover:bg-destructive/10 rounded-xl"
+            className="h-9 w-9 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-xl"
             onClick={shutDown}
           >
             <Power size={18} />
@@ -121,7 +121,7 @@ export const QuickSettings: React.FC = () => {
           onClick={() => connectToWifi(isOnline ? 'Public_Guest_No_Internet' : 'Nebula_Secure_5G')}
           className={cn(
             "flex items-center gap-3 p-3 rounded-xl border transition-all text-left",
-            isOnline ? "bg-accent/20 border-accent/30 text-accent" : "bg-white/5 border-white/5 text-white/40 hover:bg-white/10"
+            isOnline ? "bg-accent/20 border-accent/30 text-accent" : "bg-white/5 border-white/5 text-muted-foreground hover:bg-white/10"
           )}
         >
           {isOnline ? <Wifi size={18} /> : <WifiOff size={18} />}
@@ -133,16 +133,16 @@ export const QuickSettings: React.FC = () => {
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="flex items-center gap-3 p-3 rounded-xl border bg-white/5 border-white/5 text-white/40 hover:bg-white/10 transition-all text-left">
+            <button className="flex items-center gap-3 p-3 rounded-xl border bg-white/5 border-white/5 text-muted-foreground hover:bg-white/10 transition-all text-left">
               <Monitor size={18} className="text-accent" />
               <div className="flex flex-col min-w-0">
-                <span className="text-[11px] font-bold text-white/80">Displays</span>
+                <span className="text-[11px] font-bold text-foreground">Displays</span>
                 <span className="text-[9px] truncate opacity-60">ID: {currentDisplayId}</span>
               </div>
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent className="glass border-white/10 w-56 backdrop-blur-3xl shadow-2xl">
-             <div className="px-2 py-1.5 text-[10px] font-black uppercase text-white/30 tracking-widest">Identify This Screen</div>
+             <div className="px-2 py-1.5 text-[10px] font-black uppercase text-muted-foreground tracking-widest">Identify This Screen</div>
              {['1', '2', '3'].map(id => (
                <DropdownMenuItem 
                  key={id} 
@@ -155,7 +155,7 @@ export const QuickSettings: React.FC = () => {
              ))}
              
              <Separator className="my-1 bg-white/5" />
-             <div className="px-2 py-1.5 text-[10px] font-black uppercase text-white/30 tracking-widest">Physical Layout</div>
+             <div className="px-2 py-1.5 text-[10px] font-black uppercase text-muted-foreground tracking-widest">Physical Layout</div>
              
              {['1', '2', '3'].map(fromId => (
                <DropdownMenuSub key={fromId}>
@@ -208,7 +208,7 @@ export const QuickSettings: React.FC = () => {
           onClick={handleToggleTheme}
           className={cn(
             "flex items-center gap-3 p-3 rounded-xl border transition-all text-left",
-            theme === 'dark' ? "bg-accent/20 border-accent/30 text-accent" : "bg-white/5 border-white/5 text-white/40 hover:bg-white/10"
+            theme === 'dark' ? "bg-accent/20 border-accent/30 text-accent" : "bg-white/5 border-white/5 text-muted-foreground hover:bg-white/10"
           )}
         >
           {theme === 'dark' ? <Moon size={18} /> : <Sun size={18} />}
@@ -222,7 +222,7 @@ export const QuickSettings: React.FC = () => {
           onClick={() => setIsDND(!isDND)}
           className={cn(
             "flex items-center gap-3 p-3 rounded-xl border transition-all text-left",
-            isDND ? "bg-accent/20 border-accent/30 text-accent" : "bg-white/5 border-white/5 text-white/40 hover:bg-white/10"
+            isDND ? "bg-accent/20 border-accent/30 text-accent" : "bg-white/5 border-white/5 text-muted-foreground hover:bg-white/10"
           )}
         >
           {isDND ? <BellOff size={18} /> : <Bell size={18} />}
@@ -235,7 +235,7 @@ export const QuickSettings: React.FC = () => {
 
       <div className="space-y-6 px-1">
         <div className="space-y-3">
-          <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-widest text-white/30">
+          <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
             <div className="flex items-center gap-2">
               <Sun size={12} className="text-accent" />
               <span>Display Brightness</span>
@@ -253,7 +253,7 @@ export const QuickSettings: React.FC = () => {
         </div>
 
         <div className="space-y-3">
-          <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-widest text-white/30">
+          <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
             <div className="flex items-center gap-2">
               <VolumeIcon size={12} className="text-accent" />
               <span>System Volume</span>
@@ -274,15 +274,15 @@ export const QuickSettings: React.FC = () => {
 
       <div className="flex items-center justify-between">
         <div className="flex flex-col">
-          <span className="text-xs font-bold text-white/80">
+          <span className="text-xs font-bold text-foreground">
             {new Date().toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' })}
           </span>
-          <span className="text-[10px] text-white/40 uppercase tracking-widest font-bold">Nebula Multi-Link Active</span>
+          <span className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold">Nebula Multi-Link Active</span>
         </div>
         <Button 
           variant="outline" 
           size="sm" 
-          className="h-8 text-[10px] font-bold gap-2 border-white/10 hover:bg-destructive hover:text-white hover:border-destructive transition-all rounded-xl"
+          className="h-8 text-[10px] font-bold gap-2 border-border/50 hover:bg-destructive hover:text-white hover:border-destructive transition-all rounded-xl text-foreground"
           onClick={logout}
         >
           <LogOut size={12} />

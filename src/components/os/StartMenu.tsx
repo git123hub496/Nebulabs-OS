@@ -25,7 +25,7 @@ import {
   Calendar as CalendarIcon,
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -77,7 +77,7 @@ export const StartMenu: React.FC<StartMenuProps> = ({ onClose }) => {
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="Search apps, settings, and files" 
-          className="pl-10 bg-white/10 border-white/10 text-white placeholder:text-white/30 h-10 rounded-xl focus-visible:ring-accent"
+          className="pl-10 bg-white/10 border-white/10 text-foreground placeholder:text-muted-foreground/40 h-10 rounded-xl focus-visible:ring-accent"
         />
       </div>
 
@@ -103,16 +103,16 @@ export const StartMenu: React.FC<StartMenuProps> = ({ onClose }) => {
                         onContextMenu={(e) => e.preventDefault()}
                       >
                         <div className="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center group-hover:bg-accent/20 group-hover:scale-105 transition-all border border-white/5 group-hover:border-accent/20">
-                          <Icon className="text-white/80 group-hover:text-accent transition-colors" size={24} />
+                          <Icon className="text-muted-foreground group-hover:text-accent transition-colors" size={24} />
                         </div>
-                        <span className="text-[10px] text-white/70 font-medium text-center truncate w-full group-hover:text-accent transition-colors">{info.label}</span>
+                        <span className="text-[10px] text-muted-foreground font-medium text-center truncate w-full group-hover:text-accent transition-colors">{info.label}</span>
                       </button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent className="glass border-white/10 w-48 backdrop-blur-3xl">
-                      <DropdownMenuItem onClick={() => handleAppClick(appId)} className="gap-2">
+                      <DropdownMenuItem onClick={() => handleAppClick(appId)} className="gap-2 text-foreground">
                         <div className="w-4" /> Open
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => togglePinApp(appId)} className="gap-2">
+                      <DropdownMenuItem onClick={() => togglePinApp(appId)} className="gap-2 text-foreground">
                         {isPinned ? <PinOff size={14} className="text-accent" /> : <Pin size={14} className="text-accent" />}
                         {isPinned ? 'Unpin from Taskbar' : 'Pin to Taskbar'}
                       </DropdownMenuItem>
@@ -122,7 +122,7 @@ export const StartMenu: React.FC<StartMenuProps> = ({ onClose }) => {
               })}
             </div>
           ) : (
-            <div className="text-center py-8 opacity-40 flex flex-col items-center gap-2">
+            <div className="text-center py-8 text-muted-foreground opacity-40 flex flex-col items-center gap-2">
               <Search size={32} strokeWidth={1} />
               <p className="text-xs">No matching applications found.</p>
             </div>
@@ -133,15 +133,15 @@ export const StartMenu: React.FC<StartMenuProps> = ({ onClose }) => {
           <div>
             <h3 className="text-[11px] font-bold text-accent uppercase tracking-widest mb-4 opacity-80">Quick Links</h3>
             <div className="space-y-1">
-              <button className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-accent/10 text-sm text-white/80 transition-colors group" onClick={() => handleAppClick('news')}>
+              <button className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-accent/10 text-sm text-foreground transition-colors group" onClick={() => handleAppClick('news')}>
                 <Newspaper size={16} className="text-accent group-hover:scale-110 transition-transform" />
                 <span className="group-hover:text-accent">Nebula Local News</span>
               </button>
-              <button className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-accent/10 text-sm text-white/80 transition-colors group" onClick={() => handleAppClick('maps')}>
+              <button className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-accent/10 text-sm text-foreground transition-colors group" onClick={() => handleAppClick('maps')}>
                 <MapIcon size={16} className="text-accent group-hover:scale-110 transition-transform" />
                 <span className="group-hover:text-accent">Nebula Maps</span>
               </button>
-              <button className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-accent/10 text-sm text-white/80 transition-colors group" onClick={() => handleAppClick('browser')}>
+              <button className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-accent/10 text-sm text-foreground transition-colors group" onClick={() => handleAppClick('browser')}>
                 <Globe size={16} className="text-accent group-hover:scale-110 transition-transform" />
                 <span className="group-hover:text-accent">Nebula Browser</span>
               </button>
@@ -152,7 +152,8 @@ export const StartMenu: React.FC<StartMenuProps> = ({ onClose }) => {
 
       <div className="border-t border-white/10 pt-4 mt-auto flex items-center justify-between">
         <div className="flex items-center gap-3 overflow-hidden">
-          <Avatar className="w-10 h-10 border-2 border-accent/20">
+          <Avatar className="w-10 h-10 border-2 border-accent/20 shrink-0">
+            <AvatarImage src={currentUser?.avatarUrl} className="object-cover" />
             <AvatarFallback 
               className="text-white font-bold"
               style={{ backgroundColor: currentUser?.avatarColor || 'var(--accent)' }}
@@ -161,7 +162,7 @@ export const StartMenu: React.FC<StartMenuProps> = ({ onClose }) => {
             </AvatarFallback>
           </Avatar>
           <div className="flex flex-col overflow-hidden">
-            <span className="text-sm font-bold text-white/90 truncate">{currentUser?.username || 'Guest User'}</span>
+            <span className="text-sm font-bold text-foreground truncate">{currentUser?.username || 'Guest User'}</span>
             <span className="text-[10px] text-accent/60 truncate font-medium uppercase tracking-tighter">Local Administrator</span>
           </div>
         </div>
@@ -169,11 +170,11 @@ export const StartMenu: React.FC<StartMenuProps> = ({ onClose }) => {
         <div className="flex items-center gap-1">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-10 w-10 text-white/40 hover:text-accent hover:bg-accent/10 rounded-xl">
+              <Button variant="ghost" size="icon" className="h-10 w-10 text-muted-foreground hover:text-accent hover:bg-accent/10 rounded-xl">
                 <Power size={20} />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48 glass border-white/10 text-white p-2 rounded-xl backdrop-blur-3xl shadow-2xl">
+            <DropdownMenuContent align="end" className="w-48 glass border-white/10 text-foreground p-2 rounded-xl backdrop-blur-3xl shadow-2xl">
               <DropdownMenuItem onClick={restart} className="gap-3 cursor-pointer p-3 rounded-lg hover:bg-accent/10 focus:bg-accent/20">
                 <RefreshCw size={16} className="text-accent" />
                 <span className="font-medium">Restart</span>

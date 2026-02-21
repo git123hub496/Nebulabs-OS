@@ -23,7 +23,7 @@ import {
   Gamepad2,
   Bomb,
   File as FileIcon,
-  Image as ImageIcon,
+  ImageIcon,
   RefreshCw,
   Skull,
   ShieldAlert,
@@ -45,6 +45,7 @@ export interface LocalUser {
   id: string;
   username: string;
   avatarColor: string;
+  avatarUrl?: string;
   password?: string;
 }
 
@@ -140,6 +141,7 @@ interface OSContextType {
   unlock: (password?: string) => boolean;
   createAccount: (username: string, password?: string) => void;
   updateUserPassword: (password: string) => void;
+  updateUserAvatar: (url: string) => void;
   openApp: (appId: AppId, title: string, params?: any) => void;
   closeWindow: (windowId: string) => void;
   minimizeWindow: (windowId: string) => void;
@@ -441,6 +443,16 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     addNotification("Security Updated", "Your account password has been changed.", "security");
   };
 
+  const updateUserAvatar = (url: string) => {
+    if (!currentUser) return;
+    const updatedUser = { ...currentUser, avatarUrl: url };
+    setCurrentUser(updatedUser);
+    const updatedAccounts = accounts.map(a => a.id === currentUser.id ? updatedUser : a);
+    setAccounts(updatedAccounts);
+    localStorage.setItem('nebula_accounts', JSON.stringify(updatedAccounts));
+    addNotification("Identity Updated", "Your profile picture has been updated.", "system");
+  };
+
   const addNotification = useCallback((title: string, message: string, type: SystemNotification['type'] = 'system') => {
     const newNotif: SystemNotification = {
       id: Math.random().toString(36).substr(2, 9),
@@ -737,7 +749,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       isOnline, volume, brightness, isWidgetsOpen, isQuickSettingsOpen, 
       isStartOpen, isLocked, systemStats,
       currentDisplayId, displayLayout, isSecurityEnabled,
-      login, logout, lock, unlock, createAccount, updateUserPassword, openApp, closeWindow, minimizeWindow,
+      login, logout, lock, unlock, createAccount, updateUserPassword, updateUserAvatar, openApp, closeWindow, minimizeWindow,
       maximizeWindow, snapWindow, focusWindow, updateWindowPosition, moveWindowToDisplay,
       updateDisplayLayout, resetDisplayLayout, installApp, addNotification, clearNotifications,
       updateWallpaper, setNotes, setTheme, setAccentColor, setCustomAccentHex,

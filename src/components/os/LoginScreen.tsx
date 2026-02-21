@@ -5,7 +5,7 @@ import { useOS, LocalUser } from '@/context/os-context';
 import { User, Plus, ArrowRight, X, Lock, ShieldCheck, KeyRound } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { BIOS } from './BIOS';
 import { cn } from '@/lib/utils';
 
@@ -91,9 +91,10 @@ export const LoginScreen: React.FC = () => {
               >
                 <div 
                   className="w-24 h-24 rounded-full border-4 border-white/10 group-hover:border-accent transition-colors flex items-center justify-center shadow-2xl overflow-hidden relative"
-                  style={{ backgroundColor: account.avatarColor }}
+                  style={{ backgroundColor: account.avatarUrl ? 'transparent' : account.avatarColor }}
                 >
                   <Avatar className="w-full h-full">
+                    <AvatarImage src={account.avatarUrl} className="object-cover" />
                     <AvatarFallback className="bg-transparent text-white text-3xl font-bold">
                       {account.username[0].toUpperCase()}
                     </AvatarFallback>
@@ -133,12 +134,15 @@ export const LoginScreen: React.FC = () => {
 
         {selectedAccount && (
           <div className="glass p-10 rounded-[2.5rem] border border-white/10 w-full max-w-md flex flex-col items-center gap-8 animate-in zoom-in-95 duration-300 shadow-2xl">
-            <div 
-              className="w-24 h-24 rounded-full border-4 border-accent flex items-center justify-center text-4xl font-black text-white shadow-xl shadow-accent/20"
-              style={{ backgroundColor: selectedAccount.avatarColor }}
-            >
-              {selectedAccount.username[0].toUpperCase()}
-            </div>
+            <Avatar className="w-24 h-24 border-4 border-accent shadow-xl shadow-accent/20">
+              <AvatarImage src={selectedAccount.avatarUrl} className="object-cover" />
+              <AvatarFallback 
+                className="text-4xl font-black text-white"
+                style={{ backgroundColor: selectedAccount.avatarColor }}
+              >
+                {selectedAccount.username[0].toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
             
             <div className="text-center space-y-1">
               <h2 className="text-2xl font-bold text-white">{selectedAccount.username}</h2>
