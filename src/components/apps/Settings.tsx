@@ -1,12 +1,12 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
-import { useOS, TaskbarPosition, TaskbarSize, DesktopIconSize, AccentColor, CursorColor, SystemNotification } from '@/context/os-context';
+import React, { useState, useRef, useMemo } from 'react';
+import { useOS, TaskbarPosition, TaskbarSize, DesktopIconSize, AccentColor, CursorColor, AppId, APP_INFO } from '@/context/os-context';
 import { 
   Monitor, Palette, User, Shield, Bell, BellOff, HelpCircle, Upload, 
   ImageIcon, Sun, Moon, Layout, Check, MousePointer2, 
   Eye, Zap, Layers, Pipette, Maximize2, Plus, ArrowUpRight,
-  Wifi, ShieldCheck, Activity, Trash2, Info, Newspaper, Clock, XCircle, RefreshCw, ChevronRight, ShieldAlert, ShieldX, Lock, KeyRound, Camera, Building2, Briefcase, GraduationCap, Heart, MonitorCheck, Sliders, Smartphone, Smile, Home
+  Wifi, ShieldCheck, Activity, Trash2, Info, Newspaper, Clock, XCircle, RefreshCw, ChevronRight, ShieldAlert, ShieldX, Lock, KeyRound, Camera, Building2, Briefcase, GraduationCap, Heart, MonitorCheck, Sliders, Smartphone, Smile, Home, Search, AppWindow, ExternalLink
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
@@ -26,7 +26,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Slider } from '@/components/ui/slider';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
-type SettingsTab = 'personalization' | 'display' | 'accessibility' | 'notifications' | 'accounts' | 'security' | 'updates' | 'about';
+type SettingsTab = 'personalization' | 'display' | 'apps' | 'accessibility' | 'notifications' | 'accounts' | 'security' | 'updates' | 'about';
 
 const ACCENT_COLORS: { id: AccentColor; class: string; label: string }[] = [
   { id: 'purple', class: 'bg-[#9333ea]', label: 'Purple' },
@@ -47,22 +47,46 @@ const CURSOR_COLORS: { id: CursorColor; color: string; label: string }[] = [
 export const Settings: React.FC = () => {
   const { 
     wallpaper, updateWallpaper, theme, setTheme, taskbarPosition, setTaskbarPosition, 
-    taskbarSize, setTaskbarSize, taskbarAutoHide, setTaskbarAutoHide, iconSize, setIconSize,
+    taskbarSize, setTaskbarSize, iconSize, setIconSize,
     accentColor, setAccentColor, customAccentHex, 
     cursorColor, setCursorColor, isInverted, setInverted,
     glassEnabled, setGlassEnabled, brightness, setBrightness,
     currentDisplayId, setCurrentDisplayId, displayLayout, updateDisplayLayout, resetDisplayLayout,
     currentUser, logout, notifications, clearNotifications, addNotification, openApp,
-    isSecurityEnabled, setSecurityEnabled, updateUserPassword, updateUserAvatar, updateUserWorkStatus
+    isSecurityEnabled, setSecurityEnabled, updateUserPassword, updateUserAvatar, updateUserWorkStatus,
+    installedApps
   } = useOS();
 
   const [activeTab, setActiveTab] = useState<SettingsTab>('personalization');
+  const [searchQuery, setSearchQuery] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [isChangingPass, setIsChangingPass] = useState(false);
   const avatarInputRef = useRef<HTMLInputElement>(null);
 
   const isSchool = currentUser?.isSchoolAccount;
   const isKid = currentUser?.isKidAccount;
+
+  // Filter tabs based on search
+  const tabs = useMemo(() => {
+    const allTabs: { id: SettingsTab; label: string; icon: any; keywords: string[] }[] = [
+      { id: 'personalization', label: 'Personalization', icon: Palette, keywords: ['theme', 'wallpaper', 'taskbar', 'accent', 'color', 'dark mode', 'light mode'] },
+      { id: 'display', label: 'Display', icon: Monitor, keywords: ['brightness', 'monitor', 'screen', 'resolution', 'multi-display'] },
+      { id: 'apps', label: 'Apps', icon: AppWindow, keywords: ['installed', 'applications', 'software', 'management'] },
+      { id: 'accessibility', label: 'Accessibility', icon: Eye, keywords: ['contrast', 'glass', 'transparency', 'cursor', 'pointer', 'mouse'] },
+      { id: 'notifications', label: 'Notifications', icon: Bell, keywords: ['alerts', 'messages', 'activity', 'dnd'] },
+      { id: 'accounts', label: 'Accounts', icon: User, keywords: ['profile', 'identity', 'password', 'avatar', 'user', 'sign out'] },
+      { id: 'security', label: 'Security', icon: Shield, keywords: ['encryption', 'lockdown', 'defender', 'kernel'] },
+      { id: 'updates', label: 'Updates', icon: RefreshCw, keywords: ['patch', 'kernel', 'version', 'check for updates'] },
+      { id: 'about', label: 'About', icon: HelpCircle, keywords: ['system', 'device', 'credits', 'nebulabs', 'version'] },
+    ];
+
+    if (!searchQuery) return allTabs;
+
+    return allTabs.filter(tab => 
+      tab.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      tab.keywords.some(k => k.toLowerCase().includes(searchQuery.toLowerCase()))
+    );
+  }, [searchQuery]);
 
   const handleAvatarUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -150,17 +174,6 @@ export const Settings: React.FC = () => {
                     </SelectContent>
                   </Select>
                 </div>
-
-                <div className="flex items-center justify-between p-5 bg-foreground/5 rounded-2xl border border-border/50">
-                  <div className="space-y-0.5">
-                    <Label className="text-sm font-bold text-foreground">Auto-hide Taskbar</Label>
-                    <p className="text-[11px] text-muted-foreground">Automatically hide the taskbar when not in use</p>
-                  </div>
-                  <Switch 
-                    checked={taskbarAutoHide} 
-                    onCheckedChange={setTaskbarAutoHide}
-                  />
-                </div>
               </div>
             </section>
           </div>
@@ -205,6 +218,51 @@ export const Settings: React.FC = () => {
                 <Button variant="outline" className="text-[10px] uppercase font-bold" onClick={() => openApp('monitor', 'System Monitor')}>
                   View Video Hardware Stats
                 </Button>
+              </div>
+            </section>
+          </div>
+        );
+
+      case 'apps':
+        return (
+          <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
+            <section>
+              <div className="flex items-center gap-2 mb-6">
+                <AppWindow size={18} className="text-accent" />
+                <h2 className="text-lg font-bold text-foreground">Installed Applications</h2>
+              </div>
+              
+              <div className="grid gap-3">
+                {installedApps.map(appId => {
+                  const info = APP_INFO[appId];
+                  if (!info) return null;
+                  const Icon = info.icon;
+                  
+                  return (
+                    <div key={appId} className="flex items-center justify-between p-4 bg-foreground/5 rounded-2xl border border-border/50 group hover:border-accent/30 transition-all">
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center border border-white/5">
+                          <Icon size={24} className="text-accent" />
+                        </div>
+                        <div>
+                          <h4 className="text-sm font-bold text-white">{info.label}</h4>
+                          <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-black">Nebula Certified</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="h-8 text-[10px] font-bold uppercase tracking-widest hover:bg-accent/10 hover:text-accent"
+                          onClick={() => openApp(appId, info.label)}
+                        >
+                          <ExternalLink size={14} className="mr-2" />
+                          Launch
+                        </Button>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </section>
           </div>
@@ -426,14 +484,6 @@ export const Settings: React.FC = () => {
                         </div>
                       </div>
                     )}
-                    
-                    {(isSchool || isKid) && (
-                      <div className={cn("p-3 border rounded-xl", isSchool ? "bg-blue-500/10 border-blue-500/20" : "bg-pink-500/10 border-pink-500/20")}>
-                        <p className={cn("text-[10px] leading-relaxed font-bold uppercase tracking-widest flex items-center gap-2", isSchool ? "text-blue-400" : "text-pink-400")}>
-                          <ShieldAlert size={12} /> Password Control Restricted
-                        </p>
-                      </div>
-                    )}
                   </div>
 
                   {!isSchool && !isKid && (
@@ -527,70 +577,67 @@ export const Settings: React.FC = () => {
 
   return (
     <div className="flex h-full bg-background text-foreground overflow-hidden">
-      <div className="w-64 border-r border-border bg-foreground/5 flex flex-col p-4 gap-1 shrink-0 overflow-y-auto">
+      <div className="w-72 border-r border-border bg-foreground/5 flex flex-col p-4 gap-1 shrink-0 overflow-hidden">
         <h2 className={cn("px-4 py-4 text-[10px] font-black uppercase tracking-[0.2em] mb-2 opacity-60", isSchool ? "text-blue-400" : isKid ? "text-pink-400" : "text-accent")}>
           {isSchool ? "District Terminal" : isKid ? "Home Dashboard" : "System Configuration"}
         </h2>
-        
-        <button 
-          onClick={() => setActiveTab('personalization')}
-          className={cn("w-full flex items-center gap-3 px-4 h-11 rounded-xl transition-all text-sm", activeTab === 'personalization' ? "bg-accent/10 text-accent font-bold" : "text-muted-foreground hover:bg-foreground/5")}
-        >
-          <Palette size={16} /> Personalization
-        </button>
-        
-        <button 
-          onClick={() => setActiveTab('display')}
-          className={cn("w-full flex items-center gap-3 px-4 h-11 rounded-xl transition-all text-sm", activeTab === 'display' ? "bg-accent/10 text-accent font-bold" : "text-muted-foreground hover:bg-foreground/5")}
-        >
-          <Monitor size={16} /> Display
-        </button>
-        
-        <button 
-          onClick={() => setActiveTab('accessibility')}
-          className={cn("w-full flex items-center gap-3 px-4 h-11 rounded-xl transition-all text-sm", activeTab === 'accessibility' ? "bg-accent/10 text-accent font-bold" : "text-muted-foreground hover:bg-foreground/5")}
-        >
-          <Eye size={16} /> Accessibility
-        </button>
-        
-        <button 
-          onClick={() => setActiveTab('notifications')}
-          className={cn("w-full flex items-center gap-3 px-4 h-11 rounded-xl transition-all text-sm", activeTab === 'notifications' ? "bg-accent/10 text-accent font-bold" : "text-muted-foreground hover:bg-foreground/5")}
-        >
-          <Bell size={16} /> Notifications
-        </button>
-        
-        <Separator className="my-4 opacity-5 mx-2" />
-        
-        <button 
-          onClick={() => setActiveTab('accounts')}
-          className={cn("w-full flex items-center gap-3 px-4 h-11 rounded-xl transition-all text-sm", activeTab === 'accounts' ? "bg-accent/10 text-accent font-bold" : "text-muted-foreground hover:bg-foreground/5")}
-        >
-          <User size={16} /> {isSchool ? "Student Profile" : isKid ? "Kid Profile" : "User Accounts"}
-        </button>
-        
-        <button 
-          onClick={() => setActiveTab('security')}
-          className={cn("w-full flex items-center gap-3 px-4 h-11 rounded-xl transition-all text-sm", activeTab === 'security' ? "bg-accent/10 text-accent font-bold" : "text-muted-foreground hover:bg-foreground/5")}
-        >
-          <Shield size={16} /> Security
-        </button>
 
-        {!isKid && (
-          <button 
-            onClick={() => setActiveTab('updates')}
-            className={cn("w-full flex items-center gap-3 px-4 h-11 rounded-xl transition-all text-sm", activeTab === 'updates' ? "bg-accent/10 text-accent font-bold" : "text-muted-foreground hover:bg-foreground/5")}
-          >
-            <RefreshCw size={16} /> Updates
-          </button>
-        )}
+        <div className="px-4 mb-6 relative">
+          <Search size={14} className="absolute left-7 top-1/2 -translate-y-1/2 text-muted-foreground/40" />
+          <Input 
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search settings..."
+            className="h-9 pl-9 bg-foreground/5 border-border/50 text-xs rounded-xl focus-visible:ring-accent"
+          />
+        </div>
         
-        <button 
-          onClick={() => setActiveTab('about')}
-          className={cn("w-full flex items-center gap-3 px-4 h-11 rounded-xl transition-all text-sm", activeTab === 'about' ? "bg-accent/10 text-accent font-bold" : "text-muted-foreground hover:bg-foreground/5")}
-        >
-          <HelpCircle size={16} /> About
-        </button>
+        <ScrollArea className="flex-1 -mx-2 px-2">
+          <div className="space-y-1 pb-4">
+            {tabs.map((tab) => (
+              <button 
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={cn(
+                  "w-full flex items-center gap-3 px-4 h-11 rounded-xl transition-all text-sm group", 
+                  activeTab === tab.id 
+                    ? "bg-accent/10 text-accent font-bold" 
+                    : "text-muted-foreground hover:bg-foreground/5 hover:text-foreground"
+                )}
+              >
+                <tab.icon size={16} className={cn("transition-colors", activeTab === tab.id ? "text-accent" : "group-hover:text-accent/60")} />
+                {tab.label}
+              </button>
+            ))}
+            
+            {tabs.length === 0 && (
+              <div className="py-8 text-center text-[10px] uppercase font-bold text-muted-foreground/40 tracking-widest">
+                No matches found
+              </div>
+            )}
+          </div>
+        </ScrollArea>
+
+        <Separator className="my-4 opacity-5" />
+        
+        <div className="px-4 py-2 opacity-40 hover:opacity-100 transition-opacity">
+          <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-4">
+            <span>Identity Bridge</span>
+            <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+          </div>
+          <div className="flex items-center gap-3">
+            <Avatar className="w-8 h-8 border border-border/50">
+              <AvatarImage src={currentUser?.avatarUrl} />
+              <AvatarFallback className="bg-accent/20 text-accent text-[10px] font-bold">
+                {currentUser?.username[0].toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            <div className="flex flex-col min-w-0">
+              <span className="text-[11px] font-bold truncate">{currentUser?.username}</span>
+              <span className="text-[9px] text-muted-foreground truncate uppercase">{isSchool ? 'District Managed' : 'Admin'}</span>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div className="flex-1 overflow-hidden flex flex-col">
