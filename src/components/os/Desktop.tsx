@@ -24,6 +24,8 @@ import {
   Map as MapIcon,
   Activity,
   Calendar as CalendarIcon,
+  Gamepad2,
+  Bomb
 } from 'lucide-react';
 import { FileExplorer } from '../apps/FileExplorer';
 import { AppStore } from '../apps/AppStore';
@@ -39,6 +41,8 @@ import { NebulaNews } from '../apps/NebulaNews';
 import { NebulaMaps } from '../apps/NebulaMaps';
 import { SystemMonitor } from '../apps/SystemMonitor';
 import { Calendar } from '../apps/Calendar';
+import { SnakeGame } from '../apps/SnakeGame';
+import { Minesweeper } from '../apps/Minesweeper';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 
@@ -57,6 +61,8 @@ const APP_COMPONENTS: Record<AppId, React.ReactNode> = {
   'maps': <NebulaMaps />,
   'monitor': <SystemMonitor />,
   'calendar': <Calendar />,
+  'snake': <SnakeGame />,
+  'minesweeper': <Minesweeper />,
 };
 
 export const Desktop: React.FC = () => {

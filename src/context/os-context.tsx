@@ -20,11 +20,13 @@ import {
   Info,
   ShieldCheck,
   Zap,
-  Wifi
+  Wifi,
+  Gamepad2,
+  Bomb
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
-export type AppId = 'store' | 'files' | 'settings' | 'assistant' | 'google-drive' | 'notes' | 'calc' | 'terminal' | 'browser' | 'trash' | 'news' | 'maps' | 'monitor' | 'calendar';
+export type AppId = 'store' | 'files' | 'settings' | 'assistant' | 'google-drive' | 'notes' | 'calc' | 'terminal' | 'browser' | 'trash' | 'news' | 'maps' | 'monitor' | 'calendar' | 'snake' | 'minesweeper';
 export type ThemeMode = 'dark' | 'light';
 export type PowerStatus = 'on' | 'off' | 'booting';
 export type TaskbarPosition = 'top' | 'bottom' | 'left' | 'right';
@@ -189,6 +191,8 @@ export const APP_INFO: Record<AppId, { icon: any; label: string }> = {
   'maps': { icon: MapIcon, label: 'Nebula Maps' },
   'monitor': { icon: Activity, label: 'System Monitor' },
   'calendar': { icon: CalendarIcon, label: 'Calendar' },
+  'snake': { icon: Gamepad2, label: 'Nebula Snake' },
+  'minesweeper': { icon: Bomb, label: 'Minesweeper' },
 };
 
 const INITIAL_FILES: FileSystemItem[] = [
@@ -215,7 +219,7 @@ const RANDOM_NOTIFICATIONS: Omit<SystemNotification, 'id' | 'timestamp'>[] = [
   { title: "Performance Note", message: "System Monitor detected high idle efficiency. Battery saved.", type: 'system' },
 ];
 
-const INITIAL_APPS: AppId[] = ['store', 'files', 'settings', 'assistant', 'notes', 'calc', 'terminal', 'browser', 'trash', 'news', 'maps', 'monitor', 'calendar'];
+const INITIAL_APPS: AppId[] = ['store', 'files', 'settings', 'assistant', 'notes', 'calc', 'terminal', 'browser', 'trash', 'news', 'maps', 'monitor', 'calendar', 'snake', 'minesweeper'];
 const INITIAL_PINNED: AppId[] = ['files', 'store', 'assistant', 'browser', 'settings', 'monitor'];
 
 const AVATAR_COLORS = ['#9333ea', '#3b82f6', '#e11d48', '#f97316', '#16a34a'];
@@ -627,6 +631,8 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     else if (appId === 'maps') { initialWidth = 950; initialHeight = 650; }
     else if (appId === 'monitor') { initialWidth = 700; initialHeight = 500; }
     else if (appId === 'calendar') { initialWidth = 850; initialHeight = 600; }
+    else if (appId === 'snake') { initialWidth = 400; initialHeight = 500; }
+    else if (appId === 'minesweeper') { initialWidth = 350; initialHeight = 450; }
 
     const newId = `${appId}-${Date.now()}`;
     const newWindow: WindowInstance = {

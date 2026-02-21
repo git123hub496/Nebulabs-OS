@@ -1,8 +1,9 @@
+
 "use client"
 
 import React from 'react';
 import { useOS, AppId } from '@/context/os-context';
-import { ShoppingBag, Star, Download, CheckCircle2, FileText, Calculator, Terminal, Cloud, MessageSquare, Globe, Map as MapIcon, Activity, Calendar as CalendarIcon } from 'lucide-react';
+import { ShoppingBag, Star, Download, CheckCircle2, FileText, Calculator, Terminal, Cloud, MessageSquare, Globe, Map as MapIcon, Activity, Calendar as CalendarIcon, Gamepad2, Bomb } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
@@ -17,6 +18,8 @@ const STORE_APPS: { id: AppId; name: string; description: string; category: stri
   { id: 'maps', name: 'Nebula Maps', description: 'World navigation and intelligence.', category: 'Navigation', rating: 4.7, icon: MapIcon },
   { id: 'monitor', name: 'System Monitor', description: 'Real-time telemetry and stats.', category: 'System', rating: 4.8, icon: Activity },
   { id: 'calendar', name: 'Calendar', description: 'Unified OS scheduling.', category: 'Productivity', rating: 4.6, icon: CalendarIcon },
+  { id: 'snake', name: 'Nebula Snake', description: 'Classic arcade survival.', category: 'Entertainment', rating: 4.9, icon: Gamepad2 },
+  { id: 'minesweeper', name: 'Minesweeper', description: 'Strategic mine disposal.', category: 'Entertainment', rating: 4.5, icon: Bomb },
 ];
 
 export const AppStore: React.FC = () => {
