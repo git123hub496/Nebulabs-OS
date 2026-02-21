@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { useOS } from '@/context/os-context';
 import { cn } from '@/lib/utils';
+import { toast } from '@/hooks/use-toast';
 
 export const Paint: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
