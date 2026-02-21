@@ -12,6 +12,7 @@ export const GlobalSearch: React.FC = () => {
   const [query, setQuery] = useState("");
   const [isFocused, setIsFocused] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const results = useMemo(() => {
     if (!query.trim()) return [];
@@ -25,6 +26,7 @@ export const GlobalSearch: React.FC = () => {
     openApp(appId, APP_INFO[appId].label);
     setQuery("");
     setIsFocused(false);
+    inputRef.current?.blur();
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -33,9 +35,23 @@ export const GlobalSearch: React.FC = () => {
     }
     if (e.key === 'Escape') {
       setQuery("");
-      (e.target as HTMLInputElement).blur();
+      inputRef.current?.blur();
+      setIsFocused(false);
     }
   };
+
+  // Listen for ALT + O globally to jump to search
+  useEffect(() => {
+    const handleGlobalKeyDown = (e: KeyboardEvent) => {
+      if (e.altKey && e.key.toLowerCase() === 'o') {
+        e.preventDefault();
+        inputRef.current?.focus();
+        setIsFocused(true);
+      }
+    };
+    window.addEventListener('keydown', handleGlobalKeyDown);
+    return () => window.removeEventListener('keydown', handleGlobalKeyDown);
+  }, []);
 
   // Close results when clicking outside
   useEffect(() => {
@@ -65,6 +81,7 @@ export const GlobalSearch: React.FC = () => {
         <div className="relative flex items-center h-12 px-4 gap-3">
           <Search className={cn("shrink-0 transition-colors", isFocused ? "text-accent" : "text-white/40")} size={18} />
           <input 
+            ref={inputRef}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onFocus={() => setIsFocused(true)}
@@ -74,7 +91,7 @@ export const GlobalSearch: React.FC = () => {
           />
           <div className="flex items-center gap-1 opacity-20 hidden sm:flex">
             <div className="px-1.5 py-0.5 rounded border border-foreground/50 text-[9px] font-black">ALT</div>
-            <div className="px-1.5 py-0.5 rounded border border-foreground/50 text-[9px] font-black">S</div>
+            <div className="px-1.5 py-0.5 rounded border border-foreground/50 text-[9px] font-black">O</div>
           </div>
         </div>
 
