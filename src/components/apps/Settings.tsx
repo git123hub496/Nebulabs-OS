@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useRef } from 'react';
@@ -51,7 +50,7 @@ const ACCENT_COLORS: { id: AccentColor; class: string; label: string }[] = [
 export const Settings: React.FC = () => {
   const { 
     wallpaper, updateWallpaper, theme, setTheme, taskbarPosition, setTaskbarPosition, 
-    taskbarSize, setTaskbarSize, iconSize, setIconSize,
+    taskbarSize, setTaskbarSize, taskbarAutoHide, setTaskbarAutoHide, iconSize, setIconSize,
     accentColor, setAccentColor, customAccentHex, 
     cursorColor, setCursorColor, isInverted, setInverted,
     glassEnabled, setGlassEnabled, brightness, setBrightness,
@@ -153,6 +152,17 @@ export const Settings: React.FC = () => {
                       <SelectItem value="right">Right</SelectItem>
                     </SelectContent>
                   </Select>
+                </div>
+
+                <div className="flex items-center justify-between p-5 bg-foreground/5 rounded-2xl border border-border/50">
+                  <div className="space-y-0.5">
+                    <Label className="text-sm font-bold text-foreground">Auto-hide Taskbar</Label>
+                    <p className="text-[11px] text-muted-foreground">Automatically hide the taskbar when not in use</p>
+                  </div>
+                  <Switch 
+                    checked={taskbarAutoHide} 
+                    onCheckedChange={setTaskbarAutoHide}
+                  />
                 </div>
               </div>
             </section>

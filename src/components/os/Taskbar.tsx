@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -16,7 +15,7 @@ import { Slider } from "@/components/ui/slider";
 
 export const Taskbar: React.FC = () => {
   const { 
-    openWindows, activeWindowId, focusWindow, openApp, taskbarPosition, taskbarSize, 
+    openWindows, activeWindowId, focusWindow, openApp, taskbarPosition, taskbarSize, taskbarAutoHide,
     currentWifi, isWifiConnecting, connectToWifi, volume, setVolume, isOnline,
     isWidgetsOpen, setIsWidgetsOpen, pinnedApps, reorderPinnedApps,
     isQuickSettingsOpen, setIsQuickSettingsOpen, isStartOpen, setIsStartOpen,
@@ -28,6 +27,7 @@ export const Taskbar: React.FC = () => {
   const [draggingAppId, setDraggingAppId] = useState<AppId | null>(null);
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [targetIndex, setTargetIndex] = useState<number | null>(null);
+  const [isForcedVisible, setIsForcedVisible] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -35,6 +35,15 @@ export const Taskbar: React.FC = () => {
     const timer = setInterval(() => setTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
+
+  // Force taskbar to be visible if a menu is open
+  useEffect(() => {
+    if (isStartOpen || isQuickSettingsOpen || isWidgetsOpen || isChatOpen) {
+      setIsForcedVisible(true);
+    } else {
+      setIsForcedVisible(false);
+    }
+  }, [isStartOpen, isQuickSettingsOpen, isWidgetsOpen, isChatOpen]);
 
   const formatTime = (date: Date) => {
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -48,6 +57,13 @@ export const Taskbar: React.FC = () => {
     top: `top-0 left-0 right-0 border-b`,
     left: `left-0 top-0 bottom-0 border-r`,
     right: `right-0 top-0 bottom-0 border-l`,
+  };
+
+  const autoHideClasses = {
+    bottom: isForcedVisible ? 'translate-y-0' : 'translate-y-[calc(100%-2px)] hover:translate-y-0',
+    top: isForcedVisible ? 'translate-y-0' : '-translate-y-[calc(100%-2px)] hover:translate-y-0',
+    left: isForcedVisible ? 'translate-x-0' : '-translate-x-[calc(100%-2px)] hover:translate-x-0',
+    right: isForcedVisible ? 'translate-x-0' : 'translate-x-[calc(100%-2px)] hover:translate-x-0',
   };
 
   const safeTaskbarSize = isNaN(taskbarSize) ? 48 : taskbarSize;
@@ -92,8 +108,9 @@ export const Taskbar: React.FC = () => {
   return (
     <div 
       className={cn(
-        "fixed glass flex z-[9999] transition-all duration-300",
+        "fixed glass flex z-[9999] transition-all duration-500 ease-in-out",
         positionClasses[taskbarPosition],
+        taskbarAutoHide && autoHideClasses[taskbarPosition],
         isVertical ? "flex-col py-2" : "items-center px-2",
         isSchool && "border-blue-500/20"
       )}

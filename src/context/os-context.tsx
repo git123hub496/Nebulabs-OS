@@ -167,6 +167,7 @@ interface OSContextType {
   powerStatus: PowerStatus;
   taskbarPosition: TaskbarPosition;
   taskbarSize: TaskbarSize;
+  taskbarAutoHide: boolean;
   iconSize: DesktopIconSize;
   currentWifi: string;
   isWifiConnecting: boolean;
@@ -218,6 +219,7 @@ interface OSContextType {
   setGlassEnabled: (enabled: boolean) => void;
   setTaskbarPosition: (position: TaskbarPosition) => void;
   setTaskbarSize: (size: TaskbarSize) => void;
+  setTaskbarAutoHide: (hide: boolean) => void;
   setIconSize: (size: DesktopIconSize) => void;
   connectToWifi: (ssid: string) => void;
   setVolume: (v: number) => void;
@@ -345,6 +347,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
 
   const [taskbarPosition, setTaskbarPositionState] = useState<TaskbarPosition>('bottom');
   const [taskbarSize, setTaskbarSizeState] = useState<number>(48);
+  const [taskbarAutoHide, setTaskbarAutoHideState] = useState<boolean>(false);
   const [iconSize, setIconSizeState] = useState<number>(100);
 
   const [installedApps, setInstalledApps] = useState<AppId[]>(INITIAL_APPS);
@@ -611,6 +614,9 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     const size = localStorage.getItem(`nebula_${user.id}_taskbar_size`);
     if (size && !isNaN(Number(size))) setTaskbarSizeState(Number(size));
     else setTaskbarSizeState(48);
+
+    const autoHide = localStorage.getItem(`nebula_${user.id}_taskbar_autohide`);
+    if (autoHide) setTaskbarAutoHideState(autoHide === 'true');
     
     const n = localStorage.getItem(`nebula_${user.id}_notes`);
     if (n) setNotesInternal(n);
@@ -856,6 +862,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   const setGlassEnabled = (gl: boolean) => { setGlassEnabledState(gl); saveSetting('glass', gl); };
   const setTaskbarPosition = (p: TaskbarPosition) => { setTaskbarPositionState(p); saveSetting('taskbar_pos', p); };
   const setTaskbarSize = (s: number) => { if (isNaN(s)) return; setTaskbarSizeState(s); saveSetting('taskbar_size', s); };
+  const setTaskbarAutoHide = (h: boolean) => { setTaskbarAutoHideState(h); saveSetting('taskbar_autohide', h); };
   const setIconSize = (s: number) => { if (isNaN(s)) return; setIconSizeState(s); saveSetting('icon_size', s); };
   const setVolume = (v: number) => { setVolumeState(v); saveSetting('volume', v); };
   const setBrightness = (b: number) => { setBrightnessState(b); saveSetting('brightness', b); };
@@ -1002,7 +1009,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       archiveEmail, deleteEmail, restoreEmail, permanentlyDeleteEmail,
       wallpaper, notes, theme, accentColor,
       customAccentHex, cursorColor, isInverted, glassEnabled, powerStatus,
-      taskbarPosition, taskbarSize, iconSize, currentWifi, isWifiConnecting,
+      taskbarPosition, taskbarSize, taskbarAutoHide, iconSize, currentWifi, isWifiConnecting,
       isOnline, volume, brightness, isWidgetsOpen, isQuickSettingsOpen, 
       isStartOpen, isChatOpen, isLocked, systemStats,
       currentDisplayId, displayLayout, isSecurityEnabled, chatMessages, biosSettings,
@@ -1010,7 +1017,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       maximizeWindow, snapWindow, focusWindow, updateWindowPosition, moveWindowToDisplay,
       updateDisplayLayout, resetDisplayLayout, installApp, addNotification, clearNotifications,
       updateWallpaper, setNotes, setTheme, setAccentColor, setCustomAccentHex,
-      setCursorColor, setInverted, setGlassEnabled, setTaskbarPosition, setTaskbarSize,
+      setCursorColor, setInverted, setGlassEnabled, setTaskbarPosition, setTaskbarSize, setTaskbarAutoHide,
       setIconSize, connectToWifi, setVolume, setBrightness, setIsWidgetsOpen,
       setIsQuickSettingsOpen, setIsStartOpen, setIsChatOpen, sendChatMessage, setCurrentDisplayId, setSecurityEnabled, updateBIOSSettings, restart, shutDown, powerOn,
       minimizeAllWindows, playSound,
