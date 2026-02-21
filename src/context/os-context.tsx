@@ -319,10 +319,10 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     if (pos) setTaskbarPositionState(pos as TaskbarPosition);
     
     const size = localStorage.getItem(`nebula_${user.id}_taskbar_size`);
-    if (size) setTaskbarSizeState(Number(size));
+    if (size && !isNaN(Number(size))) setTaskbarSizeState(Number(size));
     
     const ics = localStorage.getItem(`nebula_${user.id}_icon_size`);
-    if (ics) setIconSizeState(Number(ics));
+    if (ics && !isNaN(Number(ics))) setIconSizeState(Number(ics));
     
     const n = localStorage.getItem(`nebula_${user.id}_notes`);
     if (n) setNotesInternal(n);
@@ -521,11 +521,13 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const setTaskbarSize = (s: number) => {
+    if (isNaN(s)) return;
     setTaskbarSizeState(s);
     saveSetting('taskbar_size', s);
   };
 
   const setIconSize = (s: number) => {
+    if (isNaN(s)) return;
     setIconSizeState(s);
     saveSetting('icon_size', s);
   };

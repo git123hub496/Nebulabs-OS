@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -52,8 +51,10 @@ export const Taskbar: React.FC = () => {
     right: `right-0 top-0 bottom-0 border-l`,
   };
 
-  const iconSize = Math.max(12, Math.floor(taskbarSize * 0.45));
-  const logoFontSize = Math.max(14, Math.floor(taskbarSize * 0.5));
+  // Ensure taskbarSize is a valid number to prevent NaN in icons
+  const safeTaskbarSize = isNaN(taskbarSize) ? 48 : taskbarSize;
+  const iconSize = Math.max(12, Math.floor(safeTaskbarSize * 0.45));
+  const logoFontSize = Math.max(14, Math.floor(safeTaskbarSize * 0.5));
 
   // Drag handlers for taskbar reordering
   const handleDragStart = (id: AppId, index: number) => {
@@ -90,7 +91,7 @@ export const Taskbar: React.FC = () => {
         isVertical ? "flex-col py-2" : "items-center px-2"
       )}
       style={{
-        [isVertical ? 'width' : 'height']: `${taskbarSize}px`
+        [isVertical ? 'width' : 'height']: `${safeTaskbarSize}px`
       }}
     >
       {/* Start & Widgets Buttons */}
