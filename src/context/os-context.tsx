@@ -235,31 +235,23 @@ const AVATAR_COLORS = ['#9333ea', '#3b82f6', '#e11d48', '#f97316', '#16a34a'];
 const OFFLINE_WIFI = "Public_Guest_No_Internet";
 
 export const OSProvider = ({ children }: { children: ReactNode }) => {
-  // Core Identity
+  // --- CORE STATE ---
   const [currentUser, setCurrentUser] = useState<LocalUser | null>(null);
   const [accounts, setAccounts] = useState<LocalUser[]>([]);
-  
-  // Power & Performance
-  const [powerStatus, setPowerStatus] = useState<PowerStatus>('booting');
-  const [systemStats, setSystemStats] = useState({ cpu: 12, ram: 42, net: 2 });
+  const [powerStatus, setPowerStatusState] = useState<PowerStatus>('booting');
+  const [systemStats] = useState({ cpu: 12, ram: 42, net: 2 });
 
-  // Window Management
-  const [openWindows, setOpenWindows] = useState<WindowInstance[]>([]);
-  const [activeWindowId, setActiveWindowId] = useState<string | null>(null);
-  const [nextZIndex, setNextZIndex] = useState(10);
-
-  // Shell Visibility
+  // --- UI SHELL STATE ---
   const [isWidgetsOpen, setIsWidgetsOpenState] = useState(false);
   const [isQuickSettingsOpen, setIsQuickSettingsOpenState] = useState(false);
   const [isStartOpen, setIsStartOpenState] = useState(false);
 
-  // Desktop Content
-  const [installedApps, setInstalledApps] = useState<AppId[]>(INITIAL_APPS);
-  const [pinnedApps, setPinnedApps] = useState<AppId[]>(INITIAL_PINNED);
-  const [desktopApps, setDesktopApps] = useState<DesktopShortcut[]>(INITIAL_DESKTOP);
-  const [notifications, setNotifications] = useState<SystemNotification[]>([]);
+  // --- WINDOW STATE ---
+  const [openWindows, setOpenWindows] = useState<WindowInstance[]>([]);
+  const [activeWindowId, setActiveWindowId] = useState<string | null>(null);
+  const [nextZIndex, setNextZIndex] = useState(10);
 
-  // Personalization
+  // --- PREFERENCES ---
   const [wallpaper, setWallpaperState] = useState("https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=1920");
   const [theme, setThemeState] = useState<ThemeMode>('dark');
   const [accentColor, setAccentColorState] = useState<AccentColor>('purple');
@@ -270,29 +262,45 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   const [brightness, setBrightnessState] = useState(100);
   const [volume, setVolumeState] = useState(75);
 
-  // Physical Layout
+  // --- LAYOUT ---
   const [taskbarPosition, setTaskbarPositionState] = useState<TaskbarPosition>('bottom');
   const [taskbarSize, setTaskbarSizeState] = useState<number>(48);
   const [iconSize, setIconSizeState] = useState<number>(100);
 
-  // Networking
-  const [currentWifi, setCurrentWifiState] = useState("Nebula_Secure_5G");
-  const [isWifiConnecting, setIsWifiConnecting] = useState(false);
-  const [isOnline, setIsOnline] = useState(true);
-
-  // Virtual Storage
+  // --- CONTENT ---
+  const [installedApps, setInstalledApps] = useState<AppId[]>(INITIAL_APPS);
+  const [pinnedApps, setPinnedApps] = useState<AppId[]>(INITIAL_PINNED);
+  const [desktopApps, setDesktopApps] = useState<DesktopShortcut[]>(INITIAL_DESKTOP);
+  const [notifications, setNotifications] = useState<SystemNotification[]>([]);
   const [fileSystem, setFileSystem] = useState<FileSystemItem[]>(INITIAL_FILES);
   const [trash, setTrash] = useState<FileSystemItem[]>([]);
   const [notes, setNotesInternal] = useState("");
 
-  // Multi-Display Environment
+  // --- ENVIRONMENT ---
+  const [currentWifi, setCurrentWifiState] = useState("Nebula_Secure_5G");
+  const [isWifiConnecting, setIsWifiConnecting] = useState(false);
+  const [isOnline, setIsOnline] = useState(true);
   const [currentDisplayId, setDisplayIdState] = useState('1');
   const [displayLayout, setDisplayLayoutState] = useState<DisplayLayout>({ '1': { right: '2' }, '2': { left: '1' } });
-
-  // Kernel Security
   const [isSecurityEnabled, setSecurityEnabledState] = useState(true);
 
-  // --- PERSISTENCE HELPERS ---
+  // --- INITIALIZATION ---
+  useEffect(() => {
+    // Load accounts
+    const savedAccounts = localStorage.getItem('nebula_accounts');
+    if (savedAccounts) setAccounts(JSON.parse(savedAccounts));
+    else {
+      const defaultUser = { id: 'admin', username: 'Administrator', avatarColor: '#9333ea' };
+      setAccounts([defaultUser]);
+      localStorage.setItem('nebula_accounts', JSON.stringify([defaultUser]));
+    }
+
+    // Initial boot sequence
+    const timer = setTimeout(() => {
+      setPowerStatusState('on');
+    }, 2500);
+    return () => clearTimeout(timer);
+  }, []);
 
   const saveSetting = useCallback((key: string, value: any) => {
     if (currentUser) {
@@ -301,7 +309,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [currentUser]);
 
-  // --- ACTIONS ---
+  // --- CORE ACTIONS ---
 
   const login = (userId: string, password?: string): boolean => {
     const user = accounts.find(a => a.id === userId);
@@ -350,31 +358,18 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       title, message, type,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     };
-    
-    setNotifications(prev => {
-      const updated = [newNotif, ...prev].slice(0, 50);
-      saveSetting('notifications', updated);
-      return updated;
-    });
+    setNotifications(prev => [newNotif, ...prev].slice(0, 50));
+    if (currentDisplayId === '1') toast({ title, description: message });
+  }, [currentDisplayId]);
 
-    if (currentDisplayId === '1') {
-      toast({ title, description: message });
-    }
-  }, [currentDisplayId, currentUser, saveSetting]);
-
-  const clearNotifications = () => {
-    setNotifications([]);
-    saveSetting('notifications', []);
-  };
+  const clearNotifications = () => setNotifications([]);
 
   const openApp = (appId: AppId, title: string, params?: any) => {
     const existing = openWindows.find(w => w.appId === appId && JSON.stringify(w.params) === JSON.stringify(params));
     if (existing) {
       focusWindow(existing.id);
       if (existing.isMinimized) {
-        const updated = openWindows.map(w => w.id === existing.id ? { ...w, isMinimized: false, displayId: currentDisplayId } : w);
-        setOpenWindows(updated);
-        saveSetting('windows', updated);
+        setOpenWindows(prev => prev.map(w => w.id === existing.id ? { ...w, isMinimized: false, displayId: currentDisplayId } : w));
       }
       return;
     }
@@ -384,15 +379,6 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     else if (appId === 'terminal') { initialWidth = 700; initialHeight = 450; }
     else if (appId === 'notes') { initialWidth = 500; initialHeight = 600; }
     else if (appId === 'assistant') { initialWidth = 400; initialHeight = 650; }
-    else if (appId === 'trash') { initialWidth = 600; initialHeight = 400; }
-    else if (appId === 'news') { initialWidth = 900; initialHeight = 700; }
-    else if (appId === 'maps') { initialWidth = 950; initialHeight = 650; }
-    else if (appId === 'monitor') { initialWidth = 700; initialHeight = 500; }
-    else if (appId === 'calendar') { initialWidth = 850; initialHeight = 600; }
-    else if (appId === 'snake') { initialWidth = 400; initialHeight = 500; }
-    else if (appId === 'minesweeper') { initialWidth = 350; initialHeight = 450; }
-    else if (appId === 'image-viewer') { initialWidth = 600; initialHeight = 500; }
-    else if (appId === 'update') { initialWidth = 500; initialHeight = 400; }
     else if (appId === 'virus') { initialWidth = 300; initialHeight = 250; }
 
     const newId = `${appId}-${Date.now()}`;
@@ -404,57 +390,41 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       params
     };
 
-    const updated = [...openWindows, newWindow];
-    setOpenWindows(updated);
+    setOpenWindows(prev => [...prev, newWindow]);
     setActiveWindowId(newId);
     setNextZIndex(prev => prev + 1);
-    saveSetting('windows', updated);
   };
 
   const closeWindow = (windowId: string) => {
-    const updated = openWindows.filter(w => w.id !== windowId);
-    setOpenWindows(updated);
+    setOpenWindows(prev => prev.filter(w => w.id !== windowId));
     if (activeWindowId === windowId) setActiveWindowId(null);
-    saveSetting('windows', updated);
   };
 
   const minimizeWindow = (windowId: string) => {
-    const updated = openWindows.map(w => w.id === windowId ? { ...w, isMinimized: true } : w);
-    setOpenWindows(updated);
+    setOpenWindows(prev => prev.map(w => w.id === windowId ? { ...w, isMinimized: true } : w));
     setActiveWindowId(null);
-    saveSetting('windows', updated);
   };
 
   const maximizeWindow = (windowId: string) => {
-    const updated = openWindows.map(w => w.id === windowId ? { ...w, isMaximized: !w.isMaximized, isSnapped: null } : w);
-    setOpenWindows(updated);
-    saveSetting('windows', updated);
+    setOpenWindows(prev => prev.map(w => w.id === windowId ? { ...w, isMaximized: !w.isMaximized, isSnapped: null } : w));
   };
 
   const snapWindow = (windowId: string, side: 'left' | 'right' | null) => {
-    const updated = openWindows.map(w => w.id === windowId ? { ...w, isSnapped: side, isMaximized: false } : w);
-    setOpenWindows(updated);
-    saveSetting('windows', updated);
+    setOpenWindows(prev => prev.map(w => w.id === windowId ? { ...w, isSnapped: side, isMaximized: false } : w));
   };
 
   const focusWindow = (windowId: string) => {
     setActiveWindowId(windowId);
-    const updated = openWindows.map(w => w.id === windowId ? { ...w, zIndex: nextZIndex, isMinimized: false } : w);
-    setOpenWindows(updated);
+    setOpenWindows(prev => prev.map(w => w.id === windowId ? { ...w, zIndex: nextZIndex, isMinimized: false } : w));
     setNextZIndex(prev => prev + 1);
-    saveSetting('windows', updated);
   };
 
   const updateWindowPosition = (windowId: string, x: number, y: number, displayId?: string) => {
-    const updated = openWindows.map(w => w.id === windowId ? { ...w, x, y, displayId: displayId || w.displayId } : w);
-    setOpenWindows(updated);
-    saveSetting('windows', updated);
+    setOpenWindows(prev => prev.map(w => w.id === windowId ? { ...w, x, y, displayId: displayId || w.displayId } : w));
   };
 
   const moveWindowToDisplay = (windowId: string, displayId: string) => {
-    const updated = openWindows.map(w => w.id === windowId ? { ...w, displayId } : w);
-    setOpenWindows(updated);
-    saveSetting('windows', updated);
+    setOpenWindows(prev => prev.map(w => w.id === windowId ? { ...w, displayId } : w));
   };
 
   const setNotes = (content: string) => {
@@ -463,49 +433,49 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     saveSetting('notes', content);
   };
 
-  const setTheme = (theme: ThemeMode) => {
-    setThemeState(theme);
-    saveSetting('theme', theme);
+  const setTheme = (t: ThemeMode) => {
+    setThemeState(t);
+    saveSetting('theme', t);
   };
 
-  const setAccentColor = (color: AccentColor) => {
-    setAccentColorState(color);
-    saveSetting('accent', color);
+  const setAccentColor = (c: AccentColor) => {
+    setAccentColorState(c);
+    saveSetting('accent', c);
   };
 
-  const setCustomAccentHex = (hex: string) => {
-    setCustomAccentHexState(hex);
-    saveSetting('custom_accent', hex);
+  const setCustomAccentHex = (h: string) => {
+    setCustomAccentHexState(h);
+    saveSetting('custom_accent', h);
   };
 
-  const setCursorColor = (color: CursorColor) => {
-    setCursorColorState(color);
-    saveSetting('cursor', color);
+  const setCursorColor = (c: CursorColor) => {
+    setCursorColorState(c);
+    saveSetting('cursor', c);
   };
 
-  const setInverted = (inverted: boolean) => {
-    setInvertedState(inverted);
-    saveSetting('inverted', inverted);
+  const setInverted = (inv: boolean) => {
+    setInvertedState(inv);
+    saveSetting('inverted', inv);
   };
 
-  const setGlassEnabled = (enabled: boolean) => {
-    setGlassEnabledState(enabled);
-    saveSetting('glass', enabled);
+  const setGlassEnabled = (gl: boolean) => {
+    setGlassEnabledState(gl);
+    saveSetting('glass', gl);
   };
 
-  const setTaskbarPosition = (pos: TaskbarPosition) => {
-    setTaskbarPositionState(pos);
-    saveSetting('taskbar_pos', pos);
+  const setTaskbarPosition = (p: TaskbarPosition) => {
+    setTaskbarPositionState(p);
+    saveSetting('taskbar_pos', p);
   };
 
-  const setTaskbarSize = (size: number) => {
-    setTaskbarSizeState(size);
-    saveSetting('taskbar_size', size);
+  const setTaskbarSize = (s: number) => {
+    setTaskbarSizeState(s);
+    saveSetting('taskbar_size', s);
   };
 
-  const setIconSize = (size: number) => {
-    setIconSizeState(size);
-    saveSetting('icon_size', size);
+  const setIconSize = (s: number) => {
+    setIconSizeState(s);
+    saveSetting('icon_size', s);
   };
 
   const setVolume = (v: number) => {
@@ -518,19 +488,19 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     saveSetting('brightness', b);
   };
 
-  const setIsWidgetsOpen = (isOpen: boolean) => {
-    setIsWidgetsOpenState(isOpen);
-    if (isOpen) { setIsStartOpenState(false); setIsQuickSettingsOpenState(false); }
+  const setIsWidgetsOpen = (open: boolean) => {
+    setIsWidgetsOpenState(open);
+    if (open) { setIsStartOpenState(false); setIsQuickSettingsOpenState(false); }
   };
 
-  const setIsQuickSettingsOpen = (isOpen: boolean) => {
-    setIsQuickSettingsOpenState(isOpen);
-    if (isOpen) { setIsStartOpenState(false); setIsWidgetsOpenState(false); }
+  const setIsQuickSettingsOpen = (open: boolean) => {
+    setIsQuickSettingsOpenState(open);
+    if (open) { setIsStartOpenState(false); setIsWidgetsOpenState(false); }
   };
 
-  const setIsStartOpen = (isOpen: boolean) => {
-    setIsStartOpenState(isOpen);
-    if (isOpen) { setIsQuickSettingsOpenState(false); setIsWidgetsOpenState(false); }
+  const setIsStartOpen = (open: boolean) => {
+    setIsStartOpenState(open);
+    if (open) { setIsQuickSettingsOpenState(false); setIsWidgetsOpenState(false); }
   };
 
   const connectToWifi = (ssid: string) => {
@@ -539,28 +509,21 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       setCurrentWifiState(ssid);
       setIsOnline(ssid !== OFFLINE_WIFI);
       setIsWifiConnecting(false);
-      saveSetting('wifi', ssid);
       addNotification("WiFi Connected", `Successfully joined ${ssid}.`, 'system');
     }, 2000);
   };
 
   const setSecurityEnabled = (enabled: boolean) => {
     setSecurityEnabledState(enabled);
-    saveSetting('security_enabled', enabled);
     if (enabled) {
-      const updated = openWindows.filter(w => w.appId !== 'virus');
-      setOpenWindows(updated);
-      saveSetting('windows', updated);
-      addNotification("Security Restored", "Nebula Defender has quarantined all active threats.", 'security');
+      setOpenWindows(prev => prev.filter(w => w.appId !== 'virus'));
+      addNotification("Security Restored", "Nebula Defender has quarantined active threats.", 'security');
     } else {
-      addNotification("Security Risk", "Nebula Defender has been disabled. System vulnerability detected.", 'security');
+      addNotification("Security Risk", "Nebula Defender has been disabled.", 'security');
     }
   };
 
-  const setCurrentDisplayId = (id: string) => {
-    setDisplayIdState(id);
-    if (currentUser) sessionStorage.setItem(`nebula_${currentUser.id}_display_id`, id);
-  };
+  const setCurrentDisplayId = (id: string) => setDisplayIdState(id);
 
   const updateDisplayLayout = (fromId: string, direction: DisplayDirection, toId: string) => {
     const updated = { ...displayLayout };
@@ -569,8 +532,6 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
 
     if (toId !== 'none') {
       if (!updated[fromId]) updated[fromId] = {};
-      const oldToId = updated[fromId][direction];
-      if (oldToId && updated[oldToId]) delete updated[oldToId][revDir];
       updated[fromId][direction] = toId;
       if (!updated[toId]) updated[toId] = {};
       updated[toId][revDir] = fromId;
@@ -582,141 +543,93 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       }
     }
     setDisplayLayoutState(updated);
-    saveSetting('display_layout', updated);
   };
 
-  const resetDisplayLayout = () => {
-    setDisplayLayoutState({});
-    saveSetting('display_layout', {});
-    addNotification("Display Reset", "All multi-display configurations cleared.", 'system');
-  };
+  const resetDisplayLayout = () => setDisplayLayoutState({});
 
   const powerOn = () => {
-    setPowerStatus('booting');
-    setTimeout(() => setPowerStatus('on'), 2600);
+    setPowerStatusState('booting');
+    setTimeout(() => setPowerStatusState('on'), 2600);
   };
 
   const restart = () => {
     setOpenWindows([]);
     setActiveWindowId(null);
-    setPowerStatus('booting');
-    setTimeout(() => setPowerStatus('on'), 2600);
+    setPowerStatusState('booting');
+    setTimeout(() => setPowerStatusState('on'), 2600);
   };
 
   const shutDown = () => {
     setOpenWindows([]);
-    setActiveWindowId(null);
-    setPowerStatus('off');
+    setPowerStatusState('off');
   };
 
   const minimizeAllWindows = () => {
-    const updated = openWindows.map(w => ({ ...w, isMinimized: true }));
-    setOpenWindows(updated);
+    setOpenWindows(prev => prev.map(w => ({ ...w, isMinimized: true })));
     setActiveWindowId(null);
-    saveSetting('windows', updated);
   };
 
   const createFolder = (name: string, parentId: string | null) => {
     const newFolder: FileSystemItem = { id: Math.random().toString(36).substr(2, 9), name, type: 'folder', parentId };
-    const updated = [...fileSystem, newFolder];
-    setFileSystem(updated);
-    saveSetting('file_system', updated);
+    setFileSystem(prev => [...prev, newFolder]);
   };
 
   const importFile = (name: string, content: string, size: number, parentId: string | null) => {
     const newFile: FileSystemItem = { id: Math.random().toString(36).substr(2, 9), name, type: 'file', parentId, content, size };
-    const updated = [...fileSystem, newFile];
-    setFileSystem(updated);
-    saveSetting('file_system', updated);
-    addNotification("File Imported", `${name} added to drive.`, 'app');
+    setFileSystem(prev => [...prev, newFile]);
+    addNotification("File Imported", `${name} added.`, 'app');
   };
 
   const moveToTrash = (id: string) => {
     const item = fileSystem.find(i => i.id === id);
     if (item) {
-      const updatedFS = fileSystem.filter(i => i.id !== id);
-      const updatedTrash = [...trash, item];
-      setFileSystem(updatedFS);
-      setTrash(updatedTrash);
-      saveSetting('file_system', updatedFS);
-      saveSetting('trash_items', updatedTrash);
+      setFileSystem(prev => prev.filter(i => i.id !== id));
+      setTrash(prev => [...prev, item]);
     }
   };
 
   const restoreFromTrash = (id: string) => {
     const item = trash.find(i => i.id === id);
     if (item) {
-      const updatedTrash = trash.filter(i => i.id !== id);
-      const updatedFS = [...fileSystem, item];
-      setTrash(updatedTrash);
-      setFileSystem(updatedFS);
-      saveSetting('trash_items', updatedTrash);
-      saveSetting('file_system', updatedFS);
+      setTrash(prev => prev.filter(i => i.id !== id));
+      setFileSystem(prev => [...prev, item]);
     }
   };
 
-  const emptyTrash = () => {
-    setTrash([]);
-    saveSetting('trash_items', []);
-  };
+  const emptyTrash = () => setTrash([]);
 
-  const deleteItemPermanently = (id: string) => {
-    const updatedTrash = trash.filter(item => item.id !== id);
-    setTrash(updatedTrash);
-    saveSetting('trash_items', updatedTrash);
-  };
+  const deleteItemPermanently = (id: string) => setTrash(prev => prev.filter(item => item.id !== id));
 
   const installApp = (appId: AppId) => {
     if (!installedApps.includes(appId)) {
       setInstalledApps(prev => [...prev, appId]);
-      addNotification("App Installed", `${APP_INFO[appId].label} added to Start Menu.`, 'app');
+      addNotification("App Installed", `${APP_INFO[appId].label} added.`, 'app');
     }
   };
 
   const updateDesktopAppPosition = (id: AppId, x: number, y: number) => {
     const snappedX = Math.round((x - PADDING) / GRID_X) * GRID_X + PADDING;
     const snappedY = Math.round((y - PADDING) / GRID_Y) * GRID_Y + PADDING;
-    if (desktopApps.some(app => app.id !== id && app.x === snappedX && app.y === snappedY)) return;
-    const updated = desktopApps.map(app => app.id === id ? { ...app, x: snappedX, y: snappedY } : app);
-    setDesktopApps(updated);
-    saveSetting('desktop_apps', updated.map(({ icon, ...app }) => app));
+    setDesktopApps(prev => prev.map(app => app.id === id ? { ...app, x: snappedX, y: snappedY } : app));
   };
 
   const toggleDesktopApp = (id: AppId) => {
-    const CORE_APPS: AppId[] = ['trash', 'files', 'store'];
     const exists = desktopApps.find(app => app.id === id);
     if (exists) {
-      if (CORE_APPS.includes(id)) return;
-      const updated = desktopApps.filter(app => app.id !== id);
-      setDesktopApps(updated);
-      saveSetting('desktop_apps', updated.map(({ icon, ...app }) => app));
+      if (['trash', 'files', 'store'].includes(id)) return;
+      setDesktopApps(prev => prev.filter(app => app.id !== id));
     } else {
       const info = APP_INFO[id];
-      let foundX = PADDING, foundY = PADDING, col = 0, row = 0, isOccupied = true;
-      while (isOccupied) {
-        foundX = PADDING + (col * GRID_X);
-        foundY = PADDING + (row * GRID_Y);
-        isOccupied = desktopApps.some(app => app.x === foundX && app.y === foundY);
-        if (isOccupied) { row++; if (row > 6) { row = 0; col++; } }
-      }
-      const newApp = { id, label: info.label, icon: info.icon, x: foundX, y: foundY };
-      const updated = [...desktopApps, newApp];
-      setDesktopApps(updated);
-      saveSetting('desktop_apps', updated.map(({ icon, ...app }) => app));
+      const newApp = { id, label: info.label, icon: info.icon, x: PADDING, y: PADDING + (desktopApps.length * GRID_Y) };
+      setDesktopApps(prev => [...prev, newApp]);
     }
   };
 
   const togglePinApp = (id: AppId) => {
-    const isPinned = pinnedApps.includes(id);
-    const updated = isPinned ? pinnedApps.filter(appId => appId !== id) : [...pinnedApps, id];
-    setPinnedApps(updated);
-    saveSetting('pinned_apps', updated);
+    setPinnedApps(prev => prev.includes(id) ? prev.filter(a => a !== id) : [...prev, id]);
   };
 
-  const reorderPinnedApps = (newOrder: AppId[]) => {
-    setPinnedApps(newOrder);
-    saveSetting('pinned_apps', newOrder);
-  };
+  const reorderPinnedApps = (newOrder: AppId[]) => setPinnedApps(newOrder);
 
   const updateWallpaper = (url: string) => {
     setWallpaperState(url);
