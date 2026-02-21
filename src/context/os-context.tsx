@@ -35,8 +35,8 @@ export type AppId = 'store' | 'files' | 'settings' | 'assistant' | 'google-drive
 export type ThemeMode = 'dark' | 'light';
 export type PowerStatus = 'on' | 'off' | 'booting';
 export type TaskbarPosition = 'top' | 'bottom' | 'left' | 'right';
-export type TaskbarSize = 'sm' | 'md' | 'lg';
-export type DesktopIconSize = 'sm' | 'md' | 'lg';
+export type TaskbarSize = number; // Numeric scale in pixels
+export type DesktopIconSize = number; // Numeric scale percentage (50-150)
 export type AccentColor = 'default' | 'blue' | 'purple' | 'rose' | 'orange' | 'green' | 'grey' | 'custom';
 export type CursorColor = 'black' | 'white' | 'accent';
 
@@ -246,42 +246,62 @@ const AVATAR_COLORS = ['#9333ea', '#3b82f6', '#e11d48', '#f97316', '#16a34a'];
 const OFFLINE_WIFI = "Public_Guest_No_Internet";
 
 export const OSProvider = ({ children }: { children: ReactNode }) => {
+  // Core Identity State
   const [currentUser, setCurrentUser] = useState<LocalUser | null>(null);
   const [accounts, setAccounts] = useState<LocalUser[]>([]);
+  
+  // Power & Boot State
+  const [powerStatus, setPowerStatus] = useState<PowerStatus>('booting');
+  const [systemStats, setSystemStats] = useState({ cpu: 12, ram: 42, net: 2 });
+
+  // Window & Shell State
   const [openWindows, setOpenWindows] = useState<WindowInstance[]>([]);
   const [activeWindowId, setActiveWindowId] = useState<string | null>(null);
-  const [installedApps, setInstalledApps] = useState<AppId[]>(INITIAL_APPS);
-  const [pinnedApps, setPinnedApps] = useState<AppId[]>(INITIAL_PINNED);
-  const [fileSystem, setFileSystem] = useState<FileSystemItem[]>(INITIAL_FILES);
-  const [trash, setTrash] = useState<FileSystemItem[]>([]);
-  const [desktopApps, setDesktopApps] = useState<DesktopShortcut[]>(INITIAL_DESKTOP);
-  const [notifications, setNotifications] = useState<SystemNotification[]>([]);
-  const [wallpaper, setWallpaper] = useState("https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=1920");
-  const [notes, setNotesState] = useState("");
-  const [theme, setTheme] = useState<ThemeMode>('dark');
-  const [accentColor, setAccentColor] = useState<AccentColor>('purple');
-  const [customAccentHex, setCustomAccentHex] = useState("#9333ea");
-  const [cursorColor, setCursorColor] = useState<CursorColor>('black');
-  const [isInverted, setInverted] = useState(false);
-  const [glassEnabled, setGlassEnabled] = useState(true);
-  const [powerStatus, setPowerStatus] = useState<PowerStatus>('booting');
-  const [taskbarPosition, setTaskbarPosition] = useState<TaskbarPosition>('bottom');
-  const [taskbarSize, setTaskbarSize] = useState<TaskbarSize>('md');
-  const [iconSize, setIconSize] = useState<DesktopIconSize>('md');
-  const [currentWifi, setCurrentWifi] = useState("Nebula_Secure_5G");
-  const [isWifiConnecting, setIsWifiConnecting] = useState(false);
-  const [isOnline, setIsOnline] = useState(true);
-  const [volume, setVolume] = useState(75);
-  const [brightness, setBrightness] = useState(100);
+  const [nextZIndex, setNextZIndex] = useState(10);
   const [isWidgetsOpen, setIsWidgetsOpenState] = useState(false);
   const [isQuickSettingsOpen, setIsQuickSettingsOpenState] = useState(false);
   const [isStartOpen, setIsStartOpenState] = useState(false);
-  const [nextZIndex, setNextZIndex] = useState(10);
-  const [systemStats, setSystemStats] = useState({ cpu: 12, ram: 42, net: 2 });
-  const [isSecurityEnabled, setSecurityEnabledState] = useState(true);
-  
+
+  // App & Desktop State
+  const [installedApps, setInstalledApps] = useState<AppId[]>(INITIAL_APPS);
+  const [pinnedApps, setPinnedApps] = useState<AppId[]>(INITIAL_PINNED);
+  const [desktopApps, setDesktopApps] = useState<DesktopShortcut[]>(INITIAL_DESKTOP);
+  const [notifications, setNotifications] = useState<SystemNotification[]>([]);
+
+  // Personalization State
+  const [wallpaper, setWallpaperState] = useState("https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=1920");
+  const [theme, setThemeState] = useState<ThemeMode>('dark');
+  const [accentColor, setAccentColorState] = useState<AccentColor>('purple');
+  const [customAccentHex, setCustomAccentHexState] = useState("#9333ea");
+  const [cursorColor, setCursorColorState] = useState<CursorColor>('black');
+  const [isInverted, setInvertedState] = useState(false);
+  const [glassEnabled, setGlassEnabledState] = useState(true);
+  const [brightness, setBrightnessState] = useState(100);
+  const [volume, setVolumeState] = useState(75);
+
+  // Layout State
+  const [taskbarPosition, setTaskbarPositionState] = useState<TaskbarPosition>('bottom');
+  const [taskbarSize, setTaskbarSizeState] = useState<number>(48);
+  const [iconSize, setIconSizeState] = useState<number>(100);
+
+  // Network State
+  const [currentWifi, setCurrentWifiState] = useState("Nebula_Secure_5G");
+  const [isWifiConnecting, setIsWifiConnecting] = useState(false);
+  const [isOnline, setIsOnline] = useState(true);
+
+  // Storage State
+  const [fileSystem, setFileSystem] = useState<FileSystemItem[]>(INITIAL_FILES);
+  const [trash, setTrash] = useState<FileSystemItem[]>([]);
+  const [notes, setNotesInternal] = useState("");
+
+  // Multi-Display State
   const [currentDisplayId, setDisplayIdState] = useState('1');
   const [displayLayout, setDisplayLayoutState] = useState<DisplayLayout>({ '1': { right: '2' }, '2': { left: '1' } });
+
+  // Security State
+  const [isSecurityEnabled, setSecurityEnabledState] = useState(true);
+
+  // --- INITIALIZATION & PERSISTENCE ---
 
   useEffect(() => {
     const handleStorageChange = (e: StorageEvent) => {
@@ -296,17 +316,20 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
           switch (key) {
             case 'windows': setOpenWindows(JSON.parse(val)); break;
             case 'active_window': setActiveWindowId(val); break;
-            case 'theme': setTheme(val as ThemeMode); break;
-            case 'accent': setAccentColor(val as AccentColor); break;
-            case 'wallpaper': setWallpaper(val); break;
+            case 'theme': setThemeState(val as ThemeMode); break;
+            case 'accent': setAccentColorState(val as AccentColor); break;
+            case 'wallpaper': setWallpaperState(val); break;
             case 'pinned_apps': setPinnedApps(JSON.parse(val)); break;
-            case 'brightness': setBrightness(parseInt(val)); break;
-            case 'volume': setVolume(parseInt(val)); break;
+            case 'brightness': setBrightnessState(parseInt(val)); break;
+            case 'volume': setVolumeState(parseInt(val)); break;
             case 'power': setPowerStatus(val as PowerStatus); break;
             case 'display_layout': setDisplayLayoutState(JSON.parse(val)); break;
             case 'notifications': setNotifications(JSON.parse(val)); break;
             case 'file_system': setFileSystem(JSON.parse(val)); break;
             case 'security_enabled': setSecurityEnabledState(val === 'true'); break;
+            case 'taskbar_size': setTaskbarSizeState(parseFloat(val)); break;
+            case 'icon_size': setIconSizeState(parseFloat(val)); break;
+            case 'taskbar_pos': setTaskbarPositionState(val as TaskbarPosition); break;
           }
         } catch (err) {
           console.error('Sync Error:', err);
@@ -332,26 +355,12 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     if (savedCurrentUserId) {
       const accs = JSON.parse(localStorage.getItem('nebula_accounts') || '[]');
       const user = accs.find((a: LocalUser) => a.id === savedCurrentUserId);
-      if (user) {
-        setCurrentUser(user);
-      }
+      if (user) setCurrentUser(user);
     }
 
     const bootTimer = setTimeout(() => setPowerStatus('on'), 2600);
     return () => clearTimeout(bootTimer);
   }, []);
-
-  useEffect(() => {
-    if (powerStatus !== 'on') return;
-    const interval = setInterval(() => {
-      setSystemStats({
-        cpu: Math.floor(Math.random() * 25) + 5,
-        ram: Math.floor(Math.random() * 10) + 40,
-        net: Math.floor(Math.random() * 100),
-      });
-    }, 3000);
-    return () => clearInterval(interval);
-  }, [powerStatus]);
 
   useEffect(() => {
     if (!currentUser) return;
@@ -361,6 +370,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       const val = localStorage.getItem(`nebula_${uid}_${key}`);
       if (val === null) return def;
       try {
+        if (typeof def === 'number') return parseFloat(val);
         return typeof def === 'boolean' ? val === 'true' : (typeof def === 'object' ? JSON.parse(val) : val);
       } catch {
         return val;
@@ -375,17 +385,17 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       sessionStorage.setItem(`nebula_${uid}_display_id`, '1');
     }
 
-    setNotesState(load('notes', ""));
-    setTheme(load('theme', 'dark') as ThemeMode);
-    setAccentColor(load('accent', 'purple') as AccentColor);
-    setCustomAccentHex(load('custom_accent', '#9333ea'));
-    setCursorColor(load('cursor', 'black') as CursorColor);
-    setInverted(load('inverted', false));
-    setGlassEnabled(load('glass', true));
-    setTaskbarPosition(load('taskbar_pos', 'bottom') as TaskbarPosition);
-    setTaskbarSize(load('taskbar_size', 'md') as TaskbarSize);
-    setIconSize(load('icon_size', 'md') as DesktopIconSize);
-    setWallpaper(load('wallpaper', "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=1920"));
+    setNotesInternal(load('notes', ""));
+    setThemeState(load('theme', 'dark') as ThemeMode);
+    setAccentColorState(load('accent', 'purple') as AccentColor);
+    setCustomAccentHexState(load('custom_accent', '#9333ea'));
+    setCursorColorState(load('cursor', 'black') as CursorColor);
+    setInvertedState(load('inverted', false));
+    setGlassEnabledState(load('glass', true));
+    setTaskbarPositionState(load('taskbar_pos', 'bottom') as TaskbarPosition);
+    setTaskbarSizeState(load('taskbar_size', 48));
+    setIconSizeState(load('icon_size', 100));
+    setWallpaperState(load('wallpaper', "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=1920"));
     setDesktopApps(load('desktop_apps', INITIAL_DESKTOP).map((app: any) => ({ ...app, icon: APP_INFO[app.id as AppId]?.icon || Globe })));
     setPinnedApps(load('pinned_apps', INITIAL_PINNED));
     setFileSystem(load('file_system', INITIAL_FILES));
@@ -396,14 +406,14 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     setSecurityEnabledState(load('security_enabled', true));
 
     const savedWifi = load('wifi', "Nebula_Secure_5G");
-    setCurrentWifi(savedWifi);
+    setCurrentWifiState(savedWifi);
     setIsOnline(savedWifi !== OFFLINE_WIFI);
 
-    const savedVol = load('volume', "75");
-    setVolume(parseInt(savedVol));
+    const savedVol = load('volume', 75);
+    setVolumeState(savedVol);
 
-    const savedBrightness = load('brightness', "100");
-    setBrightness(parseInt(savedBrightness));
+    const savedBrightness = load('brightness', 100);
+    setBrightnessState(savedBrightness);
 
   }, [currentUser]);
 
@@ -414,58 +424,12 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const addNotification = useCallback((title: string, message: string, type: SystemNotification['type'] = 'system') => {
-    const newNotif: SystemNotification = {
-      id: Math.random().toString(36).substr(2, 9),
-      title,
-      message,
-      type,
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-    };
-    
-    setNotifications(prev => {
-      const updated = [newNotif, ...prev].slice(0, 50);
-      saveSetting('notifications', updated);
-      return updated;
-    });
-
-    if (currentDisplayId === '1') {
-      toast({
-        title: title,
-        description: message,
-      });
-    }
-  }, [currentDisplayId, currentUser]);
-
-  const clearNotifications = () => {
-    setNotifications([]);
-    saveSetting('notifications', []);
-  };
-
-  useEffect(() => {
-    if (powerStatus !== 'on' || currentDisplayId !== '1' || !currentUser) return;
-
-    const generateRandomNotif = () => {
-      const rand = RANDOM_NOTIFICATIONS[Math.floor(Math.random() * RANDOM_NOTIFICATIONS.length)];
-      addNotification(rand.title, rand.message, rand.type);
-    };
-
-    const initialDelay = 10000 + Math.random() * 20000;
-    const timer = setTimeout(() => {
-      generateRandomNotif();
-      const interval = setInterval(generateRandomNotif, 60000 + Math.random() * 30000);
-      return () => clearInterval(interval);
-    }, initialDelay);
-
-    return () => clearTimeout(timer);
-  }, [powerStatus, currentDisplayId, addNotification, currentUser]);
+  // --- ACTIONS ---
 
   const login = (userId: string, password?: string): boolean => {
     const user = accounts.find(a => a.id === userId);
     if (user) {
-      if (user.password && user.password !== password) {
-        return false;
-      }
+      if (user.password && user.password !== password) return false;
       setCurrentUser(user);
       localStorage.setItem('nebula_current_user_id', userId);
       return true;
@@ -503,93 +467,29 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     addNotification("Security Updated", "Your account password has been changed.", "security");
   };
 
-  const setNotes = (content: string) => {
-    if (!isOnline) return;
-    setNotesState(content);
-    saveSetting('notes', content);
-  };
-
-  const connectToWifi = (ssid: string) => {
-    setIsWifiConnecting(true);
-    setTimeout(() => {
-      setCurrentWifi(ssid);
-      setIsOnline(ssid !== OFFLINE_WIFI);
-      setIsWifiConnecting(false);
-      saveSetting('wifi', ssid);
-      addNotification("WiFi Connected", `Successfully joined ${ssid}.`, 'system');
-    }, 2000);
-  };
-
-  const setSecurityEnabled = (enabled: boolean) => {
-    setSecurityEnabledState(enabled);
-    saveSetting('security_enabled', enabled);
-    if (enabled) {
-      const updated = openWindows.filter(w => w.appId !== 'virus');
-      setOpenWindows(updated);
-      saveSetting('windows', updated);
-      addNotification("Security Restored", "Nebula Defender has quarantined all active threats.", 'security');
-    } else {
-      addNotification("Security Risk", "Nebula Defender has been disabled. System vulnerability detected.", 'security');
-    }
-  };
-
-  const updateDisplayLayout = (fromId: string, direction: DisplayDirection, toId: string) => {
-    const updated = { ...displayLayout };
-    const reverseMap: Record<DisplayDirection, DisplayDirection> = { 
-      left: 'right', right: 'left', top: 'bottom', bottom: 'top' 
+  const addNotification = useCallback((title: string, message: string, type: SystemNotification['type'] = 'system') => {
+    const newNotif: SystemNotification = {
+      id: Math.random().toString(36).substr(2, 9),
+      title,
+      message,
+      type,
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     };
-    const revDir = reverseMap[direction];
-
-    if (toId !== 'none') {
-      if (!updated[fromId]) updated[fromId] = {};
-      const oldToId = updated[fromId][direction];
-      if (oldToId && updated[oldToId]) delete updated[oldToId][revDir];
-      updated[fromId][direction] = toId;
-      if (!updated[toId]) updated[toId] = {};
-      updated[toId][revDir] = fromId;
-    } else {
-      if (updated[fromId]) {
-        const oldToId = updated[fromId][direction];
-        delete updated[fromId][direction];
-        if (oldToId && updated[oldToId]) delete updated[oldToId][revDir];
-      }
-    }
     
-    setDisplayLayoutState(updated);
-    saveSetting('display_layout', updated);
-  };
+    setNotifications(prev => {
+      const updated = [newNotif, ...prev].slice(0, 50);
+      saveSetting('notifications', updated);
+      return updated;
+    });
 
-  const resetDisplayLayout = () => {
-    setDisplayLayoutState({});
-    saveSetting('display_layout', {});
-    addNotification("Display Reset", "All multi-display layout configurations have been cleared.", 'system');
-  };
+    if (currentDisplayId === '1') {
+      toast({ title, description: message });
+    }
+  }, [currentDisplayId, currentUser]);
 
-  const powerOn = () => {
-    setPowerStatus('booting');
-    saveSetting('power', 'booting');
-    setTimeout(() => {
-      setPowerStatus('on');
-      saveSetting('power', 'on');
-    }, 2600);
-  };
-
-  const restart = () => {
-    setOpenWindows([]);
-    setActiveWindowId(null);
-    setPowerStatus('booting');
-    saveSetting('power', 'booting');
-    setTimeout(() => {
-      setPowerStatus('on');
-      saveSetting('power', 'on');
-    }, 2600);
-  };
-
-  const shutDown = () => {
-    setOpenWindows([]);
-    setActiveWindowId(null);
-    setPowerStatus('off');
-    saveSetting('power', 'off');
+  const clearNotifications = () => {
+    setNotifications([]);
+    saveSetting('notifications', []);
   };
 
   const openApp = (appId: AppId, title: string, params?: any) => {
@@ -604,9 +504,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       return;
     }
 
-    let initialWidth = 800;
-    let initialHeight = 600;
-
+    let initialWidth = 800, initialHeight = 600;
     if (appId === 'calc') { initialWidth = 320; initialHeight = 480; }
     else if (appId === 'terminal') { initialWidth = 700; initialHeight = 450; }
     else if (appId === 'notes') { initialWidth = 500; initialHeight = 600; }
@@ -624,15 +522,8 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
 
     const newId = `${appId}-${Date.now()}`;
     const newWindow: WindowInstance = {
-      id: newId,
-      appId,
-      title,
-      isMinimized: false,
-      isMaximized: false,
-      zIndex: nextZIndex,
-      initialWidth,
-      initialHeight,
-      displayId: currentDisplayId,
+      id: newId, appId, title, isMinimized: false, isMaximized: false, zIndex: nextZIndex,
+      initialWidth, initialHeight, displayId: currentDisplayId,
       x: appId === 'virus' ? (Math.random() * (window.innerWidth - 300)) : 100 + (openWindows.length * 20),
       y: appId === 'virus' ? (Math.random() * (window.innerHeight - 250)) : 50 + (openWindows.length * 20),
       params
@@ -680,9 +571,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const updateWindowPosition = (windowId: string, x: number, y: number, displayId?: string) => {
-    const updated = openWindows.map(w => 
-      w.id === windowId ? { ...w, x, y, displayId: displayId || w.displayId } : w
-    );
+    const updated = openWindows.map(w => w.id === windowId ? { ...w, x, y, displayId: displayId || w.displayId } : w);
     setOpenWindows(updated);
     saveSetting('windows', updated);
   };
@@ -693,39 +582,159 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     saveSetting('windows', updated);
   };
 
-  const installApp = (appId: AppId) => {
-    if (!installedApps.includes(appId)) {
-      setInstalledApps(prev => [...prev, appId]);
-      addNotification("App Installed", `${APP_INFO[appId].label} is now available in your Start Menu.`, 'app');
+  const setNotes = (content: string) => {
+    if (!isOnline) return;
+    setNotesInternal(content);
+    saveSetting('notes', content);
+  };
+
+  const setTheme = (theme: ThemeMode) => {
+    setThemeState(theme);
+    saveSetting('theme', theme);
+  };
+
+  const setAccentColor = (color: AccentColor) => {
+    setAccentColorState(color);
+    saveSetting('accent', color);
+  };
+
+  const setCustomAccentHex = (hex: string) => {
+    setCustomAccentHexState(hex);
+    saveSetting('custom_accent', hex);
+  };
+
+  const setCursorColor = (color: CursorColor) => {
+    setCursorColorState(color);
+    saveSetting('cursor', color);
+  };
+
+  const setInverted = (inverted: boolean) => {
+    setInvertedState(inverted);
+    saveSetting('inverted', inverted);
+  };
+
+  const setGlassEnabled = (enabled: boolean) => {
+    setGlassEnabledState(enabled);
+    saveSetting('glass', enabled);
+  };
+
+  const setTaskbarPosition = (pos: TaskbarPosition) => {
+    setTaskbarPositionState(pos);
+    saveSetting('taskbar_pos', pos);
+  };
+
+  const setTaskbarSize = (size: number) => {
+    setTaskbarSizeState(size);
+    saveSetting('taskbar_size', size);
+  };
+
+  const setIconSize = (size: number) => {
+    setIconSizeState(size);
+    saveSetting('icon_size', size);
+  };
+
+  const setVolume = (v: number) => {
+    setVolumeState(v);
+    saveSetting('volume', v);
+  };
+
+  const setBrightness = (b: number) => {
+    setBrightnessState(b);
+    saveSetting('brightness', b);
+  };
+
+  const connectToWifi = (ssid: string) => {
+    setIsWifiConnecting(true);
+    setTimeout(() => {
+      setCurrentWifiState(ssid);
+      setIsOnline(ssid !== OFFLINE_WIFI);
+      setIsWifiConnecting(false);
+      saveSetting('wifi', ssid);
+      addNotification("WiFi Connected", `Successfully joined ${ssid}.`, 'system');
+    }, 2000);
+  };
+
+  const setSecurityEnabled = (enabled: boolean) => {
+    setSecurityEnabledState(enabled);
+    saveSetting('security_enabled', enabled);
+    if (enabled) {
+      const updated = openWindows.filter(w => w.appId !== 'virus');
+      setOpenWindows(updated);
+      saveSetting('windows', updated);
+      addNotification("Security Restored", "Nebula Defender has quarantined all active threats.", 'security');
+    } else {
+      addNotification("Security Risk", "Nebula Defender has been disabled. System vulnerability detected.", 'security');
     }
   };
 
-  const updateWallpaper = (url: string) => {
-    setWallpaper(url);
-    saveSetting('wallpaper', url);
+  const setCurrentDisplayId = (id: string) => {
+    setDisplayIdState(id);
+    if (currentUser) sessionStorage.setItem(`nebula_${currentUser.id}_display_id`, id);
+  };
+
+  const updateDisplayLayout = (fromId: string, direction: DisplayDirection, toId: string) => {
+    const updated = { ...displayLayout };
+    const reverseMap: Record<DisplayDirection, DisplayDirection> = { left: 'right', right: 'left', top: 'bottom', bottom: 'top' };
+    const revDir = reverseMap[direction];
+
+    if (toId !== 'none') {
+      if (!updated[fromId]) updated[fromId] = {};
+      const oldToId = updated[fromId][direction];
+      if (oldToId && updated[oldToId]) delete updated[oldToId][revDir];
+      updated[fromId][direction] = toId;
+      if (!updated[toId]) updated[toId] = {};
+      updated[toId][revDir] = fromId;
+    } else {
+      if (updated[fromId]) {
+        const oldToId = updated[fromId][direction];
+        delete updated[fromId][direction];
+        if (oldToId && updated[oldToId]) delete updated[oldToId][revDir];
+      }
+    }
+    setDisplayLayoutState(updated);
+    saveSetting('display_layout', updated);
+  };
+
+  const resetDisplayLayout = () => {
+    setDisplayLayoutState({});
+    saveSetting('display_layout', {});
+    addNotification("Display Reset", "All multi-display layout configurations have been cleared.", 'system');
+  };
+
+  const powerOn = () => {
+    setPowerStatus('booting');
+    setTimeout(() => setPowerStatus('on'), 2600);
+  };
+
+  const restart = () => {
+    setOpenWindows([]);
+    setActiveWindowId(null);
+    setPowerStatus('booting');
+    setTimeout(() => setPowerStatus('on'), 2600);
+  };
+
+  const shutDown = () => {
+    setOpenWindows([]);
+    setActiveWindowId(null);
+    setPowerStatus('off');
+  };
+
+  const minimizeAllWindows = () => {
+    const updated = openWindows.map(w => ({ ...w, isMinimized: true }));
+    setOpenWindows(updated);
+    setActiveWindowId(null);
+    saveSetting('windows', updated);
   };
 
   const createFolder = (name: string, parentId: string | null) => {
-    const newFolder: FileSystemItem = {
-      id: Math.random().toString(36).substr(2, 9),
-      name,
-      type: 'folder',
-      parentId
-    };
+    const newFolder: FileSystemItem = { id: Math.random().toString(36).substr(2, 9), name, type: 'folder', parentId };
     const updated = [...fileSystem, newFolder];
     setFileSystem(updated);
     saveSetting('file_system', updated);
   };
 
   const importFile = (name: string, content: string, size: number, parentId: string | null) => {
-    const newFile: FileSystemItem = {
-      id: Math.random().toString(36).substr(2, 9),
-      name,
-      type: 'file',
-      parentId,
-      content,
-      size
-    };
+    const newFile: FileSystemItem = { id: Math.random().toString(36).substr(2, 9), name, type: 'file', parentId, content, size };
     const updated = [...fileSystem, newFile];
     setFileSystem(updated);
     saveSetting('file_system', updated);
@@ -765,6 +774,13 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     const updatedTrash = trash.filter(item => item.id !== id);
     setTrash(updatedTrash);
     saveSetting('trash_items', updatedTrash);
+  };
+
+  const installApp = (appId: AppId) => {
+    if (!installedApps.includes(appId)) {
+      setInstalledApps(prev => [...prev, appId]);
+      addNotification("App Installed", `${APP_INFO[appId].label} is now available in your Start Menu.`, 'app');
+    }
   };
 
   const updateDesktopAppPosition = (id: AppId, x: number, y: number) => {
@@ -813,23 +829,14 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     saveSetting('pinned_apps', newOrder);
   };
 
-  const minimizeAllWindows = () => {
-    const updated = openWindows.map(w => ({ ...w, isMinimized: true }));
-    setOpenWindows(updated);
-    setActiveWindowId(null);
-    saveSetting('windows', updated);
+  const updateWallpaper = (url: string) => {
+    setWallpaperState(url);
+    saveSetting('wallpaper', url);
   };
 
   const setIsWidgetsOpen = (isOpen: boolean) => setIsWidgetsOpenState(isOpen);
   const setIsQuickSettingsOpen = (isOpen: boolean) => setIsQuickSettingsOpenState(isOpen);
   const setIsStartOpen = (isOpen: boolean) => setIsStartOpenState(isOpen);
-
-  const setCurrentDisplayId = (id: string) => {
-    setDisplayIdState(id);
-    if (currentUser) {
-      sessionStorage.setItem(`nebula_${currentUser.id}_display_id`, id);
-    }
-  };
 
   return (
     <OSContext.Provider value={{

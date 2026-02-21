@@ -45,23 +45,15 @@ export const Taskbar: React.FC = () => {
 
   const isVertical = taskbarPosition === 'left' || taskbarPosition === 'right';
 
-  const sizeMap = {
-    sm: isVertical ? 'w-10' : 'h-10',
-    md: isVertical ? 'w-12' : 'h-12',
-    lg: isVertical ? 'w-16' : 'h-16',
-  };
-
   const positionClasses = {
-    bottom: `bottom-0 left-0 right-0 ${sizeMap[taskbarSize]} border-t`,
-    top: `top-0 left-0 right-0 ${sizeMap[taskbarSize]} border-b`,
-    left: `left-0 top-0 bottom-0 ${sizeMap[taskbarSize]} border-r`,
-    right: `right-0 top-0 bottom-0 ${sizeMap[taskbarSize]} border-l`,
+    bottom: `bottom-0 left-0 right-0 border-t`,
+    top: `top-0 left-0 right-0 border-b`,
+    left: `left-0 top-0 bottom-0 border-r`,
+    right: `right-0 top-0 bottom-0 border-l`,
   };
 
-  const iconSize = taskbarSize === 'sm' ? 14 : taskbarSize === 'lg' ? 24 : 18;
-  const logoSizeClass = taskbarSize === 'sm' ? 'text-lg' : taskbarSize === 'lg' ? 'text-2xl' : 'text-xl';
-
-  const VolumeIcon = volume === 0 ? VolumeX : volume < 50 ? Volume1 : Volume2;
+  const iconSize = Math.max(12, Math.floor(taskbarSize * 0.45));
+  const logoFontSize = Math.max(14, Math.floor(taskbarSize * 0.5));
 
   // Drag handlers for taskbar reordering
   const handleDragStart = (id: AppId, index: number) => {
@@ -88,12 +80,19 @@ export const Taskbar: React.FC = () => {
     setTargetIndex(null);
   };
 
+  const VolumeIcon = volume === 0 ? VolumeX : volume < 50 ? Volume1 : Volume2;
+
   return (
-    <div className={cn(
-      "fixed glass flex z-[9999] transition-all duration-300",
-      positionClasses[taskbarPosition],
-      isVertical ? "flex-col py-2" : "items-center px-2"
-    )}>
+    <div 
+      className={cn(
+        "fixed glass flex z-[9999] transition-all duration-300",
+        positionClasses[taskbarPosition],
+        isVertical ? "flex-col py-2" : "items-center px-2"
+      )}
+      style={{
+        [isVertical ? 'width' : 'height']: `${taskbarSize}px`
+      }}
+    >
       {/* Start & Widgets Buttons */}
       <div className={cn("flex", isVertical ? "flex-col gap-1" : "gap-1")}>
         <button
@@ -108,7 +107,12 @@ export const Taskbar: React.FC = () => {
             isStartOpen && "bg-white/10"
           )}
         >
-          <span className={cn("font-black text-accent font-headline tracking-tighter select-none leading-none", logoSizeClass)}>N</span>
+          <span 
+            className="font-black text-accent font-headline tracking-tighter select-none leading-none"
+            style={{ fontSize: `${logoFontSize}px` }}
+          >
+            N
+          </span>
         </button>
         
         <button
@@ -240,16 +244,15 @@ export const Taskbar: React.FC = () => {
             <BatteryMedium size={14} className={cn(isQuickSettingsOpen ? "text-accent" : "text-white/60")} />
           </div>
           
-          <div className={cn(
-            "flex flex-col items-end leading-none min-w-[50px]",
-            isVertical ? "items-center text-center scale-75 origin-bottom" : ""
-          )}>
-            {mounted && time ? (
-              <span className="text-[11px] font-bold whitespace-nowrap">{formatTime(time)}</span>
-            ) : (
-              <div className="h-3 w-10 bg-white/10 rounded animate-pulse" />
-            )}
-          </div>
+          {!isVertical && (
+            <div className="flex flex-col items-end leading-none min-w-[50px]">
+              {mounted && time ? (
+                <span className="text-[11px] font-bold whitespace-nowrap">{formatTime(time)}</span>
+              ) : (
+                <div className="h-3 w-10 bg-white/10 rounded animate-pulse" />
+              )}
+            </div>
+          )}
         </button>
       </div>
 

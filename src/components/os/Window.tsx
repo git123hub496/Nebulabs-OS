@@ -1,3 +1,4 @@
+
 "use client"
 
 import React, { useState, useRef, useEffect } from 'react';
@@ -19,7 +20,7 @@ interface WindowProps {
 export const Window: React.FC<WindowProps> = ({ window: win, children }) => {
   const { 
     closeWindow, minimizeWindow, maximizeWindow, snapWindow, focusWindow, 
-    activeWindowId, taskbarPosition, moveWindowToDisplay, currentDisplayId, 
+    activeWindowId, taskbarPosition, taskbarSize, moveWindowToDisplay, currentDisplayId, 
     updateWindowPosition, displayLayout 
   } = useOS();
   
@@ -32,7 +33,7 @@ export const Window: React.FC<WindowProps> = ({ window: win, children }) => {
   // Determine if this window is "near" enough to be grabbed on this display
   const getResponsiveDimensions = () => {
     const isHorizontal = taskbarPosition === 'bottom' || taskbarPosition === 'top';
-    const offset = 48; 
+    const offset = taskbarSize; 
     
     if (win.isMaximized) {
       return {

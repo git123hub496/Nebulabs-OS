@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useRef } from 'react';
@@ -23,6 +24,7 @@ import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Slider } from '@/components/ui/slider';
 
 type SettingsTab = 'personalization' | 'display' | 'accessibility' | 'notifications' | 'accounts' | 'security' | 'updates' | 'about';
 
@@ -48,6 +50,7 @@ const ACCENT_COLORS: { id: AccentColor; class: string; label: string }[] = [
 export const Settings: React.FC = () => {
   const { 
     wallpaper, updateWallpaper, theme, setTheme, taskbarPosition, setTaskbarPosition, 
+    taskbarSize, setTaskbarSize, iconSize, setIconSize,
     accentColor, setAccentColor, customAccentHex, 
     cursorColor, setCursorColor, isInverted, setInverted,
     glassEnabled, setGlassEnabled, brightness, setBrightness,
@@ -191,6 +194,36 @@ export const Settings: React.FC = () => {
                       <SelectItem value="right">Right</SelectItem>
                     </SelectContent>
                   </Select>
+                </div>
+
+                <div className="space-y-4 p-5 bg-white/5 rounded-2xl border border-border/50">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-sm font-bold">Taskbar Scale</Label>
+                    <span className="text-xs font-mono text-accent">{taskbarSize}px</span>
+                  </div>
+                  <Slider 
+                    value={[taskbarSize]} 
+                    min={32} 
+                    max={80} 
+                    step={1} 
+                    onValueChange={(v) => setTaskbarSize(v[0])}
+                    className="cursor-pointer"
+                  />
+                </div>
+
+                <div className="space-y-4 p-5 bg-white/5 rounded-2xl border border-border/50">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-sm font-bold">Desktop Icon Scale</Label>
+                    <span className="text-xs font-mono text-accent">{iconSize}%</span>
+                  </div>
+                  <Slider 
+                    value={[iconSize]} 
+                    min={50} 
+                    max={150} 
+                    step={5} 
+                    onValueChange={(v) => setIconSize(v[0])}
+                    className="cursor-pointer"
+                  />
                 </div>
               </div>
             </section>

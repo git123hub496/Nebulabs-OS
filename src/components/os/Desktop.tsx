@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
@@ -295,8 +296,7 @@ export const Desktop: React.FC = () => {
     '--sidebar-accent': hexToHslString(customAccentHex),
   } as React.CSSProperties : {};
 
-  const iconScaleMap = { sm: 0.8, md: 1, lg: 1.25 };
-  const currentScale = iconScaleMap[iconSize];
+  const currentScale = iconSize / 100;
 
   const displayWindows = openWindows.filter(win => {
     if ((win.displayId || '1') === currentDisplayId) return true;
