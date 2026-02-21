@@ -669,9 +669,11 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       }
 
       const baseScale = 32 * mouserScale;
+      // SVG path adjusted to make the "stick part" (tail) thicker by ~2-3 pixels.
+      // Neck widened from x=9,11 to x=8,12. Tail base widened from x=13,16 to x=12,17.
       const svg = `
         <svg width="${baseScale}" height="${baseScale}" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M3,3 L3,23 L9,17 L13,26 L16,24 L11,16 L18,16 Z" fill="${fill}" stroke="${stroke}" stroke-width="1.5" stroke-linejoin="round"/>
+          <path d="M3,3 L3,23 L8,17 L12,26 L17,24 L12,16 L18,16 Z" fill="${fill}" stroke="${stroke}" stroke-width="1.5" stroke-linejoin="round"/>
         </svg>`;
       
       return `url("data:image/svg+xml;base64,${window.btoa(svg)}") 3 3, auto`;
