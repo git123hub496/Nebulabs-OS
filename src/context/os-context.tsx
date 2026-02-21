@@ -241,24 +241,20 @@ const AVATAR_COLORS = ['#9333ea', '#3b82f6', '#e11d48', '#f97316', '#16a34a'];
 const OFFLINE_WIFI = "Public_Guest_No_Internet";
 
 export const OSProvider = ({ children }: { children: ReactNode }) => {
-  // --- CORE STATE ---
   const [currentUser, setCurrentUser] = useState<LocalUser | null>(null);
   const [accounts, setAccounts] = useState<LocalUser[]>([]);
   const [powerStatus, setPowerStatusState] = useState<PowerStatus>('booting');
   const [systemStats] = useState({ cpu: 12, ram: 42, net: 2 });
   const [isLocked, setIsLocked] = useState(false);
 
-  // --- UI SHELL STATE ---
   const [isWidgetsOpen, setIsWidgetsOpenState] = useState(false);
   const [isQuickSettingsOpen, setIsQuickSettingsOpenState] = useState(false);
   const [isStartOpen, setIsStartOpenState] = useState(false);
 
-  // --- WINDOW STATE ---
   const [openWindows, setOpenWindows] = useState<WindowInstance[]>([]);
   const [activeWindowId, setActiveWindowId] = useState<string | null>(null);
   const [nextZIndex, setNextZIndex] = useState(10);
 
-  // --- PREFERENCES ---
   const [wallpaper, setWallpaperState] = useState("https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=1920");
   const [theme, setThemeState] = useState<ThemeMode>('dark');
   const [accentColor, setAccentColorState] = useState<AccentColor>('purple');
@@ -269,12 +265,10 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   const [brightness, setBrightnessState] = useState(100);
   const [volume, setVolumeState] = useState(75);
 
-  // --- LAYOUT ---
   const [taskbarPosition, setTaskbarPositionState] = useState<TaskbarPosition>('bottom');
   const [taskbarSize, setTaskbarSizeState] = useState<number>(48);
   const [iconSize, setIconSizeState] = useState<number>(100);
 
-  // --- CONTENT ---
   const [installedApps, setInstalledApps] = useState<AppId[]>(INITIAL_APPS);
   const [pinnedApps, setPinnedApps] = useState<AppId[]>(INITIAL_PINNED);
   const [desktopApps, setDesktopApps] = useState<DesktopShortcut[]>(INITIAL_DESKTOP);
@@ -283,7 +277,6 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   const [trash, setTrash] = useState<FileSystemItem[]>([]);
   const [notes, setNotesInternal] = useState("");
 
-  // --- ENVIRONMENT ---
   const [currentWifi, setCurrentWifiState] = useState("Nebula_Secure_5G");
   const [isWifiConnecting, setIsWifiConnecting] = useState(false);
   const [isOnline, setIsOnline] = useState(true);
@@ -291,7 +284,6 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   const [displayLayout, setDisplayLayoutState] = useState<DisplayLayout>({ '1': { right: '2' }, '2': { left: '1' } });
   const [isSecurityEnabled, setSecurityEnabledState] = useState(true);
 
-  // --- PERSISTENCE UTILS ---
   const saveSetting = useCallback((key: string, value: any) => {
     if (currentUser) {
       const strValue = typeof value === 'object' ? JSON.stringify(value) : String(value);
@@ -330,20 +322,47 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     if (n) setNotesInternal(n);
   }, []);
 
-  // --- THEME ROOT APPLICATION ---
   useEffect(() => {
-    // Clear old classes
     const html = document.documentElement;
     const classes = Array.from(html.classList).filter(c => c.startsWith('accent-'));
     classes.forEach(c => html.classList.remove(c));
     
-    // Add new class
     if (accentColor !== 'default' && accentColor !== 'custom') {
       html.classList.add(`accent-${accentColor}`);
     }
   }, [accentColor]);
 
-  // --- INITIALIZATION ---
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const getCursorValue = () => {
+      if (cursorColor === 'black') return 'var(--cursor-black)';
+      if (cursorColor === 'white') return 'var(--cursor-white)';
+      
+      let hex = customAccentHex;
+      const accentHexes: Record<string, string> = {
+        blue: '#3b82f6',
+        rose: '#e11d48',
+        orange: '#f97316',
+        green: '#16a34a',
+        purple: '#9333ea',
+        grey: '#64748b',
+        default: '#9333ea'
+      };
+      
+      if (accentColor !== 'custom') {
+        hex = accentHexes[accentColor] || accentHexes['default'];
+      }
+
+      const svg = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M 4 3 L 4 21 L 8.5 16.5 L 11.5 23 L 14.5 22 L 11.5 15.5 L 18 15.5 L 4 3 Z" fill="${hex}" stroke="white" stroke-width="0.8" stroke-linejoin="round"/>
+      </svg>`;
+      return `url("data:image/svg+xml;base64,${window.btoa(svg)}")`;
+    };
+
+    document.documentElement.style.setProperty('--cursor-url', getCursorValue());
+  }, [cursorColor, accentColor, customAccentHex]);
+
   useEffect(() => {
     const savedAccounts = localStorage.getItem('nebula_accounts');
     if (savedAccounts) setAccounts(JSON.parse(savedAccounts));
@@ -358,8 +377,6 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     }, 2500);
     return () => clearTimeout(timer);
   }, []);
-
-  // --- CORE ACTIONS ---
 
   const login = (userId: string, password?: string): boolean => {
     const user = accounts.find(a => a.id === userId);
@@ -493,8 +510,6 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   const moveWindowToDisplay = (windowId: string, displayId: string) => {
     setOpenWindows(prev => prev.map(w => w.id === windowId ? { ...w, displayId } : w));
   };
-
-  // --- SETTERS ---
 
   const setNotes = (content: string) => {
     if (!isOnline) return;

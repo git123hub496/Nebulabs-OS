@@ -144,7 +144,6 @@ export const Desktop: React.FC = () => {
     }
   }, [powerStatus]);
 
-  // Global Keyboard Shortcuts
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     if (powerStatus !== 'on' || !currentUser) return;
 
@@ -279,33 +278,6 @@ export const Desktop: React.FC = () => {
     return <LoginScreen />;
   }
 
-  // Custom Cursor Logic
-  const getCursorVariable = () => {
-    if (cursorColor === 'black') return 'var(--cursor-black)';
-    if (cursorColor === 'white') return 'var(--cursor-white)';
-    
-    let hex = customAccentHex;
-    const accentHexes: Record<string, string> = {
-      blue: '#3b82f6',
-      rose: '#e11d48',
-      orange: '#f97316',
-      green: '#16a34a',
-      purple: '#9333ea',
-      grey: '#64748b',
-      default: '#9333ea'
-    };
-    
-    if (accentColor !== 'custom') {
-      hex = accentHexes[accentColor] || accentHexes['default'];
-    }
-
-    const svg = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M 4 3 L 4 21 L 8.5 16.5 L 11.5 23 L 14.5 22 L 11.5 15.5 L 18 15.5 L 4 3 Z" fill="${hex}" stroke="white" stroke-width="0.8" stroke-linejoin="round"/>
-    </svg>`;
-    const base64 = typeof window !== 'undefined' ? btoa(svg) : '';
-    return `url("data:image/svg+xml;base64,${base64}")`;
-  };
-
   const hexToHslString = (hex: string) => {
     const r = parseInt(hex.slice(1, 3), 16) / 255;
     const g = parseInt(hex.slice(3, 5), 16) / 255;
@@ -333,7 +305,6 @@ export const Desktop: React.FC = () => {
     '--sidebar-accent': hexToHslString(customAccentHex),
   } as React.CSSProperties : {};
 
-  // Safeguard against NaN in scale values
   const currentScale = isNaN(iconSize) ? 1.0 : iconSize / 100;
 
   return (
@@ -350,8 +321,6 @@ export const Desktop: React.FC = () => {
         backgroundImage: `url(${wallpaper})`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
-        // @ts-ignore
-        '--cursor-url': getCursorVariable(),
         ...customStyle
       }}
       onContextMenu={handleContextMenu}
