@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
@@ -227,7 +228,15 @@ export const Desktop: React.FC = () => {
           break;
         case 'x': 
           e.preventDefault();
-          if (activeWindowId) closeWindow(activeWindowId);
+          if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen().catch(() => {});
+            addNotification("Display Mode", "Fullscreen enabled", "system");
+          } else {
+            if (document.exitFullscreen) {
+              document.exitFullscreen().catch(() => {});
+              addNotification("Display Mode", "Fullscreen disabled", "system");
+            }
+          }
           break;
         case 'l':
           e.preventDefault();
