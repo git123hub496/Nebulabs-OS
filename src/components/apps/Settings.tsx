@@ -7,7 +7,7 @@ import {
   Monitor, Palette, User, Shield, Bell, HelpCircle, Upload, 
   Image as ImageIcon, Sun, Moon, Layout, Check, MousePointer2, 
   Eye, Zap, Layers, Pipette, Maximize2, Plus, ArrowUpRight,
-  Wifi, ShieldCheck, Activity, Trash2, Info, Newspaper, Clock, XCircle, RefreshCw, ChevronRight, ShieldAlert, ShieldX, Lock, KeyRound, Camera, Building2, Briefcase, GraduationCap
+  Wifi, ShieldCheck, Activity, Trash2, Info, Newspaper, Clock, XCircle, RefreshCw, ChevronRight, ShieldAlert, ShieldX, Lock, KeyRound, Camera, Building2, Briefcase, GraduationCap, Heart
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
@@ -300,6 +300,16 @@ export const Settings: React.FC = () => {
                   <span className="text-muted-foreground uppercase font-bold tracking-widest">Unique System ID</span>
                   <span className="text-accent font-black">{currentUser?.uniqueCode}</span>
                 </div>
+              </div>
+
+              {/* Credits Section */}
+              <div className="max-w-md mx-auto p-6 bg-accent/5 border border-accent/20 rounded-3xl text-center space-y-2">
+                <div className="flex items-center justify-center gap-2 mb-1">
+                  <Heart size={14} className="text-accent fill-accent" />
+                  <p className="text-[10px] font-black uppercase text-accent tracking-[0.2em]">Kernel Credits</p>
+                </div>
+                <p className="text-sm font-bold text-foreground">Made by Adrian R</p>
+                <p className="text-[10px] text-muted-foreground uppercase tracking-widest">Nebulabs Engineering Division</p>
               </div>
             </section>
           </div>
