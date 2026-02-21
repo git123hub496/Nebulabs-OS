@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
@@ -8,6 +9,7 @@ import { ContextMenu } from './ContextMenu';
 import { LoginScreen } from './LoginScreen';
 import { WidgetsPanel } from './WidgetsPanel';
 import { QuickSettings } from './QuickSettings';
+import { GlobalSearch } from './GlobalSearch';
 import { 
   ShoppingBag, 
   FolderOpen, 
@@ -22,6 +24,7 @@ import {
   Newspaper,
   Map as MapIcon,
   Activity,
+  Activity as ActivityIcon,
   Calendar as CalendarIcon,
   Gamepad2,
   Bomb,
@@ -394,6 +397,9 @@ export const Desktop: React.FC = () => {
       )}
 
       <WidgetsPanel />
+      
+      {/* Global OS Search Bar */}
+      <GlobalSearch />
 
       {currentDisplayId === '1' && desktopApps.map(shortcut => {
         const Icon = shortcut.icon;
