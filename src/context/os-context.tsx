@@ -22,7 +22,8 @@ import {
   Zap,
   Wifi,
   Gamepad2,
-  Bomb
+  Bomb,
+  File as FileIcon
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
@@ -61,6 +62,8 @@ export interface FileSystemItem {
   name: string;
   type: 'file' | 'folder';
   parentId: string | null;
+  content?: string; // Data URL or text content
+  size?: number;
 }
 
 export interface DesktopShortcut {
@@ -159,6 +162,7 @@ interface OSContextType {
   powerOn: () => void;
   
   createFolder: (name: string, parentId: string | null) => void;
+  importFile: (name: string, content: string, size: number, parentId: string | null) => void;
   moveToTrash: (id: string) => void;
   restoreFromTrash: (id: string) => void;
   emptyTrash: () => void;
@@ -284,6 +288,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
             case 'power': setPowerStatus(val as PowerStatus); break;
             case 'display_layout': setDisplayLayoutState(JSON.parse(val)); break;
             case 'notifications': setNotifications(JSON.parse(val)); break;
+            case 'file_system': setFileSystem(JSON.parse(val)); break;
           }
         } catch (err) {
           console.error('Sync Error:', err);
@@ -734,6 +739,21 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     saveSetting('file_system', updated);
   };
 
+  const importFile = (name: string, content: string, size: number, parentId: string | null) => {
+    const newFile: FileSystemItem = {
+      id: Math.random().toString(36).substr(2, 9),
+      name,
+      type: 'file',
+      parentId,
+      content,
+      size
+    };
+    const updated = [...fileSystem, newFile];
+    setFileSystem(updated);
+    saveSetting('file_system', updated);
+    addNotification("File Imported", `${name} has been added to your drive.`, 'app');
+  };
+
   const moveToTrash = (id: string) => {
     const item = fileSystem.find(i => i.id === id);
     if (item) {
@@ -830,7 +850,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       setCursorColor, setInverted, setGlassEnabled, setTaskbarPosition, setTaskbarSize,
       setIconSize, connectToWifi, setVolume, setBrightness, setIsWidgetsOpen,
       setIsQuickSettingsOpen, setCurrentDisplayId, restart, shutDown, powerOn,
-      createFolder, moveToTrash, restoreFromTrash, emptyTrash, deleteItemPermanently,
+      createFolder, importFile, moveToTrash, restoreFromTrash, emptyTrash, deleteItemPermanently,
       updateDesktopAppPosition, toggleDesktopApp, togglePinApp, reorderPinnedApps,
     }}>
       {children}
