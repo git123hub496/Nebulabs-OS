@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useRef } from 'react';
@@ -7,7 +6,7 @@ import {
   Monitor, Palette, User, Shield, Bell, HelpCircle, Upload, 
   Image as ImageIcon, Sun, Moon, Layout, Check, MousePointer2, 
   Eye, Zap, Layers, Pipette, Maximize2, Plus, ArrowUpRight,
-  Wifi, ShieldCheck, Activity, Trash2, Info, Newspaper, Clock, XCircle, RefreshCw, ChevronRight, ShieldAlert, ShieldX
+  Wifi, ShieldCheck, Activity, Trash2, Info, Newspaper, Clock, XCircle, RefreshCw, ChevronRight, ShieldAlert, ShieldX, Lock, KeyRound
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
@@ -53,11 +52,13 @@ export const Settings: React.FC = () => {
     cursorColor, setCursorColor, isInverted, setInverted,
     glassEnabled, setGlassEnabled, brightness, setBrightness,
     currentDisplayId, setCurrentDisplayId, displayLayout, updateDisplayLayout, resetDisplayLayout,
-    currentUser, notifications, clearNotifications, addNotification, openApp,
-    isSecurityEnabled, setSecurityEnabled
+    currentUser, logout, notifications, clearNotifications, addNotification, openApp,
+    isSecurityEnabled, setSecurityEnabled, updateUserPassword
   } = useOS();
 
   const [activeTab, setActiveTab] = useState<SettingsTab>('personalization');
+  const [newPassword, setNewPassword] = useState("");
+  const [isChangingPass, setIsChangingPass] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -83,6 +84,12 @@ export const Settings: React.FC = () => {
       case 'app': return <Zap className="text-yellow-400" size={16} />;
       default: return <Info className="text-accent" size={16} />;
     }
+  };
+
+  const handleUpdatePass = () => {
+    updateUserPassword(newPassword);
+    setNewPassword("");
+    setIsChangingPass(false);
   };
 
   const renderContent = () => {
@@ -374,36 +381,6 @@ export const Settings: React.FC = () => {
                   </Button>
                 </div>
               </div>
-
-              <div className="mt-8 space-y-4">
-                <h3 className="text-xs font-bold uppercase tracking-widest text-white/20 ml-2">Recent Changes</h3>
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/5 hover:border-white/10 transition-colors cursor-pointer group">
-                    <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-400">
-                        <ImageIcon size={20} />
-                      </div>
-                      <div>
-                        <p className="text-sm font-bold group-hover:text-accent transition-colors">Native Image Renderer</p>
-                        <p className="text-[10px] text-white/40">Build 4.5.1 Stable</p>
-                      </div>
-                    </div>
-                    <ChevronRight size={16} className="text-white/20" />
-                  </div>
-                  <div className="flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/5 hover:border-white/10 transition-colors cursor-pointer group">
-                    <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-400">
-                        <Monitor size={20} />
-                      </div>
-                      <div>
-                        <p className="text-sm font-bold group-hover:text-accent transition-colors">Multi-Display Bridge</p>
-                        <p className="text-[10px] text-white/40">Build 4.5.0 Stable</p>
-                      </div>
-                    </div>
-                    <ChevronRight size={16} className="text-white/20" />
-                  </div>
-                </div>
-              </div>
             </section>
           </div>
         );
@@ -414,21 +391,66 @@ export const Settings: React.FC = () => {
             <section>
               <div className="flex items-center gap-2 mb-6">
                 <User size={18} className="text-accent" />
-                <h2 className="text-lg font-bold">Current User</h2>
+                <h2 className="text-lg font-bold">Identity & Authentication</h2>
               </div>
-              <div className="flex items-center gap-6 p-6 bg-white/5 rounded-3xl border border-white/5">
-                <div 
-                  className="w-20 h-20 rounded-full flex items-center justify-center text-3xl font-black shadow-2xl"
-                  style={{ backgroundColor: currentUser?.avatarColor || 'var(--accent)' }}
-                >
-                  {currentUser?.username[0].toUpperCase() || 'G'}
-                </div>
-                <div className="space-y-1">
-                  <h3 className="text-2xl font-bold">{currentUser?.username || 'Guest User'}</h3>
-                  <div className="flex items-center gap-2">
-                    <Badge className="bg-accent text-primary font-bold uppercase text-[9px]">Administrator</Badge>
-                    <span className="text-xs text-white/40">Local System Account</span>
+              
+              <div className="flex flex-col gap-6">
+                <div className="flex items-center gap-6 p-6 bg-white/5 rounded-3xl border border-white/5">
+                  <div 
+                    className="w-20 h-20 rounded-full flex items-center justify-center text-3xl font-black shadow-2xl relative"
+                    style={{ backgroundColor: currentUser?.avatarColor || 'var(--accent)' }}
+                  >
+                    {currentUser?.username[0].toUpperCase() || 'G'}
+                    {currentUser?.password && (
+                      <div className="absolute -bottom-1 -right-1 w-7 h-7 bg-accent rounded-full border-4 border-[#1e2731] flex items-center justify-center">
+                        <Lock size={12} className="text-primary" />
+                      </div>
+                    )}
                   </div>
+                  <div className="space-y-1 flex-1">
+                    <h3 className="text-2xl font-bold">{currentUser?.username || 'Guest User'}</h3>
+                    <div className="flex items-center gap-2">
+                      <Badge className="bg-accent text-primary font-bold uppercase text-[9px]">Administrator</Badge>
+                      <span className="text-xs text-white/40">Local System Account</span>
+                    </div>
+                  </div>
+                  <Button variant="outline" className="border-white/10 text-destructive hover:bg-destructive/10" onClick={logout}>Sign Out</Button>
+                </div>
+
+                <div className="bg-white/5 rounded-2xl border border-white/5 p-6 space-y-6">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <KeyRound size={18} className="text-accent" />
+                      <div>
+                        <p className="text-sm font-bold">Account Protection</p>
+                        <p className="text-[10px] text-white/40">{currentUser?.password ? "Your identity is secured by a password." : "Your identity is currently unprotected."}</p>
+                      </div>
+                    </div>
+                    {!isChangingPass && (
+                      <Button variant="outline" size="sm" className="rounded-xl border-white/10" onClick={() => setIsChangingPass(true)}>
+                        {currentUser?.password ? "Change Password" : "Add Password"}
+                      </Button>
+                    )}
+                  </div>
+
+                  {isChangingPass && (
+                    <div className="space-y-4 pt-2 animate-in slide-in-from-top-2">
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase tracking-widest text-accent pl-1">New Access Password</Label>
+                        <Input 
+                          type="password"
+                          placeholder="Enter secure password"
+                          value={newPassword}
+                          onChange={(e) => setNewPassword(e.target.value)}
+                          className="bg-black/20 border-white/10 h-11 focus-visible:ring-accent"
+                        />
+                      </div>
+                      <div className="flex gap-2">
+                        <Button className="bg-accent text-primary font-bold flex-1" onClick={handleUpdatePass}>Update Protection</Button>
+                        <Button variant="ghost" className="text-white/40" onClick={() => { setIsChangingPass(false); setNewPassword(""); }}>Cancel</Button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </section>
@@ -498,11 +520,6 @@ export const Settings: React.FC = () => {
                 <Badge variant="secondary" className="bg-white/5 text-white/40 border-white/10">Kernel: React 19.x</Badge>
                 <Badge variant="secondary" className="bg-white/5 text-white/40 border-white/10">UI: Tailwind v4</Badge>
               </div>
-              <div className="max-w-xs mx-auto pt-8">
-                <p className="text-[10px] text-white/20 leading-relaxed italic">
-                  "Building the future of virtual workspace environments, one component at a time."
-                </p>
-              </div>
             </section>
           </div>
         );
@@ -514,7 +531,6 @@ export const Settings: React.FC = () => {
 
   return (
     <div className="flex h-full bg-background text-foreground overflow-hidden">
-      {/* Sidebar Navigation */}
       <div className="w-64 border-r border-border bg-black/5 flex flex-col p-4 gap-1 shrink-0 overflow-y-auto">
         <h2 className="px-4 py-4 text-[10px] font-black text-accent uppercase tracking-[0.2em] mb-2 opacity-60">System Configuration</h2>
         
@@ -585,7 +601,6 @@ export const Settings: React.FC = () => {
         </Button>
       </div>
 
-      {/* Main Content Area */}
       <div className="flex-1 overflow-hidden flex flex-col">
         <ScrollArea className="flex-1 p-10">
           <div className="max-w-3xl mx-auto">

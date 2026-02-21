@@ -44,6 +44,7 @@ export interface LocalUser {
   id: string;
   username: string;
   avatarColor: string;
+  password?: string;
 }
 
 export interface WindowInstance {
@@ -67,7 +68,7 @@ export interface FileSystemItem {
   name: string;
   type: 'file' | 'folder';
   parentId: string | null;
-  content?: string; // Data URL or text content
+  content?: string;
   size?: number;
 }
 
@@ -131,9 +132,10 @@ interface OSContextType {
   displayLayout: DisplayLayout;
   isSecurityEnabled: boolean;
   
-  login: (userId: string) => void;
+  login: (userId: string, password?: string) => boolean;
   logout: () => void;
-  createAccount: (username: string) => void;
+  createAccount: (username: string, password?: string) => void;
+  updateUserPassword: (password: string) => void;
   openApp: (appId: AppId, title: string, params?: any) => void;
   closeWindow: (windowId: string) => void;
   minimizeWindow: (windowId: string) => void;
@@ -271,9 +273,9 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   const [isOnline, setIsOnline] = useState(true);
   const [volume, setVolume] = useState(75);
   const [brightness, setBrightness] = useState(100);
-  const [isWidgetsOpen, setIsWidgetsOpen] = useState(false);
-  const [isQuickSettingsOpen, setIsQuickSettingsOpen] = useState(false);
-  const [isStartOpen, setIsStartOpen] = useState(false);
+  const [isWidgetsOpen, setIsWidgetsOpenState] = useState(false);
+  const [isQuickSettingsOpen, setIsQuickSettingsOpenState] = useState(false);
+  const [isStartOpen, setIsStartOpenState] = useState(false);
   const [nextZIndex, setNextZIndex] = useState(10);
   const [systemStats, setSystemStats] = useState({ cpu: 12, ram: 42, net: 2 });
   const [isSecurityEnabled, setSecurityEnabledState] = useState(true);
@@ -330,7 +332,9 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     if (savedCurrentUserId) {
       const accs = JSON.parse(localStorage.getItem('nebula_accounts') || '[]');
       const user = accs.find((a: LocalUser) => a.id === savedCurrentUserId);
-      if (user) login(user.id);
+      if (user) {
+        setCurrentUser(user);
+      }
     }
 
     const bootTimer = setTimeout(() => setPowerStatus('on'), 2600);
@@ -420,7 +424,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     };
     
     setNotifications(prev => {
-      const updated = [newNotif, ...prev].slice(0, 50); // Keep last 50
+      const updated = [newNotif, ...prev].slice(0, 50);
       saveSetting('notifications', updated);
       return updated;
     });
@@ -431,7 +435,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
         description: message,
       });
     }
-  }, [currentDisplayId]);
+  }, [currentDisplayId, currentUser]);
 
   const clearNotifications = () => {
     setNotifications([]);
@@ -439,7 +443,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   };
 
   useEffect(() => {
-    if (powerStatus !== 'on' || currentDisplayId !== '1') return;
+    if (powerStatus !== 'on' || currentDisplayId !== '1' || !currentUser) return;
 
     const generateRandomNotif = () => {
       const rand = RANDOM_NOTIFICATIONS[Math.floor(Math.random() * RANDOM_NOTIFICATIONS.length)];
@@ -454,14 +458,19 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     }, initialDelay);
 
     return () => clearTimeout(timer);
-  }, [powerStatus, currentDisplayId, addNotification]);
+  }, [powerStatus, currentDisplayId, addNotification, currentUser]);
 
-  const login = (userId: string) => {
+  const login = (userId: string, password?: string): boolean => {
     const user = accounts.find(a => a.id === userId);
     if (user) {
+      if (user.password && user.password !== password) {
+        return false;
+      }
       setCurrentUser(user);
       localStorage.setItem('nebula_current_user_id', userId);
+      return true;
     }
+    return false;
   };
 
   const logout = () => {
@@ -471,16 +480,27 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     setActiveWindowId(null);
   };
 
-  const createAccount = (username: string) => {
+  const createAccount = (username: string, password?: string) => {
     const newAcc: LocalUser = {
       id: Math.random().toString(36).substr(2, 9),
       username,
-      avatarColor: AVATAR_COLORS[accounts.length % AVATAR_COLORS.length]
+      avatarColor: AVATAR_COLORS[accounts.length % AVATAR_COLORS.length],
+      password: password || undefined
     };
     const updated = [...accounts, newAcc];
     setAccounts(updated);
     localStorage.setItem('nebula_accounts', JSON.stringify(updated));
-    login(newAcc.id);
+    login(newAcc.id, password);
+  };
+
+  const updateUserPassword = (password: string) => {
+    if (!currentUser) return;
+    const updatedUser = { ...currentUser, password };
+    setCurrentUser(updatedUser);
+    const updatedAccounts = accounts.map(a => a.id === currentUser.id ? updatedUser : a);
+    setAccounts(updatedAccounts);
+    localStorage.setItem('nebula_accounts', JSON.stringify(updatedAccounts));
+    addNotification("Security Updated", "Your account password has been changed.", "security");
   };
 
   const setNotes = (content: string) => {
@@ -498,13 +518,6 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       saveSetting('wifi', ssid);
       addNotification("WiFi Connected", `Successfully joined ${ssid}.`, 'system');
     }, 2000);
-  };
-
-  const setCurrentDisplayId = (id: string) => {
-    setDisplayIdState(id);
-    if (currentUser) {
-      sessionStorage.setItem(`nebula_${currentUser.id}_display_id`, id);
-    }
   };
 
   const setSecurityEnabled = (enabled: boolean) => {
@@ -529,24 +542,16 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
 
     if (toId !== 'none') {
       if (!updated[fromId]) updated[fromId] = {};
-      
       const oldToId = updated[fromId][direction];
-      if (oldToId && updated[oldToId]) {
-        delete updated[oldToId][revDir];
-      }
-
+      if (oldToId && updated[oldToId]) delete updated[oldToId][revDir];
       updated[fromId][direction] = toId;
-      
       if (!updated[toId]) updated[toId] = {};
       updated[toId][revDir] = fromId;
     } else {
       if (updated[fromId]) {
         const oldToId = updated[fromId][direction];
         delete updated[fromId][direction];
-        
-        if (oldToId && updated[oldToId]) {
-          delete updated[oldToId][revDir];
-        }
+        if (oldToId && updated[oldToId]) delete updated[oldToId][revDir];
       }
     }
     
@@ -638,16 +643,12 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     setActiveWindowId(newId);
     setNextZIndex(prev => prev + 1);
     saveSetting('windows', updated);
-    saveSetting('active_window', newId);
   };
 
   const closeWindow = (windowId: string) => {
     const updated = openWindows.filter(w => w.id !== windowId);
     setOpenWindows(updated);
-    if (activeWindowId === windowId) {
-      setActiveWindowId(null);
-      saveSetting('active_window', null);
-    }
+    if (activeWindowId === windowId) setActiveWindowId(null);
     saveSetting('windows', updated);
   };
 
@@ -656,7 +657,6 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     setOpenWindows(updated);
     setActiveWindowId(null);
     saveSetting('windows', updated);
-    saveSetting('active_window', null);
   };
 
   const maximizeWindow = (windowId: string) => {
@@ -677,7 +677,6 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     setOpenWindows(updated);
     setNextZIndex(prev => prev + 1);
     saveSetting('windows', updated);
-    saveSetting('active_window', windowId);
   };
 
   const updateWindowPosition = (windowId: string, x: number, y: number, displayId?: string) => {
@@ -819,7 +818,17 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     setOpenWindows(updated);
     setActiveWindowId(null);
     saveSetting('windows', updated);
-    saveSetting('active_window', null);
+  };
+
+  const setIsWidgetsOpen = (isOpen: boolean) => setIsWidgetsOpenState(isOpen);
+  const setIsQuickSettingsOpen = (isOpen: boolean) => setIsQuickSettingsOpenState(isOpen);
+  const setIsStartOpen = (isOpen: boolean) => setIsStartOpenState(isOpen);
+
+  const setCurrentDisplayId = (id: string) => {
+    setDisplayIdState(id);
+    if (currentUser) {
+      sessionStorage.setItem(`nebula_${currentUser.id}_display_id`, id);
+    }
   };
 
   return (
@@ -828,9 +837,10 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       fileSystem, trash, desktopApps, notifications, wallpaper, notes, theme, accentColor,
       customAccentHex, cursorColor, isInverted, glassEnabled, powerStatus,
       taskbarPosition, taskbarSize, iconSize, currentWifi, isWifiConnecting,
-      isOnline, volume, brightness, isWidgetsOpen, isQuickSettingsOpen, isStartOpen, systemStats,
+      isOnline, volume, brightness, isWidgetsOpen, isQuickSettingsOpen, 
+      isStartOpen, systemStats,
       currentDisplayId, displayLayout, isSecurityEnabled,
-      login, logout, createAccount, openApp, closeWindow, minimizeWindow,
+      login, logout, createAccount, updateUserPassword, openApp, closeWindow, minimizeWindow,
       maximizeWindow, snapWindow, focusWindow, updateWindowPosition, moveWindowToDisplay,
       updateDisplayLayout, resetDisplayLayout, installApp, addNotification, clearNotifications,
       updateWallpaper, setNotes, setTheme, setAccentColor, setCustomAccentHex,
