@@ -1,8 +1,9 @@
+
 "use client"
 
 import React, { useState } from 'react';
 import { suggestGoogleProduct, SuggestGoogleProductOutput } from '@/ai/flows/ai-assistant-google-product-suggestion';
-import { Send, Bot, User, Sparkles, ExternalLink } from 'lucide-react';
+import { Send, Bot, User, Sparkles, ExternalLink, MessageSquareText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -13,7 +14,7 @@ export const AIAssistant: React.FC = () => {
   const [query, setQuery] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [messages, setMessages] = useState<{ type: 'user' | 'bot'; text: string; suggestions?: SuggestGoogleProductOutput['suggestions'] }[]>([
-    { type: 'bot', text: "Hello! I'm your Nebula AI Assistant. How can I help you navigate Nebulabs WebOS today? Tell me what you're looking to do, and I can suggest the right tools." }
+    { type: 'bot', text: "Hello! I'm your Nebula AI Assistant. I can help you with anything from navigating this OS to answering complex questions or generating ideas. How can I assist you today?" }
   ]);
   const { openApp } = useOS();
 
@@ -29,11 +30,11 @@ export const AIAssistant: React.FC = () => {
       const response = await suggestGoogleProduct({ query: userText });
       setMessages(prev => [...prev, { 
         type: 'bot', 
-        text: response.explanation || "Based on your needs, here are some applications that might help:",
+        text: response.answer,
         suggestions: response.suggestions
       }]);
     } catch (error) {
-      setMessages(prev => [...prev, { type: 'bot', text: "I'm sorry, I encountered an error. Please try again." }]);
+      setMessages(prev => [...prev, { type: 'bot', text: "I'm sorry, I encountered an error connecting to the Nebula AI core. Please check your network and try again." }]);
     } finally {
       setIsLoading(false);
     }
@@ -41,10 +42,16 @@ export const AIAssistant: React.FC = () => {
 
   const handleLaunchApp = (name: string) => {
     const appMap: Record<string, { id: AppId; title: string }> = {
+      'Browser': { id: 'browser', title: 'Nebula Browser' },
       'Google Drive': { id: 'google-drive', title: 'Google Drive' },
       'Notes': { id: 'notes', title: 'Nebula Notes' },
       'Calculator': { id: 'calc', title: 'Calculator' },
       'Terminal': { id: 'terminal', title: 'Terminal' },
+      'Maps': { id: 'maps', title: 'Nebula Maps' },
+      'Paint': { id: 'paint', title: 'Nebula Paint' },
+      'Camera': { id: 'camera', title: 'Nebula Camera' },
+      'Slides': { id: 'slides', title: 'Nebula Slides' },
+      'Monitor': { id: 'monitor', title: 'System Monitor' },
     };
     
     const matched = Object.entries(appMap).find(([key]) => name.toLowerCase().includes(key.toLowerCase()));
@@ -63,7 +70,7 @@ export const AIAssistant: React.FC = () => {
           <h2 className="text-sm font-bold text-white">Nebula AI Assistant</h2>
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-            <span className="text-[10px] text-white/40 font-medium">Powered by Gemini</span>
+            <span className="text-[10px] text-white/40 font-medium">Core v2.0 • Ultra-Threaded</span>
           </div>
         </div>
       </div>
@@ -78,32 +85,36 @@ export const AIAssistant: React.FC = () => {
               )}>
                 {msg.type === 'user' ? <User size={16} className="text-accent" /> : <Bot size={16} className="text-white/60" />}
               </div>
-              <div className="flex flex-col gap-3 max-w-[80%]">
+              <div className="flex flex-col gap-3 max-w-[85%]">
                 <div className={cn(
-                  "p-4 rounded-2xl text-sm leading-relaxed",
-                  msg.type === 'user' ? "bg-accent text-primary-foreground font-medium" : "bg-white/5 border border-white/10 text-white/80"
+                  "p-4 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap",
+                  msg.type === 'user' ? "bg-accent text-primary-foreground font-medium shadow-lg shadow-accent/10" : "bg-white/5 border border-white/10 text-white/90"
                 )}>
                   {msg.text}
                 </div>
                 
                 {msg.suggestions && msg.suggestions.length > 0 && (
-                  <div className="grid gap-3">
+                  <div className="grid gap-3 animate-in fade-in slide-in-from-top-2 duration-500">
+                    <div className="flex items-center gap-2 pl-1">
+                      <Sparkles size={12} className="text-accent" />
+                      <span className="text-[10px] font-black uppercase tracking-widest text-white/30">Recommended Tools</span>
+                    </div>
                     {msg.suggestions.map((s, idx) => (
-                      <div key={idx} className="bg-white/5 border border-white/10 rounded-xl p-4 flex flex-col gap-2">
+                      <div key={idx} className="bg-white/5 border border-white/10 rounded-xl p-4 flex flex-col gap-2 hover:border-accent/40 transition-colors group/card">
                         <div className="flex items-center justify-between">
-                          <h4 className="font-bold text-accent text-xs">{s.name}</h4>
+                          <h4 className="font-bold text-accent text-xs group-hover/card:text-white transition-colors">{s.name}</h4>
                           <Button 
                             variant="ghost" 
                             size="icon" 
-                            className="h-6 w-6 hover:bg-accent/20 text-accent"
+                            className="h-6 w-6 hover:bg-accent text-accent hover:text-primary-foreground rounded-lg"
                             onClick={() => handleLaunchApp(s.name)}
                           >
                             <ExternalLink size={12} />
                           </Button>
                         </div>
-                        <p className="text-[11px] text-white/60">{s.description}</p>
+                        <p className="text-[11px] text-white/60 leading-relaxed">{s.description}</p>
                         <div className="flex items-start gap-2 pt-2 mt-1 border-t border-white/5">
-                          <Sparkles size={10} className="text-accent shrink-0 mt-0.5" />
+                          <MessageSquareText size={10} className="text-accent/40 shrink-0 mt-0.5" />
                           <p className="text-[10px] italic text-white/40">{s.reason}</p>
                         </div>
                       </div>
@@ -116,7 +127,10 @@ export const AIAssistant: React.FC = () => {
           {isLoading && (
             <div className="flex gap-4 animate-pulse">
               <div className="w-8 h-8 rounded-full bg-white/5 border border-white/10" />
-              <div className="h-10 w-32 bg-white/5 rounded-2xl" />
+              <div className="space-y-2">
+                <div className="h-10 w-48 bg-white/5 rounded-2xl" />
+                <div className="h-4 w-32 bg-white/5 rounded-full" />
+              </div>
             </div>
           )}
         </div>
@@ -127,20 +141,24 @@ export const AIAssistant: React.FC = () => {
           <Input 
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Ask anything or describe what you need..."
-            className="pr-12 bg-white/5 border-white/10 h-12 rounded-xl focus-visible:ring-accent text-white"
+            placeholder="Ask anything, solve problems, or explore tools..."
+            className="pr-12 bg-white/5 border-white/10 h-12 rounded-xl focus-visible:ring-accent text-white placeholder:text-white/20"
             onKeyDown={(e) => e.key === 'Enter' && handleSend()}
           />
           <Button 
             size="icon" 
-            className="absolute right-1 top-1 bottom-1 bg-accent text-primary-foreground hover:bg-accent/80 rounded-lg h-auto aspect-square"
+            className="absolute right-1.5 top-1.5 bottom-1.5 bg-accent text-primary-foreground hover:bg-accent/80 rounded-lg h-auto aspect-square transition-transform active:scale-90"
             onClick={handleSend}
             disabled={isLoading}
           >
             <Send size={18} />
           </Button>
         </div>
-        <p className="text-[9px] text-white/20 text-center mt-2">Nebula AI can make mistakes. Verify important info.</p>
+        <div className="flex justify-center gap-4 mt-3 opacity-20 hover:opacity-40 transition-opacity">
+           <span className="text-[8px] font-bold uppercase tracking-widest text-white">Quantum Chat Active</span>
+           <span className="text-[8px] font-bold uppercase tracking-widest text-white">•</span>
+           <span className="text-[8px] font-bold uppercase tracking-widest text-white">OS Intelligence Integrated</span>
+        </div>
       </div>
     </div>
   );

@@ -1,38 +1,35 @@
 
 'use server';
 /**
- * @fileOverview An AI assistant flow that suggests relevant applications
- *               available within Nebulabs WebOS based on user queries.
+ * @fileOverview A general-purpose AI assistant flow for Nebulabs WebOS.
  *
- * - suggestGoogleProduct - A function that handles the product suggestion process.
- * - SuggestGoogleProductInput - The input type for the suggestGoogleProduct function.
- * - SuggestGoogleProductOutput - The return type for the suggestGoogleProduct function.
+ * - suggestGoogleProduct - A function that handles general queries and product suggestions.
+ * - SuggestGoogleProductInput - The input type for the assistant function.
+ * - SuggestGoogleProductOutput - The return type for the assistant function.
  */
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
 const SuggestGoogleProductInputSchema = z.object({
-  query: z.string().describe('The user\'s question or description of their needs.'),
+  query: z.string().describe('The user\'s question, request, or description of their needs.'),
 });
 export type SuggestGoogleProductInput = z.infer<typeof SuggestGoogleProductInputSchema>;
 
 const SuggestGoogleProductOutputSchema = z.object({
+  answer: z.string().describe('The main, comprehensive answer to the user\'s query.'),
   suggestions: z
     .array(
       z.object({
-        name: z.string().describe('The name of the suggested product or application.'),
+        name: z.string().describe('The name of the suggested Nebulabs product or application.'),
         description: z
           .string()
           .describe('A brief description of the suggested product or application.'),
-        reason: z.string().describe('Why this product is relevant to the user\'s query.'),
+        reason: z.string().describe('Why this product is relevant to the user\'s current query.'),
       })
     )
-    .describe('A list of suggested products or applications.'),
-  explanation: z
-    .string()
     .optional()
-    .describe('An overall explanation or summary of the suggestions.'),
+    .describe('A list of suggested products or applications within the OS, if applicable.'),
 });
 export type SuggestGoogleProductOutput = z.infer<typeof SuggestGoogleProductOutputSchema>;
 
@@ -43,31 +40,34 @@ export async function suggestGoogleProduct(
 }
 
 const prompt = ai.definePrompt({
-  name: 'googleProductSuggestionPrompt',
+  name: 'nebulaAssistantPrompt',
   input: {schema: SuggestGoogleProductInputSchema},
   output: {schema: SuggestGoogleProductOutputSchema},
-  prompt: `You are an AI assistant in Nebulabs WebOS. Your task is to suggest relevant applications
-that are part of the Nebulabs WebOS ecosystem, based on the user's query.
+  prompt: `You are the Nebula AI Assistant, a highly intelligent and helpful AI integrated into the Nebulabs WebOS environment.
 
-Nebulabs WebOS includes the following popular applications:
-- Nebula Browser: A full-featured web browser for surfing the internet and searching.
-- Google Drive: For cloud storage and file synchronization.
-- Nebula Notes: A built-in text editor for quick note-taking.
-- Calculator: For math and quick calculations.
-- Terminal: A command-line interface for system exploration and dev tools.
-- Google Calendar: For scheduling and time management.
-- Google Meet: For video conferencing and online meetings.
-- Google Photos: For organizing and sharing photos.
+Your goal is to provide comprehensive, accurate, and engaging answers to any question or request the user has. You are not limited to system help; you can provide creative writing, coding assistance, analysis, or general conversation.
 
-Based on the user's needs or question, suggest which of these applications would be most helpful.
-Provide a clear reason for each suggestion.
+If the user's request can be fulfilled or enhanced by one of the built-in applications in Nebulabs WebOS, you should include them in the suggestions field.
+
+Nebulabs WebOS Applications:
+- Nebula Browser: Full web access and research.
+- Google Drive: Cloud file storage and sync.
+- Nebula Notes: Text editing and documentation.
+- Calculator: Math and data processing.
+- Terminal: Command-line system access and dev tools.
+- Calendar: Scheduling and time management.
+- Nebula Maps: Global navigation and location intelligence.
+- Nebula Paint: Creative drawing and image editing.
+- Nebula Camera: Live hardware photo capture.
+- Nebula Slides: Professional presentation creation.
+- System Monitor: Performance telemetry and resource tracking.
 
 User Query: {{{query}}}`,
 });
 
 const suggestGoogleProductFlow = ai.defineFlow(
   {
-    name: 'suggestGoogleProductFlow',
+    name: 'nebulaAssistantFlow',
     inputSchema: SuggestGoogleProductInputSchema,
     outputSchema: SuggestGoogleProductOutputSchema,
   },
