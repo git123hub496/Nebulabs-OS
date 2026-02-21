@@ -2,12 +2,12 @@
 'use client';
 
 import React, { useState, useRef } from 'react';
-import { useOS, TaskbarPosition, TaskbarSize, DesktopIconSize, AccentColor, CursorColor } from '@/context/os-context';
+import { useOS, TaskbarPosition, TaskbarSize, DesktopIconSize, AccentColor, CursorColor, SystemNotification } from '@/context/os-context';
 import { 
   Monitor, Palette, User, Shield, Bell, HelpCircle, Upload, 
   Image as ImageIcon, Sun, Moon, Layout, Check, MousePointer2, 
   Eye, Zap, Layers, Pipette, Maximize2, Plus, ArrowUpRight,
-  Wifi, ShieldCheck, Activity
+  Wifi, ShieldCheck, Activity, Trash2, Info, Newspaper, Clock
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
@@ -60,7 +60,7 @@ export const Settings: React.FC = () => {
     cursorColor, setCursorColor, isInverted, setInverted,
     glassEnabled, setGlassEnabled, brightness, setBrightness,
     currentDisplayId, setCurrentDisplayId, displayLayout, updateDisplayLayout,
-    currentUser
+    currentUser, notifications, clearNotifications, addNotification
   } = useOS();
 
   const [activeTab, setActiveTab] = useState<SettingsTab>('personalization');
@@ -80,6 +80,15 @@ export const Settings: React.FC = () => {
 
   const addDisplay = () => {
     window.open(window.location.href, '_blank', 'width=1280,height=720');
+  };
+
+  const getNotifIcon = (type: SystemNotification['type']) => {
+    switch (type) {
+      case 'security': return <ShieldCheck className="text-green-500" size={16} />;
+      case 'news': return <Newspaper className="text-blue-400" size={16} />;
+      case 'app': return <Zap className="text-yellow-400" size={16} />;
+      default: return <Info className="text-accent" size={16} />;
+    }
   };
 
   const renderContent = () => {
@@ -285,14 +294,53 @@ export const Settings: React.FC = () => {
         return (
           <div className="space-y-12 animate-in fade-in slide-in-from-right-4 duration-500">
             <section>
-              <div className="flex items-center gap-2 mb-6">
-                <Bell size={18} className="text-accent" />
-                <h2 className="text-lg font-bold">System Alerts</h2>
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-2">
+                  <Bell size={18} className="text-accent" />
+                  <h2 className="text-lg font-bold">Notification Center</h2>
+                </div>
+                <Button variant="ghost" size="sm" onClick={clearNotifications} className="text-xs text-destructive hover:bg-destructive/10">
+                  Clear All
+                </Button>
               </div>
-              <div className="p-8 bg-white/5 border border-dashed border-white/10 rounded-3xl text-center opacity-40">
-                <Bell size={32} className="mx-auto mb-4" />
-                <p className="text-sm font-medium">No recent notifications</p>
-                <p className="text-[10px] uppercase tracking-widest mt-1">System is quiet</p>
+              
+              <ScrollArea className="h-[400px] rounded-2xl border border-white/5 bg-black/20 p-4">
+                {notifications.length > 0 ? (
+                  <div className="space-y-3">
+                    {notifications.map((notif) => (
+                      <div key={notif.id} className="p-4 bg-white/5 border border-white/5 rounded-xl hover:border-accent/20 transition-colors">
+                        <div className="flex items-center justify-between mb-1">
+                          <div className="flex items-center gap-2">
+                            {getNotifIcon(notif.type)}
+                            <span className="text-xs font-bold text-white/80">{notif.title}</span>
+                          </div>
+                          <span className="text-[10px] text-white/20 font-mono">{notif.timestamp}</span>
+                        </div>
+                        <p className="text-[11px] text-white/40 leading-relaxed pl-6">{notif.message}</p>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="h-full flex flex-col items-center justify-center text-center opacity-20 py-20">
+                    <Bell size={48} className="mb-4" />
+                    <p className="text-sm font-medium">No recent notifications</p>
+                    <p className="text-[10px] uppercase tracking-widest mt-1">Everything is quiet</p>
+                  </div>
+                )}
+              </ScrollArea>
+              
+              <div className="mt-6 p-4 bg-accent/5 border border-accent/10 rounded-xl flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Clock size={16} className="text-accent" />
+                  <p className="text-[11px] font-medium text-accent/80">Simulate incoming test notification</p>
+                </div>
+                <Button 
+                  size="sm" 
+                  className="h-7 bg-accent text-primary font-bold text-[10px]"
+                  onClick={() => addNotification("Test Alert", "This is a manually triggered system verification alert.", 'system')}
+                >
+                  Trigger
+                </Button>
               </div>
             </section>
           </div>

@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect, useCallback } from 'react';
 import { 
   ShoppingBag, 
   FolderOpen, 
@@ -17,7 +17,12 @@ import {
   Cloud,
   Activity,
   Calendar as CalendarIcon,
+  Info,
+  ShieldCheck,
+  Zap,
+  Wifi
 } from 'lucide-react';
+import { toast } from '@/hooks/use-toast';
 
 export type AppId = 'store' | 'files' | 'settings' | 'assistant' | 'google-drive' | 'notes' | 'calc' | 'terminal' | 'browser' | 'trash' | 'news' | 'maps' | 'monitor' | 'calendar';
 export type ThemeMode = 'dark' | 'light';
@@ -64,6 +69,14 @@ export interface DesktopShortcut {
   y: number;
 }
 
+export interface SystemNotification {
+  id: string;
+  title: string;
+  message: string;
+  timestamp: string;
+  type: 'system' | 'news' | 'security' | 'app';
+}
+
 export type DisplayDirection = 'left' | 'right' | 'top' | 'bottom';
 
 export interface DisplayLayout {
@@ -82,6 +95,7 @@ interface OSContextType {
   fileSystem: FileSystemItem[];
   trash: FileSystemItem[];
   desktopApps: DesktopShortcut[];
+  notifications: SystemNotification[];
   wallpaper: string;
   notes: string;
   theme: ThemeMode;
@@ -118,6 +132,8 @@ interface OSContextType {
   moveWindowToDisplay: (windowId: string, displayId: string) => void;
   updateDisplayLayout: (fromId: string, direction: DisplayDirection, toId: string) => void;
   installApp: (appId: AppId) => void;
+  addNotification: (title: string, message: string, type?: SystemNotification['type']) => void;
+  clearNotifications: () => void;
   updateWallpaper: (url: string) => void;
   setNotes: (content: string) => void;
   setTheme: (theme: ThemeMode) => void;
@@ -188,6 +204,16 @@ const INITIAL_DESKTOP: DesktopShortcut[] = [
   { id: 'trash', label: 'Recycling Bin', icon: Trash2, x: PADDING, y: PADDING + (GRID_Y * 4) },
 ];
 
+const RANDOM_NOTIFICATIONS: Omit<SystemNotification, 'id' | 'timestamp'>[] = [
+  { title: "Security Scan Complete", message: "Nebula Defender found 0 threats. Your system is secure.", type: 'security' },
+  { title: "New Trending Story", message: "Nebula Labs reveals breakthrough in quantum browser speed.", type: 'news' },
+  { title: "System Tip", message: "Try dragging a window past the screen edge to hop between displays.", type: 'app' },
+  { title: "Update Available", message: "Kernel v4.2.1 is ready for installation. Restart to apply.", type: 'system' },
+  { title: "Nebula Drive Sync", message: "Your recent documents have been successfully backed up.", type: 'app' },
+  { title: "Network Stability", message: "Connected to Nebula_Secure_5G with optimal signal strength.", type: 'system' },
+  { title: "Performance Note", message: "System Monitor detected high idle efficiency. Battery saved.", type: 'system' },
+];
+
 const INITIAL_APPS: AppId[] = ['store', 'files', 'settings', 'assistant', 'notes', 'calc', 'terminal', 'browser', 'trash', 'news', 'maps', 'monitor', 'calendar'];
 const INITIAL_PINNED: AppId[] = ['files', 'store', 'assistant', 'browser', 'settings', 'monitor'];
 
@@ -205,6 +231,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   const [fileSystem, setFileSystem] = useState<FileSystemItem[]>(INITIAL_FILES);
   const [trash, setTrash] = useState<FileSystemItem[]>([]);
   const [desktopApps, setDesktopApps] = useState<DesktopShortcut[]>(INITIAL_DESKTOP);
+  const [notifications, setNotifications] = useState<SystemNotification[]>([]);
   const [wallpaper, setWallpaper] = useState("https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=1920");
   const [notes, setNotesState] = useState("");
   const [theme, setThemeState] = useState<ThemeMode>('dark');
@@ -251,6 +278,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
             case 'volume': setVolumeState(parseInt(val)); break;
             case 'power': setPowerStatus(val as PowerStatus); break;
             case 'display_layout': setDisplayLayoutState(JSON.parse(val)); break;
+            case 'notifications': setNotifications(JSON.parse(val)); break;
           }
         } catch (err) {
           console.error('Sync Error:', err);
@@ -333,6 +361,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     setFileSystem(load('file_system', INITIAL_FILES));
     setTrash(load('trash_items', []));
     setOpenWindows(load('windows', []));
+    setNotifications(load('notifications', []));
     setDisplayLayoutState(load('display_layout', { '1': { right: '2' }, '2': { left: '1' } }));
 
     const savedWifi = load('wifi', "Nebula_Secure_5G");
@@ -353,6 +382,55 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       localStorage.setItem(`nebula_${currentUser.id}_${key}`, strValue);
     }
   };
+
+  const addNotification = useCallback((title: string, message: string, type: SystemNotification['type'] = 'system') => {
+    const newNotif: SystemNotification = {
+      id: Math.random().toString(36).substr(2, 9),
+      title,
+      message,
+      type,
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    };
+    
+    setNotifications(prev => {
+      const updated = [newNotif, ...prev].slice(0, 50); // Keep last 50
+      saveSetting('notifications', updated);
+      return updated;
+    });
+
+    // Only show visual toast on primary display to avoid duplication
+    if (currentDisplayId === '1') {
+      toast({
+        title: title,
+        description: message,
+      });
+    }
+  }, [currentDisplayId]);
+
+  const clearNotifications = () => {
+    setNotifications([]);
+    saveSetting('notifications', []);
+  };
+
+  // RANDOM BACKGROUND NOTIFICATIONS EFFECT
+  useEffect(() => {
+    if (powerStatus !== 'on' || currentDisplayId !== '1') return;
+
+    const generateRandomNotif = () => {
+      const rand = RANDOM_NOTIFICATIONS[Math.floor(Math.random() * RANDOM_NOTIFICATIONS.length)];
+      addNotification(rand.title, rand.message, rand.type);
+    };
+
+    // Initial random delay then every 45-90 seconds
+    const initialDelay = 10000 + Math.random() * 20000;
+    const timer = setTimeout(() => {
+      generateRandomNotif();
+      const interval = setInterval(generateRandomNotif, 60000 + Math.random() * 30000);
+      return () => clearInterval(interval);
+    }, initialDelay);
+
+    return () => clearTimeout(timer);
+  }, [powerStatus, currentDisplayId, addNotification]);
 
   const login = (userId: string) => {
     const user = accounts.find(a => a.id === userId);
@@ -439,6 +517,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       setIsOnline(ssid !== OFFLINE_WIFI);
       setIsWifiConnecting(false);
       saveSetting('wifi', ssid);
+      addNotification("WiFi Connected", `Successfully joined ${ssid}.`, 'system');
     }, 2000);
   };
 
@@ -603,6 +682,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   const installApp = (appId: AppId) => {
     if (!installedApps.includes(appId)) {
       setInstalledApps(prev => [...prev, appId]);
+      addNotification("App Installed", `${APP_INFO[appId].label} is now available in your Start Menu.`, 'app');
     }
   };
 
@@ -707,14 +787,14 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   return (
     <OSContext.Provider value={{
       currentUser, accounts, openWindows, activeWindowId, installedApps, pinnedApps,
-      fileSystem, trash, desktopApps, wallpaper, notes, theme, accentColor,
+      fileSystem, trash, desktopApps, notifications, wallpaper, notes, theme, accentColor,
       customAccentHex, cursorColor, isInverted, glassEnabled, powerStatus,
       taskbarPosition, taskbarSize, iconSize, currentWifi, isWifiConnecting,
       isOnline, volume, brightness, isWidgetsOpen, isQuickSettingsOpen, systemStats,
       currentDisplayId, displayLayout,
       login, logout, createAccount, openApp, closeWindow, minimizeWindow,
       maximizeWindow, snapWindow, focusWindow, updateWindowPosition, moveWindowToDisplay,
-      updateDisplayLayout, installApp,
+      updateDisplayLayout, installApp, addNotification, clearNotifications,
       updateWallpaper, setNotes, setTheme, setAccentColor, setCustomAccentHex,
       setCursorColor, setInverted, setGlassEnabled, setTaskbarPosition, setTaskbarSize,
       setIconSize, connectToWifi, setVolume, setBrightness, setIsWidgetsOpen,
