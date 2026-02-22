@@ -71,6 +71,16 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({ x, y, onClose }) => {
         className="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-accent/20 text-xs font-medium text-white/80 hover:text-accent transition-colors group"
       >
         <div className="flex items-center gap-3">
+          <Settings size={14} className="text-accent/60 group-hover:text-accent" />
+          <span>System Settings</span>
+        </div>
+      </button>
+
+      <button 
+        onClick={() => handleAction(() => openApp('settings', 'Settings'))}
+        className="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-accent/20 text-xs font-medium text-white/80 hover:text-accent transition-colors group"
+      >
+        <div className="flex items-center gap-3">
           <Monitor size={14} className="text-accent/60 group-hover:text-accent" />
           <span>Personalize Desktop</span>
         </div>
