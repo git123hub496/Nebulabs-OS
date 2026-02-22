@@ -14,6 +14,7 @@ import {
   Star, 
   Zap, 
   Shield, 
+  ShieldCheck,
   Package, 
   Clock, 
   CreditCard,
