@@ -32,11 +32,12 @@ export const BIOS: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   const [bootOrder, setBootOrder] = useState(['Nebulabs Virtual SSD-0', 'Network PXE', 'USB Flash Device']);
 
   const handleAction = useCallback((direction: 'up' | 'down' | 'enter' | 'toggle') => {
-    if (activeSection === 'Exit' || isEditing) return;
+    if (activeSection === 'Exit') return;
+    if (isEditing && direction !== 'enter') return;
 
     if (direction === 'up') setSelectedItem(prev => Math.max(0, prev - 1));
     if (direction === 'down') {
-      const limits = { Main: 3, Advanced: 5, Power: 3, Security: 2, Boot: 2, Exit: 2 };
+      const limits: Record<BIOSSection, number> = { Main: 3, Advanced: 5, Power: 3, Security: 2, Boot: 2, Exit: 2 };
       setSelectedItem(prev => Math.min(limits[activeSection], prev + 1));
     }
 
@@ -46,8 +47,12 @@ export const BIOS: React.FC<{ onClose: () => void }> = ({ onClose }) => {
           setSettings(s => ({ ...s, deviceType: s.deviceType === 'NebulaBook' ? 'Nebula-PC' : 'NebulaBook' }));
         }
         if (selectedItem === 3) { // Custom Name
-          setIsEditing(true);
-          setTimeout(() => inputRef.current?.focus(), 50);
+          if (isEditing) {
+            setIsEditing(false);
+          } else {
+            setIsEditing(true);
+            setTimeout(() => inputRef.current?.focus(), 50);
+          }
         }
       }
       if (activeSection === 'Advanced') {
@@ -69,7 +74,6 @@ export const BIOS: React.FC<{ onClose: () => void }> = ({ onClose }) => {
         if (selectedItem === 2) setSettings(s => ({ ...s, secureBoot: !s.secureBoot }));
       }
       if (activeSection === 'Boot' && selectedItem < 2) {
-        // Swap boot order
         const newOrder = [...bootOrder];
         const temp = newOrder[selectedItem];
         newOrder[selectedItem] = newOrder[selectedItem + 1];
@@ -85,11 +89,16 @@ export const BIOS: React.FC<{ onClose: () => void }> = ({ onClose }) => {
     if (isEditing) {
       if (e.key === 'Enter' || e.key === 'Escape') {
         setIsEditing(false);
+        e.preventDefault();
       }
       return;
     }
 
-    if (e.key === 'Escape') onClose();
+    if (e.key === 'Escape') {
+      onClose();
+      return;
+    }
+
     if (e.key === 'ArrowRight') {
       const sections: BIOSSection[] = ['Main', 'Advanced', 'Power', 'Security', 'Boot', 'Exit'];
       const currentIndex = sections.indexOf(activeSection);
@@ -119,7 +128,7 @@ export const BIOS: React.FC<{ onClose: () => void }> = ({ onClose }) => {
         handleAction('enter');
       }
     }
-    if (e.key === ' ' || e.key === '+') handleAction('toggle');
+    if (e.key === ' ' || e.key === '+' || e.key === '=') handleAction('toggle');
   }, [activeSection, handleAction, onClose, restart, isSaving, selectedItem, settings, updateBIOSSettings, isEditing, biosSettings]);
 
   useEffect(() => {
@@ -149,6 +158,7 @@ export const BIOS: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                     ref={inputRef}
                     value={settings.deviceName}
                     onChange={(e) => setSettings(s => ({ ...s, deviceName: e.target.value }))}
+                    onBlur={() => setIsEditing(false)}
                     className="bg-white text-blue-900 px-1 border-none outline-none w-32 uppercase"
                     maxLength={15}
                   />
@@ -206,7 +216,7 @@ export const BIOS: React.FC<{ onClose: () => void }> = ({ onClose }) => {
               <div 
                 key={i} 
                 className={cn(
-                  "p-1 px-2 transition-colors flex justify-between font-bold",
+                  "p-1 px-2 transition-colors flex justify-between font-bold text-xs uppercase",
                   selectedItem === i ? "bg-[#aaaaaa] text-[#0000aa]" : "text-white"
                 )}
               >
@@ -228,7 +238,7 @@ export const BIOS: React.FC<{ onClose: () => void }> = ({ onClose }) => {
               <div 
                 key={i} 
                 className={cn(
-                  "p-1 px-2 transition-colors flex justify-between font-bold",
+                  "p-1 px-2 transition-colors flex justify-between font-bold text-xs uppercase",
                   selectedItem === i ? "bg-[#aaaaaa] text-[#0000aa]" : "text-white"
                 )}
               >
@@ -260,7 +270,7 @@ export const BIOS: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                 <div 
                   key={i} 
                   className={cn(
-                    "p-1 px-2 transition-colors flex justify-between font-bold",
+                    "p-1 px-2 transition-colors flex justify-between font-bold text-xs uppercase",
                     selectedItem === i ? "bg-[#aaaaaa] text-[#0000aa]" : "text-white"
                   )}
                 >
@@ -286,13 +296,13 @@ export const BIOS: React.FC<{ onClose: () => void }> = ({ onClose }) => {
       case 'Boot':
         return (
           <div className="space-y-2">
-            <div className="text-[#aaa] mb-2 uppercase text-[10px] tracking-widest font-black">Boot Priority Order (Press +/- to move):</div>
+            <div className="text-[#aaa] mb-2 uppercase text-[10px] tracking-widest font-black">Boot Priority Order (Press ENTER to swap):</div>
             <div className="space-y-1 font-bold">
               {bootOrder.map((device, i) => (
                 <div 
                   key={i} 
                   className={cn(
-                    "p-1 px-2 flex gap-4",
+                    "p-1 px-2 flex gap-4 text-xs uppercase",
                     selectedItem === i ? "bg-[#aaaaaa] text-[#0000aa]" : "text-white"
                   )}
                 >
@@ -316,9 +326,10 @@ export const BIOS: React.FC<{ onClose: () => void }> = ({ onClose }) => {
             ].map((label, i) => (
               <button 
                 key={i}
-                onClick={() => setSelectedItem(i)}
+                onMouseEnter={() => setSelectedItem(i)}
+                onClick={() => handleKeyDown({ key: 'Enter' } as any)}
                 className={cn(
-                  "block w-full p-2 border transition-all font-black uppercase",
+                  "block w-full p-2 border transition-all font-black uppercase text-xs",
                   selectedItem === i 
                     ? "bg-[#aaaaaa] text-[#0000aa] border-[#ffffff] scale-105 shadow-[4px_4px_0px_#000]" 
                     : "bg-transparent text-white border-white/20 hover:bg-white/5"
@@ -346,7 +357,6 @@ export const BIOS: React.FC<{ onClose: () => void }> = ({ onClose }) => {
 
   return (
     <div className="fixed inset-0 z-[100000] bg-[#0000aa] text-[#dddddd] font-mono p-8 overflow-hidden crt-overlay flex flex-col">
-      {/* Scanline effect */}
       <div className="absolute inset-0 pointer-events-none bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.1)_50%),linear-gradient(90deg,rgba(255,0,0,0.03),rgba(0,255,0,0.01),rgba(0,0,112,0.03))] z-50 bg-[length:100%_4px,3px_100%]" />
       
       {/* BIOS Header */}
@@ -358,7 +368,7 @@ export const BIOS: React.FC<{ onClose: () => void }> = ({ onClose }) => {
       </div>
 
       {/* Navigation Tabs */}
-      <div className="flex gap-1 mb-1 shrink-0">
+      <div className="flex gap-1 mb-1 shrink-0 px-1">
         {['Main', 'Advanced', 'Power', 'Security', 'Boot', 'Exit'].map((sec) => (
           <button
             key={sec}
@@ -404,13 +414,13 @@ export const BIOS: React.FC<{ onClose: () => void }> = ({ onClose }) => {
         </div>
       </div>
 
-      {/* Footer Branding */}
+      {/* Footer Branding - Properly anchored to bottom */}
       <div className="mt-6 flex items-end justify-between shrink-0">
         <div className="space-y-1">
           <div className="text-4xl font-black italic tracking-tighter text-white drop-shadow-[4px_4px_0px_#000]">NEBULABS</div>
           <div className="text-[10px] uppercase font-black opacity-60 tracking-[0.3em]">Proprietary Virtual BIOS Architecture</div>
         </div>
-        <div className="text-right text-[10px] opacity-60 font-black tracking-widest uppercase">
+        <div className="text-right text-[10px] opacity-60 font-black tracking-widest uppercase pb-1">
           <div>Display: {typeof window !== 'undefined' ? `${window.innerWidth}x${window.innerHeight}` : '1920x1080'}</div>
           <div>VRAM: {systemStats.ram * 512} KB Buffer</div>
           <div>Identity: {settings.deviceType} {settings.deviceName}</div>
