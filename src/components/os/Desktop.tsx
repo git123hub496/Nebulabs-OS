@@ -73,6 +73,7 @@ import { Camera } from '../apps/Camera';
 import { PresentationMaker } from '../apps/PresentationMaker';
 import { NebulaMail } from '../apps/NebulaMail';
 import { NebulaV } from '../apps/NebulaV';
+import { GoogleSearch } from '../apps/GoogleSearch';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -102,6 +103,7 @@ const APP_COMPONENTS: Record<AppId, (win: WindowInstance) => React.ReactNode> = 
   'slides': (win) => <PresentationMaker />,
   'mail': (win) => <NebulaMail />,
   'nebula-v': (win) => <NebulaV />,
+  'google-search': (win) => <GoogleSearch />,
   'info': (win) => (
     <div className="p-8 space-y-6 bg-[#161d25] h-full text-white/90 overflow-auto">
       <div className="flex items-center gap-4 mb-8">
