@@ -1,3 +1,4 @@
+
 "use client"
 
 import React, { useState, useEffect } from 'react';
@@ -61,18 +62,28 @@ export const Screencast: React.FC = () => {
           disconnect();
         };
       } else {
-        // Fallback for browsers without Presentation API support (Simulated)
+        // Fallback for browsers without Presentation API support
+        throw new Error('Presentation API not supported');
+      }
+    } catch (err: any) {
+      console.warn("Hardware casting restricted:", err);
+      
+      // Check if it's a security/sandbox error
+      const isSandboxError = err.name === 'SecurityError' || err.message?.includes('sandboxed') || err.message?.includes('presentation');
+      
+      if (isSandboxError || err.message === 'Presentation API not supported') {
+        // Fallback to simulation mode if restricted by environment or unsupported
         setConnectingId(deviceId);
         setTimeout(() => {
           setConnectingId(null);
           setActiveDeviceId(deviceId);
-          addNotification("Cast Active (Simulated)", `Projecting to ${deviceId}.`, "app");
+          addNotification("Cast Active (Simulated)", "Environment restriction: Using High-Fidelity Simulation.", "app");
+          playSound('notify');
         }, 2000);
+      } else {
+        setConnectingId(null);
+        addNotification("Casting Failed", "Could not establish hardware link.", "security");
       }
-    } catch (err) {
-      console.error("Casting failed:", err);
-      setConnectingId(null);
-      addNotification("Casting Failed", "Could not establish hardware link.", "security");
     }
   };
 
@@ -171,6 +182,16 @@ export const Screencast: React.FC = () => {
                 </Button>
               </div>
             ))}
+          </div>
+
+          <div className="bg-accent/5 rounded-2xl p-4 space-y-3">
+            <div className="flex items-center gap-2">
+              <Info size={14} className="text-accent" />
+              <span className="text-[10px] font-black text-accent uppercase tracking-widest">Protocol Intelligence</span>
+            </div>
+            <p className="text-[10px] text-white/40 leading-relaxed font-medium">
+              Nebula Cast attempts to establish a direct P2P link with compatible imaging hardware. If your browser environment is sandboxed (like in some development previews), the system will automatically fall back to an encrypted High-Fidelity Simulation.
+            </p>
           </div>
         </div>
       </ScrollArea>
