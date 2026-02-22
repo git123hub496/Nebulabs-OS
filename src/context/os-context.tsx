@@ -374,7 +374,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   const [theme, setThemeState] = useState<ThemeMode>('dark');
   const [accentColor, setAccentColorState] = useState<AccentColor>('purple');
   const [customAccentHex, setCustomAccentHexState] = useState("#9333ea");
-  const [cursorColor, setCursorColorState] = useState<CursorColor>('white');
+  const [cursorColor, setCursorColorState] = useState<CursorColor>('black');
   const [mouserScale, setMouserScaleState] = useState<number>(1.0);
   const [isInverted, setInvertedState] = useState(false);
   const [isGrayscale, setGrayscaleState] = useState(false);
@@ -689,8 +689,8 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     if (typeof window === 'undefined') return;
     
     const getCursorValue = () => {
-      let fill = '#fff';
-      let stroke = '#000';
+      let fill = '#000';
+      let stroke = '#fff';
       const accentHexes: Record<string, string> = { blue: '#3b82f6', rose: '#e11d48', orange: '#f97316', green: '#16a34a', purple: '#9333ea', grey: '#64748b', default: '#9333ea' };
       
       if (cursorColor === 'black') {
@@ -708,12 +708,18 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       }
 
       const baseScale = 32 * mouserScale;
+      // SVG exactly matched to image: pointed winged arrow with tilted stem and drop shadow
       const svg = `
         <svg width="${baseScale}" height="${baseScale}" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M3,3 L3,23 L8,17 L12,26 L17,24 L12,16 L18,16 Z" fill="${fill}" stroke="${stroke}" stroke-width="1.5" stroke-linejoin="round"/>
+          <defs>
+            <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+              <feDropShadow dx="1" dy="1" stdDeviation="1.5" flood-opacity="0.6"/>
+            </filter>
+          </defs>
+          <path d="M0,0 L0,19 L4.8,15 L7.5,22 L10.5,21 L7.8,14 L13,14 Z" fill="${fill}" stroke="${stroke}" stroke-width="1.5" stroke-linejoin="miter" filter="url(#shadow)"/>
         </svg>`;
       
-      return `url("data:image/svg+xml;base64,${window.btoa(svg)}") 3 3, auto`;
+      return `url("data:image/svg+xml;base64,${window.btoa(svg)}") 0 0, auto`;
     };
     
     document.documentElement.style.setProperty('--cursor-url', getCursorValue());
@@ -941,6 +947,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   const setTaskbarSize = (s: number) => { if (isNaN(s)) return; setTaskbarSizeState(s); saveSetting('taskbar_size', s); };
   const setIconSize = (s: number) => { if (isNaN(s)) return; setIconSizeState(s); saveSetting('icon_size', s); };
   const setVolume = (v: number) => { setVolumeState(v); saveSetting('volume', v); };
+  const setTaskbarSizeStateInternal = (s: number) => { if (isNaN(s)) return; setTaskbarSizeState(s); };
   const setBrightness = (b: number) => { setBrightnessState(b); saveSetting('brightness', b); };
 
   const setIsWidgetsOpen = (open: boolean) => {
