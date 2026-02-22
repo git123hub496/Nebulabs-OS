@@ -345,12 +345,12 @@ export const BIOS: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   }
 
   return (
-    <div className="fixed inset-0 z-[100000] bg-[#0000aa] text-[#dddddd] font-mono p-8 overflow-hidden crt-overlay">
+    <div className="fixed inset-0 z-[100000] bg-[#0000aa] text-[#dddddd] font-mono p-8 overflow-hidden crt-overlay flex flex-col">
       {/* Scanline effect */}
-      <div className="absolute inset-0 pointer-events-none bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.1)_50%),linear-gradient(90deg,rgba(255,0,0,0.03),rgba(0,255,0,0.01),rgba(0,0,112,0.03))] z-10 bg-[length:100%_4px,3px_100%]" />
+      <div className="absolute inset-0 pointer-events-none bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.1)_50%),linear-gradient(90deg,rgba(255,0,0,0.03),rgba(0,255,0,0.01),rgba(0,0,112,0.03))] z-50 bg-[length:100%_4px,3px_100%]" />
       
       {/* BIOS Header */}
-      <div className="border-4 border-[#aaaaaa] p-1 mb-4 shadow-[4px_4px_0px_#000]">
+      <div className="border-4 border-[#aaaaaa] p-1 mb-4 shadow-[4px_4px_0px_#000] shrink-0">
         <div className="bg-[#aaaaaa] text-[#0000aa] px-4 py-1 flex justify-between items-center font-black text-xs">
           <span>Nebulabs Setup Utility - Version 4.5.2 (C) 2026 Nebulabs Corp.</span>
           <span className="text-[10px] animate-pulse">FIRMWARE SETUP</span>
@@ -358,7 +358,7 @@ export const BIOS: React.FC<{ onClose: () => void }> = ({ onClose }) => {
       </div>
 
       {/* Navigation Tabs */}
-      <div className="flex gap-1 mb-1">
+      <div className="flex gap-1 mb-1 shrink-0">
         {['Main', 'Advanced', 'Power', 'Security', 'Boot', 'Exit'].map((sec) => (
           <button
             key={sec}
@@ -376,16 +376,16 @@ export const BIOS: React.FC<{ onClose: () => void }> = ({ onClose }) => {
       </div>
 
       {/* Main Content Area */}
-      <div className="border-4 border-[#aaaaaa] h-[calc(100%-240px)] flex shadow-[4px_4px_0px_#000]">
+      <div className="border-4 border-[#aaaaaa] flex-1 flex shadow-[4px_4px_0px_#000] min-h-0 overflow-hidden bg-[#000099]">
         {/* Left List */}
-        <div className="flex-1 p-6 border-r border-[#aaaaaa] bg-[#000099]">
+        <div className="flex-1 p-6 border-r border-[#aaaaaa] overflow-y-auto custom-scrollbar">
           {renderSection()}
         </div>
 
         {/* Right Info Sidebar */}
-        <div className="w-80 p-6 bg-[#000088] text-[10px] font-bold">
-          <div className="text-white font-black mb-4 uppercase tracking-widest border-b border-white/20 pb-2">Item Specific Help</div>
-          <div className="leading-relaxed opacity-90 h-40 overflow-hidden text-[#ccc]">
+        <div className="w-80 p-6 bg-[#000088] text-[10px] font-bold flex flex-col">
+          <div className="text-white font-black mb-4 uppercase tracking-widest border-b border-white/20 pb-2 shrink-0">Item Specific Help</div>
+          <div className="leading-relaxed opacity-90 text-[#ccc] flex-1 overflow-y-auto pr-2 custom-scrollbar">
             {activeSection === 'Main' && "Displays general system information. Select 'System Model' to toggle hardware type. Select 'Custom Identifier' and press ENTER to rename your device."}
             {activeSection === 'Advanced' && "Configure specialized hardware parameters. Warning: Improper settings may lead to virtual hardware instability."}
             {activeSection === 'Power' && "Configure power management features. 'AC Loss Policy' determines how the system reacts after a power failure."}
@@ -393,7 +393,7 @@ export const BIOS: React.FC<{ onClose: () => void }> = ({ onClose }) => {
             {activeSection === 'Boot' && "Specify the device search order. The device at the top of the list will be checked for a bootable OS first."}
             {activeSection === 'Exit' && "Commit settings to the Nebulabs Virtual CMOS memory and restart the system."}
           </div>
-          <div className="mt-auto space-y-1 opacity-80 border-t border-white/20 pt-4 text-white">
+          <div className="mt-auto space-y-1 opacity-80 border-t border-white/20 pt-4 text-white shrink-0">
             <div className="flex justify-between"><span>↑↓</span> <span>Select Item</span></div>
             <div className="flex justify-between"><span>←→</span> <span>Select Menu</span></div>
             <div className="flex justify-between"><span>Enter</span> <span>Edit/Toggle</span></div>
@@ -405,7 +405,7 @@ export const BIOS: React.FC<{ onClose: () => void }> = ({ onClose }) => {
       </div>
 
       {/* Footer Branding */}
-      <div className="mt-8 flex items-end justify-between">
+      <div className="mt-6 flex items-end justify-between shrink-0">
         <div className="space-y-1">
           <div className="text-4xl font-black italic tracking-tighter text-white drop-shadow-[4px_4px_0px_#000]">NEBULABS</div>
           <div className="text-[10px] uppercase font-black opacity-60 tracking-[0.3em]">Proprietary Virtual BIOS Architecture</div>
@@ -426,6 +426,13 @@ export const BIOS: React.FC<{ onClose: () => void }> = ({ onClose }) => {
           0% { opacity: 0.99; }
           50% { opacity: 1; }
           100% { opacity: 0.995; }
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: rgba(255, 255, 255, 0.2);
+          border-radius: 10px;
         }
       `}</style>
     </div>
