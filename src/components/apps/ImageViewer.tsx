@@ -5,12 +5,28 @@ import React from 'react';
 import { ExternalLink, Maximize2, Minimize2, ZoomIn, ZoomOut, ShieldCheck, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { useOS } from '@/context/os-context';
+import { toast } from '@/hooks/use-toast';
 
 interface ImageViewerProps {
   src?: string;
 }
 
 export const ImageViewer: React.FC<ImageViewerProps> = ({ src }) => {
+  const { importFile } = useOS();
+
+  const handleVirtualDownload = () => {
+    if (!src) return;
+    const fileName = `nebula_export_${Date.now()}.png`;
+    // Intercept physical download and save to virtual file system instead
+    importFile(fileName, src, Math.round(src.length * 0.75), null);
+    
+    toast({
+      title: "Saved to Nebula Drive",
+      description: `${fileName} has been added to your root folder.`,
+    });
+  };
+
   if (!src) {
     return (
       <div className="flex flex-col items-center justify-center h-full bg-[#161d25] text-white/40 gap-4">
@@ -40,10 +56,14 @@ export const ImageViewer: React.FC<ImageViewerProps> = ({ src }) => {
               <ExternalLink size={14} />
             </a>
           </Button>
-          <Button variant="ghost" size="icon" className="h-8 w-8 text-white/60 hover:text-white hover:bg-white/10" asChild>
-            <a href={src} download="nebulabs_export.png" title="Download Image">
-              <Download size={14} />
-            </a>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="h-8 w-8 text-white/60 hover:text-white hover:bg-white/10" 
+            onClick={handleVirtualDownload}
+            title="Download to Nebula Drive"
+          >
+            <Download size={14} />
           </Button>
         </div>
       </div>
