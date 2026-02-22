@@ -27,7 +27,10 @@ import {
   Headset,
   Speaker,
   Keyboard,
-  RefreshCw
+  RefreshCw,
+  Gamepad2,
+  Headphones,
+  Monitor
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -42,7 +45,7 @@ interface Product {
   price: number;
   description: string;
   specs: string[];
-  image: string;
+  image: string | null;
   imageHint: string;
   isNew?: boolean;
   rating: number;
@@ -63,7 +66,7 @@ export const ShopNebulabs: React.FC = () => {
       price: 2499,
       description: 'The ultimate quantum-threaded mobile workstation. Built for creators and developers.',
       specs: ['Quantum-X Octa-Core', '64GB LPDDR5', '2TB SSD', '16" Liquid Nebula Display'],
-      image: PlaceHolderImages.find(img => img.id === 'shop-laptop-pro')?.imageUrl || '',
+      image: PlaceHolderImages.find(img => img.id === 'shop-laptop-pro')?.imageUrl || null,
       imageHint: PlaceHolderImages.find(img => img.id === 'shop-laptop-pro')?.imageHint || 'laptop',
       isNew: true,
       rating: 5.0
@@ -75,7 +78,7 @@ export const ShopNebulabs: React.FC = () => {
       price: 1199,
       description: 'Holographic imaging meets neural connectivity. The future of mobile is here.',
       specs: ['Neural Link v4', 'Holographic OLED', 'Quantum Night Vision', 'All-Week Battery'],
-      image: PlaceHolderImages.find(img => img.id === 'shop-phone-ultra')?.imageUrl || '',
+      image: PlaceHolderImages.find(img => img.id === 'shop-phone-ultra')?.imageUrl || null,
       imageHint: PlaceHolderImages.find(img => img.id === 'shop-phone-ultra')?.imageHint || 'phone',
       isNew: true,
       rating: 4.9
@@ -87,7 +90,7 @@ export const ShopNebulabs: React.FC = () => {
       price: 4999,
       description: 'Extreme compute for AI researchers and deep-sim enthusiasts.',
       specs: ['Dual Quantum-X Ultra', '256GB RAM', '10TB RAID-0', 'Liquid Nitrogen Cooling'],
-      image: PlaceHolderImages.find(img => img.id === 'shop-pc-titan')?.imageUrl || '',
+      image: PlaceHolderImages.find(img => img.id === 'shop-pc-titan')?.imageUrl || null,
       imageHint: PlaceHolderImages.find(img => img.id === 'shop-pc-titan')?.imageHint || 'desktop pc',
       rating: 5.0
     },
@@ -98,7 +101,7 @@ export const ShopNebulabs: React.FC = () => {
       price: 799,
       description: 'Augmented reality seamlessly integrated with your workspace.',
       specs: ['8K Per Eye', 'Direct Kernel Link', 'Bone Conduction Audio', '12h Runtime'],
-      image: PlaceHolderImages.find(img => img.id === 'shop-gear-glasses')?.imageUrl || '',
+      image: PlaceHolderImages.find(img => img.id === 'shop-gear-glasses')?.imageUrl || null,
       imageHint: PlaceHolderImages.find(img => img.id === 'shop-gear-glasses')?.imageHint || 'smart glasses',
       isNew: true,
       rating: 4.8
@@ -110,7 +113,7 @@ export const ShopNebulabs: React.FC = () => {
       price: 1599,
       description: 'Host your own cloud partition with military-grade encryption.',
       specs: ['128-Core Compute', 'Self-Healing Storage', 'Uninterruptible UPS', 'Global DNS Link'],
-      image: PlaceHolderImages.find(img => img.id === 'shop-server-node')?.imageUrl || '',
+      image: PlaceHolderImages.find(img => img.id === 'shop-server-node')?.imageUrl || null,
       imageHint: PlaceHolderImages.find(img => img.id === 'shop-server-node')?.imageHint || 'server',
       rating: 4.7
     },
@@ -121,7 +124,7 @@ export const ShopNebulabs: React.FC = () => {
       price: 1299,
       description: 'Impossible thinness. Unmatched performance. The traveler\'s companion.',
       specs: ['Quantum-X Nano', '16GB RAM', '512GB SSD', '13" Nano-Bezel Display'],
-      image: PlaceHolderImages.find(img => img.id === 'shop-laptop-air')?.imageUrl || '',
+      image: PlaceHolderImages.find(img => img.id === 'shop-laptop-air')?.imageUrl || null,
       imageHint: PlaceHolderImages.find(img => img.id === 'shop-laptop-air')?.imageHint || 'slim laptop',
       rating: 4.9
     },
@@ -132,7 +135,7 @@ export const ShopNebulabs: React.FC = () => {
       price: 899,
       description: 'A professional-grade tablet with active stylus tracking and 4K display.',
       specs: ['Neural-X Slate', '12GB RAM', 'Precision Stylus', '120Hz ProMotion'],
-      image: PlaceHolderImages.find(img => img.id === 'shop-tablet-slate')?.imageUrl || '',
+      image: PlaceHolderImages.find(img => img.id === 'shop-tablet-slate')?.imageUrl || null,
       imageHint: PlaceHolderImages.find(img => img.id === 'shop-tablet-slate')?.imageHint || 'tablet',
       rating: 4.7
     },
@@ -143,7 +146,7 @@ export const ShopNebulabs: React.FC = () => {
       price: 449,
       description: 'Advanced health metrics synced directly to your system kernel.',
       specs: ['Bio-Sensors v3', 'Always-On Retina', 'Titanium Shell', 'Satellite SOS'],
-      image: PlaceHolderImages.find(img => img.id === 'shop-watch-link')?.imageUrl || '',
+      image: PlaceHolderImages.find(img => img.id === 'shop-watch-link')?.imageUrl || null,
       imageHint: PlaceHolderImages.find(img => img.id === 'shop-watch-link')?.imageHint || 'smartwatch',
       isNew: true,
       rating: 4.6
@@ -155,7 +158,7 @@ export const ShopNebulabs: React.FC = () => {
       price: 1499,
       description: 'High-fidelity VR for immersive virtualization and workspace expansion.',
       specs: ['Retinal Projection', 'Zero-Latency Link', 'Spatial Audio Pro', 'Haptic Feedback'],
-      image: PlaceHolderImages.find(img => img.id === 'shop-vr-dive')?.imageUrl || '',
+      image: PlaceHolderImages.find(img => img.id === 'shop-vr-dive')?.imageUrl || null,
       imageHint: PlaceHolderImages.find(img => img.id === 'shop-vr-dive')?.imageHint || 'vr headset',
       rating: 4.9
     },
@@ -166,7 +169,7 @@ export const ShopNebulabs: React.FC = () => {
       price: 1999,
       description: 'External GPU module for extreme AI training and graphics rendering.',
       specs: ['48GB VRAM', 'Quantum Cores', 'Thunderbolt 5', 'Active Liquid Cool'],
-      image: PlaceHolderImages.find(img => img.id === 'shop-gpu-accel')?.imageUrl || '',
+      image: PlaceHolderImages.find(img => img.id === 'shop-gpu-accel')?.imageUrl || null,
       imageHint: PlaceHolderImages.find(img => img.id === 'shop-gpu-accel')?.imageHint || 'graphics card',
       rating: 5.0
     },
@@ -177,7 +180,7 @@ export const ShopNebulabs: React.FC = () => {
       price: 299,
       description: 'Optical mechanical keyboard with per-key OLED macro displays.',
       specs: ['Optical Switches', 'Aluminum Build', 'Braided Cable', 'RGB Sync'],
-      image: PlaceHolderImages.find(img => img.id === 'shop-input-matrix')?.imageUrl || '',
+      image: PlaceHolderImages.find(img => img.id === 'shop-input-matrix')?.imageUrl || null,
       imageHint: PlaceHolderImages.find(img => img.id === 'shop-input-matrix')?.imageHint || 'keyboard',
       rating: 4.8
     },
@@ -188,9 +191,44 @@ export const ShopNebulabs: React.FC = () => {
       price: 399,
       description: 'Omnidirectional smart speaker with integrated AI processing.',
       specs: ['360 Sound', 'Voice Command', 'Home Automation', 'Hi-Res Audio'],
-      image: PlaceHolderImages.find(img => img.id === 'shop-audio-core')?.imageUrl || '',
+      image: PlaceHolderImages.find(img => img.id === 'shop-audio-core')?.imageUrl || null,
       imageHint: PlaceHolderImages.find(img => img.id === 'shop-audio-core')?.imageHint || 'speaker',
       rating: 4.5
+    },
+    {
+      id: 'nhub',
+      name: 'Nebula Smart Hub',
+      category: 'gear',
+      price: 599,
+      description: 'The central display for your smart ecosystem. Neural integration ready.',
+      specs: ['12" Nano-Touch', 'Spatial Mic Array', 'FaceID 2.0', 'Home Bridge'],
+      image: PlaceHolderImages.find(img => img.id === 'shop-display-hub')?.imageUrl || null,
+      imageHint: PlaceHolderImages.find(img => img.id === 'shop-display-hub')?.imageHint || 'smart display',
+      isNew: true,
+      rating: 4.7
+    },
+    {
+      id: 'nctrl',
+      name: 'Nebula Pro Controller',
+      category: 'gear',
+      price: 199,
+      description: 'Zero-latency wireless input for high-precision virtual navigation and gaming.',
+      specs: ['Haptic Feedback', '60h Battery', 'Custom Macros', 'Adaptive Triggers'],
+      image: PlaceHolderImages.find(img => img.id === 'shop-controller-pro')?.imageUrl || null,
+      imageHint: PlaceHolderImages.find(img => img.id === 'shop-controller-pro')?.imageHint || 'game controller',
+      rating: 4.9
+    },
+    {
+      id: 'npods',
+      name: 'Nebula Pods Quantum',
+      category: 'mobile',
+      price: 299,
+      description: 'Advanced spatial audio with active quantum noise cancellation.',
+      specs: ['32h Playback', 'Lossless Wireless', 'Voice Isolation', 'IPX7 Rated'],
+      image: PlaceHolderImages.find(img => img.id === 'shop-buds-quantum')?.imageUrl || null,
+      imageHint: PlaceHolderImages.find(img => img.id === 'shop-buds-quantum')?.imageHint || 'earbuds quantum',
+      isNew: true,
+      rating: 4.8
     }
   ], []);
 
@@ -270,12 +308,14 @@ export const ShopNebulabs: React.FC = () => {
               className="group bg-white/5 border border-white/5 rounded-[2rem] overflow-hidden flex flex-col hover:border-accent/40 transition-all hover:bg-white/[0.07] shadow-2xl"
             >
               <div className="aspect-[4/3] relative overflow-hidden bg-black/40">
-                <img 
-                  src={product.image} 
-                  alt={product.name} 
-                  data-ai-hint={product.imageHint}
-                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 opacity-80 group-hover:opacity-100" 
-                />
+                {product.image && (
+                  <img 
+                    src={product.image} 
+                    alt={product.name} 
+                    data-ai-hint={product.imageHint}
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 opacity-80 group-hover:opacity-100" 
+                  />
+                )}
                 {product.isNew && (
                   <Badge className="absolute top-4 left-4 bg-accent text-white font-black uppercase text-[10px] tracking-widest border-none px-3">NEW RELEASE</Badge>
                 )}
@@ -337,7 +377,9 @@ export const ShopNebulabs: React.FC = () => {
             <div className="p-8 space-y-8">
               <div className="flex gap-6 items-start">
                 <div className="w-24 h-24 rounded-2xl overflow-hidden bg-black/40 shrink-0">
-                  <img src={selectedProduct.image} alt={selectedProduct.name} className="w-full h-full object-cover" />
+                  {selectedProduct.image && (
+                    <img src={selectedProduct.image} alt={selectedProduct.name} className="w-full h-full object-cover" />
+                  )}
                 </div>
                 <div className="space-y-1">
                   <h3 className="font-black text-white">{selectedProduct.name}</h3>

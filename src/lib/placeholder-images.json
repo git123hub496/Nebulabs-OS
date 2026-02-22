@@ -59,6 +59,96 @@
       "description": "Settings Icon",
       "imageUrl": "https://images.unsplash.com/photo-1546710237-057a5519a3d1?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
       "imageHint": "gears cog"
+    },
+    {
+      "id": "shop-laptop-pro",
+      "description": "NebulaBook Pro X",
+      "imageUrl": "https://images.unsplash.com/photo-1667411425106-9e3aa26517c4?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxmdXR1cmlzdGljJTIwbGFwdG9wfGVufDB8fHx8MTc3MTc4NTk4Nnww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "futuristic laptop"
+    },
+    {
+      "id": "shop-phone-ultra",
+      "description": "NebulaPhone 13 Ultra",
+      "imageUrl": "https://images.unsplash.com/photo-1766682676127-203130cd2f7d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxmdXR1cmlzdGljJTIwcGhvbmV8ZW58MHx8fHwxNzcxNzg1OTg2fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "futuristic phone"
+    },
+    {
+      "id": "shop-pc-titan",
+      "description": "Nebula-PC Titan",
+      "imageUrl": "https://images.unsplash.com/photo-1587831990711-23ca6441447b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxkZXNrdG9wJTIwcGN8ZW58MHx8fHwxNzcxNzg1OTg2fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "desktop pc"
+    },
+    {
+      "id": "shop-gear-glasses",
+      "description": "Nebula Vision Glasses",
+      "imageUrl": "https://images.unsplash.com/photo-1656662418587-ba53f84c94c9?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHxzbWFydCUyMGdsYXNzZXN8ZW58MHx8fHwxNzcxNzg1OTg2fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "smart glasses"
+    },
+    {
+      "id": "shop-server-node",
+      "description": "Nebula Server Node",
+      "imageUrl": "https://images.unsplash.com/photo-1698668975271-2ba9a323be6b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8c2VydmVyJTIwcmFja3xlbnwwfHx8fDE3NzE2NzY1MDJ8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "server rack"
+    },
+    {
+      "id": "shop-laptop-air",
+      "description": "NebulaBook Air",
+      "imageUrl": "https://images.unsplash.com/photo-1705508216613-be1715a31212?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxzbGltJTIwbGFwdG9wfGVufDB8fHx8MTc3MTc4NTk4Nnww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "slim laptop"
+    },
+    {
+      "id": "shop-tablet-slate",
+      "description": "Nebula Slate",
+      "imageUrl": "https://images.unsplash.com/photo-1637231026203-126ae0e13e1a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8ZGlnaXRhbCUyMHRhYmxldHxlbnwwfHx8fDE3NzE3ODU5ODZ8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "digital tablet"
+    },
+    {
+      "id": "shop-watch-link",
+      "description": "Nebula BioLink",
+      "imageUrl": "https://images.unsplash.com/photo-1637160151663-a410315e4e75?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHxzbWFydCUyMHdhdGNofGVufDB8fHx8MTc3MTczOTgxNHww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "smart watch"
+    },
+    {
+      "id": "shop-vr-dive",
+      "description": "Nebula DeepDive",
+      "imageUrl": "https://images.unsplash.com/photo-1657734240326-8f2ab858a2dd?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHx2ciUyMGhlYWRzZXR8ZW58MHx8fHwxNzcxNjk2ODc4fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "vr headset"
+    },
+    {
+      "id": "shop-gpu-accel",
+      "description": "Nebula Neural Accelerator",
+      "imageUrl": "https://images.unsplash.com/photo-1692049065982-fc40fa2d4403?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8Z3JhcGhpY3MlMjBjYXJkfGVufDB8fHx8MTc3MTcyNDk2M3ww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "graphics card"
+    },
+    {
+      "id": "shop-audio-core",
+      "description": "Nebula Sonic Core",
+      "imageUrl": "https://images.unsplash.com/photo-1558089687-f282ffcbc126?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxzbWFydCUyMHNwZWFrZXJ8ZW58MHx8fHwxNzcxNzg1OTg2fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "smart speaker"
+    },
+    {
+      "id": "shop-input-matrix",
+      "description": "Nebula Matrix Keyboard",
+      "imageUrl": "https://images.unsplash.com/photo-1626155399627-86488538895d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxnYW1pbmclMjBrZXlib2FyZHxlbnwwfHx8fDE3NzE3ODU5ODZ8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "gaming keyboard"
+    },
+    {
+      "id": "shop-display-hub",
+      "description": "Nebula Smart Hub",
+      "imageUrl": "https://images.unsplash.com/photo-1662108623165-7d6f81c466d7?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxzbWFydCUyMGRpc3BsYXl8ZW58MHx8fHwxNzcxNzg1OTg3fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "smart display"
+    },
+    {
+      "id": "shop-controller-pro",
+      "description": "Nebula Pro Controller",
+      "imageUrl": "https://images.unsplash.com/flagged/photo-1580234820596-0876d136e6d5?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxnYW1lJTIwY29udHJvbGxlcnxlbnwwfHx8fDE3NzE3MTc5NDR8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "game controller"
+    },
+    {
+      "id": "shop-buds-quantum",
+      "description": "Nebula Pods Quantum",
+      "imageUrl": "https://picsum.photos/seed/tech-buds-1/600/400",
+      "imageHint": "earbuds quantum"
     }
   ]
 }

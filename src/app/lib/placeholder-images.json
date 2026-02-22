@@ -132,6 +132,24 @@
       "description": "Nebula Matrix Keyboard",
       "imageUrl": "https://picsum.photos/seed/tech-keys-1/600/400",
       "imageHint": "gaming keyboard"
+    },
+    {
+      "id": "shop-display-hub",
+      "description": "Nebula Smart Hub",
+      "imageUrl": "https://picsum.photos/seed/tech-hub-1/600/400",
+      "imageHint": "smart display"
+    },
+    {
+      "id": "shop-controller-pro",
+      "description": "Nebula Pro Controller",
+      "imageUrl": "https://picsum.photos/seed/tech-ctrl-1/600/400",
+      "imageHint": "game controller"
+    },
+    {
+      "id": "shop-buds-quantum",
+      "description": "Nebula Pods Quantum",
+      "imageUrl": "https://picsum.photos/seed/tech-buds-1/600/400",
+      "imageHint": "earbuds quantum"
     }
   ]
 }
