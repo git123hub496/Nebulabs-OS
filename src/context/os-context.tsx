@@ -252,6 +252,7 @@ interface OSContextType {
   setIsWidgetsOpen: (isOpen: boolean) => void;
   setIsQuickSettingsOpen: (isOpen: boolean) => void;
   setIsStartOpen: (isOpen: boolean) => void;
+  setIsStartOpenState: (isOpen: boolean) => void;
   setIsChatOpen: (isOpen: boolean) => void;
   sendChatMessage: (text: string, recipient: string, role: string) => Promise<void>;
   setCurrentDisplayId: (id: string) => void;
@@ -265,6 +266,7 @@ interface OSContextType {
   
   createFolder: (name: string, parentId: string | null) => void;
   importFile: (name: string, content: string, size: number, parentId: string | null) => void;
+  renameFileSystemItem: (id: string, newName: string) => void;
   moveToTrash: (id: string) => void;
   restoreFromTrash: (id: string) => void;
   emptyTrash: () => void;
@@ -1024,6 +1026,11 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     setFileSystem(prev => [...prev, newFile]);
   };
 
+  const renameFileSystemItem = (id: string, newName: string) => {
+    setFileSystem(prev => prev.map(item => item.id === id ? { ...item, name: newName } : item));
+    addNotification("Rename Successful", `Item renamed to ${newName}.`, 'system');
+  };
+
   const moveToTrash = (id: string) => {
     const item = fileSystem.find(i => i.id === id);
     if (item) { setFileSystem(prev => prev.filter(i => i.id !== id)); setTrash(prev => [...prev, item]); }
@@ -1163,6 +1170,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       saveSetting('start_layout', updated);
       return updated;
     });
+    addNotification("Folder Renamed", `Start folder renamed to ${newName}.`, 'system');
   };
 
   const deleteStartFolder = (folderId: string) => {
@@ -1201,9 +1209,9 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       updateWallpaper, setNotes, setTheme, setAccentColor, setCustomAccentHex,
       setCursorColor, setMouserScale, setInverted, setGrayscale, setGlassEnabled, setTaskbarPosition, rotateTaskbar, setTaskbarSize,
       setIconSize, connectToWifi, setVolume, setBrightness, setIsWidgetsOpen,
-      setIsQuickSettingsOpen, setIsStartOpen, setIsChatOpen, sendChatMessage, setCurrentDisplayId, setSecurityEnabled, updateBIOSSettings, restart, shutDown, powerOn,
+      setIsQuickSettingsOpen, setIsStartOpen, setIsStartOpenState, setIsChatOpen, sendChatMessage, setCurrentDisplayId, setSecurityEnabled, updateBIOSSettings, restart, shutDown, powerOn,
       minimizeAllWindows, playSound,
-      createFolder, importFile, moveToTrash, restoreFromTrash, emptyTrash, deleteItemPermanently,
+      createFolder, importFile, renameFileSystemItem, moveToTrash, restoreFromTrash, emptyTrash, deleteItemPermanently,
       updateDesktopAppPosition, toggleDesktopApp, togglePinApp, reorderPinnedApps,
       reorderStartMenu, createStartFolder, addAppToStartFolder, removeAppFromStartFolder, renameStartFolder, deleteStartFolder
     }}>

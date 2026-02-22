@@ -85,7 +85,7 @@ const StartAppContextMenu: React.FC<{ x: number, y: number, appId: AppId, onClos
   );
 };
 
-const FolderContextMenu: React.FC<{ x: number, y: number, folderId: string, onClose: () => void }> = ({ x, y, folderId, onClose }) => {
+const FolderContextMenu: React.FC<{ x: number, y: number, folderId: string, name: string, onClose: () => void }> = ({ x, y, folderId, name, onClose }) => {
   const { deleteStartFolder, renameStartFolder } = useOS();
   
   return (
@@ -97,8 +97,8 @@ const FolderContextMenu: React.FC<{ x: number, y: number, folderId: string, onCl
     >
       <button 
         onClick={() => {
-          const newName = prompt("Enter new folder name:");
-          if (newName) renameStartFolder(folderId, newName);
+          const newName = prompt("Enter new folder name:", name);
+          if (newName && newName !== name) renameStartFolder(folderId, newName);
           onClose();
         }}
         className="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-accent/20 text-xs font-bold text-white/80 hover:text-accent transition-colors"
@@ -137,7 +137,7 @@ export const StartMenu: React.FC<StartMenuProps> = ({ onClose }) => {
 
   const [searchQuery, setSearchQuery] = useState("");
   const [appContextMenu, setAppContextMenu] = useState<{ x: number, y: number, appId: AppId } | null>(null);
-  const [folderContextMenu, setFolderContextMenu] = useState<{ x: number, y: number, folderId: string } | null>(null);
+  const [folderContextMenu, setFolderContextMenu] = useState<{ x: number, y: number, folderId: string, name: string } | null>(null);
   const [expandedFolderId, setExpandedFolderId] = useState<string | null>(null);
   
   // Drag and Drop state
@@ -290,7 +290,7 @@ export const StartMenu: React.FC<StartMenuProps> = ({ onClose }) => {
                   onContextMenu={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    setFolderContextMenu({ x: e.clientX, y: e.clientY, folderId: item.folder!.id });
+                    setFolderContextMenu({ x: e.clientX, y: e.clientY, folderId: item.folder!.id, name: item.folder!.name });
                   }}
                 >
                   <div className="w-12 h-12 bg-accent/10 rounded-2xl flex flex-wrap p-1.5 gap-0.5 border border-accent/20 group-hover:scale-105 transition-all">
@@ -328,12 +328,12 @@ export const StartMenu: React.FC<StartMenuProps> = ({ onClose }) => {
         </div>
         
         <div className="flex items-center gap-1">
-          <Button variant="ghost" size="icon" className="h-10 w-10 text-muted-foreground hover:text-accent rounded-xl" onClick={restart}>
+          <button className="p-2 rounded-xl text-muted-foreground hover:bg-white/5 hover:text-accent transition-colors" onClick={restart}>
             <RefreshCw size={20} />
-          </Button>
-          <Button variant="ghost" size="icon" className="h-10 w-10 text-muted-foreground hover:text-destructive rounded-xl" onClick={shutDown}>
+          </button>
+          <button className="p-2 rounded-xl text-muted-foreground hover:bg-white/5 hover:text-destructive transition-colors" onClick={shutDown}>
             <Power size={20} />
-          </Button>
+          </button>
         </div>
       </div>
 
@@ -408,6 +408,7 @@ export const StartMenu: React.FC<StartMenuProps> = ({ onClose }) => {
           x={folderContextMenu.x} 
           y={folderContextMenu.y} 
           folderId={folderContextMenu.folderId} 
+          name={folderContextMenu.name}
           onClose={() => setFolderContextMenu(null)} 
         />
       )}

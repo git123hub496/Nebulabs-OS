@@ -3,15 +3,55 @@
 
 import React, { useState, useRef, useMemo } from 'react';
 import { useOS } from '@/context/os-context';
-import { Folder, File, ChevronRight, Plus, Trash2, Search, Upload, ImageIcon, HardDrive } from 'lucide-react';
+import { Folder, File, ChevronRight, Plus, Trash2, Search, Upload, ImageIcon, HardDrive, Edit2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 
+const FileContextMenu: React.FC<{ x: number, y: number, itemId: string, name: string, onClose: () => void }> = ({ x, y, itemId, name, onClose }) => {
+  const { renameFileSystemItem, moveToTrash } = useOS();
+  
+  return (
+    <div 
+      className="fixed z-[100001] w-52 glass rounded-xl border border-white/10 shadow-2xl backdrop-blur-3xl p-1.5 flex flex-col gap-0.5 animate-in fade-in zoom-in-95 duration-100"
+      style={{ left: x, top: y }}
+      onClick={(e) => e.stopPropagation()}
+      onContextMenu={(e) => e.preventDefault()}
+    >
+      <button 
+        onClick={() => {
+          const newName = prompt("Enter new name:", name);
+          if (newName && newName !== name) renameFileSystemItem(itemId, newName);
+          onClose();
+        }}
+        className="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-accent/20 text-xs font-bold text-white/80 hover:text-accent transition-colors"
+      >
+        <div className="flex items-center gap-3">
+          <Edit2 size={14} className="text-accent/60" />
+          <span>Rename</span>
+        </div>
+      </button>
+      <button 
+        onClick={() => {
+          moveToTrash(itemId);
+          onClose();
+        }}
+        className="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-destructive/20 text-xs font-bold text-white/80 hover:text-destructive transition-colors"
+      >
+        <div className="flex items-center gap-3">
+          <Trash2 size={14} className="text-destructive/60" />
+          <span>Move to Trash</span>
+        </div>
+      </button>
+    </div>
+  );
+};
+
 export const FileExplorer: React.FC = () => {
-  const { fileSystem, createFolder, importFile, moveToTrash, openApp } = useOS();
+  const { fileSystem, createFolder, importFile, moveToTrash, openApp, renameFileSystemItem } = useOS();
   const [currentFolderId, setCurrentFolderId] = useState<string | null>(null);
   const [newFolderName, setNewFolderName] = useState("");
+  const [itemContextMenu, setItemContextMenu] = useState<{ x: number, y: number, itemId: string, name: string } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const filteredItems = fileSystem.filter(item => item.parentId === currentFolderId);
@@ -62,6 +102,12 @@ export const FileExplorer: React.FC = () => {
     }
   };
 
+  const handleItemContextMenu = (e: React.MouseEvent, itemId: string, name: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setItemContextMenu({ x: e.clientX, y: e.clientY, itemId, name });
+  };
+
   const getBreadcrumbs = () => {
     const crumbs = [];
     let current = fileSystem.find(i => i.id === currentFolderId);
@@ -90,7 +136,10 @@ export const FileExplorer: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col h-full bg-[#1e2731]">
+    <div 
+      className="flex flex-col h-full bg-[#1e2731]"
+      onClick={() => setItemContextMenu(null)}
+    >
       <div className="flex items-center justify-between p-4 border-b border-white/5 bg-black/10">
         <div className="flex items-center gap-2 overflow-hidden">
           <Button 
@@ -163,6 +212,7 @@ export const FileExplorer: React.FC = () => {
                 key={item.id}
                 className="group flex flex-col items-center gap-2 p-3 rounded-xl hover:bg-white/5 transition-all cursor-pointer relative"
                 onDoubleClick={() => handleItemClick(item)}
+                onContextMenu={(e) => handleItemContextMenu(e, item.id, item.name)}
               >
                 <div className="w-16 h-16 flex items-center justify-center">
                   {getItemIcon(item)}
@@ -224,6 +274,16 @@ export const FileExplorer: React.FC = () => {
         <span>{filteredItems.length} items</span>
         <span>Nebula WebFS v1.1 • Persistent Storage</span>
       </div>
+
+      {itemContextMenu && (
+        <FileContextMenu 
+          x={itemContextMenu.x} 
+          y={itemContextMenu.y} 
+          itemId={itemContextMenu.itemId} 
+          name={itemContextMenu.name}
+          onClose={() => setItemContextMenu(null)} 
+        />
+      )}
     </div>
   );
 };
