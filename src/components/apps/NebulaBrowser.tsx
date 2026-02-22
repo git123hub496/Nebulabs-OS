@@ -9,8 +9,8 @@ import { cn } from '@/lib/utils';
 
 export const NebulaBrowser: React.FC = () => {
   const { isOnline, biosSettings } = useOS();
-  const [url, setUrl] = useState("https://www.yahoo.com/");
-  const [inputUrl, setInputUrl] = useState("https://www.yahoo.com/");
+  const [url, setUrl] = useState("https://duckduckgo.com/search.html");
+  const [inputUrl, setInputUrl] = useState("https://duckduckgo.com/search.html");
   const [showHint, setShowHint] = useState(true);
 
   if (!biosSettings.networkStack) {
@@ -39,8 +39,8 @@ export const NebulaBrowser: React.FC = () => {
         targetUrl = 'https://' + targetUrl;
       }
     } else {
-      // Use Yahoo Search instead of Google for better iframe compatibility
-      targetUrl = `https://search.yahoo.com/search?p=${encodeURIComponent(targetUrl)}`;
+      // Use DuckDuckGo Search for better privacy and compatibility
+      targetUrl = `https://duckduckgo.com/?q=${encodeURIComponent(targetUrl)}`;
     }
     
     setUrl(targetUrl);
@@ -49,8 +49,9 @@ export const NebulaBrowser: React.FC = () => {
 
   const goHome = () => {
     if (!isOnline) return;
-    setUrl("https://www.yahoo.com/");
-    setInputUrl("https://www.yahoo.com/");
+    const home = "https://duckduckgo.com/search.html";
+    setUrl(home);
+    setInputUrl(home);
   };
 
   return (
@@ -69,7 +70,7 @@ export const NebulaBrowser: React.FC = () => {
             value={inputUrl}
             onChange={(e) => setInputUrl(e.target.value)}
             className="h-8 bg-black/40 border-white/10 text-xs pl-8 pr-4 focus-visible:ring-accent text-white/80 rounded-lg"
-            placeholder={isOnline ? "Search Yahoo or enter address" : "Disconnected"}
+            placeholder={isOnline ? "Search DuckDuckGo or enter address" : "Disconnected"}
             disabled={!isOnline}
           />
           <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-white/20" />
@@ -95,7 +96,7 @@ export const NebulaBrowser: React.FC = () => {
           <div className="flex items-center gap-2">
             <Info size={14} className="text-accent" />
             <span className="text-[10px] text-accent/90 font-medium">
-              Yahoo! is enabled as the default engine for superior iframe workspace compatibility.
+              DuckDuckGo is enabled as the default engine for superior privacy and workspace compatibility.
             </span>
           </div>
           <button onClick={() => setShowHint(false)} className="text-accent/40 hover:text-accent transition-colors">
