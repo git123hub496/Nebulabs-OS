@@ -145,6 +145,9 @@ export interface BIOSSettings {
   virtualization: boolean;
   deviceType: 'NebulaBook' | 'Nebula-PC';
   deviceName: string;
+  integratedGfx: boolean;
+  acLossPolicy: 'Power On' | 'Stay Off' | 'Last State';
+  wakeOnLan: boolean;
 }
 
 export interface StartMenuFolder {
@@ -402,7 +405,10 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     fastBoot: false,
     virtualization: false,
     deviceType: 'NebulaBook',
-    deviceName: 'SuperNova'
+    deviceName: 'SuperNova',
+    integratedGfx: true,
+    acLossPolicy: 'Stay Off',
+    wakeOnLan: false
   });
 
   useEffect(() => {
