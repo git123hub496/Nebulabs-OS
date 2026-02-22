@@ -1,9 +1,8 @@
-
 "use client"
 
 import React, { useState, useEffect } from 'react';
 import { useOS } from '@/context/os-context';
-import { Tv, Search, RefreshCw, CheckCircle2, ShieldCheck, Zap, Monitor, Cast, Laptop, Smartphone, AlertCircle, X, ExternalLink } from 'lucide-react';
+import { Tv, Search, RefreshCw, CheckCircle2, ShieldCheck, Zap, Monitor, Cast, Laptop, Smartphone, AlertCircle, X, ExternalLink, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { ScrollArea } from '@/components/ui/scroll-area';
