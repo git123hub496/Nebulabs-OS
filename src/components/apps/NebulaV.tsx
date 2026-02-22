@@ -17,18 +17,18 @@ interface OSImage {
 
 const OS_IMAGES: OSImage[] = [
   { 
+    id: 'nebula-pro', 
+    name: 'Nebulabs WebOS Pro', 
+    description: 'Direct link to the Nebulabs Cloud Workstation node.',
+    url: 'https://6000-firebase-studio-1771543060284.cluster-lr6dwlc2lzbcctqhqorax5zmro.cloudworkstations.dev/',
+    color: 'from-accent/40 to-primary/40'
+  },
+  { 
     id: 'macos', 
     name: 'macOS Web Edition', 
     description: 'A high-fidelity simulation of the macOS desktop environment.',
     url: 'https://macos.vercel.app/',
     color: 'from-blue-500/20 to-indigo-500/20'
-  },
-  { 
-    id: 'thomson', 
-    name: 'WIN 12', 
-    description: 'A professional dark-themed virtual workspace suite.',
-    url: 'https://lttthedev.github.io/desktop.html',
-    color: 'from-zinc-500/20 to-black/20'
   }
 ];
 
@@ -127,20 +127,6 @@ export const NebulaV: React.FC = () => {
         >
           <Power size={20} /> Initialize Instance
         </Button>
-        <div className="grid grid-cols-3 gap-4 w-full max-w-lg pt-8 border-t border-white/5">
-          <div className="text-center space-y-1">
-            <Cpu size={16} className="text-white/20 mx-auto" />
-            <p className="text-[10px] font-bold text-white/40 uppercase">Virtual Core</p>
-          </div>
-          <div className="text-center space-y-1">
-            <Zap size={16} className="text-white/20 mx-auto" />
-            <p className="text-[10px] font-bold text-white/40 uppercase">Isolator Active</p>
-          </div>
-          <div className="text-center space-y-1">
-            <Activity size={16} className="text-white/20 mx-auto" />
-            <p className="text-[10px] font-bold text-white/40 uppercase">Ready</p>
-          </div>
-        </div>
       </div>
     );
   }
@@ -168,7 +154,6 @@ export const NebulaV: React.FC = () => {
 
   return (
     <div className="flex flex-col h-full bg-black overflow-hidden relative group">
-      {/* Nested OS Top Bar */}
       <div className="h-10 bg-white/5 border-b border-white/10 flex items-center px-4 justify-between shrink-0 z-20">
         <div className="flex items-center gap-3">
           <Layers size={14} className="text-accent" />
@@ -190,7 +175,6 @@ export const NebulaV: React.FC = () => {
         </div>
       </div>
 
-      {/* Main Sandbox Area */}
       <div className="flex-1 relative bg-[#0d0d0d] overflow-hidden">
         {!selectedOs ? (
           <div className="h-full flex flex-col items-center justify-center p-8 space-y-12">
@@ -221,15 +205,8 @@ export const NebulaV: React.FC = () => {
                     <span className="text-[9px] font-black text-accent uppercase tracking-widest">Load Image</span>
                     <ChevronRight size={14} className="text-accent" />
                   </div>
-                  {/* Decorative background logo */}
-                  <Layers className="absolute -bottom-4 -right-4 w-24 h-24 text-white/5 group-hover:text-accent/5 transition-colors" />
                 </button>
               ))}
-            </div>
-
-            <div className="flex items-center gap-2 text-[9px] text-white/20 font-mono uppercase tracking-[0.2em]">
-              <ShieldCheck size={12} />
-              Hyper-Isolated Environment Ready
             </div>
           </div>
         ) : (
@@ -247,24 +224,9 @@ export const NebulaV: React.FC = () => {
               title={selectedOs.name}
               sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
             />
-            
-            {/* Security Overlay for "Blocked" detection helper */}
-            <div className="absolute top-4 right-4 pointer-events-none group/info">
-              <div className="p-2 bg-black/60 backdrop-blur-md rounded-full border border-white/10 text-white/40 hover:text-white transition-colors cursor-help pointer-events-auto">
-                <Info size={14} />
-              </div>
-              <div className="absolute right-0 top-10 w-48 p-3 bg-black/90 backdrop-blur-xl border border-white/10 rounded-xl text-[10px] text-white/60 opacity-0 group-hover/info:opacity-100 transition-opacity pointer-events-none">
-                This image is running in an isolated hardware tunnel. If the screen is blank, the host may restrict nested iframes.
-                <a href={selectedOs.url} target="_blank" rel="noopener noreferrer" className="block mt-2 text-accent font-bold hover:underline">
-                  Launch Host Externally <ExternalLink size={10} className="inline ml-1" />
-                </a>
-              </div>
-            </div>
           </div>
         )}
       </div>
-
-      <div className="absolute inset-0 border-[20px] border-accent/5 pointer-events-none" />
     </div>
   );
 };
