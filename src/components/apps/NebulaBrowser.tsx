@@ -1,3 +1,4 @@
+
 "use client"
 
 import React, { useState } from 'react';
@@ -9,8 +10,8 @@ import { cn } from '@/lib/utils';
 
 export const NebulaBrowser: React.FC = () => {
   const { isOnline, biosSettings } = useOS();
-  const [url, setUrl] = useState("https://duckduckgo.com/search.html");
-  const [inputUrl, setInputUrl] = useState("https://duckduckgo.com/search.html");
+  const [url, setUrl] = useState("https://www.google.com/search?igu=1");
+  const [inputUrl, setInputUrl] = useState("https://www.google.com/search?igu=1");
   const [showHint, setShowHint] = useState(true);
 
   if (!biosSettings.networkStack) {
@@ -39,8 +40,8 @@ export const NebulaBrowser: React.FC = () => {
         targetUrl = 'https://' + targetUrl;
       }
     } else {
-      // Use DuckDuckGo Search for better privacy and compatibility
-      targetUrl = `https://duckduckgo.com/?q=${encodeURIComponent(targetUrl)}`;
+      // Use Google Search for better compatibility and matching user preference
+      targetUrl = `https://www.google.com/search?q=${encodeURIComponent(targetUrl)}&igu=1`;
     }
     
     setUrl(targetUrl);
@@ -49,7 +50,7 @@ export const NebulaBrowser: React.FC = () => {
 
   const goHome = () => {
     if (!isOnline) return;
-    const home = "https://duckduckgo.com/search.html";
+    const home = "https://www.google.com/search?igu=1";
     setUrl(home);
     setInputUrl(home);
   };
@@ -70,7 +71,7 @@ export const NebulaBrowser: React.FC = () => {
             value={inputUrl}
             onChange={(e) => setInputUrl(e.target.value)}
             className="h-8 bg-black/40 border-white/10 text-xs pl-8 pr-4 focus-visible:ring-accent text-white/80 rounded-lg"
-            placeholder={isOnline ? "Search DuckDuckGo or enter address" : "Disconnected"}
+            placeholder={isOnline ? "Search Google or enter address" : "Disconnected"}
             disabled={!isOnline}
           />
           <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-white/20" />
@@ -96,7 +97,7 @@ export const NebulaBrowser: React.FC = () => {
           <div className="flex items-center gap-2">
             <Info size={14} className="text-accent" />
             <span className="text-[10px] text-accent/90 font-medium">
-              DuckDuckGo is enabled as the default engine for superior privacy and workspace compatibility.
+              Nebula Search Engine is now the default for superior performance and workspace compatibility.
             </span>
           </div>
           <button onClick={() => setShowHint(false)} className="text-accent/40 hover:text-accent transition-colors">
