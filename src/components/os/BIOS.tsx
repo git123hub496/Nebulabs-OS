@@ -32,7 +32,6 @@ export const BIOS: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   const [bootOrder, setBootOrder] = useState(['Nebulabs Virtual SSD-0', 'Network PXE', 'USB Flash Device']);
 
   const handleAction = useCallback((direction: 'up' | 'down' | 'enter' | 'toggle') => {
-    if (activeSection === 'Exit') return;
     if (isEditing && direction !== 'enter') return;
 
     if (direction === 'up') setSelectedItem(prev => Math.max(0, prev - 1));
@@ -327,7 +326,10 @@ export const BIOS: React.FC<{ onClose: () => void }> = ({ onClose }) => {
               <button 
                 key={i}
                 onMouseEnter={() => setSelectedItem(i)}
-                onClick={() => handleKeyDown({ key: 'Enter' } as any)}
+                onClick={() => {
+                  setSelectedItem(i);
+                  handleKeyDown({ key: 'Enter' } as any);
+                }}
                 className={cn(
                   "block w-full p-2 border transition-all font-black uppercase text-xs",
                   selectedItem === i 
@@ -414,7 +416,7 @@ export const BIOS: React.FC<{ onClose: () => void }> = ({ onClose }) => {
         </div>
       </div>
 
-      {/* Footer Branding - Properly anchored to bottom */}
+      {/* Footer Branding */}
       <div className="mt-6 flex items-end justify-between shrink-0">
         <div className="space-y-1">
           <div className="text-4xl font-black italic tracking-tighter text-white drop-shadow-[4px_4px_0px_#000]">NEBULABS</div>
