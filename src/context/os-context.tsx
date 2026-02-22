@@ -39,13 +39,14 @@ import {
   Layers,
   Folder,
   Search,
-  Store
+  Store,
+  Tv
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { respondToEmail } from '@/ai/flows/mail-ai-flow';
 import { respondToChat } from '@/ai/flows/chat-ai-flow';
 
-export type AppId = 'store' | 'files' | 'settings' | 'assistant' | 'google-drive' | 'notes' | 'calc' | 'terminal' | 'browser' | 'trash' | 'news' | 'maps' | 'monitor' | 'calendar' | 'snake' | 'minesweeper' | 'image-viewer' | 'update' | 'virus' | 'paint' | 'info' | 'camera' | 'slides' | 'mail' | 'nebula-v' | 'google-search' | 'shop';
+export type AppId = 'store' | 'files' | 'settings' | 'assistant' | 'google-drive' | 'notes' | 'calc' | 'terminal' | 'browser' | 'trash' | 'news' | 'maps' | 'monitor' | 'calendar' | 'snake' | 'minesweeper' | 'image-viewer' | 'update' | 'virus' | 'paint' | 'info' | 'camera' | 'slides' | 'mail' | 'nebula-v' | 'google-search' | 'shop' | 'screencast';
 export type ThemeMode = 'dark' | 'light';
 export type PowerStatus = 'on' | 'off' | 'booting';
 export type TaskbarPosition = 'top' | 'bottom' | 'left' | 'right';
@@ -326,6 +327,7 @@ export const APP_INFO: Record<AppId, { icon: any; label: string }> = {
   'nebula-v': { icon: Layers, label: 'Nebula-V' },
   'google-search': { icon: Search, label: 'Nebula Search' },
   'shop': { icon: Store, label: 'Shop Nebulabs' },
+  'screencast': { icon: Tv, label: 'Nebula Cast' },
 };
 
 const INITIAL_FILES: FileSystemItem[] = [
@@ -343,8 +345,8 @@ const INITIAL_DESKTOP: DesktopShortcut[] = [
   { id: 'shop', label: 'Shop Nebulabs', icon: Store, x: PADDING, y: PADDING + (GRID_Y * 4) },
 ];
 
-const INITIAL_APPS: AppId[] = ['store', 'files', 'settings', 'assistant', 'notes', 'calc', 'terminal', 'browser', 'trash', 'news', 'maps', 'monitor', 'calendar', 'snake', 'minesweeper', 'update', 'paint', 'info', 'camera', 'slides', 'mail', 'nebula-v', 'google-search', 'shop'];
-const INITIAL_PINNED: AppId[] = ['files', 'store', 'shop', 'assistant', 'google-search', 'browser', 'settings', 'mail'];
+const INITIAL_APPS: AppId[] = ['store', 'files', 'settings', 'assistant', 'notes', 'calc', 'terminal', 'browser', 'trash', 'news', 'maps', 'monitor', 'calendar', 'snake', 'minesweeper', 'update', 'paint', 'info', 'camera', 'slides', 'mail', 'nebula-v', 'google-search', 'shop', 'screencast'];
+const INITIAL_PINNED: AppId[] = ['files', 'store', 'shop', 'assistant', 'google-search', 'browser', 'settings', 'mail', 'screencast'];
 
 const AVATAR_COLORS = ['#9333ea', '#3b82f6', '#e11d48', '#f97316', '#16a34a', '#ec4899', '#06b6d4'];
 const OFFLINE_WIFI = "Public_Guest_No_Internet";
@@ -904,6 +906,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     else if (appId === 'nebula-v') { initialWidth = 1000; initialHeight = 700; }
     else if (appId === 'google-search') { initialWidth = 1000; initialHeight = 700; }
     else if (appId === 'shop') { initialWidth = 1100; initialHeight = 750; }
+    else if (appId === 'screencast') { initialWidth = 450; initialHeight = 600; }
     const newId = `${appId}-${Date.now()}`;
     const newWindow: WindowInstance = {
       id: newId, appId, title, isMinimized: false, isMaximized: false, zIndex: nextZIndex,
@@ -972,7 +975,6 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   const setTaskbarSize = (s: number) => { if (isNaN(s)) return; setTaskbarSizeState(s); saveSetting('taskbar_size', s); };
   const setIconSize = (s: number) => { if (isNaN(s)) return; setIconSizeState(s); saveSetting('icon_size', s); };
   const setVolume = (v: number) => { setVolumeState(v); saveSetting('volume', v); };
-  const setTaskbarSizeStateInternal = (s: number) => { if (isNaN(s)) return; setTaskbarSizeState(s); };
   const setBrightness = (b: number) => { setBrightnessState(b); saveSetting('brightness', b); };
 
   const setIsWidgetsOpen = (open: boolean) => {

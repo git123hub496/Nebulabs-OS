@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
@@ -47,7 +48,8 @@ import {
   Smile,
   Home,
   Layers,
-  Store
+  Store,
+  Tv
 } from 'lucide-react';
 import { FileExplorer } from '../apps/FileExplorer';
 import { AppStore } from '../apps/AppStore';
@@ -75,6 +77,7 @@ import { NebulaMail } from '../apps/NebulaMail';
 import { NebulaV } from '../apps/NebulaV';
 import { GoogleSearch } from '../apps/GoogleSearch';
 import { ShopNebulabs } from '../apps/ShopNebulabs';
+import { Screencast } from '../apps/Screencast';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -106,6 +109,7 @@ const APP_COMPONENTS: Record<AppId, (win: WindowInstance) => React.ReactNode> = 
   'nebula-v': (win) => <NebulaV />,
   'google-search': (win) => <GoogleSearch />,
   'shop': (win) => <ShopNebulabs />,
+  'screencast': (win) => <Screencast />,
   'info': (win) => (
     <div className="p-8 space-y-6 bg-[#161d25] h-full text-white/90 overflow-auto">
       <div className="flex items-center gap-4 mb-8">
@@ -508,7 +512,7 @@ export const Desktop: React.FC = () => {
               
               {shortcut.id !== 'trash' && shortcut.id !== 'files' && shortcut.id !== 'store' && !isSchool && !isKid && (
                 <button 
-                  className="delete-shortcut-btn absolute -top-1.5 -right-1.5 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 hover:scale-110 transition-all z-10 border-2 border-white shadow-md flex items-center justify-center"
+                  className="delete-shortcut-btn absolute -top-1.5 -right-1.5 bg-red-500 text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100 hover:scale-110 transition-all z-10 border-2 border-white shadow-md flex items-center justify-center"
                   onMouseDown={(e) => e.stopPropagation()} 
                   onClick={(e) => { 
                     e.stopPropagation(); 
