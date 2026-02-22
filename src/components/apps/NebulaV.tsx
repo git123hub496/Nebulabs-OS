@@ -1,4 +1,3 @@
-
 "use client"
 
 import React, { useState, useEffect } from 'react';
@@ -26,7 +25,7 @@ const OS_IMAGES: OSImage[] = [
   },
   { 
     id: 'thomson', 
-    name: 'Thomson Desktop', 
+    name: 'WIN 12', 
     description: 'A professional dark-themed virtual workspace suite.',
     url: 'https://lttthedev.github.io/desktop.html',
     color: 'from-zinc-500/20 to-black/20'
