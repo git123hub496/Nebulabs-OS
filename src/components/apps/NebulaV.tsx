@@ -3,16 +3,43 @@
 
 import React, { useState, useEffect } from 'react';
 import { useOS } from '@/context/os-context';
-import { Layers, ShieldAlert, Cpu, Terminal, RefreshCw, Power, Zap, Activity, Info } from 'lucide-react';
+import { Layers, ShieldAlert, Cpu, Terminal, RefreshCw, Power, Zap, Activity, Info, Globe, Monitor, ChevronRight, ExternalLink, ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
+
+interface OSImage {
+  id: string;
+  name: string;
+  description: string;
+  url: string;
+  color: string;
+}
+
+const OS_IMAGES: OSImage[] = [
+  { 
+    id: 'macos', 
+    name: 'macOS Web Edition', 
+    description: 'A high-fidelity simulation of the macOS desktop environment.',
+    url: 'https://macos.vercel.app/',
+    color: 'from-blue-500/20 to-indigo-500/20'
+  },
+  { 
+    id: 'thomas', 
+    name: 'Darkson Desktop', 
+    description: 'A professional dark-themed virtual workspace suite.',
+    url: 'https://thomasdarkson.com/desktop',
+    color: 'from-zinc-500/20 to-black/20'
+  }
+];
 
 export const NebulaV: React.FC = () => {
   const { biosSettings, restart } = useOS();
   const [status, setStatus] = useState<'idle' | 'initializing' | 'running'>('idle');
   const [bootProgress, setBootProgress] = useState(0);
   const [logs, setLogs] = useState<string[]>([]);
+  const [selectedOs, setSelectedOs] = useState<OSImage | null>(null);
+  const [iframeLoading, setIframeLoading] = useState(false);
 
   const isHardwareSupported = biosSettings.virtualization;
 
@@ -53,6 +80,11 @@ export const NebulaV: React.FC = () => {
       };
     }
   }, [status]);
+
+  const handleSelectOs = (os: OSImage) => {
+    setIframeLoading(true);
+    setSelectedOs(os);
+  };
 
   if (!isHardwareSupported) {
     return (
@@ -126,7 +158,7 @@ export const NebulaV: React.FC = () => {
           <div className="bg-black/40 rounded-xl p-4 h-32 font-mono text-[10px] text-green-500/60 overflow-hidden border border-white/5 space-y-1">
             {logs.map((log, i) => (
               <div key={i} className={cn(i === 0 ? "text-green-400 font-bold" : "")}>
-                {">"} {log}
+                {'>'} {log}
               </div>
             ))}
           </div>
@@ -138,74 +170,99 @@ export const NebulaV: React.FC = () => {
   return (
     <div className="flex flex-col h-full bg-black overflow-hidden relative group">
       {/* Nested OS Top Bar */}
-      <div className="h-8 bg-white/5 border-b border-white/10 flex items-center px-4 justify-between shrink-0">
-        <div className="flex items-center gap-2">
-          <Layers size={12} className="text-accent" />
-          <span className="text-[10px] font-black uppercase tracking-tighter text-white/60">Nebula-V Nested Instance #01</span>
+      <div className="h-10 bg-white/5 border-b border-white/10 flex items-center px-4 justify-between shrink-0 z-20">
+        <div className="flex items-center gap-3">
+          <Layers size={14} className="text-accent" />
+          <span className="text-[10px] font-black uppercase tracking-tighter text-white/60">
+            Nebula-V Virtual Instance {selectedOs ? `• ${selectedOs.name}` : ''}
+          </span>
         </div>
         <div className="flex gap-4">
+          {selectedOs && (
+            <button 
+              className="text-[9px] font-bold text-accent hover:text-white uppercase tracking-widest flex items-center gap-1 transition-colors"
+              onClick={() => setSelectedOs(null)}
+            >
+              <RefreshCw size={10} /> Switch Instance
+            </button>
+          )}
           <span className="text-[9px] font-mono text-green-500 uppercase font-bold animate-pulse">Running</span>
           <button className="text-[9px] font-bold text-white/20 hover:text-red-500 uppercase tracking-widest" onClick={() => setStatus('idle')}>Shutdown</button>
         </div>
       </div>
 
       {/* Main Sandbox Area */}
-      <div className="flex-1 flex flex-col items-center justify-center relative bg-[#0d0d0d] p-8 overflow-hidden">
-        {/* Mock Nested Desktop */}
-        <div className="w-full h-full border border-white/10 rounded-2xl relative flex flex-col shadow-inner overflow-hidden">
-          <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'radial-gradient(#fff 1px, transparent 0)', backgroundSize: '40px 40px' }} />
-          
-          <div className="flex-1 flex flex-col p-8 space-y-8 relative z-10">
-            <div className="flex items-center justify-between">
-              <div className="space-y-1">
-                <h2 className="text-2xl font-black text-white/80">Guest Environment</h2>
-                <p className="text-xs text-white/20 font-bold uppercase">Isolated Virtual Core</p>
-              </div>
-              <Activity size={32} className="text-accent/20" />
+      <div className="flex-1 relative bg-[#0d0d0d] overflow-hidden">
+        {!selectedOs ? (
+          <div className="h-full flex flex-col items-center justify-center p-8 space-y-12">
+            <div className="text-center space-y-2">
+              <h2 className="text-2xl font-black text-white uppercase tracking-tight">Select Virtual Image</h2>
+              <p className="text-xs text-white/40 uppercase tracking-widest font-bold">Mount a guest operating system to the isolated core</p>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="bg-white/5 p-4 rounded-xl border border-white/5 space-y-3">
-                <div className="flex items-center gap-2 text-[10px] font-black uppercase text-accent">
-                  <Terminal size={12} /> Sandbox Shell
-                </div>
-                <div className="font-mono text-[11px] text-green-500/80 h-24 overflow-hidden">
-                  nebula@guest:~$ help<br/>
-                  Commands: ls, network, info, status<br/>
-                  nebula@guest:~$ status<br/>
-                  Virtual Thread: ACTIVE<br/>
-                  nebula@guest:~$ _
-                </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-2xl">
+              {OS_IMAGES.map(os => (
+                <button 
+                  key={os.id}
+                  onClick={() => handleSelectOs(os)}
+                  className={cn(
+                    "relative group p-6 rounded-[2rem] border transition-all text-left flex flex-col gap-4 overflow-hidden bg-gradient-to-br",
+                    os.color,
+                    "border-white/10 hover:border-accent/40 hover:scale-[1.02] active:scale-[0.98]"
+                  )}
+                >
+                  <div className="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center border border-white/10 group-hover:border-accent/40 transition-colors">
+                    <Monitor className="text-white/60 group-hover:text-accent transition-colors" size={24} />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-white mb-1">{os.name}</h3>
+                    <p className="text-[10px] text-white/40 leading-relaxed line-clamp-2 uppercase font-medium tracking-wide">{os.description}</p>
+                  </div>
+                  <div className="mt-auto pt-4 flex items-center justify-between">
+                    <span className="text-[9px] font-black text-accent uppercase tracking-widest">Load Image</span>
+                    <ChevronRight size={14} className="text-accent" />
+                  </div>
+                  {/* Decorative background logo */}
+                  <Layers className="absolute -bottom-4 -right-4 w-24 h-24 text-white/5 group-hover:text-accent/5 transition-colors" />
+                </button>
+              ))}
+            </div>
+
+            <div className="flex items-center gap-2 text-[9px] text-white/20 font-mono uppercase tracking-[0.2em]">
+              <ShieldCheck size={12} />
+              Hyper-Isolated Environment Ready
+            </div>
+          </div>
+        ) : (
+          <div className="w-full h-full relative bg-white">
+            {iframeLoading && (
+              <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-[#0d0d0d] text-white/40 gap-4">
+                <RefreshCw size={32} className="animate-spin text-accent" />
+                <span className="text-[10px] font-black uppercase tracking-[0.3em] animate-pulse">Mounting Virtual File System...</span>
               </div>
-              <div className="bg-white/5 p-4 rounded-xl border border-white/5 space-y-4">
-                <div className="flex items-center gap-2 text-[10px] font-black uppercase text-accent">
-                  <Cpu size={12} /> Telemetry
-                </div>
-                <div className="space-y-2">
-                  <div className="flex justify-between text-[9px] text-white/40">
-                    <span>GUEST_LOAD</span>
-                    <span>12%</span>
-                  </div>
-                  <Progress value={12} className="h-1 bg-white/5" />
-                  <div className="flex justify-between text-[9px] text-white/40">
-                    <span>IO_THROUGHPUT</span>
-                    <span>850 MB/s</span>
-                  </div>
-                  <Progress value={65} className="h-1 bg-white/5" />
-                </div>
+            )}
+            <iframe 
+              src={selectedOs.url}
+              className="w-full h-full border-none bg-black"
+              onLoad={() => setIframeLoading(false)}
+              title={selectedOs.name}
+              sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
+            />
+            
+            {/* Security Overlay for "Blocked" detection helper */}
+            <div className="absolute top-4 right-4 pointer-events-none group/info">
+              <div className="p-2 bg-black/60 backdrop-blur-md rounded-full border border-white/10 text-white/40 hover:text-white transition-colors cursor-help pointer-events-auto">
+                <Info size={14} />
+              </div>
+              <div className="absolute right-0 top-10 w-48 p-3 bg-black/90 backdrop-blur-xl border border-white/10 rounded-xl text-[10px] text-white/60 opacity-0 group-hover/info:opacity-100 transition-opacity pointer-events-none">
+                This image is running in an isolated hardware tunnel. If the screen is blank, the host may restrict nested iframes.
+                <a href={selectedOs.url} target="_blank" rel="noopener noreferrer" className="block mt-2 text-accent font-bold hover:underline">
+                  Launch Host Externally <ExternalLink size={10} className="inline ml-1" />
+                </a>
               </div>
             </div>
           </div>
-
-          <div className="h-10 bg-black/40 border-t border-white/5 flex items-center px-4 justify-between mt-auto">
-             <div className="flex gap-2">
-               <div className="w-4 h-4 rounded bg-accent/20" />
-               <div className="w-4 h-4 rounded bg-white/10" />
-               <div className="w-4 h-4 rounded bg-white/10" />
-             </div>
-             <span className="text-[9px] font-mono text-white/20">INSTANCE_UID: NEB-V-X99</span>
-          </div>
-        </div>
+        )}
       </div>
 
       <div className="absolute inset-0 border-[20px] border-accent/5 pointer-events-none" />
