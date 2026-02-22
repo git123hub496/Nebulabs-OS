@@ -46,6 +46,7 @@ const StartAppContextMenu: React.FC<{ x: number, y: number, appId: AppId, onClos
       className="fixed z-[100001] w-52 glass rounded-xl border border-white/10 shadow-2xl backdrop-blur-3xl p-1.5 flex flex-col gap-0.5 animate-in fade-in zoom-in-95 duration-100"
       style={{ left: x, top: y }}
       onClick={(e) => e.stopPropagation()}
+      onContextMenu={(e) => e.preventDefault()}
     >
       <button 
         onClick={() => {
@@ -92,6 +93,7 @@ const FolderContextMenu: React.FC<{ x: number, y: number, folderId: string, onCl
       className="fixed z-[100001] w-52 glass rounded-xl border border-white/10 shadow-2xl backdrop-blur-3xl p-1.5 flex flex-col gap-0.5 animate-in fade-in zoom-in-95 duration-100"
       style={{ left: x, top: y }}
       onClick={(e) => e.stopPropagation()}
+      onContextMenu={(e) => e.preventDefault()}
     >
       <button 
         onClick={() => {
@@ -222,9 +224,14 @@ export const StartMenu: React.FC<StartMenuProps> = ({ onClose }) => {
         "absolute w-[360px] h-[520px] glass rounded-2xl border window-shadow p-6 flex flex-col gap-6 z-[10000] shadow-2xl",
         positionClasses[taskbarPosition]
       )}
-      onClick={() => {
+      onClick={(e) => {
+        e.stopPropagation();
         setAppContextMenu(null);
         setFolderContextMenu(null);
+      }}
+      onContextMenu={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
       }}
     >
       {/* Search Header */}
@@ -259,9 +266,10 @@ export const StartMenu: React.FC<StartMenuProps> = ({ onClose }) => {
               {item.type === 'app' ? (
                 <button
                   className="flex flex-col items-center gap-2 w-full"
-                  onClick={() => handleAppClick(item.appId!)}
+                  onClick={(e) => { e.stopPropagation(); handleAppClick(item.appId!); }}
                   onContextMenu={(e) => {
                     e.preventDefault();
+                    e.stopPropagation();
                     setAppContextMenu({ x: e.clientX, y: e.clientY, appId: item.appId! });
                   }}
                 >
@@ -278,9 +286,10 @@ export const StartMenu: React.FC<StartMenuProps> = ({ onClose }) => {
               ) : (
                 <button
                   className="flex flex-col items-center gap-2 w-full"
-                  onClick={() => handleFolderClick(item.folder!.id)}
+                  onClick={(e) => { e.stopPropagation(); handleFolderClick(item.folder!.id); }}
                   onContextMenu={(e) => {
                     e.preventDefault();
+                    e.stopPropagation();
                     setFolderContextMenu({ x: e.clientX, y: e.clientY, folderId: item.folder!.id });
                   }}
                 >
@@ -302,7 +311,7 @@ export const StartMenu: React.FC<StartMenuProps> = ({ onClose }) => {
       </div>
 
       {/* Footer Branding */}
-      <div className="border-t border-white/10 pt-4 mt-auto flex items-center justify-between">
+      <div className="border-t border-white/10 pt-4 mt-auto flex items-center justify-between" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center gap-3 overflow-hidden">
           <Avatar className={cn("w-10 h-10 border-2 shrink-0", isSchool ? "border-blue-500/40" : isKid ? "border-pink-500/40" : "border-accent/40")}>
             <AvatarImage src={currentUser?.avatarUrl} className="object-cover" />
@@ -330,7 +339,7 @@ export const StartMenu: React.FC<StartMenuProps> = ({ onClose }) => {
 
       {/* Expanded Folder Modal */}
       {expandedFolderId && (
-        <div className="absolute inset-0 z-[10001] bg-black/60 backdrop-blur-xl rounded-2xl p-8 flex flex-col items-center animate-in fade-in zoom-in-95 duration-200">
+        <div className="absolute inset-0 z-[10001] bg-black/60 backdrop-blur-xl rounded-2xl p-8 flex flex-col items-center animate-in fade-in zoom-in-95 duration-200" onClick={(e) => e.stopPropagation()}>
           <button 
             onClick={() => setExpandedFolderId(null)}
             className="absolute top-4 right-4 text-white/40 hover:text-white p-2"
