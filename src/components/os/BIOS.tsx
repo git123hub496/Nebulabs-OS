@@ -1,4 +1,3 @@
-
 "use client"
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
@@ -328,7 +327,16 @@ export const BIOS: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                 onMouseEnter={() => setSelectedItem(i)}
                 onClick={() => {
                   setSelectedItem(i);
-                  handleKeyDown({ key: 'Enter' } as any);
+                  // Manually trigger enter behavior
+                  if (i === 0) {
+                    setIsSaving(true);
+                    updateBIOSSettings(settings);
+                    setTimeout(() => { restart(); onClose(); }, 1500);
+                  } else if (i === 1) {
+                    onClose();
+                  } else {
+                    setSettings({ ...biosSettings, cpuTurbo: true, networkStack: true, secureBoot: true, fastBoot: false, virtualization: true, deviceType: 'NebulaBook', deviceName: 'SuperNova' });
+                  }
                 }}
                 className={cn(
                   "block w-full p-2 border transition-all font-black uppercase text-xs",
@@ -387,7 +395,7 @@ export const BIOS: React.FC<{ onClose: () => void }> = ({ onClose }) => {
         ))}
       </div>
 
-      {/* Main Content Area */}
+      {/* Main Content Area - FLEX ARCHITECTURE FIXES OVERLAP */}
       <div className="border-4 border-[#aaaaaa] flex-1 flex shadow-[4px_4px_0px_#000] min-h-0 overflow-hidden bg-[#000099]">
         {/* Left List */}
         <div className="flex-1 p-6 border-r border-[#aaaaaa] overflow-y-auto custom-scrollbar">
@@ -416,7 +424,7 @@ export const BIOS: React.FC<{ onClose: () => void }> = ({ onClose }) => {
         </div>
       </div>
 
-      {/* Footer Branding */}
+      {/* Footer Branding - PROPERLY ANCHORED */}
       <div className="mt-6 flex items-end justify-between shrink-0">
         <div className="space-y-1">
           <div className="text-4xl font-black italic tracking-tighter text-white drop-shadow-[4px_4px_0px_#000]">NEBULABS</div>

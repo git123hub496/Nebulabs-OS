@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
@@ -342,8 +341,6 @@ export const Desktop: React.FC = () => {
       const dy = e.clientY - dragStartPos.y;
       const distance = Math.hypot(dx, dy);
       
-      // Threshold: 5 pixels of movement before entering drag state
-      // This prevents icons from turning "grey-ish" during a normal click or double-click
       if (distance > 5) {
         setDraggingAppId(pendingDragAppId);
       }
@@ -416,7 +413,13 @@ export const Desktop: React.FC = () => {
     '--sidebar-accent': hexToHslString(customAccentHex),
   } as React.CSSProperties : {};
 
+  // SAFE SCALING: We calculate dimensions directly instead of using transform: scale()
+  // to avoid hitbox misalignment and blurry rendering.
   const currentScale = isNaN(iconSize) ? 1.0 : iconSize / 100;
+  const scaledIconBoxSize = 56 * currentScale; // Base w-14 is 56px
+  const scaledContainerWidth = 96 * currentScale; // Base w-24 is 96px
+  const scaledIconSize = 28 * currentScale;
+  const scaledFontSize = 11 * currentScale;
 
   return (
     <div 
@@ -482,14 +485,13 @@ export const Desktop: React.FC = () => {
           <div 
             key={shortcut.id}
             className={cn(
-              "absolute desktop-icon group transition-all",
-              isDragging ? "z-50 opacity-50 scale-105 pointer-events-none transition-none" : "duration-200"
+              "absolute flex flex-col items-center gap-1 p-2 rounded-lg hover:bg-white/10 transition-all cursor-pointer text-center",
+              isDragging ? "z-50 opacity-50 pointer-events-none transition-none" : "duration-200"
             )}
             style={{ 
               left: isDragging ? currentDragPos.x : shortcut.x, 
               top: isDragging ? currentDragPos.y : shortcut.y,
-              transform: `scale(${currentScale})`,
-              transformOrigin: 'top left'
+              width: `${scaledContainerWidth}px`,
             }}
             onMouseDown={(e) => handleMouseDown(e, shortcut.id)}
             onDoubleClick={(e) => {
@@ -498,8 +500,11 @@ export const Desktop: React.FC = () => {
             }}
             onContextMenu={(e) => handleShortcutContextMenu(e, shortcut.id)}
           >
-            <div className={cn("w-14 h-14 glass rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform mb-1 shadow-lg border-white/20 relative", isSchool && "border-blue-500/20 shadow-blue-500/10", isKid && "border-pink-500/20 shadow-pink-500/10")}>
-              <Icon size={28} className={isSchool ? "text-blue-400" : isKid ? "text-pink-400" : "text-accent"} />
+            <div 
+              className={cn("glass rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform mb-1 shadow-lg border-white/20 relative", isSchool && "border-blue-500/20 shadow-blue-500/10", isKid && "border-pink-500/20 shadow-pink-500/10")}
+              style={{ width: `${scaledIconBoxSize}px`, height: `${scaledIconBoxSize}px` }}
+            >
+              <Icon size={scaledIconSize} className={isSchool ? "text-blue-400" : isKid ? "text-pink-400" : "text-accent"} />
               
               {shortcut.id !== 'trash' && shortcut.id !== 'files' && shortcut.id !== 'store' && !isSchool && !isKid && (
                 <button 
@@ -514,7 +519,10 @@ export const Desktop: React.FC = () => {
                 </button>
               )}
             </div>
-            <span className="text-white text-[11px] font-bold drop-shadow-md text-center line-clamp-2 px-1">
+            <span 
+              className="text-white font-bold drop-shadow-md text-center line-clamp-2 px-1"
+              style={{ fontSize: `${scaledFontSize}px` }}
+            >
               {shortcut.label}
             </span>
           </div>
