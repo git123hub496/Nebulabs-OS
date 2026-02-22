@@ -1,7 +1,7 @@
 
 "use client"
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useOS } from '@/context/os-context';
 import { 
   Laptop, 
@@ -21,12 +21,19 @@ import {
   X,
   Plus,
   Minus,
-  ShoppingBag
+  ShoppingBag,
+  Tablet,
+  Watch,
+  Headset,
+  Speaker,
+  Keyboard,
+  RefreshCw
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
+import { PlaceHolderImages } from '@/lib/placeholder-images';
 
 interface Product {
   id: string;
@@ -36,87 +43,161 @@ interface Product {
   description: string;
   specs: string[];
   image: string;
+  imageHint: string;
   isNew?: boolean;
   rating: number;
 }
 
-const PRODUCTS: Product[] = [
-  {
-    id: 'nb-pro-x',
-    name: 'NebulaBook Pro X',
-    category: 'laptop',
-    price: 2499,
-    description: 'The ultimate quantum-threaded mobile workstation. Built for creators and developers.',
-    specs: ['Quantum-X Octa-Core', '64GB LPDDR5', '2TB SSD', '16" Liquid Nebula Display'],
-    image: 'https://picsum.photos/seed/nbprox/600/400',
-    isNew: true,
-    rating: 5.0
-  },
-  {
-    id: 'nphone-13',
-    name: 'NebulaPhone 13 Ultra',
-    category: 'mobile',
-    price: 1199,
-    description: 'Holographic imaging meets neural connectivity. The future of mobile is here.',
-    specs: ['Neural Link v4', 'Holographic OLED', 'Quantum Night Vision', 'All-Week Battery'],
-    image: 'https://picsum.photos/seed/nphone/600/400',
-    isNew: true,
-    rating: 4.9
-  },
-  {
-    id: 'npc-titan',
-    name: 'Nebula-PC Titan',
-    category: 'desktop',
-    price: 4999,
-    description: 'Extreme compute for AI researchers and deep-sim enthusiasts.',
-    specs: ['Dual Quantum-X Ultra', '256GB RAM', '10TB RAID-0', 'Liquid Nitrogen Cooling'],
-    image: 'https://picsum.photos/seed/npc/600/400',
-    rating: 5.0
-  },
-  {
-    id: 'nglass',
-    name: 'Nebula Vision Glasses',
-    category: 'gear',
-    price: 799,
-    description: 'Augmented reality seamlessly integrated with your workspace.',
-    specs: ['8K Per Eye', 'Direct Kernel Link', 'Bone Conduction Audio', '12h Runtime'],
-    image: 'https://picsum.photos/seed/nglasses/600/400',
-    isNew: true,
-    rating: 4.8
-  },
-  {
-    id: 'nnode',
-    name: 'Nebula Server Node',
-    category: 'desktop',
-    price: 1599,
-    description: 'Host your own cloud partition with military-grade encryption.',
-    specs: ['128-Core Compute', 'Self-Healing Storage', 'Uninterruptible UPS', 'Global DNS Link'],
-    image: 'https://picsum.photos/seed/nnode/600/400',
-    rating: 4.7
-  },
-  {
-    id: 'nb-air',
-    name: 'NebulaBook Air',
-    category: 'laptop',
-    price: 1299,
-    description: 'Impossible thinness. Unmatched performance. The traveler\'s companion.',
-    specs: ['Quantum-X Nano', '16GB RAM', '512GB SSD', '13" Nano-Bezel Display'],
-    image: 'https://picsum.photos/seed/nbair/600/400',
-    rating: 4.9
-  }
-];
-
 export const ShopNebulabs: React.FC = () => {
   const { addNotification, playSound } = useOS();
   const [filter, setFilter] = useState<'all' | Product['category']>('all');
-  const [selectedProduct, setSelectedAccount] = useState<Product | null>(null);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [isPurchasing, setIsPurchasing] = useState(false);
+
+  const PRODUCTS: Product[] = useMemo(() => [
+    {
+      id: 'nb-pro-x',
+      name: 'NebulaBook Pro X',
+      category: 'laptop',
+      price: 2499,
+      description: 'The ultimate quantum-threaded mobile workstation. Built for creators and developers.',
+      specs: ['Quantum-X Octa-Core', '64GB LPDDR5', '2TB SSD', '16" Liquid Nebula Display'],
+      image: PlaceHolderImages.find(img => img.id === 'shop-laptop-pro')?.imageUrl || '',
+      imageHint: PlaceHolderImages.find(img => img.id === 'shop-laptop-pro')?.imageHint || 'laptop',
+      isNew: true,
+      rating: 5.0
+    },
+    {
+      id: 'nphone-13',
+      name: 'NebulaPhone 13 Ultra',
+      category: 'mobile',
+      price: 1199,
+      description: 'Holographic imaging meets neural connectivity. The future of mobile is here.',
+      specs: ['Neural Link v4', 'Holographic OLED', 'Quantum Night Vision', 'All-Week Battery'],
+      image: PlaceHolderImages.find(img => img.id === 'shop-phone-ultra')?.imageUrl || '',
+      imageHint: PlaceHolderImages.find(img => img.id === 'shop-phone-ultra')?.imageHint || 'phone',
+      isNew: true,
+      rating: 4.9
+    },
+    {
+      id: 'npc-titan',
+      name: 'Nebula-PC Titan',
+      category: 'desktop',
+      price: 4999,
+      description: 'Extreme compute for AI researchers and deep-sim enthusiasts.',
+      specs: ['Dual Quantum-X Ultra', '256GB RAM', '10TB RAID-0', 'Liquid Nitrogen Cooling'],
+      image: PlaceHolderImages.find(img => img.id === 'shop-pc-titan')?.imageUrl || '',
+      imageHint: PlaceHolderImages.find(img => img.id === 'shop-pc-titan')?.imageHint || 'desktop pc',
+      rating: 5.0
+    },
+    {
+      id: 'nglass',
+      name: 'Nebula Vision Glasses',
+      category: 'gear',
+      price: 799,
+      description: 'Augmented reality seamlessly integrated with your workspace.',
+      specs: ['8K Per Eye', 'Direct Kernel Link', 'Bone Conduction Audio', '12h Runtime'],
+      image: PlaceHolderImages.find(img => img.id === 'shop-gear-glasses')?.imageUrl || '',
+      imageHint: PlaceHolderImages.find(img => img.id === 'shop-gear-glasses')?.imageHint || 'smart glasses',
+      isNew: true,
+      rating: 4.8
+    },
+    {
+      id: 'nnode',
+      name: 'Nebula Server Node',
+      category: 'desktop',
+      price: 1599,
+      description: 'Host your own cloud partition with military-grade encryption.',
+      specs: ['128-Core Compute', 'Self-Healing Storage', 'Uninterruptible UPS', 'Global DNS Link'],
+      image: PlaceHolderImages.find(img => img.id === 'shop-server-node')?.imageUrl || '',
+      imageHint: PlaceHolderImages.find(img => img.id === 'shop-server-node')?.imageHint || 'server',
+      rating: 4.7
+    },
+    {
+      id: 'nb-air',
+      name: 'NebulaBook Air',
+      category: 'laptop',
+      price: 1299,
+      description: 'Impossible thinness. Unmatched performance. The traveler\'s companion.',
+      specs: ['Quantum-X Nano', '16GB RAM', '512GB SSD', '13" Nano-Bezel Display'],
+      image: PlaceHolderImages.find(img => img.id === 'shop-laptop-air')?.imageUrl || '',
+      imageHint: PlaceHolderImages.find(img => img.id === 'shop-laptop-air')?.imageHint || 'slim laptop',
+      rating: 4.9
+    },
+    {
+      id: 'nslate',
+      name: 'Nebula Slate Pro',
+      category: 'mobile',
+      price: 899,
+      description: 'A professional-grade tablet with active stylus tracking and 4K display.',
+      specs: ['Neural-X Slate', '12GB RAM', 'Precision Stylus', '120Hz ProMotion'],
+      image: PlaceHolderImages.find(img => img.id === 'shop-tablet-slate')?.imageUrl || '',
+      imageHint: PlaceHolderImages.find(img => img.id === 'shop-tablet-slate')?.imageHint || 'tablet',
+      rating: 4.7
+    },
+    {
+      id: 'nwatch',
+      name: 'Nebula BioLink',
+      category: 'gear',
+      price: 449,
+      description: 'Advanced health metrics synced directly to your system kernel.',
+      specs: ['Bio-Sensors v3', 'Always-On Retina', 'Titanium Shell', 'Satellite SOS'],
+      image: PlaceHolderImages.find(img => img.id === 'shop-watch-link')?.imageUrl || '',
+      imageHint: PlaceHolderImages.find(img => img.id === 'shop-watch-link')?.imageHint || 'smartwatch',
+      isNew: true,
+      rating: 4.6
+    },
+    {
+      id: 'nvr',
+      name: 'Nebula DeepDive',
+      category: 'gear',
+      price: 1499,
+      description: 'High-fidelity VR for immersive virtualization and workspace expansion.',
+      specs: ['Retinal Projection', 'Zero-Latency Link', 'Spatial Audio Pro', 'Haptic Feedback'],
+      image: PlaceHolderImages.find(img => img.id === 'shop-vr-dive')?.imageUrl || '',
+      imageHint: PlaceHolderImages.find(img => img.id === 'shop-vr-dive')?.imageHint || 'vr headset',
+      rating: 4.9
+    },
+    {
+      id: 'ngpu',
+      name: 'Neural Accelerator X',
+      category: 'desktop',
+      price: 1999,
+      description: 'External GPU module for extreme AI training and graphics rendering.',
+      specs: ['48GB VRAM', 'Quantum Cores', 'Thunderbolt 5', 'Active Liquid Cool'],
+      image: PlaceHolderImages.find(img => img.id === 'shop-gpu-accel')?.imageUrl || '',
+      imageHint: PlaceHolderImages.find(img => img.id === 'shop-gpu-accel')?.imageHint || 'graphics card',
+      rating: 5.0
+    },
+    {
+      id: 'nkeys',
+      name: 'Matrix Keyboard',
+      category: 'gear',
+      price: 299,
+      description: 'Optical mechanical keyboard with per-key OLED macro displays.',
+      specs: ['Optical Switches', 'Aluminum Build', 'Braided Cable', 'RGB Sync'],
+      image: PlaceHolderImages.find(img => img.id === 'shop-input-matrix')?.imageUrl || '',
+      imageHint: PlaceHolderImages.find(img => img.id === 'shop-input-matrix')?.imageHint || 'keyboard',
+      rating: 4.8
+    },
+    {
+      id: 'naudio',
+      name: 'Sonic Core Hub',
+      category: 'gear',
+      price: 399,
+      description: 'Omnidirectional smart speaker with integrated AI processing.',
+      specs: ['360 Sound', 'Voice Command', 'Home Automation', 'Hi-Res Audio'],
+      image: PlaceHolderImages.find(img => img.id === 'shop-audio-core')?.imageUrl || '',
+      imageHint: PlaceHolderImages.find(img => img.id === 'shop-audio-core')?.imageHint || 'speaker',
+      rating: 4.5
+    }
+  ], []);
 
   const filteredProducts = filter === 'all' ? PRODUCTS : PRODUCTS.filter(p => p.category === filter);
 
   const handleBuy = (product: Product) => {
-    setSelectedAccount(product);
+    setSelectedProduct(product);
     setIsCheckoutOpen(true);
     playSound('click');
   };
@@ -133,7 +214,7 @@ export const ShopNebulabs: React.FC = () => {
         'app'
       );
       playSound('notify');
-      setSelectedAccount(null);
+      setSelectedProduct(null);
     }, 2000);
   };
 
@@ -159,7 +240,7 @@ export const ShopNebulabs: React.FC = () => {
           {[
             { id: 'all', label: 'All Tech', icon: Package },
             { id: 'laptop', label: 'NebulaBooks', icon: Laptop },
-            { id: 'mobile', label: 'Phones', icon: Smartphone },
+            { id: 'mobile', label: 'Phones & Slates', icon: Smartphone },
             { id: 'desktop', label: 'PCs & Nodes', icon: Cpu },
             { id: 'gear', label: 'Gear', icon: Glasses },
           ].map(cat => (
@@ -192,6 +273,7 @@ export const ShopNebulabs: React.FC = () => {
                 <img 
                   src={product.image} 
                   alt={product.name} 
+                  data-ai-hint={product.imageHint}
                   className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 opacity-80 group-hover:opacity-100" 
                 />
                 {product.isNew && (
