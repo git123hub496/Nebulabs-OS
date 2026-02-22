@@ -143,6 +143,8 @@ export interface BIOSSettings {
   secureBoot: boolean;
   fastBoot: boolean;
   virtualization: boolean;
+  deviceType: 'NebulaBook' | 'Nebula-PC';
+  deviceName: string;
 }
 
 export interface StartMenuFolder {
@@ -334,20 +336,6 @@ const INITIAL_DESKTOP: DesktopShortcut[] = [
   { id: 'trash', label: 'Recycling Bin', icon: Trash2, x: PADDING, y: PADDING + (GRID_Y * 4) },
 ];
 
-const MOCK_EMAILS: Email[] = [
-  {
-    id: '1',
-    from: 'Nebulabs Corp',
-    to: 'user',
-    subject: 'Welcome to your NebulaBook 180 Pro',
-    content: 'Dear User,\n\nCongratulations on your new hardware! Your NebulaBook 180 Pro is the latest in quantum-threaded mobile workstations. We have pre-installed Nebula-Core v4.5.2 for maximum performance.\n\nBest regards,\nNebulabs Hardware Division',
-    timestamp: 'Today, 10:00 AM',
-    isRead: false,
-    isSystem: true,
-    folder: 'inbox'
-  },
-];
-
 const INITIAL_APPS: AppId[] = ['store', 'files', 'settings', 'assistant', 'notes', 'calc', 'terminal', 'browser', 'trash', 'news', 'maps', 'monitor', 'calendar', 'snake', 'minesweeper', 'update', 'paint', 'info', 'camera', 'slides', 'mail', 'nebula-v'];
 const INITIAL_PINNED: AppId[] = ['files', 'store', 'assistant', 'browser', 'settings', 'mail', 'camera', 'slides'];
 
@@ -393,7 +381,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   const [fileSystem, setFileSystem] = useState<FileSystemItem[]>(INITIAL_FILES);
   const [trash, setTrash] = useState<FileSystemItem[]>([]);
   const [notes, setNotesInternal] = useState("");
-  const [emails, setEmails] = useState<Email[]>(MOCK_EMAILS);
+  const [emails, setEmails] = useState<Email[]>([]);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
     { id: '1', sender: 'Nebulabs Onboarding', text: 'Welcome to your internal chat workspace.', timestamp: '10:00 AM', isBot: true }
   ]);
@@ -413,6 +401,8 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     secureBoot: true,
     fastBoot: false,
     virtualization: false,
+    deviceType: 'NebulaBook',
+    deviceName: 'SuperNova'
   });
 
   useEffect(() => {
@@ -427,6 +417,29 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     setBiosSettings(updated);
     localStorage.setItem('nebula_bios_settings', JSON.stringify(updated));
   };
+
+  const getFullDeviceName = useCallback(() => {
+    return `${biosSettings.deviceType} ${biosSettings.deviceName}`;
+  }, [biosSettings]);
+
+  // Set initial emails once device name is known
+  useEffect(() => {
+    if (emails.length === 0) {
+      setEmails([
+        {
+          id: '1',
+          from: 'Nebulabs Corp',
+          to: 'user',
+          subject: `Welcome to your ${getFullDeviceName()}`,
+          content: `Dear User,\n\nCongratulations on your new hardware! Your ${getFullDeviceName()} is the latest in quantum-threaded mobile workstations. We have pre-installed Nebula-Core v4.5.2 for maximum performance.\n\nBest regards,\nNebulabs Hardware Division`,
+          timestamp: 'Today, 10:00 AM',
+          isRead: false,
+          isSystem: true,
+          folder: 'inbox'
+        },
+      ]);
+    }
+  }, [getFullDeviceName, emails.length]);
 
   const playSound = useCallback((type: 'click' | 'open' | 'close' | 'notify') => {
     if (typeof window === 'undefined') return;
@@ -475,7 +488,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
             "Are we still on for the sync later?",
             "Don't forget to review the documents I sent.",
             "Hope your day is going well!",
-            "System update scheduled for tonight."
+            `System update scheduled for your ${biosSettings.deviceType} tonight.`
           ];
           
           const botMsg: ChatMessage = {
@@ -491,8 +504,8 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
             addNotification(`Chat: ${sender}`, botMsg.text.slice(0, 30) + '...', 'app');
           }
         } else {
-          const subjects = ["Update required", "Weekly Digest", "New document shared", "System Alert", "Invitation"];
-          const bodies = ["Please review the attached file.", "Your weekly stats are ready.", "Check out the new feature release.", "Action required on your account."];
+          const subjects = [`Update required for ${biosSettings.deviceName}`, "Weekly Digest", "New document shared", "System Alert", "Invitation"];
+          const bodies = ["Please review the attached file.", "Your weekly stats are ready.", "Check out the new feature release.", `Action required on your ${getFullDeviceName()} account.`];
           const newEmail: Email = {
             id: Math.random().toString(36).substr(2, 9),
             from: "Nebula Core",
@@ -510,7 +523,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     }, 45000);
 
     return () => clearInterval(interval);
-  }, [currentUser, powerStatus, isLocked, isOnline, isChatOpen, addNotification]);
+  }, [currentUser, powerStatus, isLocked, isOnline, isChatOpen, addNotification, biosSettings, getFullDeviceName]);
 
   const markEmailRead = (id: string) => {
     setEmails(prev => prev.map(email => email.id === id ? { ...email, isRead: true } : email));

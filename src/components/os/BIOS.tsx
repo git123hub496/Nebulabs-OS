@@ -1,6 +1,7 @@
+
 "use client"
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useOS, BIOSSettings as KernelBIOSSettings } from '@/context/os-context';
 import { cn } from '@/lib/utils';
 
@@ -11,6 +12,8 @@ export const BIOS: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   const [selectedItem, setSelectedItem] = useState(0);
   const { systemStats, restart, biosSettings, updateBIOSSettings } = useOS();
   const [isSaving, setIsSaving] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   // Local state for changes before committing
   const [settings, setSettings] = useState<KernelBIOSSettings>({
@@ -19,20 +22,31 @@ export const BIOS: React.FC<{ onClose: () => void }> = ({ onClose }) => {
     secureBoot: biosSettings.secureBoot,
     fastBoot: biosSettings.fastBoot,
     virtualization: biosSettings.virtualization,
+    deviceType: biosSettings.deviceType || 'NebulaBook',
+    deviceName: biosSettings.deviceName || 'SuperNova'
   });
 
   const [bootOrder, setBootOrder] = useState(['Nebulabs Virtual SSD-0', 'Network PXE', 'USB Flash Device']);
 
   const handleAction = useCallback((direction: 'up' | 'down' | 'enter' | 'toggle') => {
-    if (activeSection === 'Exit') return;
+    if (activeSection === 'Exit' || isEditing) return;
 
     if (direction === 'up') setSelectedItem(prev => Math.max(0, prev - 1));
     if (direction === 'down') {
-      const limits = { Main: 0, Advanced: 4, Security: 2, Boot: 2, Exit: 2 };
+      const limits = { Main: 2, Advanced: 4, Security: 2, Boot: 2, Exit: 2 };
       setSelectedItem(prev => Math.min(limits[activeSection], prev + 1));
     }
 
     if (direction === 'toggle' || direction === 'enter') {
+      if (activeSection === 'Main') {
+        if (selectedItem === 1) { // System Model
+          setSettings(s => ({ ...s, deviceType: s.deviceType === 'NebulaBook' ? 'Nebula-PC' : 'NebulaBook' }));
+        }
+        if (selectedItem === 2) { // Custom Name
+          setIsEditing(true);
+          setTimeout(() => inputRef.current?.focus(), 50);
+        }
+      }
       if (activeSection === 'Advanced') {
         if (selectedItem === 0) setSettings(s => ({ ...s, cpuTurbo: !s.cpuTurbo }));
         if (selectedItem === 1) setSettings(s => ({ ...s, networkStack: !s.networkStack }));
@@ -51,10 +65,18 @@ export const BIOS: React.FC<{ onClose: () => void }> = ({ onClose }) => {
         setBootOrder(newOrder);
       }
     }
-  }, [activeSection, selectedItem, bootOrder]);
+  }, [activeSection, selectedItem, bootOrder, isEditing]);
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     if (isSaving) return;
+    
+    if (isEditing) {
+      if (e.key === 'Enter' || e.key === 'Escape') {
+        setIsEditing(false);
+      }
+      return;
+    }
+
     if (e.key === 'Escape') onClose();
     if (e.key === 'ArrowRight') {
       const sections: BIOSSection[] = ['Main', 'Advanced', 'Security', 'Boot', 'Exit'];
@@ -79,14 +101,14 @@ export const BIOS: React.FC<{ onClose: () => void }> = ({ onClose }) => {
         } else if (selectedItem === 1) {
           onClose();
         } else {
-          setSettings({ cpuTurbo: true, networkStack: true, secureBoot: true, fastBoot: false, virtualization: true });
+          setSettings({ cpuTurbo: true, networkStack: true, secureBoot: true, fastBoot: false, virtualization: true, deviceType: 'NebulaBook', deviceName: 'SuperNova' });
         }
       } else {
         handleAction('enter');
       }
     }
     if (e.key === ' ' || e.key === '+') handleAction('toggle');
-  }, [activeSection, handleAction, onClose, restart, isSaving, selectedItem, settings, updateBIOSSettings]);
+  }, [activeSection, handleAction, onClose, restart, isSaving, selectedItem, settings, updateBIOSSettings, isEditing]);
 
   useEffect(() => {
     window.addEventListener('keydown', handleKeyDown);
@@ -104,11 +126,36 @@ export const BIOS: React.FC<{ onClose: () => void }> = ({ onClose }) => {
               <span className="text-[#aaa]">System Date:</span>
               <span className="text-white">[{new Date().toLocaleDateString()}]</span>
             </div>
-            <div className="border-t border-white/20 pt-4 space-y-2 text-xs font-bold">
-              <div className="flex justify-between">
-                <span>BIOS Version:</span>
-                <span className="text-white">Nebulabs-v4.5.2-PRO</span>
-              </div>
+            
+            <div className="border-t border-white/20 pt-4 space-y-1">
+              {[
+                { label: 'BIOS Version', value: 'Nebulabs-v4.5.2-PRO', static: true },
+                { label: 'System Model', value: `[${settings.deviceType}]` },
+                { label: 'Custom Identifier', value: isEditing ? (
+                  <input 
+                    ref={inputRef}
+                    value={settings.deviceName}
+                    onChange={(e) => setSettings(s => ({ ...s, deviceName: e.target.value }))}
+                    className="bg-white text-blue-900 px-1 border-none outline-none w-32 uppercase"
+                    maxLength={15}
+                  />
+                ) : `[${settings.deviceName}]` },
+              ].map((item, i) => (
+                <div 
+                  key={i} 
+                  className={cn(
+                    "p-1 px-2 transition-colors flex justify-between font-bold text-xs uppercase",
+                    selectedItem === i && !item.static ? "bg-[#aaaaaa] text-[#0000aa]" : "text-white",
+                    item.static && "opacity-60"
+                  )}
+                >
+                  <span>{item.label}:</span>
+                  <span>{item.value}</span>
+                </div>
+              ))}
+            </div>
+
+            <div className="border-t border-white/20 pt-4 space-y-2 text-[10px] font-bold">
               <div className="flex justify-between">
                 <span>Processor Type:</span>
                 <span className="text-white">Nebulabs Quantum-X Core</span>
@@ -121,14 +168,10 @@ export const BIOS: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                 <span>Total Memory:</span>
                 <span className="text-white">65536 MB (DDR5-6400)</span>
               </div>
-              <div className="flex justify-between">
-                <span>Memory Cache:</span>
-                <span className="text-white">L3: 32 MB / L2: 8 MB</span>
-              </div>
             </div>
-            <div className="mt-8 p-4 border border-white/10 bg-white/5 rounded italic text-[10px] text-[#ccc] leading-relaxed">
-              "Nebulabs firmware provides the foundation for your virtual workspace environment. 
-              Always ensure secure boot is enabled for kernel integrity."
+            
+            <div className="mt-4 p-4 border border-white/10 bg-white/5 rounded italic text-[10px] text-[#ccc] leading-relaxed">
+              "Your System Identity establishes the hardware signature for all Nebula network services."
             </div>
           </div>
         );
@@ -258,7 +301,7 @@ export const BIOS: React.FC<{ onClose: () => void }> = ({ onClose }) => {
       
       {/* BIOS Header */}
       <div className="border-4 border-[#aaaaaa] p-1 mb-4 shadow-[4px_4px_0px_#000]">
-        <div className="bg-[#aaaaaa] text-[#0000aa] px-4 py-1 flex justify-between items-center font-black">
+        <div className="bg-[#aaaaaa] text-[#0000aa] px-4 py-1 flex justify-between items-center font-black text-xs">
           <span>Nebulabs Setup Utility - Version 4.5.2 (C) 2026 Nebulabs Corp.</span>
           <span className="text-[10px] animate-pulse">FIRMWARE SETUP</span>
         </div>
@@ -293,8 +336,8 @@ export const BIOS: React.FC<{ onClose: () => void }> = ({ onClose }) => {
         <div className="w-80 p-6 bg-[#000088] text-[10px] font-bold">
           <div className="text-white font-black mb-4 uppercase tracking-widest border-b border-white/20 pb-2">Item Specific Help</div>
           <div className="leading-relaxed opacity-90 h-40 overflow-hidden text-[#ccc]">
-            {activeSection === 'Main' && "Displays general system information including the current Nebulabs Firmware version and processor specifications."}
-            {activeSection === 'Advanced' && "Configure specialized hardware parameters. Warning: Improper settings may lead to virtual hardware instability. Virtualization is required for Nebula-V."}
+            {activeSection === 'Main' && "Displays general system information. Select 'System Model' to toggle hardware type. Select 'Custom Identifier' and press ENTER to rename your device."}
+            {activeSection === 'Advanced' && "Configure specialized hardware parameters. Warning: Improper settings may lead to virtual hardware instability."}
             {activeSection === 'Security' && "Manage system access and boot security. Enabling Secure Boot prevents unauthorized code execution."}
             {activeSection === 'Boot' && "Specify the device search order. The device at the top of the list will be checked for a bootable OS first."}
             {activeSection === 'Exit' && "Commit settings to the Nebulabs Virtual CMOS memory and restart the system."}
@@ -302,7 +345,7 @@ export const BIOS: React.FC<{ onClose: () => void }> = ({ onClose }) => {
           <div className="mt-auto space-y-1 opacity-80 border-t border-white/20 pt-4 text-white">
             <div className="flex justify-between"><span>↑↓</span> <span>Select Item</span></div>
             <div className="flex justify-between"><span>←→</span> <span>Select Menu</span></div>
-            <div className="flex justify-between"><span>Enter</span> <span>Execute Action</span></div>
+            <div className="flex justify-between"><span>Enter</span> <span>Edit/Toggle</span></div>
             <div className="flex justify-between"><span>+/-</span> <span>Change Value</span></div>
             <div className="flex justify-between"><span>F10</span> <span>Save and Exit</span></div>
             <div className="flex justify-between"><span>ESC</span> <span>Exit Setup</span></div>
@@ -319,7 +362,7 @@ export const BIOS: React.FC<{ onClose: () => void }> = ({ onClose }) => {
         <div className="text-right text-[10px] opacity-60 font-black tracking-widest uppercase">
           <div>Display: {typeof window !== 'undefined' ? `${window.innerWidth}x${window.innerHeight}` : '1920x1080'}</div>
           <div>VRAM: {systemStats.ram * 512} KB Buffer</div>
-          <div>CPU State: {settings.cpuTurbo ? 'P-STATE_MAX' : 'P-STATE_BASE'}</div>
+          <div>Identity: {settings.deviceType} {settings.deviceName}</div>
         </div>
       </div>
 

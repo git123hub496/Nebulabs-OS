@@ -69,7 +69,7 @@ export const Settings: React.FC = () => {
     currentDisplayId, setCurrentDisplayId, displayLayout, updateDisplayLayout, resetDisplayLayout,
     currentUser, logout, notifications, clearNotifications, addNotification, openApp,
     isSecurityEnabled, setSecurityEnabled, updateUserPassword, updateUserAvatar, updateUserWorkStatus,
-    installedApps, uninstallApp
+    installedApps, uninstallApp, biosSettings
   } = useOS();
 
   const [activeTab, setActiveTab] = useState<SettingsTab>('personalization');
@@ -675,7 +675,7 @@ export const Settings: React.FC = () => {
                 {isSchool ? <GraduationCap size={40} className="text-blue-400" /> : isKid ? <Smile size={40} className="text-pink-400" /> : <span className="text-4xl font-black text-accent">N</span>}
               </div>
               <div className="space-y-2">
-                <h2 className="text-3xl font-black tracking-tight text-foreground">{currentUser?.username || 'User'}'s NebulaBook 180 Pro</h2>
+                <h2 className="text-3xl font-black tracking-tight text-foreground">{currentUser?.username || 'User'}'s {biosSettings.deviceType} {biosSettings.deviceName}</h2>
                 <p className="text-xs text-muted-foreground font-mono uppercase tracking-[0.3em]">
                   {isSchool ? "Education Edition • District Managed" : isKid ? "Home Edition • Managed Child Profile" : "Version 1.0.4 Stable-Channel"}
                 </p>
@@ -683,7 +683,7 @@ export const Settings: React.FC = () => {
               <div className="max-w-md mx-auto p-6 bg-foreground/5 border border-border/50 rounded-3xl text-left space-y-4">
                 <div className="flex items-center justify-between text-xs">
                   <span className="text-muted-foreground uppercase font-bold tracking-widest">Device Name</span>
-                  <span className="text-foreground font-bold">NEBULA-{isSchool ? 'EDU' : isKid ? 'HOME' : 'PRO'}-{currentUser?.id.slice(0, 4).toUpperCase()}</span>
+                  <span className="text-foreground font-bold">{biosSettings.deviceType}-{biosSettings.deviceName.toUpperCase()}</span>
                 </div>
                 <div className="flex items-center justify-between text-xs">
                   <span className="text-muted-foreground uppercase font-bold tracking-widest">Managed State</span>
