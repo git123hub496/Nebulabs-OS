@@ -47,7 +47,8 @@ import {
   PinOff,
   Smile,
   Home,
-  Layers
+  Layers,
+  Store
 } from 'lucide-react';
 import { FileExplorer } from '../apps/FileExplorer';
 import { AppStore } from '../apps/AppStore';
@@ -74,6 +75,7 @@ import { PresentationMaker } from '../apps/PresentationMaker';
 import { NebulaMail } from '../apps/NebulaMail';
 import { NebulaV } from '../apps/NebulaV';
 import { GoogleSearch } from '../apps/GoogleSearch';
+import { ShopNebulabs } from '../apps/ShopNebulabs';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -104,6 +106,7 @@ const APP_COMPONENTS: Record<AppId, (win: WindowInstance) => React.ReactNode> = 
   'mail': (win) => <NebulaMail />,
   'nebula-v': (win) => <NebulaV />,
   'google-search': (win) => <GoogleSearch />,
+  'shop': (win) => <ShopNebulabs />,
   'info': (win) => (
     <div className="p-8 space-y-6 bg-[#161d25] h-full text-white/90 overflow-auto">
       <div className="flex items-center gap-4 mb-8">

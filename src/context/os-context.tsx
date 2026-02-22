@@ -38,13 +38,14 @@ import {
   Home,
   Layers,
   Folder,
-  Search
+  Search,
+  Store
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { respondToEmail } from '@/ai/flows/mail-ai-flow';
 import { respondToChat } from '@/ai/flows/chat-ai-flow';
 
-export type AppId = 'store' | 'files' | 'settings' | 'assistant' | 'google-drive' | 'notes' | 'calc' | 'terminal' | 'browser' | 'trash' | 'news' | 'maps' | 'monitor' | 'calendar' | 'snake' | 'minesweeper' | 'image-viewer' | 'update' | 'virus' | 'paint' | 'info' | 'camera' | 'slides' | 'mail' | 'nebula-v' | 'google-search';
+export type AppId = 'store' | 'files' | 'settings' | 'assistant' | 'google-drive' | 'notes' | 'calc' | 'terminal' | 'browser' | 'trash' | 'news' | 'maps' | 'monitor' | 'calendar' | 'snake' | 'minesweeper' | 'image-viewer' | 'update' | 'virus' | 'paint' | 'info' | 'camera' | 'slides' | 'mail' | 'nebula-v' | 'google-search' | 'shop';
 export type ThemeMode = 'dark' | 'light';
 export type PowerStatus = 'on' | 'off' | 'booting';
 export type TaskbarPosition = 'top' | 'bottom' | 'left' | 'right';
@@ -324,6 +325,7 @@ export const APP_INFO: Record<AppId, { icon: any; label: string }> = {
   'mail': { icon: MailIcon, label: 'NebulaMail' },
   'nebula-v': { icon: Layers, label: 'Nebula-V' },
   'google-search': { icon: Search, label: 'Nebula Search' },
+  'shop': { icon: Store, label: 'Shop Nebulabs' },
 };
 
 const INITIAL_FILES: FileSystemItem[] = [
@@ -338,11 +340,11 @@ const INITIAL_DESKTOP: DesktopShortcut[] = [
   { id: 'browser', label: 'Nebula Browser', icon: Globe, x: PADDING, y: PADDING + GRID_Y },
   { id: 'files', label: 'File Explorer', icon: FolderOpen, x: PADDING, y: PADDING + (GRID_Y * 2) },
   { id: 'store', label: 'App Store', icon: ShoppingBag, x: PADDING, y: PADDING + (GRID_Y * 3) },
-  { id: 'news', label: 'Nebula News', icon: Newspaper, x: PADDING, y: PADDING + (GRID_Y * 4) },
+  { id: 'shop', label: 'Shop Nebulabs', icon: Store, x: PADDING, y: PADDING + (GRID_Y * 4) },
 ];
 
-const INITIAL_APPS: AppId[] = ['store', 'files', 'settings', 'assistant', 'notes', 'calc', 'terminal', 'browser', 'trash', 'news', 'maps', 'monitor', 'calendar', 'snake', 'minesweeper', 'update', 'paint', 'info', 'camera', 'slides', 'mail', 'nebula-v', 'google-search'];
-const INITIAL_PINNED: AppId[] = ['files', 'store', 'assistant', 'google-search', 'browser', 'settings', 'mail'];
+const INITIAL_APPS: AppId[] = ['store', 'files', 'settings', 'assistant', 'notes', 'calc', 'terminal', 'browser', 'trash', 'news', 'maps', 'monitor', 'calendar', 'snake', 'minesweeper', 'update', 'paint', 'info', 'camera', 'slides', 'mail', 'nebula-v', 'google-search', 'shop'];
+const INITIAL_PINNED: AppId[] = ['files', 'store', 'shop', 'assistant', 'google-search', 'browser', 'settings', 'mail'];
 
 const AVATAR_COLORS = ['#9333ea', '#3b82f6', '#e11d48', '#f97316', '#16a34a', '#ec4899', '#06b6d4'];
 const OFFLINE_WIFI = "Public_Guest_No_Internet";
@@ -901,6 +903,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     else if (appId === 'mail') { initialWidth = 900; initialHeight = 600; }
     else if (appId === 'nebula-v') { initialWidth = 1000; initialHeight = 700; }
     else if (appId === 'google-search') { initialWidth = 1000; initialHeight = 700; }
+    else if (appId === 'shop') { initialWidth = 1100; initialHeight = 750; }
     const newId = `${appId}-${Date.now()}`;
     const newWindow: WindowInstance = {
       id: newId, appId, title, isMinimized: false, isMaximized: false, zIndex: nextZIndex,

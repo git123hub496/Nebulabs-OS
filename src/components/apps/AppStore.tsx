@@ -3,12 +3,13 @@
 
 import React from 'react';
 import { useOS, AppId } from '@/context/os-context';
-import { ShoppingBag, Star, Download, CheckCircle2, FileText, Calculator, Terminal, Cloud, MessageSquare, Globe, Map as MapIcon, Activity, Calendar as CalendarIcon, Gamepad2, Bomb, Palette, Info, Camera, Presentation, Mail, Search } from 'lucide-react';
+import { ShoppingBag, Star, Download, CheckCircle2, FileText, Calculator, Terminal, Cloud, MessageSquare, Globe, Map as MapIcon, Activity, Calendar as CalendarIcon, Gamepad2, Bomb, Palette, Info, Camera, Presentation, Mail, Search, Store } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 
 const STORE_APPS: { id: AppId; name: string; description: string; category: string; rating: number; icon: any }[] = [
+  { id: 'shop', name: 'Shop Nebulabs', description: 'Exclusive access to premium Nebula hardware.', category: 'Lifestyle', rating: 5.0, icon: Store },
   { id: 'browser', name: 'Nebula Browser', description: 'Fast and secure web browsing.', category: 'Utilities', rating: 4.9, icon: Globe },
   { id: 'google-search', name: 'Nebula Search', description: 'Programmable web index powered by Google.', category: 'Utilities', rating: 5.0, icon: Search },
   { id: 'mail', name: 'NebulaMail', description: 'Unified system communication suite.', category: 'Productivity', rating: 4.8, icon: Mail },
