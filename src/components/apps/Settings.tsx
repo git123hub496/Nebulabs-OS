@@ -77,6 +77,7 @@ export const Settings: React.FC = () => {
   const [newPassword, setNewPassword] = useState("");
   const [isChangingPass, setIsChangingPass] = useState(false);
   const avatarInputRef = useRef<HTMLInputElement>(null);
+  const wallpaperInputRef = useRef<HTMLInputElement>(null);
 
   const isSchool = currentUser?.isSchoolAccount;
   const isKid = currentUser?.isKidAccount;
@@ -109,6 +110,19 @@ export const Settings: React.FC = () => {
       reader.onload = async (event) => {
         const result = event.target?.result as string;
         updateUserAvatar(result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleWallpaperUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const result = event.target?.result as string;
+        updateWallpaper(result);
+        addNotification("Wallpaper Updated", "Custom background applied to workspace.", "system");
       };
       reader.readAsDataURL(file);
     }
@@ -169,9 +183,27 @@ export const Settings: React.FC = () => {
             </section>
 
             <section>
-              <div className="flex items-center gap-2 mb-6">
-                <ImageIcon size={18} className="text-accent" />
-                <h2 className="text-lg font-bold text-foreground">Desktop Wallpaper</h2>
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-2">
+                  <ImageIcon size={18} className="text-accent" />
+                  <h2 className="text-lg font-bold text-foreground">Desktop Wallpaper</h2>
+                </div>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="h-8 text-[10px] font-bold uppercase tracking-widest gap-2 border-white/10 text-white/60 hover:text-accent hover:border-accent/40"
+                  onClick={() => wallpaperInputRef.current?.click()}
+                >
+                  <Upload size={12} />
+                  Upload Background
+                </Button>
+                <input 
+                  type="file" 
+                  ref={wallpaperInputRef} 
+                  className="hidden" 
+                  accept="image/*" 
+                  onChange={handleWallpaperUpload} 
+                />
               </div>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 {PlaceHolderImages.filter(img => img.id.startsWith('wallpaper-')).map((img) => (
