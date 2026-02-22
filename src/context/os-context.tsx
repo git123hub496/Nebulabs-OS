@@ -36,7 +36,8 @@ import {
   GraduationCap,
   Smile,
   Home,
-  Layers
+  Layers,
+  Folder
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { respondToEmail } from '@/ai/flows/mail-ai-flow';
@@ -144,6 +145,19 @@ export interface BIOSSettings {
   virtualization: boolean;
 }
 
+export interface StartMenuFolder {
+  id: string;
+  name: string;
+  apps: AppId[];
+}
+
+export interface StartMenuItem {
+  id: string;
+  type: 'app' | 'folder';
+  appId?: AppId;
+  folder?: StartMenuFolder;
+}
+
 interface OSContextType {
   currentUser: LocalUser | null;
   accounts: LocalUser[];
@@ -192,6 +206,7 @@ interface OSContextType {
   isSecurityEnabled: boolean;
   chatMessages: ChatMessage[];
   biosSettings: BIOSSettings;
+  startMenuLayout: StartMenuItem[];
   
   login: (userId: string, password?: string) => boolean;
   logout: () => void;
@@ -259,6 +274,13 @@ interface OSContextType {
   toggleDesktopApp: (id: AppId) => void;
   togglePinApp: (id: AppId) => void;
   reorderPinnedApps: (newOrder: AppId[]) => void;
+
+  reorderStartMenu: (newLayout: StartMenuItem[]) => void;
+  createStartFolder: (name: string, firstAppId: AppId, secondAppId: AppId) => void;
+  addAppToStartFolder: (appId: AppId, folderId: string) => void;
+  removeAppFromStartFolder: (appId: AppId, folderId: string) => void;
+  renameStartFolder: (folderId: string, newName: string) => void;
+  deleteStartFolder: (folderId: string) => void;
 }
 
 const OSContext = createContext<OSContextType | undefined>(undefined);
@@ -380,6 +402,8 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   const [currentDisplayId, setDisplayIdState] = useState('1');
   const [displayLayout, setDisplayLayoutState] = useState<DisplayLayout>({ '1': { right: '2' }, '2': { left: '1' } });
   const [isSecurityEnabled, setSecurityEnabledState] = useState(true);
+
+  const [startMenuLayout, setStartMenuLayout] = useState<StartMenuItem[]>([]);
 
   const [biosSettings, setBiosSettings] = useState<BIOSSettings>({
     cpuTurbo: true,
@@ -629,6 +653,19 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
 
     const gr = localStorage.getItem(`nebula_${user.id}_grayscale`);
     if (gr) setGrayscaleState(gr === 'true');
+
+    const sm = localStorage.getItem(`nebula_${user.id}_start_layout`);
+    if (sm) {
+      setStartMenuLayout(JSON.parse(sm));
+    } else {
+      // Default layout if none exists
+      const defaultLayout: StartMenuItem[] = INITIAL_APPS.map(id => ({
+        id: `item-${id}`,
+        type: 'app',
+        appId: id
+      }));
+      setStartMenuLayout(defaultLayout);
+    }
   }, []);
 
   useEffect(() => {
@@ -669,8 +706,6 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       }
 
       const baseScale = 32 * mouserScale;
-      // SVG path adjusted to make the "stick part" (tail) thicker by ~2-3 pixels.
-      // Neck widened from x=9,11 to x=8,12. Tail base widened from x=13,16 to x=12,17.
       const svg = `
         <svg width="${baseScale}" height="${baseScale}" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M3,3 L3,23 L8,17 L12,26 L17,24 L12,16 L18,16 Z" fill="${fill}" stroke="${stroke}" stroke-width="1.5" stroke-linejoin="round"/>
@@ -1005,6 +1040,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   const installApp = (appId: AppId) => {
     if (!installedApps.includes(appId)) {
       setInstalledApps(prev => [...prev, appId]);
+      setStartMenuLayout(prev => [...prev, { id: `item-${appId}`, type: 'app', appId }]);
       addNotification("App Installed", `${APP_INFO[appId]?.label || appId} is now available in your workspace.`, 'app');
     }
   };
@@ -1020,6 +1056,18 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     setPinnedApps(prev => prev.filter(id => id !== appId));
     setDesktopApps(prev => prev.filter(item => item.id !== appId));
     setOpenWindows(prev => prev.filter(win => win.appId !== appId));
+    setStartMenuLayout(prev => {
+      const filtered = prev.filter(item => item.appId !== appId);
+      return filtered.map(item => {
+        if (item.type === 'folder' && item.folder) {
+          return {
+            ...item,
+            folder: { ...item.folder, apps: item.folder.apps.filter(id => id !== appId) }
+          };
+        }
+        return item;
+      });
+    });
     addNotification("App Uninstalled", `${APP_INFO[appId]?.label || appId} has been removed.`, 'system');
     playSound('close');
   };
@@ -1053,6 +1101,88 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     saveSetting('wallpaper', url);
   };
 
+  const reorderStartMenu = (newLayout: StartMenuItem[]) => {
+    setStartMenuLayout(newLayout);
+    saveSetting('start_layout', newLayout);
+  };
+
+  const createStartFolder = (name: string, firstAppId: AppId, secondAppId: AppId) => {
+    const newFolder: StartMenuFolder = {
+      id: Math.random().toString(36).substr(2, 9),
+      name,
+      apps: [firstAppId, secondAppId]
+    };
+    const newItem: StartMenuItem = { id: `folder-${newFolder.id}`, type: 'folder', folder: newFolder };
+    
+    setStartMenuLayout(prev => {
+      const filtered = prev.filter(item => item.appId !== firstAppId && item.appId !== secondAppId);
+      const updated = [...filtered, newItem];
+      saveSetting('start_layout', updated);
+      return updated;
+    });
+  };
+
+  const addAppToStartFolder = (appId: AppId, folderId: string) => {
+    setStartMenuLayout(prev => {
+      const updated = prev.map(item => {
+        if (item.type === 'folder' && item.folder?.id === folderId) {
+          if (!item.folder.apps.includes(appId)) {
+            return { ...item, folder: { ...item.folder, apps: [...item.folder.apps, appId] } };
+          }
+        }
+        return item;
+      }).filter(item => item.appId !== appId);
+      saveSetting('start_layout', updated);
+      return updated;
+    });
+  };
+
+  const removeAppFromStartFolder = (appId: AppId, folderId: string) => {
+    setStartMenuLayout(prev => {
+      const appItem: StartMenuItem = { id: `item-${appId}`, type: 'app', appId };
+      const updated = prev.map(item => {
+        if (item.type === 'folder' && item.folder?.id === folderId) {
+          return { ...item, folder: { ...item.folder, apps: item.folder.apps.filter(id => id !== appId) } };
+        }
+        return item;
+      });
+      const final = [...updated, appItem];
+      saveSetting('start_layout', final);
+      return final;
+    });
+  };
+
+  const renameStartFolder = (folderId: string, newName: string) => {
+    setStartMenuLayout(prev => {
+      const updated = prev.map(item => {
+        if (item.type === 'folder' && item.folder?.id === folderId) {
+          return { ...item, folder: { ...item.folder, name: newName } };
+        }
+        return item;
+      });
+      saveSetting('start_layout', updated);
+      return updated;
+    });
+  };
+
+  const deleteStartFolder = (folderId: string) => {
+    setStartMenuLayout(prev => {
+      const folderItem = prev.find(item => item.type === 'folder' && item.folder?.id === folderId);
+      if (!folderItem || !folderItem.folder) return prev;
+      
+      const appsToRestore: StartMenuItem[] = folderItem.folder.apps.map(id => ({
+        id: `item-${id}`,
+        type: 'app',
+        appId: id
+      }));
+      
+      const filtered = prev.filter(item => !(item.type === 'folder' && item.folder?.id === folderId));
+      const updated = [...filtered, ...appsToRestore];
+      saveSetting('start_layout', updated);
+      return updated;
+    });
+  };
+
   return (
     <OSContext.Provider value={{
       currentUser, accounts, openWindows, activeWindowId, installedApps, pinnedApps,
@@ -1064,6 +1194,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       isOnline, volume, brightness, isWidgetsOpen, isQuickSettingsOpen, 
       isStartOpen, isChatOpen, isLocked, systemStats,
       currentDisplayId, displayLayout, isSecurityEnabled, chatMessages, biosSettings,
+      startMenuLayout,
       login, logout, lock, unlock, createAccount, deleteAccount, updateUserPassword, resetUserPassword, updateUserAvatar, updateUserWorkStatus, openApp, closeWindow, minimizeWindow,
       maximizeWindow, snapWindow, focusWindow, updateWindowPosition, moveWindowToDisplay,
       updateDisplayLayout, resetDisplayLayout, installApp, uninstallApp, addNotification, clearNotifications,
@@ -1074,6 +1205,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       minimizeAllWindows, playSound,
       createFolder, importFile, moveToTrash, restoreFromTrash, emptyTrash, deleteItemPermanently,
       updateDesktopAppPosition, toggleDesktopApp, togglePinApp, reorderPinnedApps,
+      reorderStartMenu, createStartFolder, addAppToStartFolder, removeAppFromStartFolder, renameStartFolder, deleteStartFolder
     }}>
       {children}
     </OSContext.Provider>

@@ -1,7 +1,8 @@
+
 "use client"
 
-import React, { useState } from 'react';
-import { useOS, AppId, APP_INFO } from '@/context/os-context';
+import React, { useState, useRef } from 'react';
+import { useOS, AppId, APP_INFO, StartMenuItem, StartMenuFolder } from '@/context/os-context';
 import { 
   Search, 
   Settings, 
@@ -26,21 +27,17 @@ import {
   GraduationCap,
   Presentation as PresentationIcon,
   Smile,
-  Home
+  Home,
+  ChevronRight,
+  Folder,
+  X,
+  Edit2
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu";
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
-// Local implementation of Dropdown for Context Menu behavior in Start Menu
 const StartAppContextMenu: React.FC<{ x: number, y: number, appId: AppId, onClose: () => void }> = ({ x, y, appId, onClose }) => {
   const { togglePinApp, pinnedApps, openApp } = useOS();
   
@@ -87,18 +84,63 @@ const StartAppContextMenu: React.FC<{ x: number, y: number, appId: AppId, onClos
   );
 };
 
+const FolderContextMenu: React.FC<{ x: number, y: number, folderId: string, onClose: () => void }> = ({ x, y, folderId, onClose }) => {
+  const { deleteStartFolder, renameStartFolder } = useOS();
+  
+  return (
+    <div 
+      className="fixed z-[100001] w-52 glass rounded-xl border border-white/10 shadow-2xl backdrop-blur-3xl p-1.5 flex flex-col gap-0.5 animate-in fade-in zoom-in-95 duration-100"
+      style={{ left: x, top: y }}
+      onClick={(e) => e.stopPropagation()}
+    >
+      <button 
+        onClick={() => {
+          const newName = prompt("Enter new folder name:");
+          if (newName) renameStartFolder(folderId, newName);
+          onClose();
+        }}
+        className="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-accent/20 text-xs font-bold text-white/80 hover:text-accent transition-colors"
+      >
+        <div className="flex items-center gap-3">
+          <Edit2 size={14} className="text-accent/60" />
+          <span>Rename Folder</span>
+        </div>
+      </button>
+      <button 
+        onClick={() => {
+          if (confirm("Delete folder and restore apps?")) deleteStartFolder(folderId);
+          onClose();
+        }}
+        className="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-destructive/20 text-xs font-bold text-white/80 hover:text-destructive transition-colors"
+      >
+        <div className="flex items-center gap-3">
+          <Trash2 size={14} className="text-destructive/60" />
+          <span>Delete Folder</span>
+        </div>
+      </button>
+    </div>
+  );
+};
+
 interface StartMenuProps {
   onClose: () => void;
 }
 
 export const StartMenu: React.FC<StartMenuProps> = ({ onClose }) => {
   const { 
-    installedApps, openApp, restart, shutDown, taskbarPosition, 
-    currentUser, logout, pinnedApps, togglePinApp 
+    startMenuLayout, reorderStartMenu, createStartFolder, addAppToStartFolder, 
+    removeAppFromStartFolder, openApp, restart, shutDown, taskbarPosition, 
+    currentUser, logout 
   } = useOS();
 
   const [searchQuery, setSearchQuery] = useState("");
   const [appContextMenu, setAppContextMenu] = useState<{ x: number, y: number, appId: AppId } | null>(null);
+  const [folderContextMenu, setFolderContextMenu] = useState<{ x: number, y: number, folderId: string } | null>(null);
+  const [expandedFolderId, setExpandedFolderId] = useState<string | null>(null);
+  
+  // Drag and Drop state
+  const [draggingItemId, setDraggingItemId] = useState<string | null>(null);
+  const [dragOverItemId, setDragOverItemId] = useState<string | null>(null);
 
   const isSchool = currentUser?.isSchoolAccount;
   const isKid = currentUser?.isKidAccount;
@@ -108,30 +150,51 @@ export const StartMenu: React.FC<StartMenuProps> = ({ onClose }) => {
     onClose();
   };
 
-  const handleAppContextMenu = (e: React.MouseEvent, appId: AppId) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    // Boundary check for context menu
-    const menuWidth = 208;
-    const menuHeight = 100;
-    let x = e.clientX;
-    let y = e.clientY;
-
-    if (x + menuWidth > window.innerWidth) x -= menuWidth;
-    if (y + menuHeight > window.innerHeight) y -= menuHeight;
-
-    setAppContextMenu({ x, y, appId });
+  const handleDragStart = (e: React.DragEvent, id: string) => {
+    setDraggingItemId(id);
+    e.dataTransfer.setData('itemId', id);
   };
 
-  const filteredApps = installedApps.filter(appId => {
-    const info = APP_INFO[appId];
-    if (!info) return false;
-    // Kid restrictions
-    if (isKid && (appId === 'terminal' || appId === 'virus')) return false;
-    
-    return info.label.toLowerCase().includes(searchQuery.toLowerCase());
-  });
+  const handleDragOver = (e: React.DragEvent, id: string) => {
+    e.preventDefault();
+    if (draggingItemId !== id) {
+      setDragOverItemId(id);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent, targetId: string) => {
+    e.preventDefault();
+    const sourceId = e.dataTransfer.getData('itemId');
+    if (sourceId === targetId) return;
+
+    const sourceItem = startMenuLayout.find(i => i.id === sourceId);
+    const targetItem = startMenuLayout.find(i => i.id === targetId);
+
+    if (!sourceItem || !targetItem) return;
+
+    // Folder Logic
+    if (sourceItem.type === 'app' && targetItem.type === 'folder') {
+      addAppToStartFolder(sourceItem.appId!, targetItem.folder!.id);
+    } else if (sourceItem.type === 'app' && targetItem.type === 'app') {
+      // Create folder if dropped on another app
+      createStartFolder("New Group", targetItem.appId!, sourceItem.appId!);
+    } else {
+      // Rearrange logic
+      const newLayout = [...startMenuLayout];
+      const sourceIndex = newLayout.findIndex(i => i.id === sourceId);
+      const targetIndex = newLayout.findIndex(i => i.id === targetId);
+      const [removed] = newLayout.splice(sourceIndex, 1);
+      newLayout.splice(targetIndex, 0, removed);
+      reorderStartMenu(newLayout);
+    }
+
+    setDraggingItemId(null);
+    setDragOverItemId(null);
+  };
+
+  const handleFolderClick = (id: string) => {
+    setExpandedFolderId(id);
+  };
 
   const positionClasses = {
     bottom: 'bottom-14 left-0 animate-in slide-in-from-bottom-2 origin-bottom-left',
@@ -140,14 +203,31 @@ export const StartMenu: React.FC<StartMenuProps> = ({ onClose }) => {
     right: 'right-14 top-0 animate-in slide-in-from-right-2 origin-top-right',
   };
 
+  const filteredItems = startMenuLayout.filter(item => {
+    if (item.type === 'app' && item.appId) {
+      const info = APP_INFO[item.appId];
+      if (isKid && (item.appId === 'terminal' || item.appId === 'virus')) return false;
+      return info?.label.toLowerCase().includes(searchQuery.toLowerCase());
+    }
+    if (item.type === 'folder' && item.folder) {
+      if (searchQuery) return item.folder.name.toLowerCase().includes(searchQuery.toLowerCase());
+      return true;
+    }
+    return false;
+  });
+
   return (
     <div 
       className={cn(
         "absolute w-[360px] h-[520px] glass rounded-2xl border window-shadow p-6 flex flex-col gap-6 z-[10000] shadow-2xl",
         positionClasses[taskbarPosition]
       )}
-      onClick={() => setAppContextMenu(null)}
+      onClick={() => {
+        setAppContextMenu(null);
+        setFolderContextMenu(null);
+      }}
     >
+      {/* Search Header */}
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-accent/60" size={16} />
         <Input 
@@ -159,85 +239,151 @@ export const StartMenu: React.FC<StartMenuProps> = ({ onClose }) => {
       </div>
 
       <div className="flex-1 overflow-auto pr-1">
-        <div className="mb-6">
-          <h3 className={cn("text-[11px] font-bold uppercase tracking-widest mb-4 opacity-80", isSchool ? "text-blue-400" : isKid ? "text-pink-400" : "text-accent")}>
-            {searchQuery ? "Search Results" : "All Applications"}
-          </h3>
-          {filteredApps.length > 0 ? (
-            <div className="grid grid-cols-4 gap-4">
-              {filteredApps.map(appId => {
-                const info = APP_INFO[appId];
-                if (!info) return null;
-                const Icon = info.icon;
+        <h3 className={cn("text-[11px] font-bold uppercase tracking-widest mb-4 opacity-80", isSchool ? "text-blue-400" : isKid ? "text-pink-400" : "text-accent")}>
+          {searchQuery ? "Search Results" : "Workspace Intelligence"}
+        </h3>
 
-                return (
-                  <button
-                    key={appId}
-                    className="flex flex-col items-center gap-2 group transition-all"
-                    onClick={() => handleAppClick(appId)}
-                    onContextMenu={(e) => handleAppContextMenu(e, appId)}
-                  >
-                    <div className={cn("w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center group-hover:scale-105 transition-all border border-white/5", isSchool ? "group-hover:bg-blue-500/20 group-hover:border-blue-500/20" : isKid ? "group-hover:bg-pink-500/20 group-hover:border-pink-500/20" : "group-hover:bg-accent/20 group-hover:border-accent/20")}>
-                      <Icon className={cn("transition-colors", isSchool ? "group-hover:text-blue-400" : isKid ? "group-hover:text-pink-400" : "group-hover:text-accent")} size={24} />
-                    </div>
-                    <span className={cn("text-[10px] text-muted-foreground font-medium text-center truncate w-full transition-colors", isSchool ? "group-hover:text-blue-400" : isKid ? "group-hover:text-pink-400" : "group-hover:text-accent")}>{info.label}</span>
-                  </button>
-                );
-              })}
+        <div className="grid grid-cols-4 gap-4 pb-4">
+          {filteredItems.map(item => (
+            <div
+              key={item.id}
+              draggable
+              onDragStart={(e) => handleDragStart(e, item.id)}
+              onDragOver={(e) => handleDragOver(e, item.id)}
+              onDrop={(e) => handleDrop(e, item.id)}
+              className={cn(
+                "group flex flex-col items-center gap-2 p-2 rounded-xl transition-all relative",
+                dragOverItemId === item.id && "bg-accent/20 scale-105"
+              )}
+            >
+              {item.type === 'app' ? (
+                <button
+                  className="flex flex-col items-center gap-2 w-full"
+                  onClick={() => handleAppClick(item.appId!)}
+                  onContextMenu={(e) => {
+                    e.preventDefault();
+                    setAppContextMenu({ x: e.clientX, y: e.clientY, appId: item.appId! });
+                  }}
+                >
+                  <div className={cn("w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center group-hover:scale-105 transition-all border border-white/5", isSchool ? "group-hover:bg-blue-500/20 group-hover:border-blue-500/20" : isKid ? "group-hover:bg-pink-500/20 group-hover:border-pink-500/20" : "group-hover:bg-accent/20 group-hover:border-accent/20")}>
+                    {React.createElement(APP_INFO[item.appId!].icon, { 
+                      className: cn("transition-colors", isSchool ? "group-hover:text-blue-400" : isKid ? "group-hover:text-pink-400" : "group-hover:text-accent"),
+                      size: 24 
+                    })}
+                  </div>
+                  <span className="text-[10px] text-muted-foreground font-medium text-center truncate w-full group-hover:text-white">
+                    {APP_INFO[item.appId!].label}
+                  </span>
+                </button>
+              ) : (
+                <button
+                  className="flex flex-col items-center gap-2 w-full"
+                  onClick={() => handleFolderClick(item.folder!.id)}
+                  onContextMenu={(e) => {
+                    e.preventDefault();
+                    setFolderContextMenu({ x: e.clientX, y: e.clientY, folderId: item.folder!.id });
+                  }}
+                >
+                  <div className="w-12 h-12 bg-accent/10 rounded-2xl flex flex-wrap p-1.5 gap-0.5 border border-accent/20 group-hover:scale-105 transition-all">
+                    {item.folder!.apps.slice(0, 4).map(appId => (
+                      <div key={appId} className="w-[45%] h-[45%] flex items-center justify-center">
+                        {React.createElement(APP_INFO[appId].icon, { size: 10, className: "text-accent" })}
+                      </div>
+                    ))}
+                  </div>
+                  <span className="text-[10px] text-accent font-bold text-center truncate w-full group-hover:text-white">
+                    {item.folder!.name}
+                  </span>
+                </button>
+              )}
             </div>
-          ) : (
-            <div className="text-center py-8 text-muted-foreground opacity-40 flex flex-col items-center gap-2">
-              <Search size={32} strokeWidth={1} />
-              <p className="text-xs">No matching applications found.</p>
-            </div>
-          )}
+          ))}
         </div>
-
-        {!searchQuery && (
-          <div>
-            <h3 className={cn("text-[11px] font-bold uppercase tracking-widest mb-4 opacity-80", isSchool ? "text-blue-400" : isKid ? "text-pink-400" : "text-accent")}>Quick Links</h3>
-            <div className="space-y-1">
-              <button className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-accent/10 text-sm text-foreground transition-colors group" onClick={() => handleAppClick('news')}>
-                <Newspaper size={16} className={cn("group-hover:scale-110 transition-transform", isSchool ? "text-blue-400" : isKid ? "text-pink-400" : "text-accent")} />
-                <span className={cn(isSchool ? "group-hover:text-blue-400" : isKid ? "group-hover:text-pink-400" : "group-hover:text-accent")}>Nebula Local News</span>
-              </button>
-              <button className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-accent/10 text-sm text-foreground transition-colors group" onClick={() => handleAppClick('browser')}>
-                <Globe size={16} className={cn("group-hover:scale-110 transition-transform", isSchool ? "text-blue-400" : isKid ? "text-pink-400" : "text-accent")} />
-                <span className={cn(isSchool ? "group-hover:text-blue-400" : isKid ? "group-hover:text-pink-400" : "group-hover:text-accent")}>Research Browser</span>
-              </button>
-            </div>
-          </div>
-        )}
       </div>
 
+      {/* Footer Branding */}
       <div className="border-t border-white/10 pt-4 mt-auto flex items-center justify-between">
         <div className="flex items-center gap-3 overflow-hidden">
           <Avatar className={cn("w-10 h-10 border-2 shrink-0", isSchool ? "border-blue-500/40" : isKid ? "border-pink-500/40" : "border-accent/40")}>
             <AvatarImage src={currentUser?.avatarUrl} className="object-cover" />
-            <AvatarFallback 
-              className="text-white font-bold"
-              style={{ backgroundColor: currentUser?.avatarColor || 'var(--accent)' }}
-            >
+            <AvatarFallback className="bg-accent/20 text-accent font-bold">
               {currentUser?.username[0].toUpperCase() || 'G'}
             </AvatarFallback>
           </Avatar>
           <div className="flex flex-col overflow-hidden">
             <span className="text-sm font-bold text-foreground truncate">{currentUser?.username || 'Guest User'}</span>
             <span className={cn("text-[10px] truncate font-medium uppercase tracking-tighter", isSchool ? "text-blue-400/60" : isKid ? "text-pink-400/60" : "text-accent/60")}>
-              {isSchool ? "District Student" : isKid ? "Home Managed" : "Local Administrator"}
+              {isSchool ? "District Student" : isKid ? "Home Managed" : "Administrator"}
             </span>
           </div>
         </div>
         
         <div className="flex items-center gap-1">
-          <Button variant="ghost" size="icon" className="h-10 w-10 text-muted-foreground hover:text-accent hover:bg-accent/10 rounded-xl" onClick={restart}>
+          <Button variant="ghost" size="icon" className="h-10 w-10 text-muted-foreground hover:text-accent rounded-xl" onClick={restart}>
             <RefreshCw size={20} />
           </Button>
-          <Button variant="ghost" size="icon" className="h-10 w-10 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-xl" onClick={shutDown}>
+          <Button variant="ghost" size="icon" className="h-10 w-10 text-muted-foreground hover:text-destructive rounded-xl" onClick={shutDown}>
             <Power size={20} />
           </Button>
         </div>
       </div>
+
+      {/* Expanded Folder Modal */}
+      {expandedFolderId && (
+        <div className="absolute inset-0 z-[10001] bg-black/60 backdrop-blur-xl rounded-2xl p-8 flex flex-col items-center animate-in fade-in zoom-in-95 duration-200">
+          <button 
+            onClick={() => setExpandedFolderId(null)}
+            className="absolute top-4 right-4 text-white/40 hover:text-white p-2"
+          >
+            <X size={20} />
+          </button>
+          
+          <h2 className="text-xl font-bold text-white mb-8">
+            {startMenuLayout.find(i => i.folder?.id === expandedFolderId)?.folder?.name}
+          </h2>
+
+          <div className="grid grid-cols-3 gap-8 w-full max-w-[280px]">
+            {startMenuLayout.find(i => i.folder?.id === expandedFolderId)?.folder?.apps.map(appId => (
+              <button
+                key={appId}
+                draggable
+                onDragStart={(e) => {
+                  e.stopPropagation();
+                  e.dataTransfer.setData('appId', appId);
+                  e.dataTransfer.setData('sourceFolderId', expandedFolderId);
+                }}
+                onClick={() => handleAppClick(appId)}
+                className="flex flex-col items-center gap-2 group"
+              >
+                <div className="w-14 h-14 bg-white/5 rounded-2xl flex items-center justify-center border border-white/5 group-hover:scale-110 transition-all group-hover:bg-accent/20">
+                  {React.createElement(APP_INFO[appId].icon, { size: 28, className: "text-accent" })}
+                </div>
+                <span className="text-[10px] text-white/60 font-medium text-center truncate w-full group-hover:text-white">
+                  {APP_INFO[appId].label}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          <p className="mt-auto text-[9px] text-white/20 uppercase font-bold tracking-[0.2em]">Drag apps out to ungroup</p>
+        </div>
+      )}
+
+      {/* Drop area for ungrouping */}
+      {expandedFolderId && (
+        <div 
+          className="absolute -inset-4 z-[10000] pointer-events-none"
+          onDragOver={(e) => e.preventDefault()}
+          onDrop={(e) => {
+            const appId = e.dataTransfer.getData('appId') as AppId;
+            const sourceFolderId = e.dataTransfer.getData('sourceFolderId');
+            if (appId && sourceFolderId) {
+              removeAppFromStartFolder(appId, sourceFolderId);
+              setExpandedFolderId(null);
+            }
+          }}
+        />
+      )}
 
       {appContextMenu && (
         <StartAppContextMenu 
@@ -245,6 +391,15 @@ export const StartMenu: React.FC<StartMenuProps> = ({ onClose }) => {
           y={appContextMenu.y} 
           appId={appContextMenu.appId} 
           onClose={() => setAppContextMenu(null)} 
+        />
+      )}
+
+      {folderContextMenu && (
+        <FolderContextMenu 
+          x={folderContextMenu.x} 
+          y={folderContextMenu.y} 
+          folderId={folderContextMenu.folderId} 
+          onClose={() => setFolderContextMenu(null)} 
         />
       )}
     </div>
