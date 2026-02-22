@@ -1,57 +1,63 @@
 {
   "placeholderImages": [
     {
-      "id": "wallpaper-default",
-      "description": "Default Nebulabs Purple-Blue Gradient",
-      "imageUrl": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxwdXJwbGUlMjBibHVlJTIwZ3JhZGllbnR8ZW58MHx8fHwxNzcxNTQ0Mjk0fDA&ixlib=rb-4.1.0&q=80&w=1920",
-      "imageHint": "purple blue gradient"
+      "id": "wallpaper-nebula",
+      "description": "Nebula Signature Flow",
+      "imageUrl": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=1920",
+      "imageHint": "abstract fluid"
     },
     {
-      "id": "wallpaper-abstract-1",
-      "description": "Fluid Nebula Flow",
-      "imageUrl": "https://images.unsplash.com/photo-1631195535986-4717d6a8a1d8?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHxhYnN0cmFjdCUyMGZsb3d8ZW58MHx8fHwxNzcxNTE3NTc2fDA&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "abstract flow"
+      "id": "wallpaper-cosmic",
+      "description": "Cosmic Drift",
+      "imageUrl": "https://images.unsplash.com/photo-1634017839464-5c339ebe3cb4?auto=format&fit=crop&q=80&w=1920",
+      "imageHint": "purple abstract"
     },
     {
-      "id": "wallpaper-abstract-2",
-      "description": "Cosmic Swirl",
-      "imageUrl": "https://images.unsplash.com/photo-1771013678263-d4755d759587?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHxjb3NtaWMlMjBzd2lybHxlbnwwfHx8fDE3NzE2MjUwNDB8MA&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "cosmic swirl"
+      "id": "wallpaper-void",
+      "description": "Deep Void Silk",
+      "imageUrl": "https://images.unsplash.com/photo-1635776062127-d379bfcba9f8?auto=format&fit=crop&q=80&w=1920",
+      "imageHint": "dark fluid"
     },
     {
-      "id": "wallpaper-abstract-3",
-      "description": "Ethereal Waves",
-      "imageUrl": "https://images.unsplash.com/photo-1743842773564-142688c5461a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHxldGhlcmVhbCUyMHdhdmVzfGVufDB8fHx8MTc3MTYyNTA0MHww&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "ethereal waves"
+      "id": "wallpaper-horizon",
+      "description": "Event Horizon",
+      "imageUrl": "https://images.unsplash.com/photo-1579546929518-9e396f3cc809?auto=format&fit=crop&q=80&w=1920",
+      "imageHint": "vibrant gradient"
     },
     {
-      "id": "wallpaper-abstract-4",
-      "description": "Digital Silk",
-      "imageUrl": "https://images.unsplash.com/photo-1711437134852-2876232e479c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxkaWdpdGFsJTIwc2lsa3xlbnwwfHx8fDE3NzE2MjUwNDB8MA&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "digital silk"
+      "id": "wallpaper-mesh",
+      "description": "Neural Mesh",
+      "imageUrl": "https://images.unsplash.com/photo-1614850523296-d8c1af93d400?auto=format&fit=crop&q=80&w=1920",
+      "imageHint": "mesh background"
+    },
+    {
+      "id": "wallpaper-wave",
+      "description": "Indigo Waves",
+      "imageUrl": "https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?auto=format&fit=crop&q=80&w=1920",
+      "imageHint": "abstract waves"
     },
     {
       "id": "app-icon-store",
       "description": "App Store Icon",
-      "imageUrl": "https://images.unsplash.com/photo-1575081838238-d06e716afa28?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxzdG9yZSUyMHNob3BwaW5nfGVufDB8fHx8MTc3MTU0NDI5NHww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageUrl": "https://images.unsplash.com/photo-1575081838238-d06e716afa28?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
       "imageHint": "store shopping"
     },
     {
       "id": "app-icon-files",
       "description": "File Explorer Icon",
-      "imageUrl": "https://images.unsplash.com/photo-1762427354605-ac241af2b102?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxmb2xkZXIlMjBkb2N1bWVudHxlbnwwfHx8fDE3NzE1NDQyOTV8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageUrl": "https://images.unsplash.com/photo-1762427354605-ac241af2b102?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
       "imageHint": "folder document"
     },
     {
       "id": "app-icon-assistant",
       "description": "AI Assistant Icon",
-      "imageUrl": "https://images.unsplash.com/photo-1763788427851-e329a047356b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8cm9ib3QlMjBpbnRlbGxpZ2VuY2V8ZW58MHx8fHwxNzcxNTQ0Mjk0fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageUrl": "https://images.unsplash.com/photo-1763788427851-e329a047356b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
       "imageHint": "robot intelligence"
     },
     {
       "id": "app-icon-settings",
       "description": "Settings Icon",
-      "imageUrl": "https://images.unsplash.com/photo-1546710237-057a5519a3d1?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxnZWFycyUyMGNvZ3xlbnwwfHx8fDE3NzE1NDQyOTR8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageUrl": "https://images.unsplash.com/photo-1546710237-057a5519a3d1?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
       "imageHint": "gears cog"
     }
   ]

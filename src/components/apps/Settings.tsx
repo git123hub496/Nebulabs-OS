@@ -38,6 +38,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { PlaceHolderImages } from '@/lib/placeholder-images';
 
 type SettingsTab = 'personalization' | 'display' | 'apps' | 'accessibility' | 'notifications' | 'accounts' | 'security' | 'updates' | 'about';
 
@@ -164,6 +165,37 @@ export const Settings: React.FC = () => {
                     </div>
                   </div>
                 )}
+              </div>
+            </section>
+
+            <section>
+              <div className="flex items-center gap-2 mb-6">
+                <ImageIcon size={18} className="text-accent" />
+                <h2 className="text-lg font-bold text-foreground">Desktop Wallpaper</h2>
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                {PlaceHolderImages.filter(img => img.id.startsWith('wallpaper-')).map((img) => (
+                  <button
+                    key={img.id}
+                    onClick={() => updateWallpaper(img.imageUrl)}
+                    className={cn(
+                      "relative aspect-video rounded-xl overflow-hidden border-2 transition-all group",
+                      wallpaper === img.imageUrl ? "border-accent scale-105 shadow-xl shadow-accent/20 z-10" : "border-transparent opacity-70 hover:opacity-100"
+                    )}
+                  >
+                    <img src={img.imageUrl} alt={img.description} className="w-full h-full object-cover" />
+                    {wallpaper === img.imageUrl && (
+                      <div className="absolute inset-0 bg-accent/20 flex items-center justify-center backdrop-blur-[2px]">
+                        <div className="w-10 h-10 rounded-full bg-accent flex items-center justify-center shadow-lg">
+                          <Check size={20} className="text-white" />
+                        </div>
+                      </div>
+                    )}
+                    <div className="absolute inset-x-0 bottom-0 p-2 bg-black/60 backdrop-blur-md opacity-0 group-hover:opacity-100 transition-opacity">
+                      <p className="text-[9px] font-black text-white uppercase tracking-widest truncate">{img.description}</p>
+                    </div>
+                  </button>
+                ))}
               </div>
             </section>
 
