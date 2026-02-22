@@ -25,10 +25,10 @@ const OS_IMAGES: OSImage[] = [
     color: 'from-blue-500/20 to-indigo-500/20'
   },
   { 
-    id: 'thomas', 
-    name: 'Darkson Desktop', 
+    id: 'thomson', 
+    name: 'Thomson Desktop', 
     description: 'A professional dark-themed virtual workspace suite.',
-    url: 'https://thomasdarkson.com/desktop',
+    url: 'https://lttthedev.github.io/desktop.html',
     color: 'from-zinc-500/20 to-black/20'
   }
 ];
