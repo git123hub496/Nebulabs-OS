@@ -40,13 +40,14 @@ import {
   Folder,
   Search,
   Store,
-  Tv
+  Tv,
+  StickyNote as StickyNoteIcon
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { respondToEmail } from '@/ai/flows/mail-ai-flow';
 import { respondToChat } from '@/ai/flows/chat-ai-flow';
 
-export type AppId = 'store' | 'files' | 'settings' | 'assistant' | 'google-drive' | 'notes' | 'calc' | 'terminal' | 'browser' | 'trash' | 'news' | 'maps' | 'monitor' | 'calendar' | 'snake' | 'minesweeper' | 'image-viewer' | 'update' | 'virus' | 'paint' | 'info' | 'camera' | 'slides' | 'mail' | 'nebula-v' | 'google-search' | 'shop' | 'screencast';
+export type AppId = 'store' | 'files' | 'settings' | 'assistant' | 'google-drive' | 'notes' | 'calc' | 'terminal' | 'browser' | 'trash' | 'news' | 'maps' | 'monitor' | 'calendar' | 'snake' | 'minesweeper' | 'image-viewer' | 'update' | 'virus' | 'paint' | 'info' | 'camera' | 'slides' | 'mail' | 'nebula-v' | 'google-search' | 'shop' | 'screencast' | 'sticky-notes';
 export type ThemeMode = 'dark' | 'light';
 export type PowerStatus = 'on' | 'off' | 'booting';
 export type TaskbarPosition = 'top' | 'bottom' | 'left' | 'right';
@@ -124,6 +125,14 @@ export interface DesktopShortcut {
   y: number;
 }
 
+export interface StickyNote {
+  id: string;
+  content: string;
+  x: number;
+  y: number;
+  color: string;
+}
+
 export interface SystemNotification {
   id: string;
   title: string;
@@ -177,6 +186,7 @@ interface OSContextType {
   trash: FileSystemItem[];
   desktopApps: DesktopShortcut[];
   notifications: SystemNotification[];
+  stickyNotes: StickyNote[];
   emails: Email[];
   markEmailRead: (id: string) => void;
   sendEmail: (to: string, subject: string, content: string) => Promise<void>;
@@ -291,6 +301,10 @@ interface OSContextType {
   removeAppFromStartFolder: (appId: AppId, folderId: string) => void;
   renameStartFolder: (folderId: string, newName: string) => void;
   deleteStartFolder: (folderId: string) => void;
+
+  createStickyNote: () => void;
+  updateStickyNote: (id: string, updates: Partial<StickyNote>) => void;
+  deleteStickyNote: (id: string) => void;
 }
 
 const OSContext = createContext<OSContextType | undefined>(undefined);
@@ -328,6 +342,7 @@ export const APP_INFO: Record<AppId, { icon: any; label: string }> = {
   'google-search': { icon: Search, label: 'Nebula Search' },
   'shop': { icon: Store, label: 'Shop Nebulabs' },
   'screencast': { icon: Tv, label: 'Nebula Cast' },
+  'sticky-notes': { icon: StickyNoteIcon, label: 'Sticky Notes' },
 };
 
 const INITIAL_FILES: FileSystemItem[] = [
@@ -345,8 +360,8 @@ const INITIAL_DESKTOP: DesktopShortcut[] = [
   { id: 'shop', label: 'Shop Nebulabs', icon: Store, x: PADDING, y: PADDING + (GRID_Y * 4) },
 ];
 
-const INITIAL_APPS: AppId[] = ['store', 'files', 'settings', 'assistant', 'notes', 'calc', 'terminal', 'browser', 'trash', 'news', 'maps', 'monitor', 'calendar', 'snake', 'minesweeper', 'update', 'paint', 'info', 'camera', 'slides', 'mail', 'nebula-v', 'google-search', 'shop', 'screencast'];
-const INITIAL_PINNED: AppId[] = ['files', 'store', 'shop', 'assistant', 'google-search', 'browser', 'settings', 'mail', 'screencast'];
+const INITIAL_APPS: AppId[] = ['store', 'files', 'settings', 'assistant', 'notes', 'calc', 'terminal', 'browser', 'trash', 'news', 'maps', 'monitor', 'calendar', 'snake', 'minesweeper', 'update', 'paint', 'info', 'camera', 'slides', 'mail', 'nebula-v', 'google-search', 'shop', 'screencast', 'sticky-notes'];
+const INITIAL_PINNED: AppId[] = ['files', 'store', 'shop', 'assistant', 'google-search', 'browser', 'settings', 'mail', 'sticky-notes'];
 
 const AVATAR_COLORS = ['#9333ea', '#3b82f6', '#e11d48', '#f97316', '#16a34a', '#ec4899', '#06b6d4'];
 const OFFLINE_WIFI = "Public_Guest_No_Internet";
@@ -387,6 +402,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   const [pinnedApps, setPinnedApps] = useState<AppId[]>(INITIAL_PINNED);
   const [desktopApps, setDesktopApps] = useState<DesktopShortcut[]>(INITIAL_DESKTOP);
   const [notifications, setNotifications] = useState<SystemNotification[]>([]);
+  const [stickyNotes, setStickyNotes] = useState<StickyNote[]>([]);
   const [fileSystem, setFileSystem] = useState<FileSystemItem[]>(INITIAL_FILES);
   const [trash, setTrash] = useState<FileSystemItem[]>([]);
   const [notes, setNotesInternal] = useState("");
@@ -693,6 +709,9 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       }));
       setStartMenuLayout(defaultLayout);
     }
+
+    const sn = localStorage.getItem(`nebula_${user.id}_sticky_notes`);
+    if (sn) setStickyNotes(JSON.parse(sn));
   }, []);
 
   useEffect(() => {
@@ -876,6 +895,11 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   const clearNotifications = () => setNotifications([]);
 
   const openApp = (appId: AppId, title: string, params?: any) => {
+    if (appId === 'sticky-notes') {
+      createStickyNote();
+      return;
+    }
+
     if (currentUser?.isSchoolAccount && (appId === 'virus')) {
       addNotification("Access Restricted", "Restricted app execution prevented by District Policy.", "security");
       return;
@@ -1225,6 +1249,33 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     });
   };
 
+  const createStickyNote = () => {
+    const newNote: StickyNote = {
+      id: Math.random().toString(36).substr(2, 9),
+      content: "New Note...",
+      x: 300 + (stickyNotes.length * 20),
+      y: 100 + (stickyNotes.length * 20),
+      color: '#fef08a' // Default yellow
+    };
+    const updated = [...stickyNotes, newNote];
+    setStickyNotes(updated);
+    saveSetting('sticky_notes', updated);
+    playSound('click');
+  };
+
+  const updateStickyNote = (id: string, updates: Partial<StickyNote>) => {
+    const updated = stickyNotes.map(n => n.id === id ? { ...n, ...updates } : n);
+    setStickyNotes(updated);
+    saveSetting('sticky_notes', updated);
+  };
+
+  const deleteStickyNote = (id: string) => {
+    const updated = stickyNotes.filter(n => n.id !== id);
+    setStickyNotes(updated);
+    saveSetting('sticky_notes', updated);
+    playSound('close');
+  };
+
   return (
     <OSContext.Provider value={{
       currentUser, accounts, openWindows, activeWindowId, installedApps, pinnedApps,
@@ -1234,7 +1285,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       customAccentHex, cursorColor, isInverted, isGrayscale, glassEnabled, powerStatus,
       taskbarPosition, taskbarSize, iconSize, currentWifi, isWifiConnecting,
       isOnline, volume, brightness, isWidgetsOpen, isQuickSettingsOpen, 
-      isStartOpen, isChatOpen, isLocked, systemStats,
+      isStartOpen, isChatOpen, isLocked, systemStats, stickyNotes,
       currentDisplayId, displayLayout, isSecurityEnabled, chatMessages, biosSettings,
       startMenuLayout,
       login, logout, lock, unlock, createAccount, deleteAccount, updateUserPassword, resetUserPassword, updateUserAvatar, updateUserWorkStatus, openApp, closeWindow, minimizeWindow,
@@ -1247,7 +1298,8 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       minimizeAllWindows, playSound,
       createFolder, importFile, renameFileSystemItem, moveToTrash, restoreFromTrash, emptyTrash, deleteItemPermanently,
       updateDesktopAppPosition, toggleDesktopApp, togglePinApp, reorderPinnedApps,
-      reorderStartMenu, createStartFolder, addAppToStartFolder, removeAppFromStartFolder, renameStartFolder, deleteStartFolder
+      reorderStartMenu, createStartFolder, addAppToStartFolder, removeAppFromStartFolder, renameStartFolder, deleteStartFolder,
+      createStickyNote, updateStickyNote, deleteStickyNote
     }}>
       {children}
     </OSContext.Provider>

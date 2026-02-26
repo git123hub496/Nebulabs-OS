@@ -12,6 +12,7 @@ import { QuickSettings } from './QuickSettings';
 import { GlobalSearch } from './GlobalSearch';
 import { ChatBar } from './ChatBar';
 import { BIOS } from './BIOS';
+import { StickyNote } from './StickyNote';
 import { 
   ShoppingBag, 
   FolderOpen, 
@@ -49,7 +50,8 @@ import {
   Home,
   Layers,
   Store,
-  Tv
+  Tv,
+  StickyNote as StickyNoteIcon
 } from 'lucide-react';
 import { FileExplorer } from '../apps/FileExplorer';
 import { AppStore } from '../apps/AppStore';
@@ -110,6 +112,7 @@ const APP_COMPONENTS: Record<AppId, (win: WindowInstance) => React.ReactNode> = 
   'google-search': (win) => <GoogleSearch />,
   'shop': (win) => <ShopNebulabs />,
   'screencast': (win) => <Screencast />,
+  'sticky-notes': (win) => <div className="p-8 text-center text-white/40"><p className="text-sm font-bold">Sticky Notes Manager</p><p className="text-[10px] uppercase">A new note has been created on your desktop.</p></div>,
   'info': (win) => (
     <div className="p-8 space-y-6 bg-[#161d25] h-full text-white/90 overflow-auto">
       <div className="flex items-center gap-4 mb-8">
@@ -148,7 +151,7 @@ export const Desktop: React.FC = () => {
     isWidgetsOpen, setIsWidgetsOpen, isQuickSettingsOpen, setIsQuickSettingsOpen,
     isStartOpen, setIsStartOpen, isChatOpen, setIsChatOpen, activeWindowId, closeWindow, minimizeAllWindows,
     brightness, currentDisplayId, displayLayout, isSecurityEnabled, addNotification,
-    isLocked, lock, biosSettings, pinnedApps, togglePinApp
+    isLocked, lock, biosSettings, pinnedApps, togglePinApp, stickyNotes
   } = useOS();
   
   const [bootOpacity, setBootOpacity] = useState(1);
@@ -478,6 +481,11 @@ export const Desktop: React.FC = () => {
       <GlobalSearch />
 
       <ChatBar />
+
+      {/* Render Sticky Notes */}
+      {stickyNotes.map(note => (
+        <StickyNote key={note.id} note={note} />
+      ))}
 
       {currentDisplayId === '1' && desktopApps.map(shortcut => {
         if (isKid && (shortcut.id === 'terminal' || shortcut.id === 'virus')) return null;
