@@ -8,7 +8,7 @@ import {
   ImageIcon, Sun, Moon, Layout, Check, MousePointer2, 
   Eye, Zap, Layers, Pipette, Maximize2, Plus, ArrowUpRight,
   Wifi, ShieldCheck, Activity, Trash2, Info, Newspaper, Clock, XCircle, RefreshCw, ChevronRight, ShieldAlert, ShieldX, Lock, KeyRound, Camera, Building2, Briefcase, GraduationCap, Heart, MonitorCheck, Sliders, Smartphone, Smile, Home, Search, AppWindow, ExternalLink,
-  Trash
+  Trash, EyeOff
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
@@ -61,7 +61,7 @@ const CURSOR_COLORS: { id: CursorColor; color: string; label: string }[] = [
 export const Settings: React.FC = () => {
   const { 
     wallpaper, updateWallpaper, theme, setTheme, taskbarPosition, setTaskbarPosition, 
-    taskbarSize, setTaskbarSize, iconSize, setIconSize,
+    taskbarSize, setTaskbarSize, isTaskbarAutoHide, setTaskbarAutoHide, iconSize, setIconSize,
     accentColor, setAccentColor, customAccentHex, 
     cursorColor, setCursorColor, mouserScale, setMouserScale, isInverted, setInverted,
     isGrayscale, setGrayscale,
@@ -234,11 +234,14 @@ export const Settings: React.FC = () => {
             <section>
               <div className="flex items-center gap-2 mb-6">
                 <Layout size={18} className="text-accent" />
-                <h2 className="text-lg font-bold text-foreground">Desktop Layout</h2>
+                <h2 className="text-lg font-bold text-foreground">Taskbar Configuration</h2>
               </div>
               <div className="grid gap-4">
                 <div className="flex items-center justify-between p-5 bg-foreground/5 rounded-2xl border border-border/50">
-                  <Label className="text-sm font-bold text-foreground">Taskbar Position</Label>
+                  <div className="space-y-0.5">
+                    <Label className="text-sm font-bold text-foreground">Taskbar Position</Label>
+                    <p className="text-[11px] text-muted-foreground">Dock the system bar to any screen edge</p>
+                  </div>
                   <Select value={taskbarPosition} onValueChange={(v) => setTaskbarPosition(v as TaskbarPosition)}>
                     <SelectTrigger className="w-[120px] bg-foreground/5 border-border/50 text-xs text-foreground">
                       <SelectValue />
@@ -250,6 +253,36 @@ export const Settings: React.FC = () => {
                       <SelectItem value="right">Right</SelectItem>
                     </SelectContent>
                   </Select>
+                </div>
+
+                <div className="flex items-center justify-between p-5 bg-foreground/5 rounded-2xl border border-border/50">
+                  <div className="flex items-center gap-4">
+                    <div className="p-2.5 rounded-xl bg-accent/10 text-accent">
+                      <EyeOff size={20} />
+                    </div>
+                    <div className="space-y-0.5">
+                      <Label className="text-sm font-bold text-foreground">Auto-Hide Taskbar</Label>
+                      <p className="text-[11px] text-muted-foreground">Slide taskbar out of view when not in use</p>
+                    </div>
+                  </div>
+                  <Switch 
+                    checked={isTaskbarAutoHide} 
+                    onCheckedChange={setTaskbarAutoHide}
+                  />
+                </div>
+
+                <div className="p-5 bg-foreground/5 rounded-2xl border border-border/50 space-y-4">
+                  <div className="flex justify-between items-center">
+                    <Label className="text-sm font-bold text-foreground">Taskbar Scale</Label>
+                    <span className="text-xs font-mono text-accent">{taskbarSize}px</span>
+                  </div>
+                  <Slider 
+                    value={[taskbarSize]} 
+                    max={120} 
+                    min={32} 
+                    step={1} 
+                    onValueChange={(v) => setTaskbarSize(v[0])} 
+                  />
                 </div>
               </div>
             </section>
@@ -779,7 +812,7 @@ export const Settings: React.FC = () => {
 
       <div className="flex-1 overflow-hidden flex flex-col">
         <ScrollArea className="flex-1 p-10">
-          <div className="max-w-3xl mx-auto">
+          <div className="max-w-3xl auto">
             {renderContent()}
           </div>
         </ScrollArea>
