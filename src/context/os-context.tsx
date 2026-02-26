@@ -227,6 +227,7 @@ interface OSContextType {
   chatMessages: ChatMessage[];
   biosSettings: BIOSSettings;
   startMenuLayout: StartMenuItem[];
+  globalScale: number;
   
   login: (userId: string, password?: string) => boolean;
   logout: () => void;
@@ -283,6 +284,7 @@ interface OSContextType {
   powerOn: () => void;
   minimizeAllWindows: () => void;
   playSound: (type: 'click' | 'open' | 'close' | 'notify') => void;
+  setGlobalScale: (scale: number) => void;
   
   createFolder: (name: string, parentId: string | null) => void;
   importFile: (name: string, content: string, size: number, parentId: string | null) => void;
@@ -400,6 +402,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   const [taskbarSize, setTaskbarSizeState] = useState<number>(48);
   const [isTaskbarAutoHide, setTaskbarAutoHideState] = useState<boolean>(false);
   const [iconSize, setIconSizeState] = useState<number>(100);
+  const [globalScale, setGlobalScaleState] = useState<number>(1.0);
 
   const [installedApps, setInstalledApps] = useState<AppId[]>(INITIAL_APPS);
   const [pinnedApps, setPinnedApps] = useState<AppId[]>(INITIAL_PINNED);
@@ -696,6 +699,9 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
 
     const hide = localStorage.getItem(`nebula_${user.id}_taskbar_autohide`);
     if (hide) setTaskbarAutoHideState(hide === 'true');
+
+    const gs = localStorage.getItem(`nebula_${user.id}_global_scale`);
+    if (gs) setGlobalScaleState(Number(gs));
     
     const n = localStorage.getItem(`nebula_${user.id}_notes`);
     if (n) setNotesInternal(n);
@@ -1006,6 +1012,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   const setIconSize = (s: number) => { if (isNaN(s)) return; setIconSizeState(s); saveSetting('icon_size', s); };
   const setVolume = (v: number) => { setVolumeState(v); saveSetting('volume', v); };
   const setBrightness = (b: number) => { setBrightnessState(b); saveSetting('brightness', b); };
+  const setGlobalScale = (s: number) => { setGlobalScaleState(s); saveSetting('global_scale', s); };
 
   const setIsWidgetsOpen = (open: boolean) => {
     if ((currentUser?.isSchoolAccount || currentUser?.isKidAccount) && open) {
@@ -1293,7 +1300,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       isOnline, volume, brightness, isWidgetsOpen, isQuickSettingsOpen, 
       isStartOpen, isChatOpen, isLocked, systemStats, stickyNotes,
       currentDisplayId, displayLayout, isSecurityEnabled, chatMessages, biosSettings,
-      startMenuLayout,
+      startMenuLayout, globalScale,
       login, logout, lock, unlock, createAccount, deleteAccount, updateUserPassword, resetUserPassword, updateUserAvatar, updateUserWorkStatus, openApp, closeWindow, minimizeWindow,
       maximizeWindow, snapWindow, focusWindow, updateWindowPosition, moveWindowToDisplay,
       updateDisplayLayout, resetDisplayLayout, installApp, uninstallApp, addNotification, clearNotifications,
@@ -1301,7 +1308,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       setCursorColor, setMouserScale, setInverted, setGrayscale, setGlassEnabled, setTaskbarPosition, rotateTaskbar, setTaskbarSize,
       setIconSize, connectToWifi, setVolume, setBrightness, setIsWidgetsOpen,
       setIsQuickSettingsOpen, setIsStartOpen, setIsStartOpenState, setIsChatOpen, sendChatMessage, setCurrentDisplayId, setSecurityEnabled, updateBIOSSettings, restart, shutDown, powerOn,
-      minimizeAllWindows, playSound,
+      minimizeAllWindows, playSound, setGlobalScale,
       createFolder, importFile, renameFileSystemItem, moveToTrash, restoreFromTrash, emptyTrash, deleteItemPermanently,
       updateDesktopAppPosition, toggleDesktopApp, togglePinApp, reorderPinnedApps,
       reorderStartMenu, createStartFolder, addAppToStartFolder, removeAppFromStartFolder, renameStartFolder, deleteStartFolder,

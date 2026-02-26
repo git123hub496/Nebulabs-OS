@@ -151,7 +151,8 @@ export const Desktop: React.FC = () => {
     isWidgetsOpen, setIsWidgetsOpen, isQuickSettingsOpen, setIsQuickSettingsOpen,
     isStartOpen, setIsStartOpen, isChatOpen, setIsChatOpen, activeWindowId, closeWindow, minimizeAllWindows,
     brightness, currentDisplayId, displayLayout, isSecurityEnabled, addNotification,
-    isLocked, lock, biosSettings, pinnedApps, togglePinApp, stickyNotes
+    isLocked, lock, biosSettings, pinnedApps, togglePinApp, stickyNotes,
+    globalScale, setGlobalScale
   } = useOS();
   
   const [bootOpacity, setBootOpacity] = useState(1);
@@ -189,7 +190,7 @@ export const Desktop: React.FC = () => {
   }, [powerStatus]);
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
-    if (e.key.toLowerCase() === 'b') {
+    if (e.key.toLowerCase() === 'b' && !e.altKey) {
       const isBooting = powerStatus === 'booting' || shouldRenderBoot;
       const isOff = powerStatus === 'off';
       if (isBooting || isOff) {
@@ -203,6 +204,18 @@ export const Desktop: React.FC = () => {
 
     if (e.altKey) {
       switch (e.key.toLowerCase()) {
+        case 'b':
+          e.preventDefault();
+          const newBigScale = Math.min(globalScale + 0.1, 2.0);
+          setGlobalScale(newBigScale);
+          addNotification("System Scale", `Magnification increased to ${Math.round(newBigScale * 100)}%`, "system");
+          break;
+        case 'v':
+          e.preventDefault();
+          const newSmallScale = Math.max(globalScale - 0.1, 0.5);
+          setGlobalScale(newSmallScale);
+          addNotification("System Scale", `Magnification decreased to ${Math.round(newSmallScale * 100)}%`, "system");
+          break;
         case 'n': 
           e.preventDefault();
           setIsStartOpen(!isStartOpen);
@@ -279,7 +292,7 @@ export const Desktop: React.FC = () => {
       setContextMenu(null);
       setShortcutContextMenu(null);
     }
-  }, [powerStatus, currentUser, isStartOpen, isWidgetsOpen, isQuickSettingsOpen, isChatOpen, activeWindowId, openApp, setIsStartOpen, setIsWidgetsOpen, setIsQuickSettingsOpen, setIsChatOpen, closeWindow, minimizeAllWindows, lock, isSchool, isKid, addNotification, shouldRenderBoot, isGrayscale, setGrayscale, isInverted, setInverted]);
+  }, [powerStatus, currentUser, isStartOpen, isWidgetsOpen, isQuickSettingsOpen, isChatOpen, activeWindowId, openApp, setIsStartOpen, setIsWidgetsOpen, setIsQuickSettingsOpen, setIsChatOpen, closeWindow, minimizeAllWindows, lock, isSchool, isKid, addNotification, shouldRenderBoot, isGrayscale, setGrayscale, isInverted, setInverted, globalScale, setGlobalScale]);
 
   useEffect(() => {
     window.addEventListener('keydown', handleKeyDown);
@@ -443,6 +456,7 @@ export const Desktop: React.FC = () => {
         backgroundImage: `url(${wallpaper})`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
+        zoom: globalScale,
         ...customStyle
       }}
       onContextMenu={handleContextMenu}
