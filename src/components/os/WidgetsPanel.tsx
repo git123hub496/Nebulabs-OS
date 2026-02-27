@@ -3,7 +3,7 @@
 
 import React from 'react';
 import { useOS } from '@/context/os-context';
-import { Cloud, Sun, Newspaper, TrendingUp, Calendar, Zap, LayoutGrid, ArrowUpRight, Search, MapPin, RefreshCw, Loader2 } from 'lucide-react';
+import { Cloud, Sun, Newspaper, TrendingUp, Calendar, Zap, LayoutGrid, ArrowUpRight, Search, MapPin, RefreshCw, Loader2, Map as MapIcon } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
