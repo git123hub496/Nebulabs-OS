@@ -230,6 +230,12 @@ interface OSContextType {
   startMenuLayout: StartMenuItem[];
   globalScale: number;
   
+  // Location & Weather
+  userLocation: { lat: number, lon: number } | null;
+  locationName: string;
+  weatherData: { temp: number, condition: string } | null;
+  requestLocation: () => Promise<void>;
+  
   login: (userId: string, password?: string) => boolean;
   logout: () => void;
   lock: () => void;
@@ -380,6 +386,18 @@ const INITIAL_PINNED: AppId[] = ['files', 'store', 'shop', 'assistant', 'google-
 const AVATAR_COLORS = ['#9333ea', '#3b82f6', '#e11d48', '#f97316', '#16a34a', '#ec4899', '#06b6d4'];
 const OFFLINE_WIFI = "Public_Guest_No_Internet";
 
+const getWeatherCondition = (code: number) => {
+  if (code === 0) return "Clear Sky";
+  if (code <= 3) return "Partly Cloudy";
+  if (code >= 45 && code <= 48) return "Foggy";
+  if (code >= 51 && code <= 55) return "Drizzle";
+  if (code >= 61 && code <= 65) return "Rainy";
+  if (code >= 71 && code <= 77) return "Snowy";
+  if (code >= 80 && code <= 82) return "Showers";
+  if (code >= 95) return "Thunderstorm";
+  return "Variable";
+};
+
 export const OSProvider = ({ children }: { children: ReactNode }) => {
   const [currentUser, setCurrentUser] = useState<LocalUser | null>(null);
   const [accounts, setAccounts] = useState<LocalUser[]>([]);
@@ -437,6 +455,11 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
 
   const [startMenuLayout, setStartMenuLayout] = useState<StartMenuItem[]>([]);
 
+  // Location & Weather State
+  const [userLocation, setUserLocation] = useState<{ lat: number, lon: number } | null>(null);
+  const [locationName, setLocationName] = useState<string>("Locating...");
+  const [weatherData, setWeatherData] = useState<{ temp: number, condition: string } | null>(null);
+
   const [biosSettings, setBiosSettings] = useState<BIOSSettings>({
     cpuTurbo: true,
     networkStack: true,
@@ -482,6 +505,44 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   const clearNotifications = useCallback(() => {
     setNotifications([]);
   }, []);
+
+  const requestLocation = useCallback(async () => {
+    if (!navigator.geolocation) {
+      addNotification("Hardware Locked", "Geolocation sensors not detected.", "security");
+      return;
+    }
+
+    addNotification("Sensor Link", "Establishing GPS handshake...", "system");
+
+    navigator.geolocation.getCurrentPosition(async (position) => {
+      const { latitude, longitude } = position.coords;
+      setUserLocation({ lat: latitude, lon: longitude });
+
+      try {
+        // Reverse Geocode for City Name
+        const geoRes = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`);
+        const geoData = await geoRes.json();
+        const city = geoData.address.city || geoData.address.town || geoData.address.village || "Unknown Area";
+        const state = geoData.address.state || "";
+        setLocationName(`${city}${state ? ', ' + state : ''}`);
+
+        // Fetch Real Weather
+        const weatherRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true`);
+        const wData = await weatherRes.json();
+        setWeatherData({
+          temp: Math.round(wData.current_weather.temperature),
+          condition: getWeatherCondition(wData.current_weather.weathercode)
+        });
+        
+        addNotification("Location Established", `System synced to ${city}.`, "system");
+      } catch (err) {
+        console.error("Location services failed", err);
+        setLocationName("System Error");
+      }
+    }, (error) => {
+      addNotification("Access Denied", "Hardware location access was rejected.", "security");
+    });
+  }, [addNotification]);
 
   const saveSetting = useCallback((key: string, value: any) => {
     if (currentUser) {
@@ -1134,6 +1195,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       isStartOpen: isStartOpenState, isChatOpen, isLocked, isNDEEnabled, systemStats, stickyNotes,
       currentDisplayId, displayLayout, isSecurityEnabled, chatMessages, biosSettings,
       startMenuLayout, globalScale,
+      userLocation, locationName, weatherData, requestLocation,
       login, logout, lock, unlock, createAccount, deleteAccount, updateUserPassword, resetUserPassword, updateUserAvatar, updateUserWorkStatus, openApp, closeWindow, minimizeWindow,
       maximizeWindow, snapWindow, focusWindow, updateWindowPosition, moveWindowToDisplay,
       updateDisplayLayout, resetDisplayLayout, installApp, uninstallApp, addNotification, clearNotifications,
