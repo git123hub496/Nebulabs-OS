@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { useOS, AppId, DesktopShortcut, WindowInstance, APP_INFO } from '@/context/os-context';
+import { useOS, AppId, WindowInstance, APP_INFO } from '@/context/os-context';
 import { Window } from './Window';
 import { Taskbar } from './Taskbar';
 import { ContextMenu } from './ContextMenu';
@@ -164,7 +164,6 @@ export const Desktop: React.FC = () => {
   const [isRunOpen, setIsRunOpen] = useState(false);
   const [isClient, setIsClient] = useState(false);
   
-  // Drag threshold state
   const [pendingDragAppId, setPendingDragAppId] = useState<AppId | null>(null);
   const [dragStartPos, setDragStartPos] = useState({ x: 0, y: 0 });
   const [draggingAppId, setDraggingAppId] = useState<AppId | null>(null);
@@ -380,7 +379,7 @@ export const Desktop: React.FC = () => {
     else if (cursorColor === 'accent') {
       const computedStyle = getComputedStyle(document.documentElement);
       const accentVal = computedStyle.getPropertyValue('--accent').trim();
-      color = `hsl(${accentVal})`;
+      color = accentVal.includes('%') ? `hsl(${accentVal})` : accentVal;
     }
 
     const size = 24 * mouserScale;
@@ -390,7 +389,7 @@ export const Desktop: React.FC = () => {
   }, [cursorColor, mouserScale, isClient, accentColor, customAccentHex]);
 
   if (showBIOS) {
-    return <BIOS onClose={() => setShowBIOS(false)} />;
+    return <div style={cursorStyle} className="h-full w-full"><BIOS onClose={() => setShowBIOS(false)} /></div>;
   }
 
   if (powerStatus === 'off') {

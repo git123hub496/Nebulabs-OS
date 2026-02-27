@@ -162,17 +162,15 @@ export interface BIOSSettings {
   wakeOnLan: boolean;
 }
 
-export interface StartMenuFolder {
-  id: string;
-  name: string;
-  apps: AppId[];
-}
-
 export interface StartMenuItem {
   id: string;
   type: 'app' | 'folder';
   appId?: AppId;
-  folder?: StartMenuFolder;
+  folder?: {
+    id: string;
+    name: string;
+    apps: AppId[];
+  };
 }
 
 interface OSContextType {
@@ -379,7 +377,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
 
   const [isWidgetsOpen, setIsWidgetsOpenState] = useState(false);
   const [isQuickSettingsOpen, setIsQuickSettingsOpenState] = useState(false);
-  const [isStartOpen, setIsStartOpenInternal] = useState(false);
+  const [isStartOpen, setIsStartOpenState] = useState(false);
   const [isChatOpen, setIsChatOpenState] = useState(false);
 
   const [openWindows, setOpenWindows] = useState<WindowInstance[]>([]);
@@ -516,7 +514,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const restoreEmail = (id: string) => {
-    setEmails(prev => prev.filter(e => e.id !== id));
+    setEmails(prev => prev.map(e => e.id === id ? { ...e, folder: 'inbox' } : e));
   };
 
   const permanentlyDeleteEmail = (id: string) => {
@@ -641,17 +639,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     if (n) setNotesInternal(n);
     const gr = localStorage.getItem(`nebula_${user.id}_grayscale`);
     if (gr) setGrayscaleState(gr === 'true');
-    const sm = localStorage.getItem(`nebula_${user.id}_start_layout`);
-    if (sm) {
-      setStartMenuLayout(JSON.parse(sm));
-    } else {
-      const defaultLayout: StartMenuItem[] = INITIAL_APPS.map(id => ({
-        id: `item-${id}`,
-        type: 'app',
-        appId: id
-      }));
-      setStartMenuLayout(defaultLayout);
-    }
+    
     const sn = localStorage.getItem(`nebula_${user.id}_sticky_notes`);
     if (sn) setStickyNotes(JSON.parse(sn));
   }, []);
@@ -659,11 +647,21 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const savedAccounts = localStorage.getItem('nebula_accounts');
     if (savedAccounts) {
-      setAccounts(JSON.parse(savedAccounts));
+      const parsed = JSON.parse(savedAccounts);
+      setAccounts(parsed);
+      
+      const lastUserId = localStorage.getItem('nebula_current_user_id');
+      if (lastUserId) {
+        const lastUser = parsed.find((u: LocalUser) => u.id === lastUserId);
+        if (lastUser) {
+          setCurrentUser(lastUser);
+          loadSettings(lastUser);
+        }
+      }
     }
     const timer = setTimeout(() => setPowerStatusState('on'), 800);
     return () => clearTimeout(timer);
-  }, []);
+  }, [loadSettings]);
 
   const login = useCallback((userId: string, password?: string): boolean => {
     const user = accounts.find(a => a.id === userId);
@@ -877,25 +875,25 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
 
   const setIsWidgetsOpen = (open: boolean) => {
     setIsWidgetsOpenState(open);
-    if (open) { setIsStartOpenInternal(false); setIsQuickSettingsOpenState(false); setIsChatOpenState(false); playSound('open'); }
+    if (open) { setIsStartOpenState(false); setIsQuickSettingsOpenState(false); setIsChatOpenState(false); playSound('open'); }
     else { playSound('close'); }
   };
 
   const setIsQuickSettingsOpen = (open: boolean) => {
     setIsQuickSettingsOpenState(open);
-    if (open) { setIsStartOpenInternal(false); setIsWidgetsOpenState(false); setIsChatOpenState(false); playSound('open'); }
+    if (open) { setIsStartOpenState(false); setIsWidgetsOpenState(false); setIsChatOpenState(false); playSound('open'); }
     else { playSound('close'); }
   };
 
   const setIsStartOpen = (open: boolean) => {
-    setIsStartOpenInternal(open);
+    setIsStartOpenState(open);
     if (open) { setIsQuickSettingsOpenState(false); setIsWidgetsOpenState(false); setIsChatOpenState(false); playSound('open'); }
     else { playSound('close'); }
   };
 
   const setIsChatOpen = (open: boolean) => {
     setIsChatOpenState(open);
-    if (open) { setIsStartOpenInternal(false); setIsQuickSettingsOpenState(false); setIsWidgetsOpenState(false); playSound('open'); }
+    if (open) { setIsStartOpenState(false); setIsQuickSettingsOpenState(false); setIsWidgetsOpenState(false); playSound('open'); }
     else { playSound('close'); }
   };
 
@@ -970,7 +968,6 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   const installApp = (appId: AppId) => {
     if (!installedApps.includes(appId)) {
       setInstalledApps(prev => [...prev, appId]);
-      setStartMenuLayout(prev => [...prev, { id: `item-${appId}`, type: 'app', appId }]);
       addNotification("App Installed", `${APP_INFO[appId]?.label || appId} is now available in your workspace.`, 'app');
     }
   };
@@ -980,18 +977,6 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     setPinnedApps(prev => prev.filter(id => id !== appId));
     setDesktopApps(prev => prev.filter(item => item.id !== appId));
     setOpenWindows(prev => prev.filter(win => win.appId !== appId));
-    setStartMenuLayout(prev => {
-      const filtered = prev.filter(item => item.appId !== appId);
-      return filtered.map(item => {
-        if (item.type === 'folder' && item.folder) {
-          return {
-            ...item,
-            folder: { ...item.folder, apps: item.folder.apps.filter(id => id !== appId) }
-          };
-        }
-        return item;
-      });
-    });
     addNotification("App Uninstalled", `${APP_INFO[appId]?.label || appId} has been removed.`, 'system');
     playSound('close');
   };
@@ -1020,24 +1005,14 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
 
   const reorderPinnedApps = (newOrder: AppId[]) => setPinnedApps(newOrder);
 
-  const updateWallpaper = (url: string) => {
-    setWallpaperState(url);
-    saveSetting('wallpaper', url);
-  };
-
   const reorderStartMenu = (newLayout: StartMenuItem[]) => {
     setStartMenuLayout(newLayout);
     saveSetting('start_layout', newLayout);
   };
 
   const createStartFolder = (name: string, firstAppId: AppId, secondAppId: AppId) => {
-    const newFolder: StartMenuFolder = {
-      id: Math.random().toString(36).substr(2, 9),
-      name,
-      apps: [firstAppId, secondAppId]
-    };
+    const newFolder = { id: Math.random().toString(36).substr(2, 9), name, apps: [firstAppId, secondAppId] };
     const newItem: StartMenuItem = { id: `folder-${newFolder.id}`, type: 'folder', folder: newFolder };
-    
     setStartMenuLayout(prev => {
       const filtered = prev.filter(item => item.appId !== firstAppId && item.appId !== secondAppId);
       const updated = [...filtered, newItem];
@@ -1087,25 +1062,23 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       saveSetting('start_layout', updated);
       return updated;
     });
-    addNotification("Folder Renamed", `Start folder renamed to ${newName}.`, 'system');
   };
 
   const deleteStartFolder = (folderId: string) => {
     setStartMenuLayout(prev => {
       const folderItem = prev.find(item => item.type === 'folder' && item.folder?.id === folderId);
       if (!folderItem || !folderItem.folder) return prev;
-      
-      const appsToRestore: StartMenuItem[] = folderItem.folder.apps.map(id => ({
-        id: `item-${id}`,
-        type: 'app',
-        appId: id
-      }));
-      
+      const appsToRestore: StartMenuItem[] = folderItem.folder.apps.map(id => ({ id: `item-${id}`, type: 'app', appId: id }));
       const filtered = prev.filter(item => !(item.type === 'folder' && item.folder?.id === folderId));
       const updated = [...filtered, ...appsToRestore];
       saveSetting('start_layout', updated);
       return updated;
     });
+  };
+
+  const updateWallpaper = (url: string) => {
+    setWallpaperState(url);
+    saveSetting('wallpaper', url);
   };
 
   const createStickyNote = () => {

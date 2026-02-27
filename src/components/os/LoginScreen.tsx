@@ -130,7 +130,7 @@ export const LoginScreen: React.FC = () => {
                 playSound('open');
                 if (step === 'initialize') {
                   const effectivePassword = creationAccountType === 'school' 
-                    ? newDistrict.slice(0, 2).toUpperCase() 
+                    ? (newDistrict ? newDistrict.slice(0, 2).toUpperCase() : "NHU")
                     : (newPassword || undefined);
 
                   createAccount(
@@ -261,7 +261,7 @@ export const LoginScreen: React.FC = () => {
                 <button onClick={(e) => { e.stopPropagation(); deleteAccount(account.id); }} className="absolute -top-2 -right-2 bg-destructive text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100 hover:scale-110 transition-all z-20 border-2 border-white shadow-lg"><Trash2 size={12} strokeWidth={3} /></button>
               </div>
             ))}
-            <button onClick={() => { playSound('click'); setStep('hardware'); }} className="group flex flex-col items-center gap-4 transition-all hover:scale-105">
+            <button onClick={() => { playSound('click'); setStep('create'); }} className="group flex flex-col items-center gap-4 transition-all hover:scale-105">
               <div className="w-24 h-24 rounded-full border-4 border-dashed border-white/20 group-hover:border-white/40 group-hover:bg-white/5 transition-all flex items-center justify-center">
                 <Plus className="text-white/40 group-hover:text-white" size={32} />
               </div>
@@ -414,9 +414,9 @@ export const LoginScreen: React.FC = () => {
               </div>
               <div className="bg-black/20 rounded-xl p-4 h-32 overflow-hidden border border-white/5 font-mono text-[10px] space-y-1">
                 <div className="font-bold text-green-500">{currentLog}</div>
-                <div className="text-white/20 opacity-40">{"{'>>'}"} Hardware link active</div>
-                <div className="text-white/20 opacity-40">{"{'>>'}"} Partition wipe successful</div>
-                <div className="text-white/20 opacity-40">{"{'>>'}"} Cryptographic key staged</div>
+                <div className="text-white/20 opacity-40">{"Hardware link active"}</div>
+                <div className="text-white/20 opacity-40">{"Partition wipe successful"}</div>
+                <div className="text-white/20 opacity-40">{"Cryptographic key staged"}</div>
               </div>
             </div>
           </div>
