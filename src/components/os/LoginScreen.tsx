@@ -30,7 +30,10 @@ import {
   Building2,
   Briefcase,
   Smile,
-  Home
+  Home,
+  Palette,
+  Tv,
+  Monitor
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -42,7 +45,6 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 
 const SETUP_LOGS = [
@@ -82,7 +84,7 @@ export const LoginScreen: React.FC = () => {
   const { 
     accounts, login, createAccount, deleteAccount, resetUserPassword, wallpaper, 
     setTheme, theme, setAccentColor, shutDown, restart,
-    isInverted, setInverted, glassEnabled, setGlassEnabled, biosSettings, updateBIOSSettings, factoryReset
+    isInverted, setInverted, glassEnabled, setGlassEnabled, biosSettings, updateBIOSSettings, factoryReset, playSound
   } = useOS();
   
   const [step, setStep] = useState<'select' | 'hardware' | 'create' | 'customize' | 'initialize' | 'recovery'>('select');
@@ -114,19 +116,6 @@ export const LoginScreen: React.FC = () => {
     }
   }, [accounts, step]);
 
-  const playSound = (type: 'click' | 'success') => {
-    if (typeof window === 'undefined') return;
-    const urls = {
-      click: 'https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3',
-      success: 'https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3'
-    };
-    try {
-      const audio = new Audio(urls[type]);
-      audio.volume = 0.4;
-      audio.play().catch(() => {}); 
-    } catch (e) {}
-  };
-
   useEffect(() => {
     if ((step === 'initialize' || step === 'recovery') && !hasCreated.current) {
       const sequenceLogs = step === 'initialize' ? SETUP_LOGS : RECOVERY_LOGS;
@@ -138,7 +127,7 @@ export const LoginScreen: React.FC = () => {
             if (!hasCreated.current) {
               hasCreated.current = true;
               setTimeout(() => {
-                playSound('success');
+                playSound('open');
                 if (step === 'initialize') {
                   const effectivePassword = creationAccountType === 'school' 
                     ? newDistrict.slice(0, 2).toUpperCase() 
@@ -182,7 +171,7 @@ export const LoginScreen: React.FC = () => {
         clearInterval(logInterval);
       };
     }
-  }, [step, newUsername, newPassword, newDistrict, creationAccountType, createAccount, resetUserPassword, selectedAccount]);
+  }, [step, newUsername, newPassword, newDistrict, creationAccountType, createAccount, resetUserPassword, selectedAccount, playSound]);
 
   const handleHardwareSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -193,7 +182,6 @@ export const LoginScreen: React.FC = () => {
   const handleCreateSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (newUsername.trim()) {
-      if (creationAccountType === 'school' && !newDistrict.trim()) return;
       playSound('click');
       if (creationAccountType === 'school' || creationAccountType === 'kid') setStep('initialize'); 
       else setStep('customize');
@@ -212,13 +200,20 @@ export const LoginScreen: React.FC = () => {
     if (selectedAccount) {
       const success = login(selectedAccount.id, passwordInput);
       if (success) {
-        playSound('success');
+        playSound('open');
         setSelectedAccount(null);
       } else {
         setIsError(true);
         setPasswordInput("");
       }
     }
+  };
+
+  const handleSelectAccount = (account: LocalUser) => {
+    setSelectedAccount(account);
+    setPasswordInput("");
+    setIsError(false);
+    playSound('click');
   };
 
   if (!time) return null;
@@ -291,7 +286,7 @@ export const LoginScreen: React.FC = () => {
                       <span className="text-[10px] font-black uppercase">NebulaBook</span>
                     </button>
                     <button type="button" onClick={() => updateBIOSSettings({ deviceType: 'Nebula-PC' })} className={cn("p-4 rounded-xl border-2 transition-all text-left", biosSettings.deviceType === 'Nebula-PC' ? "bg-accent/10 border-accent text-white" : "bg-white/5 border-white/10 text-white/40 hover:bg-white/10")}>
-                      <Cpu size={18} className="mb-2" />
+                      <Monitor size={18} className="mb-2" />
                       <span className="text-[10px] font-black uppercase">Nebula-PC</span>
                     </button>
                   </div>
@@ -303,6 +298,76 @@ export const LoginScreen: React.FC = () => {
               </div>
               <Button type="submit" className="w-full h-14 bg-accent text-primary-foreground font-black rounded-2xl hover:bg-accent/80 gap-2 uppercase tracking-[0.2em]">Deploy Hardware <ArrowRight size={18} /></Button>
             </form>
+          </div>
+        )}
+
+        {step === 'create' && (
+          <div className="glass p-10 rounded-[2.5rem] border border-white/10 w-full max-w-md flex flex-col gap-8 animate-in slide-in-from-bottom-4 shadow-2xl">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center"><User className="text-accent" size={24} /></div>
+              <h2 className="text-xl font-bold text-white tracking-tight">User Identity</h2>
+            </div>
+            <form onSubmit={handleCreateSubmit} className="space-y-6">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-accent uppercase tracking-widest px-1">Account Type</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {[
+                      { id: 'personal', label: 'Personal', icon: Home },
+                      { id: 'work', label: 'Work', icon: Briefcase },
+                      { id: 'school', label: 'School', icon: GraduationCap },
+                      { id: 'kid', label: 'Kid', icon: Smile },
+                    ].map(type => (
+                      <button key={type.id} type="button" onClick={() => setCreationAccountType(type.id as any)} className={cn("flex items-center gap-2 p-3 rounded-xl border text-[10px] font-bold uppercase transition-all", creationAccountType === type.id ? "bg-accent/10 border-accent text-white" : "bg-white/5 border-white/5 text-white/40")}>
+                        <type.icon size={14} /> {type.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-accent uppercase tracking-widest px-1">Display Name</label>
+                  <Input value={newUsername} onChange={(e) => setNewUsername(e.target.value)} placeholder="Username" className="bg-white/5 border-white/10 text-white h-12 rounded-xl focus-visible:ring-accent" />
+                </div>
+                {creationAccountType !== 'school' && (
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-accent uppercase tracking-widest px-1">Passcode (Optional)</label>
+                    <Input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="Security Code" className="bg-white/5 border-white/10 text-white h-12 rounded-xl focus-visible:ring-accent" />
+                  </div>
+                )}
+              </div>
+              <Button type="submit" className="w-full h-14 bg-accent text-primary-foreground font-black rounded-2xl hover:bg-accent/80 gap-2 uppercase tracking-[0.2em]">Commit Identity <ArrowRight size={18} /></Button>
+            </form>
+          </div>
+        )}
+
+        {step === 'customize' && (
+          <div className="glass p-10 rounded-[2.5rem] border border-white/10 w-full max-w-md flex flex-col gap-8 animate-in slide-in-from-bottom-4 shadow-2xl">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center"><Palette className="text-accent" size={24} /></div>
+              <h2 className="text-xl font-bold text-white tracking-tight">Personalization</h2>
+            </div>
+            <div className="space-y-6">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-accent uppercase tracking-widest px-1">Interface Mode</label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button onClick={() => setSelectedTheme('dark')} className={cn("p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2", selectedTheme === 'dark' ? "bg-accent/10 border-accent text-white" : "bg-white/5 border-white/10 text-white/40")}>
+                    <Moon size={20} /> <span className="text-[10px] font-bold uppercase">Dark</span>
+                  </button>
+                  <button onClick={() => setSelectedTheme('light')} className={cn("p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2", selectedTheme === 'light' ? "bg-accent/10 border-accent text-white" : "bg-white/5 border-white/10 text-white/40")}>
+                    <Sun size={20} /> <span className="text-[10px] font-bold uppercase">Light</span>
+                  </button>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-accent uppercase tracking-widest px-1">Accent Core</label>
+                <div className="flex justify-between items-center px-2">
+                  {ACCENT_COLORS.map(color => (
+                    <button key={color.id} onClick={() => setSelectedAccent(color.id)} className={cn("w-8 h-8 rounded-full border-2 transition-all", selectedAccent === color.id ? "border-white scale-125 shadow-lg" : "border-transparent")} style={{ backgroundColor: color.color }} />
+                  ))}
+                </div>
+              </div>
+              <Button onClick={handleCustomizeSubmit} className="w-full h-14 bg-accent text-primary-foreground font-black rounded-2xl hover:bg-accent/80 gap-2 uppercase tracking-[0.2em]">Finalize Setup <ArrowRight size={18} /></Button>
+            </div>
           </div>
         )}
 
@@ -349,9 +414,9 @@ export const LoginScreen: React.FC = () => {
               </div>
               <div className="bg-black/20 rounded-xl p-4 h-32 overflow-hidden border border-white/5 font-mono text-[10px] space-y-1">
                 <div className="font-bold text-green-500">{currentLog}</div>
-                <div className="text-white/20 opacity-40">{">> "}Hardware link active</div>
-                <div className="text-white/20 opacity-40">{">> "}Partition wipe successful</div>
-                <div className="text-white/20 opacity-40">{">> "}Cryptographic key staged</div>
+                <div className="text-white/20 opacity-40">{"{'>>'}"} Hardware link active</div>
+                <div className="text-white/20 opacity-40">{"{'>>'}"} Partition wipe successful</div>
+                <div className="text-white/20 opacity-40">{"{'>>'}"} Cryptographic key staged</div>
               </div>
             </div>
           </div>

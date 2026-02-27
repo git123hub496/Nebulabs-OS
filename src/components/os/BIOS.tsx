@@ -337,7 +337,7 @@ export const BIOS: React.FC<{ onClose: () => void }> = ({ onClose }) => {
 
   if (isInitializing) {
     return (
-      <div className="fixed inset-0 z-[100000] bg-black text-[#00ff00] font-mono p-12 overflow-hidden crt-overlay flex flex-col gap-4">
+      <div className="fixed inset-0 z-[100000] bg-black text-[#00ff00] font-mono p-12 overflow-hidden flex flex-col gap-4">
         <div className="text-xl font-bold tracking-widest border-b border-[#00ff00]/20 pb-4">NEBULABS BIOS INITIALIZATION</div>
         <div className="space-y-1 text-sm">
           <div>{'>'} CPU: Quantum-X v4.2 Detected [OK]</div>
@@ -371,7 +371,7 @@ export const BIOS: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   }
 
   return (
-    <div className="fixed inset-0 z-[100000] bg-[#0000aa] text-[#dddddd] font-mono p-8 overflow-hidden crt-overlay flex flex-col">
+    <div className="fixed inset-0 z-[100000] bg-[#0000aa] text-[#dddddd] font-mono p-8 overflow-hidden flex flex-col">
       <div className="absolute inset-0 pointer-events-none bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.1)_50%),linear-gradient(90deg,rgba(255,0,0,0.03),rgba(0,255,0,0.01),rgba(0,0,112,0.03))] z-50 bg-[length:100%_4px,3px_100%]" />
       
       <div className="border-4 border-[#aaaaaa] p-1 mb-4 shadow-[4px_4px_0px_#000] shrink-0">
@@ -425,18 +425,6 @@ export const BIOS: React.FC<{ onClose: () => void }> = ({ onClose }) => {
           <div className="text-[10px] uppercase font-black opacity-60 tracking-[0.3em]">Proprietary Virtual BIOS Architecture</div>
         </div>
       </div>
-
-      <style jsx>{`
-        .crt-overlay {
-          text-shadow: 0 0 5px rgba(255,255,255,0.3);
-          animation: flicker 0.15s infinite;
-        }
-        @keyframes flicker {
-          0% { opacity: 0.99; }
-          50% { opacity: 1; }
-          100% { opacity: 0.995; }
-        }
-      `}</style>
     </div>
   );
 };

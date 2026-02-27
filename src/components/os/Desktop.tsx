@@ -152,7 +152,7 @@ export const Desktop: React.FC = () => {
     isStartOpen, setIsStartOpen, isChatOpen, setIsChatOpen, activeWindowId, closeWindow, minimizeAllWindows,
     brightness, currentDisplayId, displayLayout, isSecurityEnabled, addNotification,
     isLocked, lock, biosSettings, pinnedApps, togglePinApp, stickyNotes,
-    globalScale, setGlobalScale, factoryReset, cursorColor: osCursorColor, mouserScale
+    globalScale, setGlobalScale, factoryReset, mouserScale
   } = useOS();
   
   const [bootOpacity, setBootOpacity] = useState(1);
@@ -205,7 +205,13 @@ export const Desktop: React.FC = () => {
       }
     }
 
-    if (powerStatus !== 'on' || !currentUser) return;
+    if (powerStatus !== 'on' || !currentUser) {
+      if (e.altKey && e.key.toLowerCase() === 'z') {
+        e.preventDefault();
+        factoryReset();
+      }
+      return;
+    }
 
     if (e.altKey) {
       switch (e.key.toLowerCase()) {
@@ -215,22 +221,15 @@ export const Desktop: React.FC = () => {
           break;
         case 'b':
           e.preventDefault();
-          const newBigScale = Math.min(globalScale + 0.1, 2.0);
-          setGlobalScale(newBigScale);
-          addNotification("System Scale", `Magnification increased to ${Math.round(newBigScale * 100)}%`, "system");
+          setGlobalScale(Math.min(globalScale + 0.1, 2.0));
           break;
         case 'v':
           e.preventDefault();
-          const newSmallScale = Math.max(globalScale - 0.1, 0.5);
-          setGlobalScale(newSmallScale);
-          addNotification("System Scale", `Magnification decreased to ${Math.round(newSmallScale * 100)}%`, "system");
+          setGlobalScale(Math.max(globalScale - 0.1, 0.5));
           break;
         case 'n': 
           e.preventDefault();
           setIsStartOpen(!isStartOpen);
-          setIsWidgetsOpen(false);
-          setIsQuickSettingsOpen(false);
-          setIsChatOpen(false);
           break;
         case 'e': 
           e.preventDefault();
@@ -260,16 +259,6 @@ export const Desktop: React.FC = () => {
           e.preventDefault();
           minimizeAllWindows();
           break;
-        case 'x': 
-          e.preventDefault();
-          if (typeof window !== 'undefined') {
-            if (!document.fullscreenElement) {
-              document.documentElement.requestFullscreen().catch(() => {});
-            } else {
-              if (document.exitFullscreen) document.exitFullscreen().catch(() => {});
-            }
-          }
-          break;
         case 'l':
           e.preventDefault();
           lock();
@@ -281,9 +270,6 @@ export const Desktop: React.FC = () => {
         case 'q': 
           e.preventDefault();
           setIsQuickSettingsOpen(!isQuickSettingsOpen);
-          setIsStartOpen(false);
-          setIsWidgetsOpen(false);
-          setIsChatOpen(false);
           break;
       }
     }
@@ -297,7 +283,7 @@ export const Desktop: React.FC = () => {
       setContextMenu(null);
       setShortcutContextMenu(null);
     }
-  }, [powerStatus, currentUser, isStartOpen, isWidgetsOpen, isQuickSettingsOpen, isChatOpen, activeWindowId, openApp, setIsStartOpen, setIsWidgetsOpen, setIsQuickSettingsOpen, setIsChatOpen, closeWindow, minimizeAllWindows, lock, isSchool, isKid, addNotification, shouldRenderBoot, isGrayscale, setGrayscale, isInverted, setInverted, globalScale, setGlobalScale, factoryReset]);
+  }, [powerStatus, currentUser, isStartOpen, isWidgetsOpen, isQuickSettingsOpen, isChatOpen, openApp, setIsStartOpen, setIsWidgetsOpen, setIsQuickSettingsOpen, setIsChatOpen, minimizeAllWindows, lock, isKid, shouldRenderBoot, isGrayscale, setGrayscale, isInverted, setInverted, globalScale, setGlobalScale, factoryReset]);
 
   useEffect(() => {
     window.addEventListener('keydown', handleKeyDown);
@@ -393,14 +379,15 @@ export const Desktop: React.FC = () => {
     if (cursorColor === 'white') color = '#ffffff';
     else if (cursorColor === 'accent') {
       const computedStyle = getComputedStyle(document.documentElement);
-      color = `hsl(${computedStyle.getPropertyValue('--accent')})`;
+      const accentVal = computedStyle.getPropertyValue('--accent').trim();
+      color = `hsl(${accentVal})`;
     }
 
     const size = 24 * mouserScale;
     const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24" fill="${color}" stroke="white" stroke-width="1.5"><path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z"/></svg>`;
     const encoded = typeof window !== 'undefined' ? btoa(svg) : '';
     return { '--cursor-url': `url('data:image/svg+xml;base64,${encoded}'), auto` } as React.CSSProperties;
-  }, [cursorColor, mouserScale, isClient]);
+  }, [cursorColor, mouserScale, isClient, accentColor, customAccentHex]);
 
   if (showBIOS) {
     return <BIOS onClose={() => setShowBIOS(false)} />;
@@ -408,7 +395,7 @@ export const Desktop: React.FC = () => {
 
   if (powerStatus === 'off') {
     return (
-      <div className="fixed inset-0 bg-[#020202] flex flex-col items-center justify-center gap-12 animate-in fade-in duration-1000 overflow-hidden">
+      <div className="fixed inset-0 bg-[#020202] flex flex-col items-center justify-center gap-12 animate-in fade-in duration-1000 overflow-hidden" style={cursorStyle}>
         <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.02)_0%,transparent_70%)]" />
         <Button 
           variant="outline" 
@@ -424,7 +411,7 @@ export const Desktop: React.FC = () => {
   }
 
   if ((powerStatus === 'on' && !currentUser && !shouldRenderBoot) || isLocked) {
-    return <LoginScreen />;
+    return <div style={cursorStyle} className="h-full w-full"><LoginScreen /></div>;
   }
 
   const hexToHslString = (hex: string) => {
@@ -447,12 +434,23 @@ export const Desktop: React.FC = () => {
     return `${h * 360} ${s * 100}% ${l * 100}%`;
   };
 
-  const customStyle = accentColor === 'custom' ? {
-    '--accent': hexToHslString(customAccentHex),
-    '--primary': hexToHslString(customAccentHex),
-    '--ring': hexToHslString(customAccentHex),
-    '--sidebar-accent': hexToHslString(customAccentHex),
-  } as React.CSSProperties : {};
+  const accentVarMap: Record<AccentColor, string> = {
+    'purple': '262.1 83.3% 57.8%',
+    'blue': '217.2 91.2% 59.8%',
+    'rose': '346.8 77.2% 49.8%',
+    'orange': '24.6 95% 53.1%',
+    'green': '142.1 76.2% 36.3%',
+    'grey': '210 20% 50%',
+    'default': '262.1 83.3% 57.8%',
+    'custom': customAccentHex ? hexToHslString(customAccentHex) : '262.1 83.3% 57.8%'
+  };
+
+  const systemVars = {
+    '--accent': accentVarMap[accentColor],
+    '--primary': accentVarMap[accentColor],
+    '--ring': accentVarMap[accentColor],
+    '--sidebar-accent': accentVarMap[accentColor],
+  } as React.CSSProperties;
 
   const currentScale = isNaN(iconSize) ? 1.0 : iconSize / 100;
   const scaledIconBoxSize = 56 * currentScale;
@@ -476,7 +474,7 @@ export const Desktop: React.FC = () => {
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         zoom: globalScale,
-        ...customStyle,
+        ...systemVars,
         ...cursorStyle
       }}
       onContextMenu={handleContextMenu}
@@ -674,7 +672,7 @@ export const Desktop: React.FC = () => {
       {shouldRenderBoot && (
         <div 
           className="fixed inset-0 bg-[#000088] z-[20000] flex flex-col items-center justify-center transition-opacity duration-1000 pointer-events-none"
-          style={{ opacity: bootOpacity }}
+          style={{ opacity: bootOpacity, ...cursorStyle }}
         >
           <div className="w-24 h-24 bg-white/10 rounded-3xl flex items-center justify-center mb-8 animate-pulse border border-white/20">
             <div className="w-12 h-12 bg-white rounded-full shadow-[0_0_20px_rgba(255,255,255,0.5)]" />

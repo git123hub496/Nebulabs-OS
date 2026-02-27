@@ -218,7 +218,6 @@ interface OSContextType {
   isWidgetsOpen: boolean;
   isQuickSettingsOpen: boolean;
   isStartOpen: boolean;
-  isStartOpenState: boolean;
   isChatOpen: boolean;
   isLocked: boolean;
   systemStats: { cpu: number; ram: number; net: number };
@@ -274,7 +273,6 @@ interface OSContextType {
   setIsWidgetsOpen: (isOpen: boolean) => void;
   setIsQuickSettingsOpen: (isOpen: boolean) => void;
   setIsStartOpen: (isOpen: boolean) => void;
-  setIsStartOpenState: (isOpen: boolean) => void;
   setIsChatOpen: (isOpen: boolean) => void;
   sendChatMessage: (text: string, recipient: string, role: string) => Promise<void>;
   setCurrentDisplayId: (id: string) => void;
@@ -381,7 +379,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
 
   const [isWidgetsOpen, setIsWidgetsOpenState] = useState(false);
   const [isQuickSettingsOpen, setIsQuickSettingsOpenState] = useState(false);
-  const [isStartOpen, setIsStartOpenState] = useState(false);
+  const [isStartOpen, setIsStartOpenInternal] = useState(false);
   const [isChatOpen, setIsChatOpenState] = useState(false);
 
   const [openWindows, setOpenWindows] = useState<WindowInstance[]>([]);
@@ -688,7 +686,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     setIsLocked(false);
   }, []);
 
-  const lock = () => { if (currentUser) setIsLocked(true); };
+  const lock = useCallback(() => { if (currentUser) setIsLocked(true); }, [currentUser]);
 
   const unlock = (password?: string): boolean => {
     if (currentUser) {
@@ -879,25 +877,25 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
 
   const setIsWidgetsOpen = (open: boolean) => {
     setIsWidgetsOpenState(open);
-    if (open) { setIsStartOpenState(false); setIsQuickSettingsOpenState(false); setIsChatOpenState(false); playSound('open'); }
+    if (open) { setIsStartOpenInternal(false); setIsQuickSettingsOpenState(false); setIsChatOpenState(false); playSound('open'); }
     else { playSound('close'); }
   };
 
   const setIsQuickSettingsOpen = (open: boolean) => {
     setIsQuickSettingsOpenState(open);
-    if (open) { setIsStartOpenState(false); setIsWidgetsOpenState(false); setIsChatOpenState(false); playSound('open'); }
+    if (open) { setIsStartOpenInternal(false); setIsWidgetsOpenState(false); setIsChatOpenState(false); playSound('open'); }
     else { playSound('close'); }
   };
 
   const setIsStartOpen = (open: boolean) => {
-    setIsStartOpenState(open);
+    setIsStartOpenInternal(open);
     if (open) { setIsQuickSettingsOpenState(false); setIsWidgetsOpenState(false); setIsChatOpenState(false); playSound('open'); }
     else { playSound('close'); }
   };
 
   const setIsChatOpen = (open: boolean) => {
     setIsChatOpenState(open);
-    if (open) { setIsStartOpenState(false); setIsQuickSettingsOpenState(false); setIsWidgetsOpenState(false); playSound('open'); }
+    if (open) { setIsStartOpenInternal(false); setIsQuickSettingsOpenState(false); setIsWidgetsOpenState(false); playSound('open'); }
     else { playSound('close'); }
   };
 
@@ -1146,7 +1144,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       customAccentHex, cursorColor, isInverted, isGrayscale, glassEnabled, powerStatus,
       taskbarPosition, taskbarSize, isTaskbarAutoHide, setTaskbarAutoHide, iconSize, currentWifi, isWifiConnecting,
       isOnline, volume, brightness, isWidgetsOpen, isQuickSettingsOpen, 
-      isStartOpen, isStartOpenState: isStartOpen, isChatOpen, isLocked, systemStats, stickyNotes,
+      isStartOpen, isChatOpen, isLocked, systemStats, stickyNotes,
       currentDisplayId, displayLayout, isSecurityEnabled, chatMessages, biosSettings,
       startMenuLayout, globalScale,
       login, logout, lock, unlock, createAccount, deleteAccount, updateUserPassword, resetUserPassword, updateUserAvatar, updateUserWorkStatus, openApp, closeWindow, minimizeWindow,
@@ -1155,7 +1153,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       updateWallpaper, setNotes, setTheme, setAccentColor, setCustomAccentHex,
       setCursorColor, setMouserScale, setInverted, setGrayscale, setGlassEnabled, setTaskbarPosition, rotateTaskbar, setTaskbarSize,
       setIconSize, connectToWifi, setVolume, setBrightness, setIsWidgetsOpen,
-      setIsQuickSettingsOpen, setIsStartOpen, setIsStartOpenState: setIsStartOpen, setIsChatOpen, sendChatMessage, setCurrentDisplayId, setSecurityEnabled, updateBIOSSettings, restart, shutDown, powerOn,
+      setIsQuickSettingsOpen, setIsStartOpen, setIsChatOpen, sendChatMessage, setCurrentDisplayId, setSecurityEnabled, updateBIOSSettings, restart, shutDown, powerOn,
       minimizeAllWindows, playSound, setGlobalScale, factoryReset,
       createFolder, importFile, renameFileSystemItem, moveToTrash, restoreFromTrash, emptyTrash, deleteItemPermanently,
       updateDesktopAppPosition, toggleDesktopApp, togglePinApp, reorderPinnedApps,
