@@ -156,7 +156,7 @@ export const Desktop: React.FC = () => {
     isStartOpen, setIsStartOpen, isChatOpen, setIsChatOpen, activeWindowId, closeWindow, minimizeAllWindows,
     brightness, currentDisplayId, displayLayout, isSecurityEnabled, addNotification,
     isLocked, lock, biosSettings, pinnedApps, togglePinApp, stickyNotes,
-    globalScale, setGlobalScale, factoryReset, mouserScale
+    globalScale, setGlobalScale, factoryReset, mouserScale, isNDEEnabled
   } = useOS();
   
   const [bootOpacity, setBootOpacity] = useState(1);
@@ -266,7 +266,7 @@ export const Desktop: React.FC = () => {
           break;
         case 'd':
           e.preventDefault();
-          openApp('nde', 'NDE Dev Tool');
+          if (isNDEEnabled) openApp('nde', 'NDE Dev Tool');
           break;
         case 'n': 
           e.preventDefault();
@@ -324,7 +324,7 @@ export const Desktop: React.FC = () => {
       setContextMenu(null);
       setShortcutContextMenu(null);
     }
-  }, [powerStatus, currentUser, isStartOpen, isWidgetsOpen, isQuickSettingsOpen, isChatOpen, openApp, setIsStartOpen, setIsWidgetsOpen, setIsQuickSettingsOpen, setIsChatOpen, minimizeAllWindows, lock, isKid, shouldRenderBoot, isGrayscale, setGrayscale, isInverted, setInverted, globalScale, setGlobalScale, triggerPowerwash]);
+  }, [powerStatus, currentUser, isStartOpen, isWidgetsOpen, isQuickSettingsOpen, isChatOpen, openApp, setIsStartOpen, setIsWidgetsOpen, setIsQuickSettingsOpen, setIsChatOpen, minimizeAllWindows, lock, isKid, shouldRenderBoot, isGrayscale, setGrayscale, isInverted, setInverted, globalScale, setGlobalScale, triggerPowerwash, isNDEEnabled]);
 
   useEffect(() => {
     window.addEventListener('keydown', handleKeyDown);
@@ -613,6 +613,7 @@ export const Desktop: React.FC = () => {
 
       {currentDisplayId === '1' && desktopApps.map(shortcut => {
         if (isKid && (shortcut.id === 'terminal' || shortcut.id === 'virus')) return null;
+        if (shortcut.id === 'nde' && !isNDEEnabled) return null;
 
         const Icon = shortcut.icon;
         const isDragging = draggingAppId === shortcut.id;

@@ -220,6 +220,7 @@ interface OSContextType {
   isStartOpen: boolean;
   isChatOpen: boolean;
   isLocked: boolean;
+  isNDEEnabled: boolean;
   systemStats: { cpu: number; ram: number; net: number };
   currentDisplayId: string;
   displayLayout: DisplayLayout;
@@ -274,6 +275,7 @@ interface OSContextType {
   setIsQuickSettingsOpen: (isOpen: boolean) => void;
   setIsStartOpen: (isOpen: boolean) => void;
   setIsChatOpen: (isOpen: boolean) => void;
+  setIsNDEEnabled: (enabled: boolean) => void;
   sendChatMessage: (text: string, recipient: string, role: string) => Promise<void>;
   setCurrentDisplayId: (id: string) => void;
   setSecurityEnabled: (enabled: boolean) => void;
@@ -356,6 +358,13 @@ const INITIAL_FILES: FileSystemItem[] = [
   { id: '2', name: 'Pictures', type: 'folder', parentId: null },
   { id: '3', name: 'README.md', type: 'file', parentId: null },
   { id: '4', name: 'Nebula Shared Assets', type: 'folder', parentId: null },
+  { id: '5', name: 'config', type: 'folder', parentId: null },
+  { id: '6', name: 'drivers', type: 'folder', parentId: null },
+  { id: '7', name: 'logs', type: 'folder', parentId: null },
+  { id: 'f1', name: 'kernel.sys', type: 'file', parentId: null, size: 40960 },
+  { id: 'f2', name: 'registry.dat', type: 'file', parentId: '5', size: 1024 },
+  { id: 'f3', name: 'display.drv', type: 'file', parentId: '6', size: 20480 },
+  { id: 'f4', name: 'boot.log', type: 'file', parentId: '7', size: 512, content: 'Kernel Initialized OK\nHardware Link established\nUser Session Active' },
 ];
 
 const INITIAL_DESKTOP: DesktopShortcut[] = [
@@ -363,11 +372,10 @@ const INITIAL_DESKTOP: DesktopShortcut[] = [
   { id: 'browser', label: 'Nebula Browser', icon: Globe, x: PADDING, y: PADDING + GRID_Y },
   { id: 'files', label: 'File Explorer', icon: FolderOpen, x: PADDING, y: PADDING + (GRID_Y * 2) },
   { id: 'store', label: 'App Store', icon: ShoppingBag, x: PADDING, y: PADDING + (GRID_Y * 3) },
-  { id: 'nde', label: 'NDE Dev Tool', icon: Braces, x: PADDING, y: PADDING + (GRID_Y * 4) },
 ];
 
 const INITIAL_APPS: AppId[] = ['store', 'files', 'settings', 'assistant', 'notes', 'calc', 'terminal', 'browser', 'trash', 'news', 'maps', 'monitor', 'calendar', 'snake', 'minesweeper', 'update', 'paint', 'info', 'camera', 'slides', 'mail', 'nebula-v', 'google-search', 'shop', 'screencast', 'sticky-notes', 'nde'];
-const INITIAL_PINNED: AppId[] = ['files', 'store', 'shop', 'assistant', 'google-search', 'browser', 'nde', 'settings', 'mail', 'sticky-notes'];
+const INITIAL_PINNED: AppId[] = ['files', 'store', 'shop', 'assistant', 'google-search', 'browser', 'settings', 'mail', 'sticky-notes'];
 
 const AVATAR_COLORS = ['#9333ea', '#3b82f6', '#e11d48', '#f97316', '#16a34a', '#ec4899', '#06b6d4'];
 const OFFLINE_WIFI = "Public_Guest_No_Internet";
@@ -378,6 +386,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   const [powerStatus, setPowerStatusState] = useState<PowerStatus>('booting');
   const [systemStats, setSystemStatsState] = useState({ cpu: 12, ram: 42, net: 2 });
   const [isLocked, setIsLocked] = useState(false);
+  const [isNDEEnabled, setIsNDEEnabledState] = useState(false);
 
   const [isWidgetsOpen, setIsWidgetsOpenState] = useState(false);
   const [isQuickSettingsOpen, setIsQuickSettingsOpenState] = useState(false);
@@ -508,6 +517,8 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     if (n) setNotesInternal(n);
     const gr = localStorage.getItem(`nebula_${user.id}_grayscale`);
     if (gr) setGrayscaleState(gr === 'true');
+    const nde = localStorage.getItem(`nebula_${user.id}_nde_enabled`);
+    if (nde) setIsNDEEnabledState(nde === 'true');
     
     const sn = localStorage.getItem(`nebula_${user.id}_sticky_notes`);
     if (sn) setStickyNotes(JSON.parse(sn));
@@ -768,6 +779,10 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       createStickyNote();
       return;
     }
+    if (appId === 'nde' && !isNDEEnabled) {
+      addNotification("Launch Failed", "Developer Environment is currently disabled.", "security");
+      return;
+    }
     const existing = openWindows.find(w => w.appId === appId && JSON.stringify(w.params) === JSON.stringify(params));
     if (existing) {
       focusWindow(existing.id);
@@ -854,6 +869,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   const setVolume = (v: number) => { setVolumeState(v); saveSetting('volume', v); };
   const setBrightness = (b: number) => { setBrightnessState(b); saveSetting('brightness', b); };
   const setGlobalScale = (s: number) => { setGlobalScaleState(s); saveSetting('global_scale', s); };
+  const setIsNDEEnabled = (enabled: boolean) => { setIsNDEEnabledState(enabled); saveSetting('nde_enabled', enabled); };
   const setSystemStats = (stats: Partial<{ cpu: number; ram: number; net: number }>) => { setSystemStatsState(prev => ({ ...prev, ...stats })); };
 
   const factoryReset = useCallback(() => {
@@ -1115,7 +1131,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       customAccentHex, cursorColor, isInverted, isGrayscale, glassEnabled, powerStatus,
       taskbarPosition, taskbarSize, isTaskbarAutoHide, setTaskbarAutoHide, iconSize, currentWifi, isWifiConnecting,
       isOnline, volume, brightness, isWidgetsOpen, isQuickSettingsOpen, 
-      isStartOpen: isStartOpenState, isChatOpen, isLocked, systemStats, stickyNotes,
+      isStartOpen: isStartOpenState, isChatOpen, isLocked, isNDEEnabled, systemStats, stickyNotes,
       currentDisplayId, displayLayout, isSecurityEnabled, chatMessages, biosSettings,
       startMenuLayout, globalScale,
       login, logout, lock, unlock, createAccount, deleteAccount, updateUserPassword, resetUserPassword, updateUserAvatar, updateUserWorkStatus, openApp, closeWindow, minimizeWindow,
@@ -1124,7 +1140,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       updateWallpaper, setNotes, setTheme, setAccentColor, setCustomAccentHex,
       setCursorColor, setMouserScale, setInverted, setGrayscale, setGlassEnabled, setTaskbarPosition, rotateTaskbar, setTaskbarSize,
       setIconSize, connectToWifi, setVolume, setBrightness, setIsWidgetsOpen,
-      setIsQuickSettingsOpen, setIsStartOpen, setIsChatOpen, sendChatMessage, setCurrentDisplayId, setSecurityEnabled, updateBIOSSettings, restart, shutDown, powerOn,
+      setIsQuickSettingsOpen, setIsStartOpen, setIsChatOpen, setIsNDEEnabled, sendChatMessage, setCurrentDisplayId, setSecurityEnabled, updateBIOSSettings, restart, shutDown, powerOn,
       minimizeAllWindows, playSound, setGlobalScale, factoryReset, setSystemStats,
       createFolder, importFile, renameFileSystemItem, moveToTrash, restoreFromTrash, emptyTrash, deleteItemPermanently,
       updateDesktopAppPosition, toggleDesktopApp, togglePinApp, reorderPinnedApps,

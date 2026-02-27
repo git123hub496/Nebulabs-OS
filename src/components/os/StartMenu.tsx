@@ -31,7 +31,8 @@ import {
   ChevronRight,
   Folder,
   X,
-  Edit2
+  Edit2,
+  Code2
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -132,7 +133,7 @@ export const StartMenu: React.FC<StartMenuProps> = ({ onClose }) => {
   const { 
     startMenuLayout, reorderStartMenu, createStartFolder, addAppToStartFolder, 
     removeAppFromStartFolder, openApp, restart, shutDown, taskbarPosition, 
-    currentUser, logout 
+    currentUser, logout, isNDEEnabled 
   } = useOS();
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -209,6 +210,7 @@ export const StartMenu: React.FC<StartMenuProps> = ({ onClose }) => {
     if (item.type === 'app' && item.appId) {
       const info = APP_INFO[item.appId];
       if (isKid && (item.appId === 'terminal' || item.appId === 'virus')) return false;
+      if (item.appId === 'nde' && !isNDEEnabled) return false;
       return info?.label.toLowerCase().includes(searchQuery.toLowerCase());
     }
     if (item.type === 'folder' && item.folder) {

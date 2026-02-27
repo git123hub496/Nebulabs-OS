@@ -52,7 +52,7 @@ export const Settings: React.FC = () => {
     currentDisplayId, setCurrentDisplayId, displayLayout, updateDisplayLayout, resetDisplayLayout,
     currentUser, logout, notifications, clearNotifications, addNotification, openApp,
     isSecurityEnabled, setSecurityEnabled, updateUserPassword, updateUserAvatar, updateUserWorkStatus,
-    installedApps, uninstallApp, biosSettings, factoryReset
+    installedApps, uninstallApp, biosSettings, factoryReset, isNDEEnabled, setIsNDEEnabled
   } = useOS();
 
   const [activeTab, setActiveTab] = useState<SettingsTab>('personalization');
@@ -68,7 +68,7 @@ export const Settings: React.FC = () => {
       { id: 'accessibility', label: 'Accessibility', icon: Eye, keywords: ['contrast', 'grayscale', 'glass', 'transparency', 'cursor', 'pointer', 'mouse', 'scale'] },
       { id: 'notifications', label: 'Notifications', icon: Bell, keywords: ['alerts', 'messages', 'activity', 'dnd'] },
       { id: 'accounts', label: 'Accounts', icon: User, keywords: ['profile', 'identity', 'password', 'avatar', 'user', 'sign out'] },
-      { id: 'security', label: 'Security', icon: Shield, keywords: ['encryption', 'lockdown', 'defender', 'kernel'] },
+      { id: 'security', label: 'Security', icon: Shield, keywords: ['encryption', 'lockdown', 'defender', 'kernel', 'developer', 'nde'] },
       { id: 'updates', label: 'Updates', icon: RefreshCw, keywords: ['patch', 'kernel', 'version', 'check for updates'] },
       { id: 'about', label: 'About', icon: HelpCircle, keywords: ['system', 'device', 'credits', 'nebulabs', 'version', 'reset', 'factory'] },
     ];
@@ -257,6 +257,23 @@ export const Settings: React.FC = () => {
                     <div className="p-4 bg-white/5 rounded-2xl border border-white/5 space-y-1"><p className="text-[10px] font-bold text-muted-foreground uppercase">Partition Status</p><p className="text-sm font-black text-green-500">Verified Secure</p></div>
                   </div>
                 </div>
+
+                {!isRestricted && (
+                  <div className="p-6 bg-foreground/5 border border-border/50 rounded-3xl space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-white/60"><Code2 size={20} /></div>
+                        <div className="space-y-0.5"><p className="text-sm font-bold text-foreground">Developer Mode (NDE)</p><p className="text-[10px] text-muted-foreground">Enable Nebulabs Dev Environment suite</p></div>
+                      </div>
+                      <Switch checked={isNDEEnabled} onCheckedChange={setIsNDEEnabled} />
+                    </div>
+                    {isNDEEnabled && (
+                      <div className="p-4 bg-accent/5 rounded-2xl border border-accent/20 animate-in slide-in-from-top-2">
+                        <p className="text-[10px] text-accent font-bold uppercase leading-relaxed">NDE Active: Access via Alt+D or Start Menu. Kernel telemetry hooks enabled.</p>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </section>
           </div>
