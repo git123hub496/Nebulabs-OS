@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useOS, AppId, APP_INFO } from '@/context/os-context';
-import { Wifi, Volume2, FolderOpen, ShoppingBag, MessageSquare, Settings, Lock, Check, Loader2, VolumeX, Volume1, LayoutGrid, Battery, BatteryMedium, MessageCircle, GraduationCap, PinOff, EyeOff, Smile, Home, RotateCw, Clock as ClockIcon, Calendar as CalendarIcon, ChevronUp } from 'lucide-react';
+import { Wifi, Volume2, FolderOpen, ShoppingBag, MessageSquare, Settings, Lock, Check, Loader2, VolumeX, Volume1, LayoutGrid, Battery, BatteryMedium, MessageCircle, GraduationCap, PinOff, EyeOff, Smile, Home, RotateCw, Clock as ClockIcon, Calendar as CalendarIcon, ChevronUp, Eye } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { StartMenu } from './StartMenu';
 import { QuickSettings } from './QuickSettings';
@@ -18,7 +18,7 @@ export const Taskbar: React.FC = () => {
   const { 
     openWindows, activeWindowId, openApp, taskbarPosition, taskbarSize, rotateTaskbar,
     isWifiConnecting, volume, isOnline, isWidgetsOpen, setIsWidgetsOpen, 
-    pinnedApps, reorderPinnedApps, togglePinApp, isTaskbarAutoHide,
+    pinnedApps, reorderPinnedApps, togglePinApp, isTaskbarAutoHide, setTaskbarAutoHide,
     isQuickSettingsOpen, setIsQuickSettingsOpen, isStartOpen, setIsStartOpen,
     isChatOpen, setIsChatOpen, playSound, currentUser, minimizeAllWindows
   } = useOS();
@@ -97,7 +97,7 @@ export const Taskbar: React.FC = () => {
     e.stopPropagation();
     
     const menuWidth = 208;
-    const menuHeight = 60;
+    const menuHeight = 120;
     let x = e.clientX;
     let y = e.clientY;
 
@@ -370,19 +370,34 @@ export const Taskbar: React.FC = () => {
           onContextMenu={(e) => e.preventDefault()}
         >
           {taskbarMenu.type === 'taskbar' ? (
-            <button 
-              onClick={() => {
-                rotateTaskbar();
-                setTaskbarMenu(null);
-                playSound('click');
-              }}
-              className="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-accent/20 text-xs font-medium text-white/80 hover:text-accent transition-colors group"
-            >
-              <div className="flex items-center gap-3">
-                <RotateCw size={14} className="text-accent/60 group-hover:text-accent" />
-                <span>Rotate</span>
-              </div>
-            </button>
+            <>
+              <button 
+                onClick={() => {
+                  rotateTaskbar();
+                  setTaskbarMenu(null);
+                  playSound('click');
+                }}
+                className="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-accent/20 text-xs font-medium text-white/80 hover:text-accent transition-colors group"
+              >
+                <div className="flex items-center gap-3">
+                  <RotateCw size={14} className="text-accent/60 group-hover:text-accent" />
+                  <span>Rotate Taskbar</span>
+                </div>
+              </button>
+              <button 
+                onClick={() => {
+                  setTaskbarAutoHide(!isTaskbarAutoHide);
+                  setTaskbarMenu(null);
+                  playSound('click');
+                }}
+                className="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-accent/20 text-xs font-medium text-white/80 hover:text-accent transition-colors group"
+              >
+                <div className="flex items-center gap-3">
+                  {isTaskbarAutoHide ? <Eye size={14} className="text-accent/60 group-hover:text-accent" /> : <EyeOff size={14} className="text-accent/60 group-hover:text-accent" />}
+                  <span>{isTaskbarAutoHide ? "Lock Taskbar" : "Auto-hide Taskbar"}</span>
+                </div>
+              </button>
+            </>
           ) : (
             <button 
               onClick={() => {

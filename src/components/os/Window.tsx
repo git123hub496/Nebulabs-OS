@@ -4,6 +4,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useOS, WindowInstance } from '@/context/os-context';
 import { X, Minus, Square, Columns, Monitor } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 import {
   DropdownMenu,
@@ -24,6 +25,7 @@ export const Window: React.FC<WindowProps> = ({ window: win, children }) => {
     updateWindowPosition, displayLayout 
   } = useOS();
   
+  const isMobile = useIsMobile();
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const windowRef = useRef<HTMLDivElement>(null);
@@ -35,7 +37,10 @@ export const Window: React.FC<WindowProps> = ({ window: win, children }) => {
     const isHorizontal = taskbarPosition === 'bottom' || taskbarPosition === 'top';
     const offset = taskbarSize; 
     
-    if (win.isMaximized) {
+    // On mobile, windows should default to full screen for better usability
+    const isForceMaximized = isMobile || win.isMaximized;
+
+    if (isForceMaximized) {
       return {
         left: taskbarPosition === 'left' ? offset : 0,
         right: taskbarPosition === 'right' ? offset : 0,
@@ -43,6 +48,7 @@ export const Window: React.FC<WindowProps> = ({ window: win, children }) => {
         bottom: taskbarPosition === 'bottom' ? offset : 0,
         width: isHorizontal ? '100%' : `calc(100% - ${offset}px)`,
         height: !isHorizontal ? '100%' : `calc(100% - ${offset}px)`,
+        isVisibleOnThisScreen: true
       };
     }
 
@@ -53,6 +59,7 @@ export const Window: React.FC<WindowProps> = ({ window: win, children }) => {
         bottom: taskbarPosition === 'bottom' ? offset : 0,
         width: isHorizontal ? '50%' : `calc(50% - ${offset / 2}px)`,
         height: !isHorizontal ? '100%' : `calc(100% - ${offset}px)`,
+        isVisibleOnThisScreen: true
       };
     }
 
@@ -64,6 +71,7 @@ export const Window: React.FC<WindowProps> = ({ window: win, children }) => {
         left: isHorizontal ? '50%' : undefined,
         width: isHorizontal ? '50%' : `calc(50% - ${offset / 2}px)`,
         height: !isHorizontal ? '100%' : `calc(100% - ${offset}px)`,
+        isVisibleOnThisScreen: true
       };
     }
 
@@ -100,7 +108,7 @@ export const Window: React.FC<WindowProps> = ({ window: win, children }) => {
 
   const handleMouseDown = (e: React.MouseEvent) => {
     focusWindow(win.id);
-    if (win.isMaximized || win.isSnapped) return;
+    if (win.isMaximized || win.isSnapped || isMobile) return;
     
     // We can grab it if it's visible here
     setIsDragging(true);
@@ -115,7 +123,7 @@ export const Window: React.FC<WindowProps> = ({ window: win, children }) => {
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
-      if (isDragging) {
+      if (isDragging && !isMobile) {
         const screenWidth = window.innerWidth;
         const screenHeight = window.innerHeight;
         const windowWidth = windowRef.current?.offsetWidth || 800;
@@ -181,7 +189,7 @@ export const Window: React.FC<WindowProps> = ({ window: win, children }) => {
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleMouseUp);
     };
-  }, [isDragging, dragOffset, win.id, win.displayId, currentDisplayId, displayLayout, updateWindowPosition]);
+  }, [isDragging, dragOffset, win.id, win.displayId, currentDisplayId, displayLayout, updateWindowPosition, isMobile]);
 
   if (win.isMinimized) return null;
 
@@ -191,7 +199,7 @@ export const Window: React.FC<WindowProps> = ({ window: win, children }) => {
       className={cn(
         "fixed flex flex-col glass rounded-xl border overflow-hidden window-shadow",
         isActive ? "z-[100] border-accent/40 ring-1 ring-accent/20" : "z-10 opacity-90",
-        win.isMaximized || win.isSnapped ? "rounded-none" : "",
+        win.isMaximized || win.isSnapped || isMobile ? "rounded-none" : "",
         isDragging ? "transition-none shadow-accent/20 border-accent" : "transition-all duration-300"
       )}
       style={{
@@ -204,37 +212,42 @@ export const Window: React.FC<WindowProps> = ({ window: win, children }) => {
       onClick={() => focusWindow(win.id)}
     >
       <div
-        className="h-10 bg-white/5 flex items-center justify-between px-3 cursor-default select-none shrink-0"
+        className={cn(
+          "h-10 bg-white/5 flex items-center justify-between px-3 cursor-default select-none shrink-0",
+          isMobile ? "h-12" : "h-10"
+        )}
         onMouseDown={handleMouseDown}
       >
         <div className="flex items-center gap-2">
           <span className="text-sm font-medium text-white/80">{win.title}</span>
         </div>
         <div className="flex items-center gap-1">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button 
-                className="p-1.5 hover:bg-white/10 rounded-md transition-colors"
-                title="Move to Display"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <Monitor size={14} className="text-accent" />
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="glass border-white/10">
-              {['1', '2', '3'].map(id => (
-                <DropdownMenuItem 
-                  key={id} 
-                  onClick={() => moveWindowToDisplay(win.id, id)}
-                  disabled={id === win.displayId}
-                  className="gap-2 text-[10px] font-bold uppercase"
+          {!isMobile && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button 
+                  className="p-1.5 hover:bg-white/10 rounded-md transition-colors"
+                  title="Move to Display"
+                  onClick={(e) => e.stopPropagation()}
                 >
-                  <Monitor size={12} />
-                  Display {id} {id === win.displayId ? '(Current)' : ''}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
+                  <Monitor size={14} className="text-accent" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="glass border-white/10">
+                {['1', '2', '3'].map(id => (
+                  <DropdownMenuItem 
+                    key={id} 
+                    onClick={() => moveWindowToDisplay(win.id, id)}
+                    disabled={id === win.displayId}
+                    className="gap-2 text-[10px] font-bold uppercase"
+                  >
+                    <Monitor size={12} />
+                    Display {id} {id === win.displayId ? '(Current)' : ''}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
 
           <button 
             onClick={(e) => { e.stopPropagation(); minimizeWindow(win.id); }}
@@ -244,31 +257,33 @@ export const Window: React.FC<WindowProps> = ({ window: win, children }) => {
             <Minus size={14} className="text-white/60" />
           </button>
           
-          <div className="flex items-center group/snap relative">
-            <button 
-              onClick={(e) => { e.stopPropagation(); maximizeWindow(win.id); }}
-              className="p-1.5 hover:bg-white/10 rounded-md transition-colors"
-              title="Maximize"
-            >
-              <Square size={12} className="text-white/60" />
-            </button>
-            <div className="absolute top-full right-0 mt-1 hidden group-hover/snap:flex glass border border-white/10 p-1 rounded-lg gap-1 z-[200] shadow-2xl">
+          {!isMobile && (
+            <div className="flex items-center group/snap relative">
               <button 
-                onClick={(e) => { e.stopPropagation(); snapWindow(win.id, 'left'); }}
-                className="p-1 hover:bg-accent/20 rounded text-accent"
-                title="Snap Left"
+                onClick={(e) => { e.stopPropagation(); maximizeWindow(win.id); }}
+                className="p-1.5 hover:bg-white/10 rounded-md transition-colors"
+                title="Maximize"
               >
-                <Columns size={12} className="rotate-180" />
+                <Square size={12} className="text-white/60" />
               </button>
-              <button 
-                onClick={(e) => { e.stopPropagation(); snapWindow(win.id, 'right'); }}
-                className="p-1 hover:bg-accent/20 rounded text-accent"
-                title="Snap Right"
-              >
-                <Columns size={12} />
-              </button>
+              <div className="absolute top-full right-0 mt-1 hidden group-hover/snap:flex glass border border-white/10 p-1 rounded-lg gap-1 z-[200] shadow-2xl">
+                <button 
+                  onClick={(e) => { e.stopPropagation(); snapWindow(win.id, 'left'); }}
+                  className="p-1 hover:bg-accent/20 rounded text-accent"
+                  title="Snap Left"
+                >
+                  <Columns size={12} className="rotate-180" />
+                </button>
+                <button 
+                  onClick={(e) => { e.stopPropagation(); snapWindow(win.id, 'right'); }}
+                  className="p-1 hover:bg-accent/20 rounded text-accent"
+                  title="Snap Right"
+                >
+                  <Columns size={12} />
+                </button>
+              </div>
             </div>
-          </div>
+          )}
 
           <button 
             onClick={(e) => { e.stopPropagation(); closeWindow(win.id); }}

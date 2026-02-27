@@ -13,6 +13,7 @@ import { GlobalSearch } from './GlobalSearch';
 import { ChatBar } from './ChatBar';
 import { BIOS } from './BIOS';
 import { StickyNote } from './StickyNote';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { 
   ShoppingBag, 
   FolderOpen, 
@@ -52,7 +53,8 @@ import {
   Store,
   Tv,
   StickyNote as StickyNoteIcon,
-  Code2
+  Code2,
+  Smartphone
 } from 'lucide-react';
 import { FileExplorer } from '../apps/FileExplorer';
 import { AppStore } from '../apps/AppStore';
@@ -159,6 +161,7 @@ export const Desktop: React.FC = () => {
     globalScale, setGlobalScale, factoryReset, mouserScale, isNDEEnabled
   } = useOS();
   
+  const isMobile = useIsMobile();
   const [bootOpacity, setBootOpacity] = useState(1);
   const [shouldRenderBoot, setShouldRenderBoot] = useState(true);
   const [showBIOS, setShowBIOS] = useState(false);
@@ -199,6 +202,16 @@ export const Desktop: React.FC = () => {
       setBootOpacity(0);
     }
   }, [powerStatus]);
+
+  // Mobile Friendly notification
+  useEffect(() => {
+    if (isClient && isMobile && powerStatus === 'on' && currentUser) {
+      const timer = setTimeout(() => {
+        addNotification("Mobile Optimized", "Kernel has adapted UI for touch interaction.", "system");
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [isClient, isMobile, powerStatus, currentUser, addNotification]);
 
   const triggerPowerwash = useCallback(() => {
     setIsPowerwashing(true);
@@ -570,7 +583,7 @@ export const Desktop: React.FC = () => {
         />
       )}
 
-      {!isSchool && !isKid && <WidgetsPanel />}
+      {!isSchool && !isKid && !isMobile && <WidgetsPanel />}
       
       <GlobalSearch />
 
@@ -751,6 +764,16 @@ export const Desktop: React.FC = () => {
              <p className="text-[10px] text-white/40 font-black tracking-widest uppercase animate-pulse">Press [B] for Setup</p>
           </div>
           <p className="fixed bottom-12 text-[10px] text-white/20 font-bold tracking-widest uppercase">Proprietary Kernel v4.5.2 • © 2026</p>
+        </div>
+      )}
+
+      {/* Mobile Optimization Badge */}
+      {isMobile && powerStatus === 'on' && !shouldRenderBoot && currentUser && (
+        <div className="fixed bottom-16 left-4 z-[9996] animate-in slide-in-from-left-4 duration-500">
+          <div className="bg-accent/20 backdrop-blur-xl border border-accent/40 rounded-full px-3 py-1 flex items-center gap-2 shadow-lg shadow-accent/10">
+            <Smartphone size={12} className="text-accent" />
+            <span className="text-[9px] font-black text-accent uppercase tracking-widest">Mobile Workspace</span>
+          </div>
         </div>
       )}
     </div>
