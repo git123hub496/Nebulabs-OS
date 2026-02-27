@@ -521,7 +521,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       try {
         // Reverse Geocode for City Name
         const geoRes = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`, {
-          headers: { 'Accept-Language': 'en-US,en;q=0.9' }
+          headers: { 'Accept-Language': 'en-US,en;q=0.9', 'User-Agent': 'Nebulabs-WebOS/1.0' }
         });
         
         if (!geoRes.ok) throw new Error("API Limit Reached");
@@ -660,14 +660,21 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
 
   const lock = useCallback(() => { if (currentUser) setIsLocked(true); }, [currentUser]);
 
-  const unlock = (password?: string): boolean => {
+  const unlock = useCallback((password?: string): boolean => {
     if (currentUser) {
       if (currentUser.password && currentUser.password !== password) return false;
       setIsLocked(false);
       return true;
     }
     return false;
-  };
+  }, [currentUser]);
+
+  // Auto-unlock if account has no password
+  useEffect(() => {
+    if (currentUser && isLocked && !currentUser.password) {
+      unlock("");
+    }
+  }, [currentUser, isLocked, unlock]);
 
   const createAccount = useCallback((username: string, password?: string, isSchool: boolean = false, isWork: boolean = false, isKid: boolean = false, districtId?: string) => {
     const effectiveDistrictId = districtId || (isSchool ? "NHU-7" : undefined);
@@ -907,7 +914,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const snapWindow = (windowId: string, side: 'left' | 'right' | null) => {
-    setOpenWindows(prev => prev.map(w => w.id === windowId ? { ...w, snapped: side, isMaximized: false } : w));
+    setOpenWindows(prev => prev.map(w => w.id === windowId ? { ...w, isSnapped: side, isMaximized: false } : w));
     playSound('click');
   };
 
