@@ -377,7 +377,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
 
   const [isWidgetsOpen, setIsWidgetsOpenState] = useState(false);
   const [isQuickSettingsOpen, setIsQuickSettingsOpenState] = useState(false);
-  const [isStartOpen, setIsStartOpen] = useState(false);
+  const [isStartOpenState, setIsStartOpenState] = useState(false);
   const [isChatOpen, setIsChatOpenState] = useState(false);
 
   const [openWindows, setOpenWindows] = useState<WindowInstance[]>([]);
@@ -545,6 +545,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   const login = useCallback((userId: string, password?: string): boolean => {
     const user = accounts.find(a => a.id === userId);
     if (user) {
+      // Allow login if no password exists on the account or if password matches
       if (user.password && user.password !== password) return false;
       setCurrentUser(user);
       localStorage.setItem('nebula_current_user_id', userId);
@@ -866,8 +867,8 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     else { playSound('close'); }
   };
 
-  const setIsStartOpenState = (open: boolean) => {
-    setIsStartOpen(open);
+  const setIsStartOpen = (open: boolean) => {
+    setIsStartOpenState(open);
     if (open) { setIsQuickSettingsOpenState(false); setIsWidgetsOpenState(false); setIsChatOpenState(false); playSound('open'); }
     else { playSound('close'); }
   };
@@ -1106,7 +1107,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       customAccentHex, cursorColor, isInverted, isGrayscale, glassEnabled, powerStatus,
       taskbarPosition, taskbarSize, isTaskbarAutoHide, setTaskbarAutoHide, iconSize, currentWifi, isWifiConnecting,
       isOnline, volume, brightness, isWidgetsOpen, isQuickSettingsOpen, 
-      isStartOpen, isChatOpen, isLocked, systemStats, stickyNotes,
+      isStartOpen: isStartOpenState, isChatOpen, isLocked, systemStats, stickyNotes,
       currentDisplayId, displayLayout, isSecurityEnabled, chatMessages, biosSettings,
       startMenuLayout, globalScale,
       login, logout, lock, unlock, createAccount, deleteAccount, updateUserPassword, resetUserPassword, updateUserAvatar, updateUserWorkStatus, openApp, closeWindow, minimizeWindow,
@@ -1115,7 +1116,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       updateWallpaper, setNotes, setTheme, setAccentColor, setCustomAccentHex,
       setCursorColor, setMouserScale, setInverted, setGrayscale, setGlassEnabled, setTaskbarPosition, rotateTaskbar, setTaskbarSize,
       setIconSize, connectToWifi, setVolume, setBrightness, setIsWidgetsOpen,
-      setIsQuickSettingsOpen, setIsStartOpen: setIsStartOpenState, setIsChatOpen, sendChatMessage, setCurrentDisplayId, setSecurityEnabled, updateBIOSSettings, restart, shutDown, powerOn,
+      setIsQuickSettingsOpen, setIsStartOpen, setIsChatOpen, sendChatMessage, setCurrentDisplayId, setSecurityEnabled, updateBIOSSettings, restart, shutDown, powerOn,
       minimizeAllWindows, playSound, setGlobalScale, factoryReset,
       createFolder, importFile, renameFileSystemItem, moveToTrash, restoreFromTrash, emptyTrash, deleteItemPermanently,
       updateDesktopAppPosition, toggleDesktopApp, togglePinApp, reorderPinnedApps,

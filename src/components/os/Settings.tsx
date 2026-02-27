@@ -27,17 +27,6 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Slider } from '@/components/ui/slider';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 
 type SettingsTab = 'personalization' | 'display' | 'apps' | 'accessibility' | 'notifications' | 'accounts' | 'security' | 'updates' | 'about';
@@ -169,6 +158,13 @@ export const Settings: React.FC = () => {
             <section>
               <div className="flex items-center gap-2 mb-6"><Eye size={18} className="text-accent" /><h2 className="text-lg font-bold text-foreground">Vision & Interaction</h2></div>
               <div className="space-y-6">
+                <div className="flex items-center justify-between p-5 bg-foreground/5 rounded-2xl border border-border/50">
+                  <div className="flex items-center gap-4"><div className="p-2.5 rounded-xl bg-accent/10 text-accent"><MousePointer2 size={20} /></div><div className="space-y-0.5"><Label className="text-sm font-bold">Pointer Color</Label><p className="text-[11px] text-muted-foreground">Customize the hardware cursor style</p></div></div>
+                  <Select value={cursorColor} onValueChange={(v) => setCursorColor(v as any)}>
+                    <SelectTrigger className="w-32 rounded-xl bg-foreground/5 border-border/50"><SelectValue /></SelectTrigger>
+                    <SelectContent className="glass border-white/10"><SelectItem value="black">Black</SelectItem><SelectItem value="white">White</SelectItem><SelectItem value="accent">System Accent</SelectItem></SelectContent>
+                  </Select>
+                </div>
                 <div className="flex items-center justify-between p-5 bg-foreground/5 rounded-2xl border border-border/50">
                   <div className="flex items-center gap-4"><div className="p-2.5 rounded-xl bg-accent/10 text-accent"><Pipette size={20} /></div><div className="space-y-0.5"><Label className="text-sm font-bold">Grayscale Mode</Label><p className="text-[11px] text-muted-foreground">Remove all interface colors</p></div></div>
                   <Switch checked={isGrayscale} onCheckedChange={setGrayscale} />

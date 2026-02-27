@@ -27,17 +27,6 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Slider } from '@/components/ui/slider';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 
 type SettingsTab = 'personalization' | 'display' | 'apps' | 'accessibility' | 'notifications' | 'accounts' | 'security' | 'updates' | 'about';
@@ -170,6 +159,13 @@ export const Settings: React.FC = () => {
               <div className="flex items-center gap-2 mb-6"><Eye size={18} className="text-accent" /><h2 className="text-lg font-bold text-foreground">Vision & Interaction</h2></div>
               <div className="space-y-6">
                 <div className="flex items-center justify-between p-5 bg-foreground/5 rounded-2xl border border-border/50">
+                  <div className="flex items-center gap-4"><div className="p-2.5 rounded-xl bg-accent/10 text-accent"><MousePointer2 size={20} /></div><div className="space-y-0.5"><Label className="text-sm font-bold">Pointer Color</Label><p className="text-[11px] text-muted-foreground">Customize the hardware cursor style</p></div></div>
+                  <Select value={cursorColor} onValueChange={(v) => setCursorColor(v as any)}>
+                    <SelectTrigger className="w-32 rounded-xl bg-foreground/5 border-border/50"><SelectValue /></SelectTrigger>
+                    <SelectContent className="glass border-white/10"><SelectItem value="black">Black</SelectItem><SelectItem value="white">White</SelectItem><SelectItem value="accent">System Accent</SelectItem></SelectContent>
+                  </Select>
+                </div>
+                <div className="flex items-center justify-between p-5 bg-foreground/5 rounded-2xl border border-border/50">
                   <div className="flex items-center gap-4"><div className="p-2.5 rounded-xl bg-accent/10 text-accent"><Pipette size={20} /></div><div className="space-y-0.5"><Label className="text-sm font-bold">Grayscale Mode</Label><p className="text-[11px] text-muted-foreground">Remove all interface colors</p></div></div>
                   <Switch checked={isGrayscale} onCheckedChange={setGrayscale} />
                 </div>
@@ -269,7 +265,7 @@ export const Settings: React.FC = () => {
         return (
           <div className="space-y-12 animate-in fade-in slide-in-from-right-4 duration-500">
             <section className="text-center py-12 space-y-6">
-              <div className="w-20 h-20 rounded-[2rem] bg-accent/20 flex items-center justify-center auto shadow-2xl animate-spin-slow"><RefreshCw size={32} className="text-accent" /></div>
+              <div className="w-20 h-20 rounded-[2rem] bg-accent/20 flex items-center justify-center auto shadow-2xl animate-spin-slow mx-auto"><RefreshCw size={32} className="text-accent" /></div>
               <div className="space-y-2"><h2 className="text-2xl font-black tracking-tight text-foreground">System is Up to Date</h2><p className="text-xs text-muted-foreground font-mono uppercase tracking-widest">Nebula Core build_4.5.2_stable</p></div>
               {!isRestricted && (
                 <Button className="bg-accent text-primary-foreground font-black px-10 h-12 rounded-xl uppercase tracking-widest shadow-xl shadow-accent/20" onClick={() => openApp('update', 'System Update')}>Check for Patches</Button>

@@ -465,10 +465,10 @@ export const Desktop: React.FC = () => {
         <div className="w-full max-w-md space-y-4">
           <Progress value={powerwashProgress} className="h-2 bg-white/5" />
           <div className="bg-black/40 rounded-xl p-4 h-32 font-mono text-[10px] text-destructive/60 text-left overflow-hidden border border-white/5 space-y-1">
-            <div className="text-destructive font-bold animate-pulse">{'>'} {powerwashLog}</div>
-            <div className="opacity-40">{'>'} Security level: KERNEL_WIPE</div>
-            <div className="opacity-40">{'>'} Entropy collection active</div>
-            <div className="opacity-40">{'>'} Cryptographic shredding...</div>
+            <div className="text-destructive font-bold animate-pulse">{' > '} {powerwashLog}</div>
+            <div className="opacity-40">{' > '} Security level: KERNEL_WIPE</div>
+            <div className="opacity-40">{' > '} Entropy collection active</div>
+            <div className="opacity-40">{' > '} Cryptographic shredding...</div>
           </div>
         </div>
       </div>

@@ -114,7 +114,7 @@ export const LoginScreen: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    const isEnrolled = localStorage.getItem('nebula_machine_enrolled');
+    const isEnrolled = typeof window !== 'undefined' && localStorage.getItem('nebula_machine_enrolled');
     if (accounts.length === 0 && step === 'select' && !isEnrolled) {
       setStep('hardware');
     }
@@ -215,6 +215,12 @@ export const LoginScreen: React.FC = () => {
   };
 
   const handleSelectAccount = (account: LocalUser) => {
+    // If no password, login directly
+    if (!account.password) {
+      login(account.id, "");
+      playSound('open');
+      return;
+    }
     setSelectedAccount(account);
     setPasswordInput("");
     setIsError(false);
