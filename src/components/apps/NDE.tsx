@@ -19,7 +19,8 @@ import {
   ChevronRight,
   Braces,
   Settings,
-  Layout
+  Layout,
+  Skull
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';

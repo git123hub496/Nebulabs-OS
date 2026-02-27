@@ -511,6 +511,9 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     
     const sn = localStorage.getItem(`nebula_${user.id}_sticky_notes`);
     if (sn) setStickyNotes(JSON.parse(sn));
+
+    const sl = localStorage.getItem(`nebula_${user.id}_start_layout`);
+    if (sl) setStartMenuLayout(JSON.parse(sl));
   }, []);
 
   useEffect(() => {
