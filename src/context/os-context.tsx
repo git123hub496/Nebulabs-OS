@@ -377,7 +377,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
 
   const [isWidgetsOpen, setIsWidgetsOpenState] = useState(false);
   const [isQuickSettingsOpen, setIsQuickSettingsOpenState] = useState(false);
-  const [isStartOpen, setIsStartOpenState] = useState(false);
+  const [isStartOpen, setIsStartOpen] = useState(false);
   const [isChatOpen, setIsChatOpenState] = useState(false);
 
   const [openWindows, setOpenWindows] = useState<WindowInstance[]>([]);
@@ -465,6 +465,10 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       playSound('notify');
     }
   }, [currentDisplayId, playSound]);
+
+  const clearNotifications = useCallback(() => {
+    setNotifications([]);
+  }, []);
 
   const saveSetting = useCallback((key: string, value: any) => {
     if (currentUser) {
@@ -844,7 +848,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   const setGlobalScale = (s: number) => { setGlobalScaleState(s); saveSetting('global_scale', s); };
 
   const factoryReset = useCallback(() => {
-    if (typeof window !== 'undefined' && window.confirm("CRITICAL WARNING: This will permanently erase all user accounts, virtual files, and personalization settings. Your Nebula system will be restored to factory state. This action cannot be undone. Proceed?")) {
+    if (typeof window !== 'undefined') {
       localStorage.clear();
       window.location.reload();
     }
@@ -862,8 +866,8 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     else { playSound('close'); }
   };
 
-  const setIsStartOpen = (open: boolean) => {
-    setIsStartOpenState(open);
+  const setIsStartOpenState = (open: boolean) => {
+    setIsStartOpen(open);
     if (open) { setIsQuickSettingsOpenState(false); setIsWidgetsOpenState(false); setIsChatOpenState(false); playSound('open'); }
     else { playSound('close'); }
   };
@@ -1085,6 +1089,14 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     playSound('close');
   };
 
+  const updateBIOSSettings = useCallback((updates: Partial<BIOSSettings>) => {
+    setBiosSettings(prev => {
+      const updated = { ...prev, ...updates };
+      localStorage.setItem('nebula_bios_settings', JSON.stringify(updated));
+      return updated;
+    });
+  }, []);
+
   return (
     <OSContext.Provider value={{
       currentUser, accounts, openWindows, activeWindowId, installedApps, pinnedApps,
@@ -1103,7 +1115,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       updateWallpaper, setNotes, setTheme, setAccentColor, setCustomAccentHex,
       setCursorColor, setMouserScale, setInverted, setGrayscale, setGlassEnabled, setTaskbarPosition, rotateTaskbar, setTaskbarSize,
       setIconSize, connectToWifi, setVolume, setBrightness, setIsWidgetsOpen,
-      setIsQuickSettingsOpen, setIsStartOpen, setIsChatOpen, sendChatMessage, setCurrentDisplayId, setSecurityEnabled, updateBIOSSettings, restart, shutDown, powerOn,
+      setIsQuickSettingsOpen, setIsStartOpen: setIsStartOpenState, setIsChatOpen, sendChatMessage, setCurrentDisplayId, setSecurityEnabled, updateBIOSSettings, restart, shutDown, powerOn,
       minimizeAllWindows, playSound, setGlobalScale, factoryReset,
       createFolder, importFile, renameFileSystemItem, moveToTrash, restoreFromTrash, emptyTrash, deleteItemPermanently,
       updateDesktopAppPosition, toggleDesktopApp, togglePinApp, reorderPinnedApps,

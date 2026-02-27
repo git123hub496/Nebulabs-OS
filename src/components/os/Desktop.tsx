@@ -83,6 +83,7 @@ import { Screencast } from '../apps/Screencast';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Progress } from '@/components/ui/progress';
 
 const APP_COMPONENTS: Record<AppId, (win: WindowInstance) => React.ReactNode> = {
   'store': (win) => <AppStore />,
@@ -163,6 +164,9 @@ export const Desktop: React.FC = () => {
   const [runQuery, setRunQuery] = useState("");
   const [isRunOpen, setIsRunOpen] = useState(false);
   const [isClient, setIsClient] = useState(false);
+  const [isPowerwashing, setIsPowerwashing] = useState(false);
+  const [powerwashProgress, setPowerwashProgress] = useState(0);
+  const [powerwashLog, setPowerwashLog] = useState("");
   
   const [pendingDragAppId, setPendingDragAppId] = useState<AppId | null>(null);
   const [dragStartPos, setDragStartPos] = useState({ x: 0, y: 0 });
@@ -193,6 +197,37 @@ export const Desktop: React.FC = () => {
     }
   }, [powerStatus]);
 
+  const triggerPowerwash = useCallback(() => {
+    setIsPowerwashing(true);
+    setPowerwashProgress(0);
+    const logs = [
+      "Initiating hardware sanitization...",
+      "Zeroing local partition blocks...",
+      "Purging identity registry...",
+      "Deleting cryptographic key headers...",
+      "Clearing virtual NVRAM cache...",
+      "Wiping system telemetry database...",
+      "Finalizing deep sanitization...",
+      "Hardware Reset Successful."
+    ];
+    
+    let i = 0;
+    const interval = setInterval(() => {
+      setPowerwashProgress(p => {
+        if (p >= 100) {
+          clearInterval(interval);
+          setTimeout(() => {
+            factoryReset();
+          }, 500);
+          return 100;
+        }
+        return p + 1.2;
+      });
+      setPowerwashLog(logs[Math.min(i, logs.length - 1)]);
+      if (Math.random() > 0.7) i++;
+    }, 100);
+  }, [factoryReset]);
+
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     if (e.key.toLowerCase() === 'b' && !e.altKey) {
       const isBooting = powerStatus === 'booting' || shouldRenderBoot;
@@ -207,7 +242,7 @@ export const Desktop: React.FC = () => {
     if (powerStatus !== 'on' || !currentUser) {
       if (e.altKey && e.key.toLowerCase() === 'z') {
         e.preventDefault();
-        factoryReset();
+        triggerPowerwash();
       }
       return;
     }
@@ -216,7 +251,7 @@ export const Desktop: React.FC = () => {
       switch (e.key.toLowerCase()) {
         case 'z':
           e.preventDefault();
-          factoryReset();
+          triggerPowerwash();
           break;
         case 'b':
           e.preventDefault();
@@ -282,7 +317,7 @@ export const Desktop: React.FC = () => {
       setContextMenu(null);
       setShortcutContextMenu(null);
     }
-  }, [powerStatus, currentUser, isStartOpen, isWidgetsOpen, isQuickSettingsOpen, isChatOpen, openApp, setIsStartOpen, setIsWidgetsOpen, setIsQuickSettingsOpen, setIsChatOpen, minimizeAllWindows, lock, isKid, shouldRenderBoot, isGrayscale, setGrayscale, isInverted, setInverted, globalScale, setGlobalScale, factoryReset]);
+  }, [powerStatus, currentUser, isStartOpen, isWidgetsOpen, isQuickSettingsOpen, isChatOpen, openApp, setIsStartOpen, setIsWidgetsOpen, setIsQuickSettingsOpen, setIsChatOpen, minimizeAllWindows, lock, isKid, shouldRenderBoot, isGrayscale, setGrayscale, isInverted, setInverted, globalScale, setGlobalScale, triggerPowerwash]);
 
   useEffect(() => {
     window.addEventListener('keydown', handleKeyDown);
@@ -408,7 +443,7 @@ export const Desktop: React.FC = () => {
         'custom': customAccentHex ? hexToHslString(customAccentHex) : '262.1 83.3% 57.8%'
       };
       
-      const hsl = accentVarMap[accentColor];
+      const hsl = accentVarMap[accentColor] || accentVarMap['purple'];
       color = `hsl(${hsl})`;
     }
 
@@ -416,6 +451,29 @@ export const Desktop: React.FC = () => {
     const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24" fill="${color.replace('#', '%23')}" stroke="white" stroke-width="1.5"><path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z"/></svg>`;
     return { '--cursor-url': `url('data:image/svg+xml;utf8,${svg}'), auto` } as React.CSSProperties;
   }, [cursorColor, mouserScale, isClient, accentColor, customAccentHex]);
+
+  if (isPowerwashing) {
+    return (
+      <div className="fixed inset-0 z-[100000] bg-[#0a0f14] flex flex-col items-center justify-center p-12 gap-8 text-center" style={cursorStyle}>
+        <div className="w-24 h-24 rounded-[2.5rem] bg-destructive/20 border border-destructive/20 flex items-center justify-center animate-pulse shadow-2xl">
+          <Trash2 className="text-destructive" size={48} />
+        </div>
+        <div className="space-y-2">
+          <h2 className="text-3xl font-black text-white uppercase tracking-tighter">System Sanitization</h2>
+          <p className="text-sm text-white/40 uppercase tracking-[0.3em] font-bold">Deep Hardware Wipe in Progress</p>
+        </div>
+        <div className="w-full max-w-md space-y-4">
+          <Progress value={powerwashProgress} className="h-2 bg-white/5" />
+          <div className="bg-black/40 rounded-xl p-4 h-32 font-mono text-[10px] text-destructive/60 text-left overflow-hidden border border-white/5 space-y-1">
+            <div className="text-destructive font-bold animate-pulse">{'>'} {powerwashLog}</div>
+            <div className="opacity-40">{'>'} Security level: KERNEL_WIPE</div>
+            <div className="opacity-40">{'>'} Entropy collection active</div>
+            <div className="opacity-40">{'>'} Cryptographic shredding...</div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (showBIOS) {
     return <div style={cursorStyle} className="h-full w-full"><BIOS onClose={() => setShowBIOS(false)} /></div>;
@@ -474,10 +532,10 @@ export const Desktop: React.FC = () => {
   };
 
   const systemVars = {
-    '--accent': accentVarMap[accentColor],
-    '--primary': accentVarMap[accentColor],
-    '--ring': accentVarMap[accentColor],
-    '--sidebar-accent': accentVarMap[accentColor],
+    '--accent': accentVarMap[accentColor] || accentVarMap['purple'],
+    '--primary': accentVarMap[accentColor] || accentVarMap['purple'],
+    '--ring': accentVarMap[accentColor] || accentVarMap['purple'],
+    '--sidebar-accent': accentVarMap[accentColor] || accentVarMap['purple'],
   } as React.CSSProperties;
 
   const currentScale = isNaN(iconSize) ? 1.0 : iconSize / 100;

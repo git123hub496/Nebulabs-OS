@@ -34,7 +34,8 @@ import {
   Palette,
   Tv,
   Monitor,
-  Camera
+  Camera,
+  Search
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -113,9 +114,8 @@ export const LoginScreen: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    // If we're on step select but there are no accounts, we must set up the machine first
-    const lastEnrollment = localStorage.getItem('nebula_machine_enrolled');
-    if (accounts.length === 0 && step === 'select' && !lastEnrollment) {
+    const isEnrolled = localStorage.getItem('nebula_machine_enrolled');
+    if (accounts.length === 0 && step === 'select' && !isEnrolled) {
       setStep('hardware');
     }
   }, [accounts, step]);

@@ -8,7 +8,7 @@ import {
   ImageIcon, Sun, Moon, Layout, Check, MousePointer2, 
   Eye, Zap, Layers, Pipette, Maximize2, Plus, ArrowUpRight,
   Wifi, ShieldCheck, Activity, Trash2, Info, Newspaper, Clock, XCircle, RefreshCw, ChevronRight, ShieldAlert, ShieldX, Lock, KeyRound, Camera, Building2, Briefcase, GraduationCap, Heart, MonitorCheck, Sliders, Smartphone, Smile, Home, Search, AppWindow, ExternalLink,
-  Trash, EyeOff
+  Trash, EyeOff, LogOut
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
@@ -50,12 +50,6 @@ const ACCENT_COLORS: { id: AccentColor; class: string; label: string }[] = [
   { id: 'green', class: 'bg-[#16a34a]', label: 'Green' },
   { id: 'grey', class: 'bg-[#64748b]', label: 'Slate Grey' },
   { id: 'default', class: 'bg-black/20 border-white/10', label: 'Nebula' },
-];
-
-const CURSOR_COLORS: { id: CursorColor; color: string; label: string }[] = [
-  { id: 'black', color: '#000000', label: 'Deep Black' },
-  { id: 'white', color: '#ffffff', label: 'Classic White' },
-  { id: 'accent', color: 'var(--accent)', label: 'System Accent' },
 ];
 
 export const Settings: React.FC = () => {
@@ -126,22 +120,24 @@ export const Settings: React.FC = () => {
                   <div className="flex justify-between items-center"><Label className="text-sm font-bold">Screen Brightness</Label><span className="text-xs font-mono text-accent">{brightness}%</span></div>
                   <Slider value={[brightness]} max={100} min={10} step={1} onValueChange={(vals) => setBrightness(vals[0])} />
                 </div>
-                <div className="grid grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Taskbar Position</Label>
-                    <Select value={taskbarPosition} onValueChange={(v) => setTaskbarPosition(v as any)}>
-                      <SelectTrigger className="h-11 rounded-xl bg-foreground/5 border-border/50"><SelectValue /></SelectTrigger>
-                      <SelectContent className="glass border-white/10"><SelectItem value="bottom">Bottom</SelectItem><SelectItem value="top">Top</SelectItem><SelectItem value="left">Left</SelectItem><SelectItem value="right">Right</SelectItem></SelectContent>
-                    </Select>
+                {!isRestricted && (
+                  <div className="grid grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Taskbar Position</Label>
+                      <Select value={taskbarPosition} onValueChange={(v) => setTaskbarPosition(v as any)}>
+                        <SelectTrigger className="h-11 rounded-xl bg-foreground/5 border-border/50"><SelectValue /></SelectTrigger>
+                        <SelectContent className="glass border-white/10"><SelectItem value="bottom">Bottom</SelectItem><SelectItem value="top">Top</SelectItem><SelectItem value="left">Left</SelectItem><SelectItem value="right">Right</SelectItem></SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Icon Scaling</Label>
+                      <Select value={String(iconSize)} onValueChange={(v) => setIconSize(Number(v))}>
+                        <SelectTrigger className="h-11 rounded-xl bg-foreground/5 border-border/50"><SelectValue /></SelectTrigger>
+                        <SelectContent className="glass border-white/10"><SelectItem value="80">Compact (80%)</SelectItem><SelectItem value="100">Standard (100%)</SelectItem><SelectItem value="120">Large (120%)</SelectItem><SelectItem value="150">Ultra (150%)</SelectItem></SelectContent>
+                      </Select>
+                    </div>
                   </div>
-                  <div className="space-y-2">
-                    <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Icon Scaling</Label>
-                    <Select value={String(iconSize)} onValueChange={(v) => setIconSize(Number(v))}>
-                      <SelectTrigger className="h-11 rounded-xl bg-foreground/5 border-border/50"><SelectValue /></SelectTrigger>
-                      <SelectContent className="glass border-white/10"><SelectItem value="80">Compact (80%)</SelectItem><SelectItem value="100">Standard (100%)</SelectItem><SelectItem value="120">Large (120%)</SelectItem><SelectItem value="150">Ultra (150%)</SelectItem></SelectContent>
-                    </Select>
-                  </div>
-                </div>
+                )}
               </div>
             </section>
           </div>
@@ -158,7 +154,7 @@ export const Settings: React.FC = () => {
                       <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center text-accent">{React.createElement(APP_INFO[appId].icon, { size: 20 })}</div>
                       <div className="space-y-0.5"><p className="text-sm font-bold text-foreground">{APP_INFO[appId].label}</p><p className="text-[10px] text-muted-foreground uppercase font-medium">Nebula Stable Build</p></div>
                     </div>
-                    {!['settings', 'store', 'files'].includes(appId) && (
+                    {!['settings', 'store', 'files'].includes(appId) && !isRestricted && (
                       <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => uninstallApp(appId)}><Trash size={16} /></Button>
                     )}
                   </div>
@@ -189,6 +185,31 @@ export const Settings: React.FC = () => {
             </section>
           </div>
         );
+      case 'notifications':
+        return (
+          <div className="space-y-12 animate-in fade-in slide-in-from-right-4 duration-500">
+            <section>
+              <div className="flex items-center gap-2 mb-6"><Bell size={18} className="text-accent" /><h2 className="text-lg font-bold text-foreground">Alert History</h2></div>
+              <div className="space-y-4">
+                <Button variant="outline" className="w-full justify-between h-12 rounded-xl" onClick={clearNotifications}>
+                  <span>Clear All System Alerts</span>
+                  <Trash size={14} className="text-destructive" />
+                </Button>
+                <div className="grid gap-2">
+                  {notifications.length > 0 ? notifications.map(n => (
+                    <div key={n.id} className="p-4 bg-foreground/5 rounded-xl border border-border/50 space-y-1">
+                      <div className="flex justify-between items-center"><span className="text-[10px] font-black uppercase text-accent">{n.type}</span><span className="text-[10px] opacity-40">{n.timestamp}</span></div>
+                      <p className="text-sm font-bold">{n.title}</p>
+                      <p className="text-xs text-muted-foreground">{n.message}</p>
+                    </div>
+                  )) : (
+                    <div className="py-12 text-center text-muted-foreground opacity-40 uppercase tracking-widest font-black">No Recent Alerts</div>
+                  )}
+                </div>
+              </div>
+            </section>
+          </div>
+        );
       case 'accounts':
         return (
           <div className="space-y-12 animate-in fade-in slide-in-from-right-4 duration-500">
@@ -208,10 +229,12 @@ export const Settings: React.FC = () => {
                   <p className="text-[10px] text-accent font-black uppercase tracking-[0.2em]">{currentUser?.uniqueCode || 'SYSTEM_ADMIN'}</p>
                 </div>
                 <div className="flex gap-2 w-full max-w-sm">
-                  <Button variant="outline" className="flex-1 rounded-xl h-11 text-xs font-bold uppercase tracking-widest border-border/50" onClick={() => {
-                    const pass = prompt("Enter new credentials:");
-                    if (pass) updateUserPassword(pass);
-                  }}><Lock size={14} className="mr-2" /> Change Passcode</Button>
+                  {!isRestricted && (
+                    <Button variant="outline" className="flex-1 rounded-xl h-11 text-xs font-bold uppercase tracking-widest border-border/50" onClick={() => {
+                      const pass = prompt("Enter new credentials:");
+                      if (pass) updateUserPassword(pass);
+                    }}><Lock size={14} className="mr-2" /> Passcode</Button>
+                  )}
                   <Button variant="outline" className="flex-1 rounded-xl h-11 text-xs font-bold uppercase tracking-widest text-destructive border-destructive/20 hover:bg-destructive/10" onClick={logout}><LogOut size={14} className="mr-2" /> Sign Out</Button>
                 </div>
               </div>
@@ -230,7 +253,7 @@ export const Settings: React.FC = () => {
                       <div className="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center text-accent"><ShieldCheck size={20} /></div>
                       <div className="space-y-0.5"><p className="text-sm font-bold">Nebula Defender</p><p className="text-[10px] text-muted-foreground">Real-time heuristic threat analysis</p></div>
                     </div>
-                    <Switch checked={isSecurityEnabled} onCheckedChange={setSecurityEnabled} />
+                    <Switch checked={isSecurityEnabled} onCheckedChange={setSecurityEnabled} disabled={isRestricted} />
                   </div>
                   <Separator className="bg-accent/10" />
                   <div className="grid grid-cols-2 gap-4">
@@ -248,7 +271,9 @@ export const Settings: React.FC = () => {
             <section className="text-center py-12 space-y-6">
               <div className="w-20 h-20 rounded-[2rem] bg-accent/20 flex items-center justify-center mx-auto shadow-2xl animate-spin-slow"><RefreshCw size={32} className="text-accent" /></div>
               <div className="space-y-2"><h2 className="text-2xl font-black tracking-tight text-foreground">System is Up to Date</h2><p className="text-xs text-muted-foreground font-mono uppercase tracking-widest">Nebula Core build_4.5.2_stable</p></div>
-              <Button className="bg-accent text-primary-foreground font-black px-10 h-12 rounded-xl uppercase tracking-widest shadow-xl shadow-accent/20" onClick={() => openApp('update', 'System Update')}>Check for Patches</Button>
+              {!isRestricted && (
+                <Button className="bg-accent text-primary-foreground font-black px-10 h-12 rounded-xl uppercase tracking-widest shadow-xl shadow-accent/20" onClick={() => openApp('update', 'System Update')}>Check for Patches</Button>
+              )}
             </section>
           </div>
         );
@@ -258,17 +283,19 @@ export const Settings: React.FC = () => {
             <section className="text-center py-12 space-y-6">
               <div className="w-24 h-24 rounded-[2.5rem] bg-accent/20 flex items-center justify-center mx-auto shadow-2xl animate-pulse"><span className="text-4xl font-black text-accent">N</span></div>
               <div className="space-y-2"><h2 className="text-3xl font-black tracking-tight text-foreground">{biosSettings.deviceType} {biosSettings.deviceName}</h2><p className="text-xs text-muted-foreground font-mono uppercase tracking-[0.3em]">Version 1.0.4 Stable-Channel</p></div>
-              <div className="max-w-md mx-auto p-6 bg-destructive/5 border border-destructive/20 rounded-3xl text-center space-y-4">
-                <div className="flex items-center justify-center gap-2 mb-1"><Trash2 size={14} className="text-destructive" /><p className="text-[10px] font-black uppercase text-destructive tracking-[0.2em]">System Recovery</p></div>
-                <p className="text-sm font-bold text-foreground">Factory Reset</p>
-                <p className="text-[10px] text-muted-foreground leading-relaxed">Erases all accounts, files, and settings. This action cannot be undone.</p>
-                <Button variant="destructive" className="w-full h-10 rounded-xl font-bold uppercase tracking-widest text-[10px]" onClick={factoryReset}>Reset Nebula WebOS</Button>
-              </div>
+              {!isRestricted && (
+                <div className="max-w-md mx-auto p-6 bg-destructive/5 border border-destructive/20 rounded-3xl text-center space-y-4">
+                  <div className="flex items-center justify-center gap-2 mb-1"><Trash2 size={14} className="text-destructive" /><p className="text-[10px] font-black uppercase text-destructive tracking-[0.2em]">System Recovery</p></div>
+                  <p className="text-sm font-bold text-foreground">Factory Reset</p>
+                  <p className="text-[10px] text-muted-foreground leading-relaxed">Erases all accounts, files, and settings. This action cannot be undone.</p>
+                  <Button variant="destructive" className="w-full h-10 rounded-xl font-bold uppercase tracking-widest text-[10px]" onClick={factoryReset}>Reset Nebula WebOS</Button>
+                </div>
+              )}
             </section>
           </div>
         );
       default:
-        return <div className="py-20 text-center text-muted-foreground opacity-40 uppercase tracking-widest font-black">Feature Restricted</div>;
+        return <div className="py-20 text-center text-muted-foreground opacity-40 uppercase tracking-widest font-black">Unknown Configuration</div>;
     }
   };
 
