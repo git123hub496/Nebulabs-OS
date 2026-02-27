@@ -413,100 +413,6 @@ export const Desktop: React.FC = () => {
     setDraggingAppId(null);
   };
 
-  const cursorStyle = useMemo(() => {
-    if (!isClient) return {};
-    
-    let color = '#000000';
-    if (cursorColor === 'white') color = '#ffffff';
-    else if (cursorColor === 'accent') {
-      const hexToHslString = (hex: string) => {
-        const r = parseInt(hex.slice(1, 3), 16) / 255;
-        const g = parseInt(hex.slice(3, 5), 16) / 255;
-        const b = parseInt(hex.slice(5, 7), 16) / 255;
-        const max = Math.max(r, g, b), min = Math.min(r, g, b);
-        let h = 0, s, l = (max + min) / 2;
-        if (max === min) h = s = 0;
-        else {
-          const d = max - min;
-          s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-          switch (max) {
-            case r: h = (g - b) / d + (g < b ? 6 : 0); break;
-            case g: h = (b - r) / d + 2; break;
-            case b: h = (r - g) / d + 4; break;
-          }
-          h /= 6;
-        }
-        return `${h * 360} ${s * 100}% ${l * 100}%`;
-      };
-
-      const accentVarMap: Record<AccentColor, string> = {
-        'purple': '262.1 83.3% 57.8%',
-        'blue': '217.2 91.2% 59.8%',
-        'rose': '346.8 77.2% 49.8%',
-        'orange': '24.6 95% 53.1%',
-        'green': '142.1 76.2% 36.3%',
-        'grey': '210 20% 50%',
-        'default': '262.1 83.3% 57.8%',
-        'custom': customAccentHex ? hexToHslString(customAccentHex) : '262.1 83.3% 57.8%'
-      };
-      
-      const hsl = accentVarMap[accentColor] || accentVarMap['purple'];
-      color = `hsl(${hsl})`;
-    }
-
-    const size = 24 * mouserScale;
-    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24" fill="${color.replace('#', '%23')}" stroke="white" stroke-width="1.5"><path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z"/></svg>`;
-    return { '--cursor-url': `url('data:image/svg+xml;utf8,${svg}'), auto` } as React.CSSProperties;
-  }, [cursorColor, mouserScale, isClient, accentColor, customAccentHex]);
-
-  if (isPowerwashing) {
-    return (
-      <div className="fixed inset-0 z-[100000] bg-[#0a0f14] flex flex-col items-center justify-center p-12 gap-8 text-center" style={cursorStyle}>
-        <div className="w-24 h-24 rounded-[2.5rem] bg-destructive/20 border border-destructive/20 flex items-center justify-center animate-pulse shadow-2xl">
-          <Trash2 className="text-destructive" size={48} />
-        </div>
-        <div className="space-y-2">
-          <h2 className="text-3xl font-black text-white uppercase tracking-tighter">System Sanitization</h2>
-          <p className="text-sm text-white/40 uppercase tracking-[0.3em] font-bold">Deep Hardware Wipe in Progress</p>
-        </div>
-        <div className="w-full max-w-md space-y-4">
-          <Progress value={powerwashProgress} className="h-2 bg-white/5" />
-          <div className="bg-black/40 rounded-xl p-4 h-32 font-mono text-[10px] text-destructive/60 text-left overflow-hidden border border-white/5 space-y-1">
-            <div className="text-destructive font-bold animate-pulse">{' > '} {powerwashLog}</div>
-            <div className="opacity-40">{' > '} Security level: KERNEL_WIPE</div>
-            <div className="opacity-40">{' > '} Entropy collection active</div>
-            <div className="opacity-40">{' > '} Cryptographic shredding...</div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (showBIOS) {
-    return <div style={cursorStyle} className="h-full w-full"><BIOS onClose={() => setShowBIOS(false)} /></div>;
-  }
-
-  if (powerStatus === 'off') {
-    return (
-      <div className="fixed inset-0 bg-[#020202] flex flex-col items-center justify-center gap-12 animate-in fade-in duration-1000 overflow-hidden" style={cursorStyle}>
-        <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.02)_0%,transparent_70%)]" />
-        <Button 
-          variant="outline" 
-          size="icon" 
-          className="w-24 h-24 rounded-full border-white/10 bg-white/5 hover:bg-white/10 hover:border-accent hover:text-accent transition-all duration-500 group relative z-10 shadow-2xl"
-          onClick={powerOn}
-        >
-          <Power size={40} className="group-hover:scale-110 transition-transform duration-500 group-active:scale-90" />
-        </Button>
-        <p className="text-[10px] text-white/20 font-black uppercase tracking-[0.4em] animate-pulse">Press [B] for Setup</p>
-      </div>
-    );
-  }
-
-  if ((powerStatus === 'on' && !currentUser && !shouldRenderBoot) || isLocked) {
-    return <div style={cursorStyle} className="h-full w-full"><LoginScreen /></div>;
-  }
-
   const hexToHslString = (hex: string) => {
     const r = parseInt(hex.slice(1, 3), 16) / 255;
     const g = parseInt(hex.slice(3, 5), 16) / 255;
@@ -538,12 +444,75 @@ export const Desktop: React.FC = () => {
     'custom': customAccentHex ? hexToHslString(customAccentHex) : '262.1 83.3% 57.8%'
   };
 
+  const cursorStyle = useMemo(() => {
+    if (!isClient) return {};
+    
+    let color = '#000000';
+    if (cursorColor === 'white') color = '#ffffff';
+    else if (cursorColor === 'accent') {
+      const hsl = accentVarMap[accentColor] || accentVarMap['purple'];
+      color = `hsl(${hsl})`;
+    }
+
+    const size = 24 * mouserScale;
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24" fill="${color.replace('#', '%23')}" stroke="white" stroke-width="1.5"><path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z"/></svg>`;
+    return { '--cursor-url': `url('data:image/svg+xml;utf8,${svg}'), auto` } as React.CSSProperties;
+  }, [cursorColor, mouserScale, isClient, accentColor, customAccentHex]);
+
   const systemVars = {
     '--accent': accentVarMap[accentColor] || accentVarMap['purple'],
     '--primary': accentVarMap[accentColor] || accentVarMap['purple'],
     '--ring': accentVarMap[accentColor] || accentVarMap['purple'],
     '--sidebar-accent': accentVarMap[accentColor] || accentVarMap['purple'],
   } as React.CSSProperties;
+
+  if (isPowerwashing) {
+    return (
+      <div className="fixed inset-0 z-[100000] bg-[#0a0f14] flex flex-col items-center justify-center p-12 gap-8 text-center" style={{ ...cursorStyle, ...systemVars }}>
+        <div className="w-24 h-24 rounded-[2.5rem] bg-destructive/20 border border-destructive/20 flex items-center justify-center animate-pulse shadow-2xl">
+          <Trash2 className="text-destructive" size={48} />
+        </div>
+        <div className="space-y-2">
+          <h2 className="text-3xl font-black text-white uppercase tracking-tighter">System Sanitization</h2>
+          <p className="text-sm text-white/40 uppercase tracking-[0.3em] font-bold">Deep Hardware Wipe in Progress</p>
+        </div>
+        <div className="w-full max-w-md space-y-4">
+          <Progress value={powerwashProgress} className="h-2 bg-white/5" />
+          <div className="bg-black/40 rounded-xl p-4 h-32 font-mono text-[10px] text-destructive/60 text-left overflow-hidden border border-white/5 space-y-1">
+            <div className="text-destructive font-bold animate-pulse">{' > '} {powerwashLog}</div>
+            <div className="opacity-40">{' > '} Security level: KERNEL_WIPE</div>
+            <div className="opacity-40">{' > '} Entropy collection active</div>
+            <div className="opacity-40">{' > '} Cryptographic shredding...</div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (showBIOS) {
+    return <div style={{ ...cursorStyle, ...systemVars }} className="h-full w-full"><BIOS onClose={() => setShowBIOS(false)} /></div>;
+  }
+
+  if (powerStatus === 'off') {
+    return (
+      <div className="fixed inset-0 bg-[#020202] flex flex-col items-center justify-center gap-12 animate-in fade-in duration-1000 overflow-hidden" style={{ ...cursorStyle, ...systemVars }}>
+        <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.02)_0%,transparent_70%)]" />
+        <Button 
+          variant="outline" 
+          size="icon" 
+          className="w-24 h-24 rounded-full border-white/10 bg-white/5 hover:bg-white/10 hover:border-accent hover:text-accent transition-all duration-500 group relative z-10 shadow-2xl"
+          onClick={powerOn}
+        >
+          <Power size={40} className="group-hover:scale-110 transition-transform duration-500 group-active:scale-90" />
+        </Button>
+        <p className="text-[10px] text-white/20 font-black uppercase tracking-[0.4em] animate-pulse">Press [B] for Setup</p>
+      </div>
+    );
+  }
+
+  if ((powerStatus === 'on' && !currentUser && !shouldRenderBoot) || isLocked) {
+    return <div style={{ ...cursorStyle, ...systemVars }} className="h-full w-full"><LoginScreen /></div>;
+  }
 
   const currentScale = isNaN(iconSize) ? 1.0 : iconSize / 100;
   const scaledIconBoxSize = 56 * currentScale;
@@ -766,7 +735,7 @@ export const Desktop: React.FC = () => {
       {shouldRenderBoot && (
         <div 
           className="fixed inset-0 bg-[#000088] z-[20000] flex flex-col items-center justify-center transition-opacity duration-1000 pointer-events-none"
-          style={{ opacity: bootOpacity, ...cursorStyle }}
+          style={{ opacity: bootOpacity, ...cursorStyle, ...systemVars }}
         >
           <div className="w-24 h-24 bg-white/10 rounded-3xl flex items-center justify-center mb-8 animate-pulse border border-white/20">
             <div className="w-12 h-12 bg-white rounded-full shadow-[0_0_20px_rgba(255,255,255,0.5)]" />

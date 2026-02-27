@@ -356,15 +356,15 @@ export const APP_INFO: Record<AppId, { icon: any; label: string }> = {
 const INITIAL_FILES: FileSystemItem[] = [
   { id: '1', name: 'Documents', type: 'folder', parentId: null },
   { id: '2', name: 'Pictures', type: 'folder', parentId: null },
-  { id: '3', name: 'README.md', type: 'file', parentId: null },
-  { id: '4', name: 'Nebula Shared Assets', type: 'folder', parentId: null },
-  { id: '5', name: 'config', type: 'folder', parentId: null },
-  { id: '6', name: 'drivers', type: 'folder', parentId: null },
-  { id: '7', name: 'logs', type: 'folder', parentId: null },
-  { id: 'f1', name: 'kernel.sys', type: 'file', parentId: null, size: 40960 },
-  { id: 'f2', name: 'registry.dat', type: 'file', parentId: '5', size: 1024 },
-  { id: 'f3', name: 'display.drv', type: 'file', parentId: '6', size: 20480 },
-  { id: 'f4', name: 'boot.log', type: 'file', parentId: '7', size: 512, content: 'Kernel Initialized OK\nHardware Link established\nUser Session Active' },
+  { id: '3', name: 'README.md', type: 'file', parentId: null, content: '# Nebula WebOS\nProprietary Kernel v4.5.2 stable.' },
+  { id: 'sys', name: 'System', type: 'folder', parentId: null },
+  { id: 'kernel', name: 'kernel.sys', type: 'file', parentId: 'sys', size: 1048576, content: '[BINARY_DATA_ENCRYPTED]' },
+  { id: 'cfg', name: 'config', type: 'folder', parentId: 'sys' },
+  { id: 'reg', name: 'registry.dat', type: 'file', parentId: 'cfg', size: 4096, content: '{"version": "4.5.2", "status": "active"}' },
+  { id: 'drv', name: 'drivers', type: 'folder', parentId: 'sys' },
+  { id: 'gfx', name: 'display.drv', type: 'file', parentId: 'drv', size: 524288 },
+  { id: 'log', name: 'logs', type: 'folder', parentId: 'sys' },
+  { id: 'boot', name: 'boot.log', type: 'file', parentId: 'log', size: 2048, content: '[10:00:01] BIOS check OK\n[10:00:02] GPU drivers loaded\n[10:00:05] Kernel Handshake active' },
 ];
 
 const INITIAL_DESKTOP: DesktopShortcut[] = [
@@ -830,7 +830,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const snapWindow = (windowId: string, side: 'left' | 'right' | null) => {
-    setOpenWindows(prev => prev.map(w => w.id === windowId ? { ...w, isSnapped: side, isMaximized: false } : w));
+    setOpenWindows(prev => prev.map(w => w.id === windowId ? { ...w, snapped: side, isMaximized: false } : w));
     playSound('click');
   };
 

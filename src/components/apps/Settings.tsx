@@ -8,7 +8,7 @@ import {
   ImageIcon, Sun, Moon, Layout, Check, MousePointer2, 
   Eye, Zap, Layers, Pipette, Maximize2, Plus, ArrowUpRight,
   Wifi, ShieldCheck, Activity, Trash2, Info, Newspaper, Clock, XCircle, RefreshCw, ChevronRight, ShieldAlert, ShieldX, Lock, KeyRound, Camera, Building2, Briefcase, GraduationCap, Heart, MonitorCheck, Sliders, Smartphone, Smile, Home, Search, AppWindow, ExternalLink,
-  Trash, EyeOff, LogOut
+  Trash, EyeOff, LogOut, Code2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
@@ -282,7 +282,7 @@ export const Settings: React.FC = () => {
         return (
           <div className="space-y-12 animate-in fade-in slide-in-from-right-4 duration-500">
             <section className="text-center py-12 space-y-6">
-              <div className="w-20 h-20 rounded-[2rem] bg-accent/20 flex items-center justify-center auto shadow-2xl animate-spin-slow mx-auto"><RefreshCw size={32} className="text-accent" /></div>
+              <div className="w-20 h-20 rounded-[2rem] bg-accent/20 flex items-center justify-center mx-auto shadow-2xl animate-spin-slow"><RefreshCw size={32} className="text-accent" /></div>
               <div className="space-y-2"><h2 className="text-2xl font-black tracking-tight text-foreground">System is Up to Date</h2><p className="text-xs text-muted-foreground font-mono uppercase tracking-widest">Nebula Core build_4.5.2_stable</p></div>
               {!isRestricted && (
                 <Button className="bg-accent text-primary-foreground font-black px-10 h-12 rounded-xl uppercase tracking-widest shadow-xl shadow-accent/20" onClick={() => openApp('update', 'System Update')}>Check for Patches</Button>
