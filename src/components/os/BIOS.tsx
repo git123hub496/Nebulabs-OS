@@ -1,3 +1,4 @@
+
 "use client"
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
@@ -9,11 +10,13 @@ type BIOSSection = 'Main' | 'Advanced' | 'Power' | 'Security' | 'Boot' | 'Exit';
 export const BIOS: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   const [activeSection, setActiveSection] = useState<BIOSSection>('Main');
   const [selectedItem, setSelectedItem] = useState(0);
-  const { systemStats, restart, biosSettings, updateBIOSSettings } = useOS();
+  const { systemStats, restart, biosSettings, updateBIOSSettings, factoryReset } = useOS();
   const [isSaving, setIsSaving] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [isInitializing, setIsInitializing] = useState(true);
   const [initProgress, setInitProgress] = useState(0);
+  const [mountedTime, setMountedTime] = useState("");
+  const [mountedDate, setMountedDate] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Local state for changes before committing
@@ -33,6 +36,9 @@ export const BIOS: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   const [bootOrder, setBootOrder] = useState(['Nebulabs Virtual SSD-0', 'Network PXE', 'USB Flash Device']);
 
   useEffect(() => {
+    setMountedTime(new Date().toLocaleTimeString());
+    setMountedDate(new Date().toLocaleDateString());
+    
     if (isInitializing) {
       const timer = setInterval(() => {
         setInitProgress(prev => {
@@ -138,14 +144,14 @@ export const BIOS: React.FC<{ onClose: () => void }> = ({ onClose }) => {
         } else if (selectedItem === 1) {
           onClose();
         } else {
-          setSettings({ ...biosSettings, cpuTurbo: true, networkStack: true, secureBoot: true, fastBoot: false, virtualization: true, deviceType: 'NebulaBook', deviceName: 'SuperNova' });
+          factoryReset();
         }
       } else {
         handleAction('enter');
       }
     }
     if (e.key === ' ' || e.key === '+' || e.key === '=') handleAction('toggle');
-  }, [activeSection, handleAction, onClose, restart, isSaving, isInitializing, selectedItem, settings, updateBIOSSettings, isEditing, biosSettings]);
+  }, [activeSection, handleAction, onClose, restart, isSaving, isInitializing, selectedItem, settings, updateBIOSSettings, isEditing, biosSettings, factoryReset]);
 
   useEffect(() => {
     window.addEventListener('keydown', handleKeyDown);
@@ -159,9 +165,9 @@ export const BIOS: React.FC<{ onClose: () => void }> = ({ onClose }) => {
           <div className="space-y-4 animate-in fade-in duration-200">
             <div className="grid grid-cols-2 gap-4 text-sm font-bold">
               <span className="text-[#aaa]">System Time:</span>
-              <span className="text-white">[{new Date().toLocaleTimeString()}]</span>
+              <span className="text-white">[{mountedTime}]</span>
               <span className="text-[#aaa]">System Date:</span>
-              <span className="text-white">[{new Date().toLocaleDateString()}]</span>
+              <span className="text-white">[{mountedDate}]</span>
             </div>
             
             <div className="border-t border-white/20 pt-4 space-y-1">

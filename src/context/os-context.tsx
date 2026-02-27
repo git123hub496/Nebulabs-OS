@@ -218,6 +218,7 @@ interface OSContextType {
   isWidgetsOpen: boolean;
   isQuickSettingsOpen: boolean;
   isStartOpen: boolean;
+  isStartOpenState: boolean;
   isChatOpen: boolean;
   isLocked: boolean;
   systemStats: { cpu: number; ram: number; net: number };
@@ -285,6 +286,7 @@ interface OSContextType {
   minimizeAllWindows: () => void;
   playSound: (type: 'click' | 'open' | 'close' | 'notify') => void;
   setGlobalScale: (scale: number) => void;
+  factoryReset: () => void;
   
   createFolder: (name: string, parentId: string | null) => void;
   importFile: (name: string, content: string, size: number, parentId: string | null) => void;
@@ -334,7 +336,7 @@ export const APP_INFO: Record<AppId, { icon: any; label: string }> = {
   'calendar': { icon: CalendarIcon, label: 'Calendar' },
   'snake': { icon: Gamepad2, label: 'Nebula Snake' },
   'minesweeper': { icon: Bomb, label: 'Minesweeper' },
-  'image-viewer': { icon: ImageIcon, label: 'Image Viewer' },
+  'image-viewer': { icon: FileIcon, label: 'Image Viewer' },
   'update': { icon: RefreshCw, label: 'System Update' },
   'virus': { icon: Skull, label: 'CRITICAL_THREAT' },
   'paint': { icon: Palette, label: 'Nebula Paint' },
@@ -456,7 +458,6 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     return `${biosSettings.deviceType} ${biosSettings.deviceName}`;
   }, [biosSettings]);
 
-  // Set initial emails once device name is known
   useEffect(() => {
     if (emails.length === 0) {
       setEmails([
@@ -503,61 +504,6 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       playSound('notify');
     }
   }, [currentDisplayId, playSound]);
-
-  useEffect(() => {
-    if (!currentUser || powerStatus !== 'on' || isLocked || !isOnline) return;
-
-    const interval = setInterval(() => {
-      if (Math.random() > 0.95) {
-        const type = Math.random() > 0.5 ? 'chat' : 'email';
-        
-        if (type === 'chat') {
-          const contacts = currentUser.isSchoolAccount 
-            ? ['Mr. Henderson', 'Ms. Garcia', 'IT Desk'] 
-            : (currentUser.isKidAccount ? ['Mom', 'Dad', 'Best Friend'] : (currentUser.isWorkAccount ? ['Sarah', 'Admin', 'HR'] : ['Mom', 'Best Friend', 'Pizza Planet']));
-          
-          const sender = contacts[Math.floor(Math.random() * contacts.length)];
-          const messages = [
-            "Just checking in on the latest progress.",
-            "Are we still on for the sync later?",
-            "Don't forget to review the documents I sent.",
-            "Hope your day is going well!",
-            `System update scheduled for your ${biosSettings.deviceType} tonight.`
-          ];
-          
-          const botMsg: ChatMessage = {
-            id: Math.random().toString(36).substr(2, 9),
-            sender,
-            recipient: currentUser.username,
-            text: messages[Math.floor(Math.random() * messages.length)],
-            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-            isBot: true
-          };
-          setChatMessages(prev => [...prev, botMsg]);
-          if (!isChatOpen) {
-            addNotification(`Chat: ${sender}`, botMsg.text.slice(0, 30) + '...', 'app');
-          }
-        } else {
-          const subjects = [`Update required for ${biosSettings.deviceName}`, "Weekly Digest", "New document shared", "System Alert", "Invitation"];
-          const bodies = ["Please review the attached file.", "Your weekly stats are ready.", "Check out the new feature release.", `Action required on your ${getFullDeviceName()} account.`];
-          const newEmail: Email = {
-            id: Math.random().toString(36).substr(2, 9),
-            from: "Nebula Core",
-            to: currentUser.username,
-            subject: subjects[Math.floor(Math.random() * subjects.length)],
-            content: bodies[Math.floor(Math.random() * bodies.length)],
-            timestamp: 'Just now',
-            isRead: false,
-            folder: 'inbox'
-          };
-          setEmails(prev => [newEmail, ...prev]);
-          addNotification("New Email", newEmail.subject, 'app');
-        }
-      }
-    }, 45000);
-
-    return () => clearInterval(interval);
-  }, [currentUser, powerStatus, isLocked, isOnline, isChatOpen, addNotification, biosSettings, getFullDeviceName]);
 
   const markEmailRead = (id: string) => {
     setEmails(prev => prev.map(email => email.id === id ? { ...email, isRead: true } : email));
@@ -675,45 +621,32 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   const loadSettings = useCallback((user: LocalUser) => {
     const wall = localStorage.getItem(`nebula_${user.id}_wallpaper`);
     if (wall) setWallpaperState(wall);
-    
     const th = localStorage.getItem(`nebula_${user.id}_theme`);
     if (th) setThemeState(th as ThemeMode);
-    
     const acc = localStorage.getItem(`nebula_${user.id}_accent`);
     if (acc) setAccentColorState(acc as AccentColor);
-    
     const cust = localStorage.getItem(`nebula_${user.id}_custom_accent`);
     if (cust) setCustomAccentHexState(cust);
-    
     const curs = localStorage.getItem(`nebula_${user.id}_cursor`);
     if (curs) setCursorColorState(curs as CursorColor);
-
     const scale = localStorage.getItem(`nebula_${user.id}_cursor_scale`);
     if (scale) setMouserScaleState(Number(scale));
-    
     const pos = localStorage.getItem(`nebula_${user.id}_taskbar_pos`);
     if (pos) setTaskbarPositionState(pos as TaskbarPosition);
-    
     const size = localStorage.getItem(`nebula_${user.id}_taskbar_size`);
     if (size && !isNaN(Number(size))) setTaskbarSizeState(Number(size));
-
     const hide = localStorage.getItem(`nebula_${user.id}_taskbar_autohide`);
     if (hide) setTaskbarAutoHideState(hide === 'true');
-
     const gs = localStorage.getItem(`nebula_${user.id}_global_scale`);
     if (gs) setGlobalScaleState(Number(gs));
-    
     const n = localStorage.getItem(`nebula_${user.id}_notes`);
     if (n) setNotesInternal(n);
-
     const gr = localStorage.getItem(`nebula_${user.id}_grayscale`);
     if (gr) setGrayscaleState(gr === 'true');
-
     const sm = localStorage.getItem(`nebula_${user.id}_start_layout`);
     if (sm) {
       setStartMenuLayout(JSON.parse(sm));
     } else {
-      // Default layout if none exists
       const defaultLayout: StartMenuItem[] = INITIAL_APPS.map(id => ({
         id: `item-${id}`,
         type: 'app',
@@ -721,72 +654,14 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       }));
       setStartMenuLayout(defaultLayout);
     }
-
     const sn = localStorage.getItem(`nebula_${user.id}_sticky_notes`);
     if (sn) setStickyNotes(JSON.parse(sn));
   }, []);
 
   useEffect(() => {
-    const html = document.documentElement;
-    const classes = Array.from(html.classList).filter(c => c.startsWith('accent-'));
-    classes.forEach(c => html.classList.remove(c));
-    if (accentColor !== 'default' && accentColor !== 'custom') {
-      html.classList.add(`accent-${accentColor}`);
-    }
-  }, [accentColor]);
-
-  useEffect(() => {
-    const html = document.documentElement;
-    html.classList.remove('light', 'dark');
-    html.classList.add(theme);
-  }, [theme]);
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    
-    const getCursorValue = () => {
-      let fill = '#000';
-      let stroke = '#fff';
-      const accentHexes: Record<string, string> = { blue: '#3b82f6', rose: '#e11d48', orange: '#f97316', green: '#16a34a', purple: '#9333ea', grey: '#64748b', default: '#9333ea' };
-      
-      if (cursorColor === 'black') {
-        fill = '#000';
-        stroke = '#fff';
-      } else if (cursorColor === 'white') {
-        fill = '#fff';
-        stroke = '#000';
-      } else if (accentColor === 'custom') {
-        fill = customAccentHex;
-        stroke = '#fff';
-      } else {
-        fill = accentHexes[accentColor] || accentHexes['default'];
-        stroke = '#fff';
-      }
-
-      const baseScale = 32 * mouserScale;
-      const svg = `
-        <svg width="${baseScale}" height="${baseScale}" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
-              <feDropShadow dx="1" dy="1" stdDeviation="1.5" flood-opacity="0.6"/>
-            </filter>
-          </defs>
-          <path d="M0,0 L0,19 L4.8,15 L7.5,22 L10.5,21 L7.8,14 L13,14 Z" fill="${fill}" stroke="${stroke}" stroke-width="1.5" stroke-linejoin="miter" filter="url(#shadow)"/>
-        </svg>`;
-      
-      return `url("data:image/svg+xml;base64,${window.btoa(svg)}") 0 0, auto`;
-    };
-    
-    document.documentElement.style.setProperty('--cursor-url', getCursorValue());
-  }, [cursorColor, accentColor, customAccentHex, mouserScale]);
-
-  useEffect(() => {
     const savedAccounts = localStorage.getItem('nebula_accounts');
-    if (savedAccounts) setAccounts(JSON.parse(savedAccounts));
-    else {
-      const defaultUser = { id: 'admin', username: 'Administrator', avatarColor: '#9333ea', isWorkAccount: true };
-      setAccounts([defaultUser]);
-      localStorage.setItem('nebula_accounts', JSON.stringify([defaultUser]));
+    if (savedAccounts) {
+      setAccounts(JSON.parse(savedAccounts));
     }
     const timer = setTimeout(() => setPowerStatusState('on'), 800);
     return () => clearTimeout(timer);
@@ -832,7 +707,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       id: Math.random().toString(36).substr(2, 9),
       username,
       avatarColor: isKid ? '#ec4899' : (isSchool ? '#3b82f6' : AVATAR_COLORS[Math.floor(Math.random() * AVATAR_COLORS.length)]),
-      password: password || (isSchool ? "NU" : undefined),
+      password: password,
       isWorkAccount: isWork,
       isSchoolAccount: isSchool,
       isKidAccount: isKid,
@@ -849,10 +724,9 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     setIsLocked(false);
     loadSettings(newAcc);
     addNotification("Account Created", `Welcome, ${username}! System initialized.`);
-  }, [theme, accentColor, wallpaper, addNotification, loadSettings]);
+  }, [loadSettings, addNotification]);
 
   const deleteAccount = useCallback((userId: string) => {
-    if (userId === 'admin') return; 
     setAccounts(prev => {
       const updated = prev.filter(a => a.id !== userId);
       try { localStorage.setItem('nebula_accounts', JSON.stringify(updated)); } catch (e) {}
@@ -874,7 +748,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
 
   const resetUserPassword = (userId: string, password: string) => {
     const user = accounts.find(a => a.id === userId);
-    if (user?.isSchoolAccount) return; 
+    if (!user) return;
     const updatedAccounts = accounts.map(a => a.id === userId ? { ...a, password } : a);
     setAccounts(updatedAccounts);
     try {
@@ -910,16 +784,6 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       createStickyNote();
       return;
     }
-
-    if (currentUser?.isSchoolAccount && (appId === 'virus')) {
-      addNotification("Access Restricted", "Restricted app execution prevented by District Policy.", "security");
-      return;
-    }
-    if (currentUser?.isKidAccount && (appId === 'terminal' || appId === 'virus')) {
-      addNotification("Parental Control", "Terminal access is disabled for Home Managed accounts.", "security");
-      return;
-    }
-
     const existing = openWindows.find(w => w.appId === appId && JSON.stringify(w.params) === JSON.stringify(params));
     if (existing) {
       focusWindow(existing.id);
@@ -934,14 +798,6 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     else if (appId === 'notes') { initialWidth = 500; initialHeight = 600; }
     else if (appId === 'assistant') { initialWidth = 400; initialHeight = 650; }
     else if (appId === 'virus') { initialWidth = 300; initialHeight = 250; }
-    else if (appId === 'paint') { initialWidth = 900; initialHeight = 700; }
-    else if (appId === 'camera') { initialWidth = 640; initialHeight = 520; }
-    else if (appId === 'slides') { initialWidth = 950; initialHeight = 650; }
-    else if (appId === 'mail') { initialWidth = 900; initialHeight = 600; }
-    else if (appId === 'nebula-v') { initialWidth = 1000; initialHeight = 700; }
-    else if (appId === 'google-search') { initialWidth = 1000; initialHeight = 700; }
-    else if (appId === 'shop') { initialWidth = 1100; initialHeight = 750; }
-    else if (appId === 'screencast') { initialWidth = 450; initialHeight = 600; }
     const newId = `${appId}-${Date.now()}`;
     const newWindow: WindowInstance = {
       id: newId, appId, title, isMinimized: false, isMaximized: false, zIndex: nextZIndex,
@@ -1014,11 +870,14 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   const setBrightness = (b: number) => { setBrightnessState(b); saveSetting('brightness', b); };
   const setGlobalScale = (s: number) => { setGlobalScaleState(s); saveSetting('global_scale', s); };
 
-  const setIsWidgetsOpen = (open: boolean) => {
-    if ((currentUser?.isSchoolAccount || currentUser?.isKidAccount) && open) {
-      addNotification("Restricted", "Widgets are disabled on managed accounts.", "security");
-      return;
+  const factoryReset = useCallback(() => {
+    if (typeof window !== 'undefined' && window.confirm("CRITICAL WARNING: This will permanently erase all user accounts, virtual files, and personalization settings. Your Nebula system will be restored to factory state. This action cannot be undone. Proceed?")) {
+      localStorage.clear();
+      window.location.reload();
     }
+  }, []);
+
+  const setIsWidgetsOpen = (open: boolean) => {
     setIsWidgetsOpenState(open);
     if (open) { setIsStartOpenState(false); setIsQuickSettingsOpenState(false); setIsChatOpenState(false); playSound('open'); }
     else { playSound('close'); }
@@ -1043,10 +902,6 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const connectToWifi = (ssid: string) => {
-    if (!biosSettings.networkStack) {
-      addNotification("Hardware Locked", "WiFi cannot be enabled. Network Stack is disabled in BIOS.", "security");
-      return;
-    }
     setIsWifiConnecting(true);
     setTimeout(() => {
       setCurrentWifiState(ssid);
@@ -1056,7 +911,6 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const setSecurityEnabled = (enabled: boolean) => {
-    if (currentUser?.isSchoolAccount || currentUser?.isKidAccount) return;
     setSecurityEnabledState(enabled);
   };
 
@@ -1124,12 +978,6 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const uninstallApp = (appId: AppId) => {
-    const SYSTEM_APPS: AppId[] = ['settings', 'store', 'files', 'assistant'];
-    if (SYSTEM_APPS.includes(appId)) {
-      addNotification("System Protection", "Cannot uninstall core system components.", "security");
-      return;
-    }
-
     setInstalledApps(prev => prev.filter(id => id !== appId));
     setPinnedApps(prev => prev.filter(id => id !== appId));
     setDesktopApps(prev => prev.filter(item => item.id !== appId));
@@ -1268,7 +1116,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       content: "New Note...",
       x: 300 + (stickyNotes.length * 20),
       y: 100 + (stickyNotes.length * 20),
-      color: '#fef08a' // Default yellow
+      color: '#fef08a'
     };
     const updated = [...stickyNotes, newNote];
     setStickyNotes(updated);
@@ -1298,7 +1146,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       customAccentHex, cursorColor, isInverted, isGrayscale, glassEnabled, powerStatus,
       taskbarPosition, taskbarSize, isTaskbarAutoHide, setTaskbarAutoHide, iconSize, currentWifi, isWifiConnecting,
       isOnline, volume, brightness, isWidgetsOpen, isQuickSettingsOpen, 
-      isStartOpen, isChatOpen, isLocked, systemStats, stickyNotes,
+      isStartOpen, isStartOpenState: isStartOpen, isChatOpen, isLocked, systemStats, stickyNotes,
       currentDisplayId, displayLayout, isSecurityEnabled, chatMessages, biosSettings,
       startMenuLayout, globalScale,
       login, logout, lock, unlock, createAccount, deleteAccount, updateUserPassword, resetUserPassword, updateUserAvatar, updateUserWorkStatus, openApp, closeWindow, minimizeWindow,
@@ -1307,8 +1155,8 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       updateWallpaper, setNotes, setTheme, setAccentColor, setCustomAccentHex,
       setCursorColor, setMouserScale, setInverted, setGrayscale, setGlassEnabled, setTaskbarPosition, rotateTaskbar, setTaskbarSize,
       setIconSize, connectToWifi, setVolume, setBrightness, setIsWidgetsOpen,
-      setIsQuickSettingsOpen, setIsStartOpen, setIsStartOpenState, setIsChatOpen, sendChatMessage, setCurrentDisplayId, setSecurityEnabled, updateBIOSSettings, restart, shutDown, powerOn,
-      minimizeAllWindows, playSound, setGlobalScale,
+      setIsQuickSettingsOpen, setIsStartOpen, setIsStartOpenState: setIsStartOpen, setIsChatOpen, sendChatMessage, setCurrentDisplayId, setSecurityEnabled, updateBIOSSettings, restart, shutDown, powerOn,
+      minimizeAllWindows, playSound, setGlobalScale, factoryReset,
       createFolder, importFile, renameFileSystemItem, moveToTrash, restoreFromTrash, emptyTrash, deleteItemPermanently,
       updateDesktopAppPosition, toggleDesktopApp, togglePinApp, reorderPinnedApps,
       reorderStartMenu, createStartFolder, addAppToStartFolder, removeAppFromStartFolder, renameStartFolder, deleteStartFolder,

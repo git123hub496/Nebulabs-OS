@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useOS, AppId, DesktopShortcut, WindowInstance, APP_INFO } from '@/context/os-context';
 import { Window } from './Window';
 import { Taskbar } from './Taskbar';
@@ -152,7 +152,7 @@ export const Desktop: React.FC = () => {
     isStartOpen, setIsStartOpen, isChatOpen, setIsChatOpen, activeWindowId, closeWindow, minimizeAllWindows,
     brightness, currentDisplayId, displayLayout, isSecurityEnabled, addNotification,
     isLocked, lock, biosSettings, pinnedApps, togglePinApp, stickyNotes,
-    globalScale, setGlobalScale
+    globalScale, setGlobalScale, factoryReset, cursorColor: osCursorColor, mouserScale
   } = useOS();
   
   const [bootOpacity, setBootOpacity] = useState(1);
@@ -162,6 +162,7 @@ export const Desktop: React.FC = () => {
   const [shortcutContextMenu, setShortcutContextMenu] = useState<{ x: number, y: number, appId: AppId } | null>(null);
   const [runQuery, setRunQuery] = useState("");
   const [isRunOpen, setIsRunOpen] = useState(false);
+  const [isClient, setIsClient] = useState(false);
   
   // Drag threshold state
   const [pendingDragAppId, setPendingDragAppId] = useState<AppId | null>(null);
@@ -174,6 +175,10 @@ export const Desktop: React.FC = () => {
 
   const isSchool = currentUser?.isSchoolAccount;
   const isKid = currentUser?.isKidAccount;
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   useEffect(() => {
     if (powerStatus === 'on') {
@@ -204,6 +209,10 @@ export const Desktop: React.FC = () => {
 
     if (e.altKey) {
       switch (e.key.toLowerCase()) {
+        case 'z':
+          e.preventDefault();
+          factoryReset();
+          break;
         case 'b':
           e.preventDefault();
           const newBigScale = Math.min(globalScale + 0.1, 2.0);
@@ -242,12 +251,10 @@ export const Desktop: React.FC = () => {
         case 'g': 
           e.preventDefault();
           setGrayscale(!isGrayscale);
-          addNotification("System Filter", `Grayscale mode ${!isGrayscale ? 'enabled' : 'disabled'}.`, 'system');
           break;
         case 'i':
           e.preventDefault();
           setInverted(!isInverted);
-          addNotification("System Filter", `Color inversion ${!isInverted ? 'enabled' : 'disabled'}.`, 'system');
           break;
         case 'd': 
           e.preventDefault();
@@ -255,13 +262,11 @@ export const Desktop: React.FC = () => {
           break;
         case 'x': 
           e.preventDefault();
-          if (!document.fullscreenElement) {
-            document.documentElement.requestFullscreen().catch(() => {});
-            addNotification("Display Mode", "Fullscreen enabled", "system");
-          } else {
-            if (document.exitFullscreen) {
-              document.exitFullscreen().catch(() => {});
-              addNotification("Display Mode", "Fullscreen disabled", "system");
+          if (typeof window !== 'undefined') {
+            if (!document.fullscreenElement) {
+              document.documentElement.requestFullscreen().catch(() => {});
+            } else {
+              if (document.exitFullscreen) document.exitFullscreen().catch(() => {});
             }
           }
           break;
@@ -292,7 +297,7 @@ export const Desktop: React.FC = () => {
       setContextMenu(null);
       setShortcutContextMenu(null);
     }
-  }, [powerStatus, currentUser, isStartOpen, isWidgetsOpen, isQuickSettingsOpen, isChatOpen, activeWindowId, openApp, setIsStartOpen, setIsWidgetsOpen, setIsQuickSettingsOpen, setIsChatOpen, closeWindow, minimizeAllWindows, lock, isSchool, isKid, addNotification, shouldRenderBoot, isGrayscale, setGrayscale, isInverted, setInverted, globalScale, setGlobalScale]);
+  }, [powerStatus, currentUser, isStartOpen, isWidgetsOpen, isQuickSettingsOpen, isChatOpen, activeWindowId, openApp, setIsStartOpen, setIsWidgetsOpen, setIsQuickSettingsOpen, setIsChatOpen, closeWindow, minimizeAllWindows, lock, isSchool, isKid, addNotification, shouldRenderBoot, isGrayscale, setGrayscale, isInverted, setInverted, globalScale, setGlobalScale, factoryReset]);
 
   useEffect(() => {
     window.addEventListener('keydown', handleKeyDown);
@@ -381,6 +386,22 @@ export const Desktop: React.FC = () => {
     setDraggingAppId(null);
   };
 
+  const cursorStyle = useMemo(() => {
+    if (!isClient) return {};
+    
+    let color = '#000000';
+    if (cursorColor === 'white') color = '#ffffff';
+    else if (cursorColor === 'accent') {
+      const computedStyle = getComputedStyle(document.documentElement);
+      color = `hsl(${computedStyle.getPropertyValue('--accent')})`;
+    }
+
+    const size = 24 * mouserScale;
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24" fill="${color}" stroke="white" stroke-width="1.5"><path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z"/></svg>`;
+    const encoded = typeof window !== 'undefined' ? btoa(svg) : '';
+    return { '--cursor-url': `url('data:image/svg+xml;base64,${encoded}'), auto` } as React.CSSProperties;
+  }, [cursorColor, mouserScale, isClient]);
+
   if (showBIOS) {
     return <BIOS onClose={() => setShowBIOS(false)} />;
   }
@@ -433,11 +454,9 @@ export const Desktop: React.FC = () => {
     '--sidebar-accent': hexToHslString(customAccentHex),
   } as React.CSSProperties : {};
 
-  // SAFE SCALING: We calculate dimensions directly instead of using transform: scale()
-  // to avoid hitbox misalignment and blurry rendering.
   const currentScale = isNaN(iconSize) ? 1.0 : iconSize / 100;
-  const scaledIconBoxSize = 56 * currentScale; // Base w-14 is 56px
-  const scaledContainerWidth = 96 * currentScale; // Base w-24 is 96px
+  const scaledIconBoxSize = 56 * currentScale;
+  const scaledContainerWidth = 96 * currentScale;
   const scaledIconSize = 28 * currentScale;
   const scaledFontSize = 11 * currentScale;
 
@@ -457,7 +476,8 @@ export const Desktop: React.FC = () => {
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         zoom: globalScale,
-        ...customStyle
+        ...customStyle,
+        ...cursorStyle
       }}
       onContextMenu={handleContextMenu}
       onClick={() => {
@@ -496,7 +516,6 @@ export const Desktop: React.FC = () => {
 
       <ChatBar />
 
-      {/* Render Sticky Notes */}
       {stickyNotes.map(note => (
         <StickyNote key={note.id} note={note} />
       ))}
@@ -654,18 +673,18 @@ export const Desktop: React.FC = () => {
 
       {shouldRenderBoot && (
         <div 
-          className="fixed inset-0 bg-[#0a0f14] z-[20000] flex flex-col items-center justify-center transition-opacity duration-1000 pointer-events-none"
+          className="fixed inset-0 bg-[#000088] z-[20000] flex flex-col items-center justify-center transition-opacity duration-1000 pointer-events-none"
           style={{ opacity: bootOpacity }}
         >
-          <div className="w-24 h-24 bg-accent/20 rounded-3xl flex items-center justify-center mb-8 animate-pulse border border-accent/20">
-            <div className="w-12 h-12 bg-accent rounded-full shadow-[0_0_20px_rgba(var(--accent),0.5)]" />
+          <div className="w-24 h-24 bg-white/10 rounded-3xl flex items-center justify-center mb-8 animate-pulse border border-white/20">
+            <div className="w-12 h-12 bg-white rounded-full shadow-[0_0_20px_rgba(255,255,255,0.5)]" />
           </div>
-          <h1 className="text-2xl font-black tracking-[0.3em] text-white/60 uppercase">Nebula WebOS</h1>
+          <h1 className="text-2xl font-black tracking-[0.3em] text-white/80 uppercase">Nebula WebOS</h1>
           {!biosSettings.secureBoot && (
-            <p className="text-[10px] text-red-500 font-bold uppercase tracking-[0.3em] animate-pulse mt-4">Warning: Secure Boot Disabled</p>
+            <p className="text-[10px] text-yellow-400 font-bold uppercase tracking-[0.3em] animate-pulse mt-4">Warning: Secure Boot Disabled</p>
           )}
           <div className="mt-8 w-48 h-1 bg-white/10 rounded-full overflow-hidden">
-            <div className="h-full bg-accent animate-[loading_2s_ease-in-out_infinite]" />
+            <div className="h-full bg-white animate-[loading_2s_ease-in-out_infinite]" />
           </div>
           <div className="mt-6 flex flex-col items-center gap-2">
              <p className="text-[10px] text-white/40 font-black tracking-widest uppercase animate-pulse">Press [B] for Setup</p>
