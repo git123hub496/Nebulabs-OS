@@ -2,7 +2,7 @@
 "use client"
 
 import React, { useState, useEffect } from 'react';
-import { Newspaper, MapPin, Search, RefreshCw, TrendingUp, Globe, Loader2, Bookmark, Share2 } from 'lucide-react';
+import { Newspaper, MapPin, Search, RefreshCw, TrendingUp, Globe, Loader2, Bookmark, Share2, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';

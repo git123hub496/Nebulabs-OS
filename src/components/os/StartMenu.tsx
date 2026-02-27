@@ -5,34 +5,14 @@ import React, { useState, useRef } from 'react';
 import { useOS, AppId, APP_INFO, StartMenuItem, StartMenuFolder } from '@/context/os-context';
 import { 
   Search, 
-  Settings, 
-  ShoppingBag, 
-  FileText, 
-  MessageSquare, 
-  FolderOpen,
-  Cloud,
-  Calculator as CalcIcon,
-  Terminal as TermIcon,
-  Power,
   RefreshCw,
-  LogOut,
-  Globe,
-  Newspaper,
-  Pin,
+  Power,
   PinOff,
+  Pin,
   Trash2,
-  Map as MapIcon,
-  Activity,
-  Calendar as CalendarIcon,
-  GraduationCap,
-  Presentation as PresentationIcon,
-  Smile,
-  Home,
-  ChevronRight,
-  Folder,
-  X,
   Edit2,
-  Code2
+  ChevronRight,
+  X
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -200,10 +180,10 @@ export const StartMenu: React.FC<StartMenuProps> = ({ onClose }) => {
   };
 
   const positionClasses = {
-    bottom: 'bottom-14 left-0 animate-in slide-in-from-bottom-2 origin-bottom-left',
-    top: 'top-14 left-0 animate-in slide-in-from-top-2 origin-top-left',
-    left: 'left-14 top-0 animate-in slide-in-from-left-2 origin-top-left',
-    right: 'right-14 top-0 animate-in slide-in-from-right-2 origin-top-right',
+    bottom: 'bottom-full mb-2 left-0 animate-in slide-in-from-bottom-2 origin-bottom-left',
+    top: 'top-full mt-2 left-0 animate-in slide-in-from-top-2 origin-top-left',
+    left: 'left-full ml-2 top-0 animate-in slide-in-from-left-2 origin-top-left',
+    right: 'right-full mr-2 top-0 animate-in slide-in-from-right-2 origin-top-right',
   };
 
   const filteredItems = startMenuLayout.filter(item => {
@@ -258,7 +238,7 @@ export const StartMenu: React.FC<StartMenuProps> = ({ onClose }) => {
               key={item.id}
               draggable
               onDragStart={(e) => handleDragStart(e, item.id)}
-              onDragOver={(e) => handleDragOver(e, item.id)}
+              onDragOver={(e) => handleDragOver(e, id)}
               onDrop={(e) => handleDrop(e, item.id)}
               className={cn(
                 "group flex flex-col items-center gap-2 p-2 rounded-xl transition-all relative",

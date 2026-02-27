@@ -1,17 +1,18 @@
+
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useOS, AppId, APP_INFO } from '@/context/os-context';
-import { Wifi, Volume2, FolderOpen, ShoppingBag, MessageSquare, Settings, Lock, Check, Loader2, VolumeX, Volume1, LayoutGrid, Battery, BatteryMedium, MessageCircle, GraduationCap, PinOff, EyeOff, Smile, Home, RotateCw, Clock as ClockIcon, Calendar as CalendarIcon, ChevronUp, Eye, User } from 'lucide-react';
+import { Wifi, Volume2, MessageCircle, PinOff, EyeOff, LayoutGrid, BatteryMedium, VolumeX, Volume1, Clock as ClockIcon, Calendar as CalendarIcon, ChevronUp, Eye, User, RotateCw, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { StartMenu } from './StartMenu';
 import { QuickSettings } from './QuickSettings';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   Tooltip,
-  TooltipContent,
   TooltipProvider,
   TooltipTrigger,
+  TooltipContent,
 } from "@/components/ui/tooltip";
 
 export const Taskbar: React.FC = () => {
@@ -141,6 +142,11 @@ export const Taskbar: React.FC = () => {
     right: 'right-0 top-0 bottom-0 w-1 cursor-pointer',
   };
 
+  const bgStyle = {
+    backgroundColor: `hsl(var(--background) / ${taskbarTransparency / 100})`,
+    borderColor: `hsl(var(--border) / ${taskbarTransparency / 100})`
+  };
+
   return (
     <>
       {/* Invisible Trigger for Auto-Hide */}
@@ -153,12 +159,12 @@ export const Taskbar: React.FC = () => {
 
       <div 
         className={cn(
-          "fixed flex z-[9999] transition-all duration-500 ease-in-out backdrop-blur-3xl",
+          "fixed grid z-[9999] transition-all duration-500 ease-in-out backdrop-blur-3xl",
           taskbarPosition === 'bottom' && "bottom-0 left-0 right-0 border-t",
           taskbarPosition === 'top' && "top-0 left-0 right-0 border-b",
           taskbarPosition === 'left' && "left-0 top-0 bottom-0 border-r",
           taskbarPosition === 'right' && "right-0 top-0 bottom-0 border-l",
-          isVertical ? "flex-col py-2" : "items-center px-2",
+          isVertical ? "grid-rows-[auto_1fr_auto] py-2" : "grid-cols-[1fr_auto_1fr] items-center px-2",
           isSchool && "border-blue-500/20",
           isKid && "border-pink-500/20"
         )}
@@ -166,18 +172,18 @@ export const Taskbar: React.FC = () => {
           [isVertical ? 'width' : 'height']: `${safeTaskbarSize}px`,
           transform: hideTransforms[taskbarPosition],
           opacity: isHidden ? 0 : 1,
-          backgroundColor: `hsl(var(--background) / ${taskbarTransparency / 100})`,
-          borderColor: `hsl(var(--border) / ${taskbarTransparency / 100})`
+          ...bgStyle
         }}
         onContextMenu={handleTaskbarContextMenu}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
-        <div className={cn("flex", isVertical ? "flex-col gap-1" : "gap-1")}>
+        {/* Left: Start and Widgets */}
+        <div className={cn("flex items-center", isVertical ? "flex-col gap-1" : "gap-1 justify-start")}>
           <button
             onClick={handleStartToggle}
             className={cn(
-              "p-2 rounded-md hover:bg-white/10 transition-all active:scale-95 group flex items-center justify-center min-w-[32px] min-h-[32px]",
+              "p-2 rounded-md hover:bg-white/10 transition-all active:scale-95 group flex items-center justify-center min-w-[32px] min-h-[32px] relative",
               isStartOpen && "bg-white/10"
             )}
           >
@@ -193,6 +199,7 @@ export const Taskbar: React.FC = () => {
                 N
               </span>
             )}
+            {isStartOpen && <StartMenu onClose={() => setIsStartOpen(false)} />}
           </button>
           
           {!isSchool && !isKid && (
@@ -209,13 +216,12 @@ export const Taskbar: React.FC = () => {
               <LayoutGrid size={iconSize} className={isWidgetsOpen ? "text-accent" : "text-white/60 group-hover:text-white"} />
             </button>
           )}
-          
-          {isStartOpen && <StartMenu onClose={() => setIsStartOpen(false)} />}
         </div>
 
+        {/* Center: Applications (Pinned and Active) */}
         <div className={cn(
-          "flex-1 flex gap-2 overflow-hidden",
-          isVertical ? "flex-col items-center justify-center" : "items-center justify-center"
+          "flex items-center",
+          isVertical ? "flex-col justify-center gap-2" : "justify-center gap-2"
         )}>
           {pinnedApps.map((appId, index) => {
             if (isKid && (appId === 'terminal' || appId === 'virus')) return null;
@@ -269,9 +275,10 @@ export const Taskbar: React.FC = () => {
           })}
         </div>
 
+        {/* Right: Status HUD and Identity */}
         <div className={cn(
-          "flex gap-3 text-white/70 z-10",
-          isVertical ? "flex-col items-center pb-2" : "items-center px-1"
+          "flex items-center",
+          isVertical ? "flex-col pb-2 gap-3" : "justify-end px-1 gap-3"
         )}>
           <button
             onClick={(e) => {
@@ -282,12 +289,19 @@ export const Taskbar: React.FC = () => {
               "p-2 rounded-md hover:bg-white/10 transition-all active:scale-95 group flex items-center justify-center min-w-[32px] min-h-[32px]",
               isChatOpen && (isSchool ? "bg-blue-500/20 text-blue-400" : isKid ? "bg-pink-500/20 text-pink-400" : "bg-accent/20 text-accent")
             )}
-            title={isSchool ? "Nebula Classroom" : isKid ? "Family Chat" : "District Communication"}
+            title="Chat Hub"
           >
             <MessageCircle size={iconSize} className={isChatOpen ? (isSchool ? "text-blue-400" : isKid ? "text-pink-400" : "text-accent") : "text-white/60 group-hover:text-white"} />
           </button>
 
-          <Avatar className="w-8 h-8 border border-white/10 cursor-pointer hover:border-accent transition-colors" onClick={(e) => { e.stopPropagation(); setIsQuickSettingsOpen(!isQuickSettingsOpen); }}>
+          <Avatar 
+            className="w-8 h-8 border border-white/10 cursor-pointer hover:border-accent transition-colors" 
+            onClick={(e) => { 
+              e.stopPropagation(); 
+              openApp('settings', 'Settings');
+            }}
+            title="Edit Identity"
+          >
             <AvatarImage src={currentUser?.avatarUrl} className="object-cover" />
             <AvatarFallback 
               className="text-[10px] font-bold text-white"
@@ -306,7 +320,7 @@ export const Taskbar: React.FC = () => {
                     setIsQuickSettingsOpen(!isQuickSettingsOpen);
                   }}
                   className={cn(
-                    "flex items-center gap-2 px-3 py-1.5 rounded-xl hover:bg-white/10 transition-all active:scale-95 group",
+                    "flex items-center gap-2 px-3 py-1.5 rounded-xl hover:bg-white/10 transition-all active:scale-95 group relative",
                     isQuickSettingsOpen && (isSchool ? "bg-blue-500/20 text-blue-400" : isKid ? "bg-pink-500/20 text-pink-400" : "bg-accent/20 text-accent"),
                     isVertical ? "flex-col py-3 px-1.5" : ""
                   )}
@@ -334,9 +348,10 @@ export const Taskbar: React.FC = () => {
                       <div className="h-3 w-10 bg-white/10 rounded animate-pulse" />
                     )}
                   </div>
+                  {isQuickSettingsOpen && <QuickSettings />}
                 </button>
               </TooltipTrigger>
-              <TooltipContent side="top" className="glass border-white/10 p-4 space-y-2 mb-2 animate-in fade-in zoom-in-95">
+              <TooltipContent side={taskbarPosition === 'top' ? 'bottom' : 'top'} className="glass border-white/10 p-4 space-y-2 mb-2 animate-in fade-in zoom-in-95">
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-lg bg-accent/20 flex items-center justify-center text-accent">
                     <ClockIcon size={16} />
@@ -370,8 +385,6 @@ export const Taskbar: React.FC = () => {
             title="Show Desktop"
           />
         </div>
-
-        {isQuickSettingsOpen && <QuickSettings />}
       </div>
 
       {taskbarMenu && (

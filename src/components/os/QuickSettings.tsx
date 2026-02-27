@@ -1,3 +1,4 @@
+
 "use client"
 
 import React from 'react';
@@ -17,7 +18,6 @@ import {
   BellOff, 
   Monitor,
   Check,
-  ChevronRight,
   Plus,
   Layout,
   RefreshCcw
@@ -57,10 +57,10 @@ export const QuickSettings: React.FC = () => {
   const isVertical = taskbarPosition === 'left' || taskbarPosition === 'right';
 
   const positionClasses = {
-    bottom: 'bottom-14 right-4 animate-in slide-in-from-bottom-2 origin-bottom-right',
-    top: 'top-14 right-4 animate-in slide-in-from-top-2 origin-top-right',
-    left: 'left-14 bottom-4 animate-in slide-in-from-left-2 origin-bottom-left',
-    right: 'right-14 bottom-4 animate-in slide-in-from-right-2 origin-bottom-right',
+    bottom: 'bottom-full mb-2 right-0 animate-in slide-in-from-bottom-2 origin-bottom-right',
+    top: 'top-full mt-2 right-0 animate-in slide-in-from-top-2 origin-top-right',
+    left: 'left-full ml-2 bottom-0 animate-in slide-in-from-left-2 origin-bottom-left',
+    right: 'right-full mr-2 bottom-0 animate-in slide-in-from-right-2 origin-bottom-right',
   };
 
   const handleToggleTheme = () => {
@@ -78,7 +78,7 @@ export const QuickSettings: React.FC = () => {
   return (
     <div 
       className={cn(
-        "fixed glass rounded-2xl border border-white/10 shadow-2xl z-[9999] p-6 flex flex-col gap-6",
+        "absolute glass rounded-2xl border border-white/10 shadow-2xl z-[9999] p-6 flex flex-col gap-6",
         isVertical ? "w-[320px]" : "w-[380px]",
         positionClasses[taskbarPosition]
       )}
