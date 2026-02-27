@@ -437,53 +437,6 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     wakeOnLan: false
   });
 
-  // INITIALIZE START MENU IF EMPTY
-  useEffect(() => {
-    if (startMenuLayout.length === 0) {
-      const initialLayout: StartMenuItem[] = INITIAL_APPS.map(appId => ({
-        id: `item-${appId}`,
-        type: 'app',
-        appId
-      }));
-      setStartMenuLayout(initialLayout);
-    }
-  }, [startMenuLayout.length]);
-
-  useEffect(() => {
-    const savedBios = localStorage.getItem('nebula_bios_settings');
-    if (savedBios) {
-      setBiosSettings(JSON.parse(savedBios));
-    }
-  }, []);
-
-  const updateBIOSSettings = (settings: Partial<BIOSSettings>) => {
-    const updated = { ...biosSettings, ...settings };
-    setBiosSettings(updated);
-    localStorage.setItem('nebula_bios_settings', JSON.stringify(updated));
-  };
-
-  const getFullDeviceName = useCallback(() => {
-    return `${biosSettings.deviceType} ${biosSettings.deviceName}`;
-  }, [biosSettings]);
-
-  useEffect(() => {
-    if (emails.length === 0) {
-      setEmails([
-        {
-          id: '1',
-          from: 'Nebulabs Corp',
-          to: 'user',
-          subject: `Welcome to your ${getFullDeviceName()}`,
-          content: `Dear User,\n\nCongratulations on your new hardware! Your ${getFullDeviceName()} is the latest in quantum-threaded mobile workstations. We have pre-installed Nebula-Core v4.5.2 for maximum performance.\n\nBest regards,\nNebulabs Hardware Division`,
-          timestamp: 'Today, 10:00 AM',
-          isRead: false,
-          isSystem: true,
-          folder: 'inbox'
-        },
-      ]);
-    }
-  }, [getFullDeviceName, emails.length]);
-
   const playSound = useCallback((type: 'click' | 'open' | 'close' | 'notify') => {
     if (typeof window === 'undefined') return;
     const urls = {
@@ -512,110 +465,6 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       playSound('notify');
     }
   }, [currentDisplayId, playSound]);
-
-  const markEmailRead = (id: string) => {
-    setEmails(prev => prev.map(email => email.id === id ? { ...email, isRead: true } : email));
-  };
-
-  const archiveEmail = (id: string) => {
-    setEmails(prev => prev.map(e => e.id === id ? { ...e, folder: 'archive' } : e));
-  };
-
-  const deleteEmail = (id: string) => {
-    setEmails(prev => prev.map(e => e.id === id ? { ...e, folder: 'trash' } : e));
-  };
-
-  const restoreEmail = (id: string) => {
-    setEmails(prev => prev.map(e => e.id === id ? { ...e, folder: 'inbox' } : e));
-  };
-
-  const permanentlyDeleteEmail = (id: string) => {
-    setEmails(prev => prev.filter(e => e.id !== id));
-  };
-
-  const sendEmail = async (to: string, subject: string, content: string) => {
-    const newId = Math.random().toString(36).substr(2, 9);
-    const sentEmail: Email = {
-      id: newId,
-      from: currentUser?.username || 'user',
-      to,
-      subject,
-      content,
-      timestamp: 'Just now',
-      isRead: true,
-      folder: 'sent'
-    };
-
-    setEmails(prev => [sentEmail, ...prev]);
-    addNotification("Email Sent", `Message delivered to ${to}.`, 'app');
-
-    try {
-      const firstRecipient = to.split(',')[0].trim();
-      const response = await respondToEmail({ toName: firstRecipient, subject, content });
-      
-      setTimeout(() => {
-        const replyEmail: Email = {
-          id: Math.random().toString(36).substr(2, 9),
-          from: firstRecipient,
-          to: currentUser?.username || 'user',
-          subject: response.responseSubject,
-          content: response.responseContent,
-          timestamp: 'Just now',
-          isRead: false,
-          folder: 'inbox'
-        };
-        setEmails(prev => [replyEmail, ...prev]);
-        addNotification(`New Mail: ${firstRecipient}`, response.responseSubject, 'app');
-      }, 3000 + Math.random() * 5000);
-    } catch (e) {
-      console.error("AI Mail Core: Response generation failed.", e);
-    }
-  };
-
-  const sendChatMessage = async (text: string, recipient: string, role: string) => {
-    if (!biosSettings.networkStack) {
-      addNotification("Hardware Error", "Network stack is disabled in BIOS.", "security");
-      return;
-    }
-
-    const msg: ChatMessage = {
-      id: Math.random().toString(36).substr(2, 9),
-      sender: currentUser?.username || 'Me',
-      recipient: recipient,
-      text,
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      isBot: false
-    };
-    setChatMessages(prev => [...prev, msg]);
-
-    try {
-      const chatHistory = chatMessages.slice(-5).map(m => `${m.sender}: ${m.text}`);
-      const response = await respondToChat({ 
-        colleagueName: recipient, 
-        colleagueRole: role, 
-        message: text,
-        history: chatHistory,
-        isWorkMode: currentUser?.isWorkAccount
-      });
-
-      setTimeout(() => {
-        const botMsg: ChatMessage = {
-          id: Math.random().toString(36).substr(2, 9),
-          sender: recipient,
-          recipient: currentUser?.username || 'user',
-          text: response.response,
-          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          isBot: true
-        };
-        setChatMessages(prev => [...prev, botMsg]);
-        if (!isChatOpen) {
-          addNotification(`Chat: ${recipient}`, response.response.slice(0, 30) + '...', 'app');
-        }
-      }, 1000 + Math.random() * 1000);
-    } catch (error) {
-      console.error("Chat AI Failure:", error);
-    }
-  };
 
   const saveSetting = useCallback((key: string, value: any) => {
     if (currentUser) {
@@ -671,9 +520,23 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
         }
       }
     }
+    const savedBios = localStorage.getItem('nebula_bios_settings');
+    if (savedBios) setBiosSettings(JSON.parse(savedBios));
+
     const timer = setTimeout(() => setPowerStatusState('on'), 800);
     return () => clearTimeout(timer);
   }, [loadSettings]);
+
+  useEffect(() => {
+    if (startMenuLayout.length === 0) {
+      const initialLayout: StartMenuItem[] = INITIAL_APPS.map(appId => ({
+        id: `item-${appId}`,
+        type: 'app',
+        appId
+      }));
+      setStartMenuLayout(initialLayout);
+    }
+  }, [startMenuLayout.length]);
 
   const login = useCallback((userId: string, password?: string): boolean => {
     const user = accounts.find(a => a.id === userId);
@@ -785,7 +648,109 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     localStorage.setItem('nebula_accounts', JSON.stringify(updatedAccounts));
   };
 
-  const clearNotifications = () => setNotifications([]);
+  const markEmailRead = (id: string) => {
+    setEmails(prev => prev.map(email => email.id === id ? { ...email, isRead: true } : email));
+  };
+
+  const archiveEmail = (id: string) => {
+    setEmails(prev => prev.map(e => e.id === id ? { ...e, folder: 'archive' } : e));
+  };
+
+  const deleteEmail = (id: string) => {
+    setEmails(prev => prev.map(e => e.id === id ? { ...e, folder: 'trash' } : e));
+  };
+
+  const restoreEmail = (id: string) => {
+    setEmails(prev => prev.map(e => e.id === id ? { ...e, folder: 'inbox' } : e));
+  };
+
+  const permanentlyDeleteEmail = (id: string) => {
+    setEmails(prev => prev.filter(e => e.id !== id));
+  };
+
+  const sendEmail = async (to: string, subject: string, content: string) => {
+    const newId = Math.random().toString(36).substr(2, 9);
+    const sentEmail: Email = {
+      id: newId,
+      from: currentUser?.username || 'user',
+      to,
+      subject,
+      content,
+      timestamp: 'Just now',
+      isRead: true,
+      folder: 'sent'
+    };
+
+    setEmails(prev => [sentEmail, ...prev]);
+    addNotification("Email Sent", `Message delivered to ${to}.`, 'app');
+
+    try {
+      const firstRecipient = to.split(',')[0].trim();
+      const response = await respondToEmail({ toName: firstRecipient, subject, content });
+      
+      setTimeout(() => {
+        const replyEmail: Email = {
+          id: Math.random().toString(36).substr(2, 9),
+          from: firstRecipient,
+          to: currentUser?.username || 'user',
+          subject: response.responseSubject,
+          content: response.responseContent,
+          timestamp: 'Just now',
+          isRead: false,
+          folder: 'inbox'
+        };
+        setEmails(prev => [replyEmail, ...prev]);
+        addNotification(`New Mail: ${firstRecipient}`, response.responseSubject, 'app');
+      }, 3000 + Math.random() * 5000);
+    } catch (e) {
+      console.error("AI Mail Core: Response generation failed.", e);
+    }
+  };
+
+  const sendChatMessage = async (text: string, recipient: string, role: string) => {
+    if (!biosSettings.networkStack) {
+      addNotification("Hardware Error", "Network stack is disabled in BIOS.", "security");
+      return;
+    }
+
+    const msg: ChatMessage = {
+      id: Math.random().toString(36).substr(2, 9),
+      sender: currentUser?.username || 'Me',
+      recipient: recipient,
+      text,
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      isBot: false
+    };
+    setChatMessages(prev => [...prev, msg]);
+
+    try {
+      const chatHistory = chatMessages.slice(-5).map(m => `${m.sender}: ${m.text}`);
+      const response = await respondToChat({ 
+        colleagueName: recipient, 
+        colleagueRole: role, 
+        message: text,
+        history: chatHistory,
+        isWorkMode: currentUser?.isWorkAccount
+      });
+
+      setTimeout(() => {
+        const botMsg: ChatMessage = {
+          id: Math.random().toString(36).substr(2, 9),
+          sender: recipient,
+          recipient: currentUser?.username || 'user',
+          text: response.response,
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          isBot: true
+        };
+        setChatMessages(prev => [...prev, botMsg]);
+        if (!isChatOpen) {
+          addNotification(`Chat: ${recipient}`, response.response.slice(0, 30) + '...', 'app');
+        }
+      }, 1000 + Math.random() * 1000);
+    } catch (error) {
+      console.error("Chat AI Failure:", error);
+    }
+  };
 
   const openApp = (appId: AppId, title: string, params?: any) => {
     if (appId === 'sticky-notes') {

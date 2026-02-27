@@ -33,7 +33,8 @@ import {
   Home,
   Palette,
   Tv,
-  Monitor
+  Monitor,
+  Camera
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -84,7 +85,8 @@ export const LoginScreen: React.FC = () => {
   const { 
     accounts, login, createAccount, deleteAccount, resetUserPassword, wallpaper, 
     setTheme, theme, setAccentColor, shutDown, restart,
-    isInverted, setInverted, glassEnabled, setGlassEnabled, biosSettings, updateBIOSSettings, factoryReset, playSound
+    isInverted, setInverted, glassEnabled, setGlassEnabled, biosSettings, updateBIOSSettings, factoryReset, playSound,
+    updateUserAvatar, updateUserPassword
   } = useOS();
   
   const [step, setStep] = useState<'select' | 'hardware' | 'create' | 'customize' | 'initialize' | 'recovery'>('select');
@@ -111,7 +113,9 @@ export const LoginScreen: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    if (accounts.length === 0 && step === 'select') {
+    // If we're on step select but there are no accounts, we must set up the machine first
+    const lastEnrollment = localStorage.getItem('nebula_machine_enrolled');
+    if (accounts.length === 0 && step === 'select' && !lastEnrollment) {
       setStep('hardware');
     }
   }, [accounts, step]);
@@ -141,6 +145,7 @@ export const LoginScreen: React.FC = () => {
                     creationAccountType === 'kid',
                     creationAccountType === 'school' ? newDistrict : undefined
                   );
+                  localStorage.setItem('nebula_machine_enrolled', 'true');
                 } else {
                   if (selectedAccount) {
                     resetUserPassword(selectedAccount.id, newPassword);
@@ -239,7 +244,7 @@ export const LoginScreen: React.FC = () => {
         <div className="text-center space-y-2">
           <h1 className="text-4xl font-black text-white tracking-tighter uppercase italic">Nebulabs WebOS</h1>
           <p className="text-white/40 text-sm font-medium uppercase tracking-[0.2em]">
-            {step === 'initialize' ? "System Staging" : step === 'hardware' ? "Hardware Enrollment" : step === 'customize' ? "Workspace Personalization" : selectedAccount ? "Identity Verification" : "Select Identity"}
+            {step === 'initialize' ? "System Staging" : step === 'hardware' ? "Hardware Enrollment" : step === 'customize' ? "Workspace Personalization" : step === 'recovery' ? "Identity Recovery" : selectedAccount ? "Identity Verification" : "Select Identity"}
           </p>
         </div>
 
@@ -415,11 +420,11 @@ export const LoginScreen: React.FC = () => {
                 </div>
                 <Progress value={progress} className="h-2 bg-white/5" />
               </div>
-              <div className="bg-black/20 rounded-xl p-4 h-32 overflow-hidden border border-white/5 font-mono text-[10px] space-y-1">
-                <div className="font-bold text-green-500">{currentLog}</div>
-                <div className="text-white/20 opacity-40">{"Hardware link active"}</div>
-                <div className="text-white/20 opacity-40">{"Partition wipe successful"}</div>
-                <div className="text-white/20 opacity-40">{"Cryptographic key staged"}</div>
+              <div className="bg-black/20 rounded-xl p-4 h-32 overflow-hidden border border-white/5 font-mono text-[10px] space-y-1 text-green-500">
+                <div className="font-bold">{currentLog}</div>
+                <div className="opacity-40">{">"} Hardware link active</div>
+                <div className="opacity-40">{">"} Partition wipe successful</div>
+                <div className="opacity-40">{">"} Cryptographic key staged</div>
               </div>
             </div>
           </div>

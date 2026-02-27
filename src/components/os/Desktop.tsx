@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { useOS, AppId, WindowInstance, APP_INFO } from '@/context/os-context';
+import { useOS, AppId, WindowInstance, APP_INFO, AccentColor } from '@/context/os-context';
 import { Window } from './Window';
 import { Taskbar } from './Taskbar';
 import { ContextMenu } from './ContextMenu';
@@ -377,15 +377,44 @@ export const Desktop: React.FC = () => {
     let color = '#000000';
     if (cursorColor === 'white') color = '#ffffff';
     else if (cursorColor === 'accent') {
-      const computedStyle = getComputedStyle(document.documentElement);
-      const accentVal = computedStyle.getPropertyValue('--accent').trim();
-      color = accentVal.includes('%') ? `hsl(${accentVal})` : accentVal;
+      const hexToHslString = (hex: string) => {
+        const r = parseInt(hex.slice(1, 3), 16) / 255;
+        const g = parseInt(hex.slice(3, 5), 16) / 255;
+        const b = parseInt(hex.slice(5, 7), 16) / 255;
+        const max = Math.max(r, g, b), min = Math.min(r, g, b);
+        let h = 0, s, l = (max + min) / 2;
+        if (max === min) h = s = 0;
+        else {
+          const d = max - min;
+          s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+          switch (max) {
+            case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+            case g: h = (b - r) / d + 2; break;
+            case b: h = (r - g) / d + 4; break;
+          }
+          h /= 6;
+        }
+        return `${h * 360} ${s * 100}% ${l * 100}%`;
+      };
+
+      const accentVarMap: Record<AccentColor, string> = {
+        'purple': '262.1 83.3% 57.8%',
+        'blue': '217.2 91.2% 59.8%',
+        'rose': '346.8 77.2% 49.8%',
+        'orange': '24.6 95% 53.1%',
+        'green': '142.1 76.2% 36.3%',
+        'grey': '210 20% 50%',
+        'default': '262.1 83.3% 57.8%',
+        'custom': customAccentHex ? hexToHslString(customAccentHex) : '262.1 83.3% 57.8%'
+      };
+      
+      const hsl = accentVarMap[accentColor];
+      color = `hsl(${hsl})`;
     }
 
     const size = 24 * mouserScale;
-    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24" fill="${color}" stroke="white" stroke-width="1.5"><path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z"/></svg>`;
-    const encoded = typeof window !== 'undefined' ? btoa(svg) : '';
-    return { '--cursor-url': `url('data:image/svg+xml;base64,${encoded}'), auto` } as React.CSSProperties;
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24" fill="${color.replace('#', '%23')}" stroke="white" stroke-width="1.5"><path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z"/></svg>`;
+    return { '--cursor-url': `url('data:image/svg+xml;utf8,${svg}'), auto` } as React.CSSProperties;
   }, [cursorColor, mouserScale, isClient, accentColor, customAccentHex]);
 
   if (showBIOS) {
