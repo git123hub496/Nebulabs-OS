@@ -386,15 +386,18 @@ export const LoginScreen: React.FC = () => {
                 <KeyRound className="absolute left-4 top-1/2 -translate-y-1/2 text-accent" size={18} />
                 <Input type="password" autoFocus value={passwordInput} onChange={(e) => { setPasswordInput(e.target.value); setIsError(false); }} placeholder="Credentials" className={cn("bg-white/5 border-white/10 text-white h-14 pl-12 rounded-2xl focus-visible:ring-accent text-center tracking-[0.5em] text-xl font-black", isError ? "border-destructive animate-shake" : "")} />
               </div>
-              <div className="flex gap-3 w-full">
-                <Button type="button" variant="ghost" className="flex-1 h-12 text-white/40 hover:text-white rounded-2xl font-bold" onClick={() => setSelectedAccount(null)}>Cancel</Button>
-                <Button type="submit" className="flex-1 h-12 bg-accent text-primary-foreground font-black rounded-2xl hover:bg-accent/80 uppercase tracking-widest">Sign In</Button>
+              <div className="space-y-4">
+                <div className="flex gap-3 w-full">
+                  <Button type="button" variant="ghost" className="flex-1 h-12 text-white/40 hover:text-white rounded-2xl font-bold" onClick={() => setSelectedAccount(null)}>Cancel</Button>
+                  <Button type="submit" className="flex-1 h-12 bg-accent text-primary-foreground font-black rounded-2xl hover:bg-accent/80 uppercase tracking-widest">Sign In</Button>
+                </div>
+                <button type="button" onClick={() => setStep('recovery')} className="w-full text-[10px] font-black uppercase tracking-widest text-white/20 hover:text-accent transition-colors">Forgot Password? / Identity Recovery</button>
               </div>
             </form>
           </div>
         )}
 
-        {step === 'initialize' && (
+        {(step === 'initialize' || step === 'recovery') && (
           <div className="glass p-10 rounded-[3rem] border border-white/10 w-full max-w-lg flex flex-col items-center gap-8 animate-in fade-in shadow-2xl">
             <div className="relative">
               <div className="w-20 h-20 rounded-3xl bg-accent/20 flex items-center justify-center animate-pulse">
@@ -407,7 +410,7 @@ export const LoginScreen: React.FC = () => {
             <div className="w-full space-y-6">
               <div className="space-y-2">
                 <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-accent">
-                  <span>Enrolling Identity Partition</span>
+                  <span>{step === 'initialize' ? 'Enrolling Identity Partition' : 'Identity Verification Bridge'}</span>
                   <span>{progress}%</span>
                 </div>
                 <Progress value={progress} className="h-2 bg-white/5" />

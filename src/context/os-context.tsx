@@ -437,6 +437,18 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     wakeOnLan: false
   });
 
+  // INITIALIZE START MENU IF EMPTY
+  useEffect(() => {
+    if (startMenuLayout.length === 0) {
+      const initialLayout: StartMenuItem[] = INITIAL_APPS.map(appId => ({
+        id: `item-${appId}`,
+        type: 'app',
+        appId
+      }));
+      setStartMenuLayout(initialLayout);
+    }
+  }, [startMenuLayout.length]);
+
   useEffect(() => {
     const savedBios = localStorage.getItem('nebula_bios_settings');
     if (savedBios) {
