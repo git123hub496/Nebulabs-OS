@@ -35,13 +35,17 @@ import {
   Tv,
   Monitor,
   Camera,
-  Search
+  Search,
+  Cpu,
+  Zap,
+  Shield
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';
+import { Switch } from '@/components/ui/switch';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -247,7 +251,12 @@ export const LoginScreen: React.FC = () => {
 
       <div className="relative z-10 flex flex-col items-center gap-12 animate-in fade-in zoom-in-95 duration-700 w-full max-w-4xl px-8">
         <div className="text-center space-y-2">
-          <h1 className="text-4xl font-black text-white tracking-tighter uppercase italic">Nebulabs WebOS</h1>
+          <div className="flex items-center justify-center gap-3">
+            <h1 className="text-4xl font-black text-white tracking-tighter uppercase italic">Nebulabs WebOS</h1>
+            {biosSettings.isLite && (
+              <span className="bg-blue-500 text-white text-[10px] font-black uppercase px-2 py-0.5 rounded tracking-widest">LITE</span>
+            )}
+          </div>
           <p className="text-white/40 text-sm font-medium uppercase tracking-[0.2em]">
             {step === 'initialize' ? "System Staging" : step === 'hardware' ? "Hardware Enrollment" : step === 'customize' ? "Workspace Personalization" : step === 'recovery' ? "Identity Recovery" : selectedAccount ? "Identity Verification" : "Select Identity"}
           </p>
@@ -284,7 +293,7 @@ export const LoginScreen: React.FC = () => {
           <div className="glass p-10 rounded-[2.5rem] border border-white/10 w-full max-w-md flex flex-col gap-8 animate-in slide-in-from-bottom-4 shadow-2xl">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center"><Monitor className="text-accent" size={24} /></div>
-              <h2 className="text-xl font-bold text-white tracking-tight">Machine Signature</h2>
+              <h2 className="text-xl font-bold text-white tracking-tight">Machine Configuration</h2>
             </div>
             <form onSubmit={handleHardwareSubmit} className="space-y-6">
               <div className="space-y-4">
@@ -301,12 +310,32 @@ export const LoginScreen: React.FC = () => {
                     </button>
                   </div>
                 </div>
+
+                <div className="p-4 bg-white/5 rounded-2xl border border-white/5 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center text-blue-400"><Cpu size={16} /></div>
+                      <div className="space-y-0.5">
+                        <p className="text-[10px] font-black text-white uppercase">Lite Edition</p>
+                        <p className="text-[8px] text-white/40 uppercase">For Legacy Hardware</p>
+                      </div>
+                    </div>
+                    <Switch 
+                      checked={biosSettings.isLite} 
+                      onCheckedChange={(checked) => updateBIOSSettings({ isLite: checked })} 
+                    />
+                  </div>
+                  <p className="text-[9px] text-white/30 leading-relaxed italic">
+                    Lite mode reduces pre-installed software and disables heavy visual effects for older systems.
+                  </p>
+                </div>
+
                 <div className="space-y-2">
                   <label className="text-[10px] font-black text-accent uppercase tracking-widest px-1">Model Identifier</label>
                   <Input value={biosSettings.deviceName} onChange={(e) => updateBIOSSettings({ deviceName: e.target.value })} placeholder="e.g. Supernova" className="bg-white/5 border-white/10 text-white h-12 rounded-xl focus-visible:ring-accent" />
                 </div>
               </div>
-              <Button type="submit" className="w-full h-14 bg-accent text-primary-foreground font-black rounded-2xl hover:bg-accent/80 gap-2 uppercase tracking-[0.2em]">Deploy Hardware <ArrowRight size={18} /></Button>
+              <Button type="submit" className="w-full h-14 bg-accent text-primary-foreground font-black rounded-2xl hover:bg-accent/80 gap-2 uppercase tracking-[0.2em]">Deploy Configuration <ArrowRight size={18} /></Button>
             </form>
           </div>
         )}

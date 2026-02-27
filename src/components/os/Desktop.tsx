@@ -54,7 +54,9 @@ import {
   Tv,
   StickyNote as StickyNoteIcon,
   Code2,
-  Smartphone
+  Smartphone,
+  ShieldCheck,
+  ShieldAlert
 } from 'lucide-react';
 import { FileExplorer } from '../apps/FileExplorer';
 import { AppStore } from '../apps/AppStore';
@@ -120,22 +122,34 @@ const APP_COMPONENTS: Record<AppId, (win: WindowInstance) => React.ReactNode> = 
   'nde': (win) => <NDE />,
   'sticky-notes': (win) => <div className="p-8 text-center text-white/40"><p className="text-sm font-bold">Sticky Notes Manager</p><p className="text-[10px] uppercase">A new note has been created on your desktop.</p></div>,
   'info': (win) => (
+    <DesktopInfoApp />
+  ),
+};
+
+const DesktopInfoApp = () => {
+  const { biosSettings } = useOS();
+  return (
     <div className="p-8 space-y-6 bg-[#161d25] h-full text-white/90 overflow-auto">
       <div className="flex items-center gap-4 mb-8">
         <div className="w-16 h-16 rounded-3xl bg-accent/20 flex items-center justify-center border border-accent/20">
           <Info size={32} className="text-accent" />
         </div>
         <div>
-          <h1 className="text-2xl font-black">Nebula System Info</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-black">Nebula System Info</h1>
+            {biosSettings.isLite && (
+              <span className="bg-blue-500 text-white text-[10px] font-black uppercase px-2 py-0.5 rounded tracking-widest">LITE</span>
+            )}
+          </div>
           <p className="text-xs uppercase tracking-widest text-white/60 font-bold">Kernel Build v4.5.2-STABLE • 2026</p>
         </div>
       </div>
       <div className="grid gap-4">
         {[
-          { label: "OS Platform", value: "Nebulabs WebOS Web Edition" },
+          { label: "OS Platform", value: `Nebulabs WebOS ${biosSettings.isLite ? 'Lite' : 'Pro'}` },
           { label: "Kernel Engine", value: "React 19 + Turbopack" },
-          { label: "Memory Type", value: "64GB Virtual LPDDR5" },
-          { label: "Storage", value: "256GB Cloud Partition" },
+          { label: "Memory Type", value: biosSettings.isLite ? "16GB Virtual LPDDR4" : "64GB Virtual LPDDR5" },
+          { label: "Storage", value: biosSettings.isLite ? "64GB SSD Partition" : "256GB Cloud Partition" },
           { label: "Processor", value: "Nebulabs Quantum-X Threaded Core" },
           { label: "UI Framework", value: "Tailwind v4 Precision Engine" }
         ].map((spec, i) => (
@@ -146,7 +160,7 @@ const APP_COMPONENTS: Record<AppId, (win: WindowInstance) => React.ReactNode> = 
         ))}
       </div>
     </div>
-  ),
+  );
 };
 
 export const Desktop: React.FC = () => {
@@ -203,7 +217,6 @@ export const Desktop: React.FC = () => {
     }
   }, [powerStatus]);
 
-  // Mobile Friendly notification
   useEffect(() => {
     if (isClient && isMobile && powerStatus === 'on' && currentUser) {
       const timer = setTimeout(() => {
@@ -753,7 +766,12 @@ export const Desktop: React.FC = () => {
           <div className="w-24 h-24 bg-white/10 rounded-3xl flex items-center justify-center mb-8 animate-pulse border border-white/20">
             <div className="w-12 h-12 bg-white rounded-full shadow-[0_0_20px_rgba(255,255,255,0.5)]" />
           </div>
-          <h1 className="text-2xl font-black tracking-[0.3em] text-white/80 uppercase">Nebula WebOS</h1>
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl font-black tracking-[0.3em] text-white/80 uppercase">Nebula WebOS</h1>
+            {biosSettings.isLite && (
+              <span className="bg-blue-500 text-white text-[8px] font-black uppercase px-2 py-0.5 rounded tracking-widest">LITE</span>
+            )}
+          </div>
           {!biosSettings.secureBoot && (
             <p className="text-[10px] text-yellow-400 font-bold uppercase tracking-[0.3em] animate-pulse mt-4">Warning: Secure Boot Disabled</p>
           )}
@@ -767,7 +785,6 @@ export const Desktop: React.FC = () => {
         </div>
       )}
 
-      {/* Mobile Optimization Badge */}
       {isMobile && powerStatus === 'on' && !shouldRenderBoot && currentUser && (
         <div className="fixed bottom-16 left-4 z-[9996] animate-in slide-in-from-left-4 duration-500">
           <div className="bg-accent/20 backdrop-blur-xl border border-accent/40 rounded-full px-3 py-1 flex items-center gap-2 shadow-lg shadow-accent/10">

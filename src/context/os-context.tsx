@@ -117,6 +117,7 @@ export interface FileSystemItem {
   parentId: string | null;
   content?: string;
   size?: number;
+  isSystem?: boolean;
 }
 
 export interface DesktopShortcut {
@@ -162,6 +163,7 @@ export interface BIOSSettings {
   integratedGfx: boolean;
   acLossPolicy: 'Power On' | 'Stay Off' | 'Last State';
   wakeOnLan: boolean;
+  isLite: boolean;
 }
 
 export interface StartMenuItem {
@@ -230,7 +232,6 @@ interface OSContextType {
   startMenuLayout: StartMenuItem[];
   globalScale: number;
   
-  // Location & Weather
   userLocation: { lat: number, lon: number } | null;
   locationName: string;
   weatherData: { temp: number, condition: string } | null;
@@ -363,14 +364,14 @@ const INITIAL_FILES: FileSystemItem[] = [
   { id: '1', name: 'Documents', type: 'folder', parentId: null },
   { id: '2', name: 'Pictures', type: 'folder', parentId: null },
   { id: '3', name: 'README.md', type: 'file', parentId: null, content: '# Nebula WebOS\nProprietary Kernel v4.5.2 stable.' },
-  { id: 'sys', name: 'System', type: 'folder', parentId: null },
-  { id: 'kernel', name: 'kernel.sys', type: 'file', parentId: 'sys', size: 1048576, content: '[BINARY_DATA_ENCRYPTED]' },
-  { id: 'cfg', name: 'config', type: 'folder', parentId: 'sys' },
-  { id: 'reg', name: 'registry.dat', type: 'file', parentId: 'cfg', size: 4096, content: '{"version": "4.5.2", "status": "active"}' },
-  { id: 'drv', name: 'drivers', type: 'folder', parentId: 'sys' },
-  { id: 'gfx', name: 'display.drv', type: 'file', parentId: 'drv', size: 524288 },
-  { id: 'log', name: 'logs', type: 'folder', parentId: 'sys' },
-  { id: 'boot', name: 'boot.log', type: 'file', parentId: 'log', size: 2048, content: '[10:00:01] BIOS check OK\n[10:00:02] GPU drivers loaded\n[10:00:05] Kernel Handshake active' },
+  { id: 'sys', name: 'System', type: 'folder', parentId: null, isSystem: true },
+  { id: 'kernel', name: 'kernel.sys', type: 'file', parentId: 'sys', size: 1048576, content: '[BINARY_DATA_ENCRYPTED]', isSystem: true },
+  { id: 'cfg', name: 'config', type: 'folder', parentId: 'sys', isSystem: true },
+  { id: 'reg', name: 'registry.dat', type: 'file', parentId: 'cfg', size: 4096, content: '{"version": "4.5.2", "status": "active"}', isSystem: true },
+  { id: 'drv', name: 'drivers', type: 'folder', parentId: 'sys', isSystem: true },
+  { id: 'gfx', name: 'display.drv', type: 'file', parentId: 'drv', size: 524288, isSystem: true },
+  { id: 'log', name: 'logs', type: 'folder', parentId: 'sys', isSystem: true },
+  { id: 'boot', name: 'boot.log', type: 'file', parentId: 'log', size: 2048, content: '[10:00:01] BIOS check OK\n[10:00:02] GPU drivers loaded\n[10:00:05] Kernel Handshake active', isSystem: true },
 ];
 
 const INITIAL_DESKTOP: DesktopShortcut[] = [
@@ -380,8 +381,11 @@ const INITIAL_DESKTOP: DesktopShortcut[] = [
   { id: 'store', label: 'App Store', icon: ShoppingBag, x: PADDING, y: PADDING + (GRID_Y * 3) },
 ];
 
-const INITIAL_APPS: AppId[] = ['store', 'files', 'settings', 'assistant', 'notes', 'calc', 'terminal', 'browser', 'trash', 'news', 'maps', 'monitor', 'calendar', 'snake', 'minesweeper', 'update', 'paint', 'info', 'camera', 'slides', 'mail', 'nebula-v', 'google-search', 'shop', 'screencast', 'sticky-notes', 'nde'];
-const INITIAL_PINNED: AppId[] = ['files', 'store', 'shop', 'assistant', 'google-search', 'browser', 'settings', 'mail', 'sticky-notes'];
+const FULL_APPS: AppId[] = ['store', 'files', 'settings', 'assistant', 'notes', 'calc', 'terminal', 'browser', 'trash', 'news', 'maps', 'monitor', 'calendar', 'snake', 'minesweeper', 'update', 'paint', 'info', 'camera', 'slides', 'mail', 'nebula-v', 'google-search', 'shop', 'screencast', 'sticky-notes', 'nde'];
+const LITE_APPS: AppId[] = ['files', 'settings', 'browser', 'notes', 'calc', 'trash', 'info', 'sticky-notes'];
+
+const FULL_PINNED: AppId[] = ['files', 'store', 'shop', 'assistant', 'google-search', 'browser', 'settings', 'mail', 'sticky-notes'];
+const LITE_PINNED: AppId[] = ['files', 'browser', 'settings', 'notes'];
 
 const AVATAR_COLORS = ['#9333ea', '#3b82f6', '#e11d48', '#f97316', '#16a34a', '#ec4899', '#06b6d4'];
 const OFFLINE_WIFI = "Public_Guest_No_Internet";
@@ -433,8 +437,8 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   const [iconSize, setIconSizeState] = useState<number>(100);
   const [globalScale, setGlobalScaleState] = useState<number>(1.0);
 
-  const [installedApps, setInstalledApps] = useState<AppId[]>(INITIAL_APPS);
-  const [pinnedApps, setPinnedApps] = useState<AppId[]>(INITIAL_PINNED);
+  const [installedApps, setInstalledApps] = useState<AppId[]>([]);
+  const [pinnedApps, setPinnedApps] = useState<AppId[]>([]);
   const [desktopApps, setDesktopApps] = useState<DesktopShortcut[]>(INITIAL_DESKTOP);
   const [notifications, setNotifications] = useState<SystemNotification[]>([]);
   const [stickyNotes, setStickyNotes] = useState<StickyNote[]>([]);
@@ -455,7 +459,6 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
 
   const [startMenuLayout, setStartMenuLayout] = useState<StartMenuItem[]>([]);
 
-  // Location & Weather State
   const [userLocation, setUserLocation] = useState<{ lat: number, lon: number } | null>(null);
   const [locationName, setLocationName] = useState<string>("Locating...");
   const [weatherData, setWeatherData] = useState<{ temp: number, condition: string } | null>(null);
@@ -470,7 +473,8 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     deviceName: 'SuperNova',
     integratedGfx: true,
     acLossPolicy: 'Stay Off',
-    wakeOnLan: false
+    wakeOnLan: false,
+    isLite: false
   });
 
   const playSound = useCallback((type: 'click' | 'open' | 'close' | 'notify') => {
@@ -519,7 +523,6 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       setUserLocation({ lat: latitude, lon: longitude });
 
       try {
-        // Reverse Geocode for City Name
         const geoRes = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`, {
           headers: { 'Accept-Language': 'en-US,en;q=0.9', 'User-Agent': 'Nebulabs-WebOS/1.0' }
         });
@@ -531,7 +534,6 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
         const state = geoData.address.state || "";
         setLocationName(`${city}${state ? ', ' + state : ''}`);
 
-        // Fetch Accurate Weather in Fahrenheit
         const weatherRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true&temperature_unit=fahrenheit`);
         if (!weatherRes.ok) throw new Error("Weather Offline");
         
@@ -613,22 +615,36 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       }
     }
     const savedBios = localStorage.getItem('nebula_bios_settings');
-    if (savedBios) setBiosSettings(JSON.parse(savedBios));
+    if (savedBios) {
+      const parsedBios = JSON.parse(savedBios);
+      setBiosSettings(parsedBios);
+      if (parsedBios.isLite) {
+        setInstalledApps(LITE_APPS);
+        setPinnedApps(LITE_PINNED);
+        setGlassEnabledState(false);
+      } else {
+        setInstalledApps(FULL_APPS);
+        setPinnedApps(FULL_PINNED);
+      }
+    } else {
+      setInstalledApps(FULL_APPS);
+      setPinnedApps(FULL_PINNED);
+    }
 
     const timer = setTimeout(() => setPowerStatusState('on'), 800);
     return () => clearTimeout(timer);
   }, [loadSettings]);
 
   useEffect(() => {
-    if (startMenuLayout.length === 0) {
-      const initialLayout: StartMenuItem[] = INITIAL_APPS.map(appId => ({
+    if (startMenuLayout.length === 0 && installedApps.length > 0) {
+      const initialLayout: StartMenuItem[] = installedApps.map(appId => ({
         id: `item-${appId}`,
         type: 'app',
         appId
       }));
       setStartMenuLayout(initialLayout);
     }
-  }, [startMenuLayout.length]);
+  }, [startMenuLayout.length, installedApps]);
 
   const login = useCallback((userId: string, password?: string): boolean => {
     const user = accounts.find(a => a.id === userId);
@@ -669,7 +685,6 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     return false;
   }, [currentUser]);
 
-  // Auto-unlock if account has no password
   useEffect(() => {
     if (currentUser && isLocked && !currentUser.password) {
       unlock("");
@@ -1044,7 +1059,15 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
 
   const moveToTrash = (id: string) => {
     const item = fileSystem.find(i => i.id === id);
-    if (item) { setFileSystem(prev => prev.filter(i => i.id !== id)); setTrash(prev => [...prev, item]); }
+    if (item) {
+      if (item.isSystem && !isNDEEnabled) {
+        addNotification("Access Denied", "Core system files require NDE elevation to modify.", "security");
+        playSound('close');
+        return;
+      }
+      setFileSystem(prev => prev.filter(i => i.id !== id));
+      setTrash(prev => [...prev, item]);
+    }
   };
 
   const restoreFromTrash = (id: string) => {
