@@ -1,9 +1,8 @@
-
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useOS, AppId, APP_INFO } from '@/context/os-context';
-import { Wifi, Volume2, FolderOpen, ShoppingBag, MessageSquare, Settings, Lock, Check, Loader2, VolumeX, Volume1, LayoutGrid, Battery, BatteryMedium, MessageCircle, GraduationCap, PinOff, EyeOff, Smile, Home, RotateCw, Clock as ClockIcon, Calendar as CalendarIcon, ChevronUp, Eye } from 'lucide-react';
+import { Wifi, Volume2, FolderOpen, ShoppingBag, MessageSquare, Settings, Lock, Check, Loader2, VolumeX, Volume1, LayoutGrid, Battery, BatteryMedium, MessageCircle, GraduationCap, PinOff, EyeOff, Smile, Home, RotateCw, Clock as ClockIcon, Calendar as CalendarIcon, ChevronUp, Eye, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { StartMenu } from './StartMenu';
 import { QuickSettings } from './QuickSettings';
@@ -17,7 +16,7 @@ import {
 
 export const Taskbar: React.FC = () => {
   const { 
-    openWindows, activeWindowId, openApp, taskbarPosition, taskbarSize, rotateTaskbar,
+    openWindows, activeWindowId, openApp, taskbarPosition, taskbarSize, taskbarTransparency, rotateTaskbar,
     isWifiConnecting, volume, isOnline, isWidgetsOpen, setIsWidgetsOpen, 
     pinnedApps, reorderPinnedApps, togglePinApp, isTaskbarAutoHide, setTaskbarAutoHide,
     isQuickSettingsOpen, setIsQuickSettingsOpen, isStartOpen, setIsStartOpen,
@@ -154,7 +153,7 @@ export const Taskbar: React.FC = () => {
 
       <div 
         className={cn(
-          "fixed glass flex z-[9999] transition-all duration-500 ease-in-out",
+          "fixed flex z-[9999] transition-all duration-500 ease-in-out backdrop-blur-3xl",
           taskbarPosition === 'bottom' && "bottom-0 left-0 right-0 border-t",
           taskbarPosition === 'top' && "top-0 left-0 right-0 border-b",
           taskbarPosition === 'left' && "left-0 top-0 bottom-0 border-r",
@@ -166,7 +165,9 @@ export const Taskbar: React.FC = () => {
         style={{
           [isVertical ? 'width' : 'height']: `${safeTaskbarSize}px`,
           transform: hideTransforms[taskbarPosition],
-          opacity: isHidden ? 0 : 1
+          opacity: isHidden ? 0 : 1,
+          backgroundColor: `hsl(var(--background) / ${taskbarTransparency / 100})`,
+          borderColor: `hsl(var(--border) / ${taskbarTransparency / 100})`
         }}
         onContextMenu={handleTaskbarContextMenu}
         onMouseEnter={() => setIsHovered(true)}

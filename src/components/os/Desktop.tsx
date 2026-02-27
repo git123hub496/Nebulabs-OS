@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
@@ -56,7 +55,8 @@ import {
   Code2,
   Smartphone,
   ShieldCheck,
-  ShieldAlert
+  ShieldAlert,
+  Type
 } from 'lucide-react';
 import { FileExplorer } from '../apps/FileExplorer';
 import { AppStore } from '../apps/AppStore';
@@ -86,6 +86,7 @@ import { GoogleSearch } from '../apps/GoogleSearch';
 import { ShopNebulabs } from '../apps/ShopNebulabs';
 import { Screencast } from '../apps/Screencast';
 import { NDE } from '../apps/NDE';
+import { NebulaDocs } from '../apps/NebulaDocs';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -120,6 +121,7 @@ const APP_COMPONENTS: Record<AppId, (win: WindowInstance) => React.ReactNode> = 
   'shop': (win) => <ShopNebulabs />,
   'screencast': (win) => <Screencast />,
   'nde': (win) => <NDE />,
+  'docs': (win) => <NebulaDocs />,
   'sticky-notes': (win) => <div className="p-8 text-center text-white/40"><p className="text-sm font-bold">Sticky Notes Manager</p><p className="text-[10px] uppercase">A new note has been created on your desktop.</p></div>,
   'info': (win) => (
     <DesktopInfoApp />
@@ -207,7 +209,7 @@ export const Desktop: React.FC = () => {
     if (powerStatus === 'on') {
       setBootOpacity(0);
       const timer = setTimeout(() => setShouldRenderBoot(false), 1000);
-      return () => clearTimeout(timer);
+      return () => clearTimeout(false);
     } else if (powerStatus === 'booting') {
       setShouldRenderBoot(true);
       setBootOpacity(1);
@@ -548,7 +550,6 @@ export const Desktop: React.FC = () => {
 
   return (
     <div 
-      ref={desktopRef}
       className={cn(
         "fixed inset-0 overflow-hidden select-none transition-all duration-1000",
         theme === 'light' ? "light" : "",

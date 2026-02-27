@@ -1,4 +1,3 @@
-
 "use client"
 
 import React, { useState, useRef, useEffect } from 'react';
@@ -21,7 +20,7 @@ interface WindowProps {
 export const Window: React.FC<WindowProps> = ({ window: win, children }) => {
   const { 
     closeWindow, minimizeWindow, maximizeWindow, snapWindow, focusWindow, 
-    activeWindowId, taskbarPosition, taskbarSize, moveWindowToDisplay, currentDisplayId, 
+    activeWindowId, taskbarPosition, taskbarSize, appTransparency, moveWindowToDisplay, currentDisplayId, 
     updateWindowPosition, displayLayout 
   } = useOS();
   
@@ -208,6 +207,8 @@ export const Window: React.FC<WindowProps> = ({ window: win, children }) => {
         width: dims.width,
         height: dims.height,
         zIndex: win.zIndex,
+        backgroundColor: `hsl(var(--background) / ${appTransparency / 100})`,
+        borderColor: `hsl(var(--border) / ${appTransparency / 100})`
       }}
       onClick={() => focusWindow(win.id)}
     >

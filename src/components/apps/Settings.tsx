@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useRef, useMemo } from 'react';
@@ -44,7 +43,7 @@ const ACCENT_COLORS: { id: AccentColor; class: string; label: string }[] = [
 export const Settings: React.FC = () => {
   const { 
     wallpaper, updateWallpaper, theme, setTheme, taskbarPosition, setTaskbarPosition, 
-    taskbarSize, setTaskbarSize, isTaskbarAutoHide, setTaskbarAutoHide, iconSize, setIconSize,
+    taskbarSize, setTaskbarSize, taskbarTransparency, setTaskbarTransparency, appTransparency, setAppTransparency, isTaskbarAutoHide, setTaskbarAutoHide, iconSize, setIconSize,
     accentColor, setAccentColor, customAccentHex, 
     cursorColor, setCursorColor, mouserScale, setMouserScale, isInverted, setInverted,
     isGrayscale, setGrayscale,
@@ -62,7 +61,7 @@ export const Settings: React.FC = () => {
 
   const tabs = useMemo(() => {
     const allTabs: { id: SettingsTab; label: string; icon: any; keywords: string[] }[] = [
-      { id: 'personalization', label: 'Personalization', icon: Palette, keywords: ['theme', 'wallpaper', 'taskbar', 'accent', 'color', 'dark mode', 'light mode'] },
+      { id: 'personalization', label: 'Personalization', icon: Palette, keywords: ['theme', 'wallpaper', 'taskbar', 'accent', 'color', 'dark mode', 'light mode', 'transparency'] },
       { id: 'display', label: 'Display', icon: Monitor, keywords: ['brightness', 'monitor', 'screen', 'resolution', 'multi-display'] },
       { id: 'apps', label: 'Apps', icon: AppWindow, keywords: ['installed', 'applications', 'software', 'management', 'uninstall'] },
       { id: 'accessibility', label: 'Accessibility', icon: Eye, keywords: ['contrast', 'grayscale', 'glass', 'transparency', 'cursor', 'pointer', 'mouse', 'scale'] },
@@ -93,6 +92,21 @@ export const Settings: React.FC = () => {
                 <div className="space-y-4"><Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Accent Color</Label><div className="grid grid-cols-7 gap-4">{ACCENT_COLORS.map((color) => (<button key={color.id} onClick={() => setAccentColor(color.id)} className={cn("group relative aspect-square rounded-2xl flex items-center justify-center border-2 transition-all", color.class, accentColor === color.id ? "border-foreground scale-110 shadow-xl" : "border-transparent opacity-80 hover:opacity-100")}>{accentColor === color.id && <Check size={20} className="text-white drop-shadow-md" />}</button>))}</div></div>
               </div>
             </section>
+
+            <section>
+              <div className="flex items-center gap-2 mb-6"><Layers size={18} className="text-accent" /><h2 className="text-lg font-bold text-foreground">Interface Transparency</h2></div>
+              <div className="space-y-8 bg-foreground/5 p-6 rounded-3xl border border-border/50">
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center"><Label className="text-sm font-bold">Taskbar Transparency</Label><span className="text-xs font-mono text-accent">{taskbarTransparency}%</span></div>
+                  <Slider value={[taskbarTransparency]} max={100} min={0} step={1} onValueChange={(vals) => setTaskbarTransparency(vals[0])} />
+                </div>
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center"><Label className="text-sm font-bold">App Window Transparency</Label><span className="text-xs font-mono text-accent">{appTransparency}%</span></div>
+                  <Slider value={[appTransparency]} max={100} min={0} step={1} onValueChange={(vals) => setAppTransparency(vals[0])} />
+                </div>
+              </div>
+            </section>
+
             <section>
               <div className="flex items-center justify-between mb-6"><div className="flex items-center gap-2"><ImageIcon size={18} className="text-accent" /><h2 className="text-lg font-bold text-foreground">Desktop Wallpaper</h2></div><Button variant="outline" size="sm" className="h-8 text-[10px] font-bold uppercase tracking-widest gap-2 border-white/10 text-white/60 hover:text-accent hover:border-accent/40" onClick={() => wallpaperInputRef.current?.click()}><Upload size={12} />Upload Background</Button><input type="file" ref={wallpaperInputRef} className="hidden" accept="image/*" onChange={(e) => { const file = e.target.files?.[0]; if (file) { const reader = new FileReader(); reader.onload = (event) => updateWallpaper(event.target?.result as string); reader.readAsDataURL(file); } }} /></div>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">{PlaceHolderImages.filter(img => img.id.startsWith('wallpaper-')).map((img) => (<button key={img.id} onClick={() => updateWallpaper(img.imageUrl)} className={cn("relative aspect-video rounded-xl overflow-hidden border-2 transition-all group", wallpaper === img.imageUrl ? "border-accent scale-105 shadow-xl shadow-accent/20 z-10" : "border-transparent opacity-70 hover:opacity-100")}><img src={img.imageUrl} alt={img.description} className="w-full h-full object-cover" />{wallpaper === img.imageUrl && (<div className="absolute inset-0 bg-accent/20 flex items-center justify-center backdrop-blur-[2px]"><div className="w-10 h-10 rounded-full bg-accent flex items-center justify-center shadow-lg"><Check size={20} className="text-white" /></div></div>)}</button>))}</div>

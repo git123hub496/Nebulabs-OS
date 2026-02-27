@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { createContext, useContext, useState, ReactNode, useEffect, useCallback, useRef } from 'react';
@@ -43,13 +42,14 @@ import {
   Tv,
   StickyNote as StickyNoteIcon,
   Code2,
-  Braces
+  Braces,
+  Type
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { respondToEmail } from '@/ai/flows/mail-ai-flow';
 import { respondToChat } from '@/ai/flows/chat-ai-flow';
 
-export type AppId = 'store' | 'files' | 'settings' | 'assistant' | 'google-drive' | 'notes' | 'calc' | 'terminal' | 'browser' | 'trash' | 'news' | 'maps' | 'monitor' | 'calendar' | 'snake' | 'minesweeper' | 'image-viewer' | 'update' | 'virus' | 'paint' | 'info' | 'camera' | 'slides' | 'mail' | 'nebula-v' | 'google-search' | 'shop' | 'screencast' | 'sticky-notes' | 'nde';
+export type AppId = 'store' | 'files' | 'settings' | 'assistant' | 'google-drive' | 'notes' | 'calc' | 'terminal' | 'browser' | 'trash' | 'news' | 'maps' | 'monitor' | 'calendar' | 'snake' | 'minesweeper' | 'image-viewer' | 'update' | 'virus' | 'paint' | 'info' | 'camera' | 'slides' | 'mail' | 'nebula-v' | 'google-search' | 'shop' | 'screencast' | 'sticky-notes' | 'nde' | 'docs';
 export type ThemeMode = 'dark' | 'light';
 export type PowerStatus = 'on' | 'off' | 'booting';
 export type TaskbarPosition = 'top' | 'bottom' | 'left' | 'right';
@@ -210,6 +210,8 @@ interface OSContextType {
   powerStatus: PowerStatus;
   taskbarPosition: TaskbarPosition;
   taskbarSize: TaskbarSize;
+  taskbarTransparency: number;
+  appTransparency: number;
   isTaskbarAutoHide: boolean;
   setTaskbarAutoHide: (enabled: boolean) => void;
   iconSize: DesktopIconSize;
@@ -276,6 +278,8 @@ interface OSContextType {
   setTaskbarPosition: (position: TaskbarPosition) => void;
   rotateTaskbar: () => void;
   setTaskbarSize: (size: TaskbarSize) => void;
+  setTaskbarTransparency: (t: number) => void;
+  setAppTransparency: (t: number) => void;
   setIconSize: (size: DesktopIconSize) => void;
   connectToWifi: (ssid: string) => void;
   setVolume: (v: number) => void;
@@ -360,6 +364,7 @@ export const APP_INFO: Record<AppId, { icon: any; label: string }> = {
   'screencast': { icon: Tv, label: 'Nebula Cast' },
   'sticky-notes': { icon: StickyNoteIcon, label: 'Sticky Notes' },
   'nde': { icon: Code2, label: 'NDE Dev Tool' },
+  'docs': { icon: Type, label: 'Nebula Docs' },
 };
 
 const INITIAL_FILES: FileSystemItem[] = [
@@ -383,10 +388,10 @@ const INITIAL_DESKTOP: DesktopShortcut[] = [
   { id: 'store', label: 'App Store', icon: ShoppingBag, x: PADDING, y: PADDING + (GRID_Y * 3) },
 ];
 
-const FULL_APPS: AppId[] = ['store', 'files', 'settings', 'assistant', 'notes', 'calc', 'terminal', 'browser', 'trash', 'news', 'maps', 'monitor', 'calendar', 'snake', 'minesweeper', 'update', 'paint', 'info', 'camera', 'slides', 'mail', 'nebula-v', 'google-search', 'shop', 'screencast', 'sticky-notes', 'nde'];
+const FULL_APPS: AppId[] = ['store', 'files', 'settings', 'assistant', 'notes', 'calc', 'terminal', 'browser', 'trash', 'news', 'maps', 'monitor', 'calendar', 'snake', 'minesweeper', 'update', 'paint', 'info', 'camera', 'slides', 'mail', 'nebula-v', 'google-search', 'shop', 'screencast', 'sticky-notes', 'nde', 'docs'];
 const LITE_APPS: AppId[] = ['files', 'settings', 'browser', 'notes', 'calc', 'trash', 'info', 'sticky-notes'];
 
-const FULL_PINNED: AppId[] = ['files', 'store', 'shop', 'assistant', 'google-search', 'browser', 'settings', 'mail', 'sticky-notes'];
+const FULL_PINNED: AppId[] = ['files', 'store', 'shop', 'assistant', 'google-search', 'browser', 'settings', 'mail', 'sticky-notes', 'docs'];
 const LITE_PINNED: AppId[] = ['files', 'browser', 'settings', 'notes'];
 
 const AVATAR_COLORS = ['#9333ea', '#3b82f6', '#e11d48', '#f97316', '#16a34a', '#ec4899', '#06b6d4'];
@@ -435,6 +440,8 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
 
   const [taskbarPosition, setTaskbarPositionState] = useState<TaskbarPosition>('bottom');
   const [taskbarSize, setTaskbarSizeState] = useState<number>(48);
+  const [taskbarTransparency, setTaskbarTransparencyState] = useState<number>(80);
+  const [appTransparency, setAppTransparencyState] = useState<number>(80);
   const [isTaskbarAutoHide, setTaskbarAutoHideState] = useState<boolean>(false);
   const [iconSize, setIconSizeState] = useState<number>(100);
   const [globalScale, setGlobalScaleState] = useState<number>(1.0);
@@ -585,6 +592,10 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     if (pos) setTaskbarPositionState(pos as TaskbarPosition);
     const size = localStorage.getItem(`nebula_${user.id}_taskbar_size`);
     if (size && !isNaN(Number(size))) setTaskbarSizeState(Number(size));
+    const tt = localStorage.getItem(`nebula_${user.id}_taskbar_transparency`);
+    if (tt) setTaskbarTransparencyState(Number(tt));
+    const at = localStorage.getItem(`nebula_${user.id}_app_transparency`);
+    if (at) setAppTransparencyState(Number(at));
     const hide = localStorage.getItem(`nebula_${user.id}_taskbar_autohide`);
     if (hide) setTaskbarAutoHideState(hide === 'true');
     const gs = localStorage.getItem(`nebula_${user.id}_global_scale`);
@@ -688,6 +699,8 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     setTaskbarSizeState(48);
     setTaskbarAutoHideState(false);
     setGlobalScaleState(1.0);
+    setTaskbarTransparencyState(80);
+    setAppTransparencyState(80);
     setFileSystem(INITIAL_FILES);
     setTrash([]);
     setStickyNotes([]);
@@ -926,6 +939,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     else if (appId === 'assistant') { initialWidth = 400; initialHeight = 650; }
     else if (appId === 'virus') { initialWidth = 300; initialHeight = 250; }
     else if (appId === 'nde') { initialWidth = 900; initialHeight = 700; }
+    else if (appId === 'docs') { initialWidth = 900; initialHeight = 800; }
     const newId = `${appId}-${Date.now()}`;
     const newWindow: WindowInstance = {
       id: newId, appId, title, isMinimized: false, isMaximized: false, zIndex: nextZIndex,
@@ -992,6 +1006,8 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     setTaskbarPosition(next);
   };
   const setTaskbarSize = (s: number) => { if (isNaN(s)) return; setTaskbarSizeState(s); saveSetting('taskbar_size', s); };
+  const setTaskbarTransparency = (t: number) => { setTaskbarTransparencyState(t); saveSetting('taskbar_transparency', t); };
+  const setAppTransparency = (t: number) => { setAppTransparencyState(t); saveSetting('app_transparency', t); };
   const setTaskbarAutoHide = (enabled: boolean) => { setTaskbarAutoHideState(enabled); saveSetting('taskbar_autohide', enabled); };
   const setIconSize = (s: number) => { if (isNaN(s)) return; setIconSizeState(s); saveSetting('icon_size', s); };
   const setVolume = (v: number) => { setVolumeState(v); saveSetting('volume', v); };
@@ -1265,7 +1281,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       archiveEmail, deleteEmail, restoreEmail, permanentlyDeleteEmail,
       wallpaper, notes, theme, accentColor, mouserScale,
       customAccentHex, cursorColor, isInverted, isGrayscale, glassEnabled, powerStatus,
-      taskbarPosition, taskbarSize, isTaskbarAutoHide, setTaskbarAutoHide, iconSize, currentWifi, isWifiConnecting,
+      taskbarPosition, taskbarSize, taskbarTransparency, appTransparency, isTaskbarAutoHide, setTaskbarAutoHide, iconSize, currentWifi, isWifiConnecting,
       isOnline, volume, brightness, isWidgetsOpen, isQuickSettingsOpen, 
       isStartOpen: isStartOpenState, isChatOpen, isLocked, isNDEEnabled, systemStats, stickyNotes,
       currentDisplayId, displayLayout, isSecurityEnabled, chatMessages, biosSettings,
@@ -1276,6 +1292,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       updateDisplayLayout, resetDisplayLayout, installApp, uninstallApp, addNotification, clearNotifications,
       updateWallpaper, setNotes, setTheme, setAccentColor, setCustomAccentHex,
       setCursorColor, setMouserScale, setInverted, setGrayscale, setGlassEnabled, setTaskbarPosition, rotateTaskbar, setTaskbarSize,
+      setTaskbarTransparency, setAppTransparency,
       setIconSize, connectToWifi, setVolume, setBrightness, setIsWidgetsOpen,
       setIsQuickSettingsOpen, setIsStartOpen, setIsChatOpen, setIsNDEEnabled, sendChatMessage, setCurrentDisplayId, setSecurityEnabled, updateBIOSSettings, restart, shutDown, powerOn,
       minimizeAllWindows, playSound, setGlobalScale, factoryReset, setSystemStats,
