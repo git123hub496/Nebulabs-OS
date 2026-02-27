@@ -360,10 +360,10 @@ export const LoginScreen: React.FC = () => {
               <div className="space-y-2">
                 <label className="text-[10px] font-black text-accent uppercase tracking-widest px-1">Interface Mode</label>
                 <div className="grid grid-cols-2 gap-3">
-                  <button onClick={() => setSelectedTheme('dark')} className={cn("p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2", selectedTheme === 'dark' ? "bg-accent/10 border-accent text-white" : "bg-white/5 border-white/10 text-white/40")}>
+                  <button onClick={() => setTheme('dark')} className={cn("p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2", theme === 'dark' ? "bg-accent/10 border-accent text-white" : "bg-white/5 border-white/10 text-white/40")}>
                     <Moon size={20} /> <span className="text-[10px] font-bold uppercase">Dark</span>
                   </button>
-                  <button onClick={() => setSelectedTheme('light')} className={cn("p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2", selectedTheme === 'light' ? "bg-accent/10 border-accent text-white" : "bg-white/5 border-white/10 text-white/40")}>
+                  <button onClick={() => setTheme('light')} className={cn("p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2", theme === 'light' ? "bg-accent/10 border-accent text-white" : "bg-white/5 border-white/10 text-white/40")}>
                     <Sun size={20} /> <span className="text-[10px] font-bold uppercase">Light</span>
                   </button>
                 </div>
@@ -372,11 +372,11 @@ export const LoginScreen: React.FC = () => {
                 <label className="text-[10px] font-black text-accent uppercase tracking-widest px-1">Accent Core</label>
                 <div className="flex justify-between items-center px-2">
                   {ACCENT_COLORS.map(color => (
-                    <button key={color.id} onClick={() => setSelectedAccent(color.id)} className={cn("w-8 h-8 rounded-full border-2 transition-all", selectedAccent === color.id ? "border-white scale-125 shadow-lg" : "border-transparent")} style={{ backgroundColor: color.color }} />
+                    <button key={color.id} onClick={() => setAccentColor(color.id)} className={cn("w-8 h-8 rounded-full border-2 transition-all", accentColor === color.id ? "border-white scale-125 shadow-lg" : "border-transparent")} style={{ backgroundColor: color.color }} />
                   ))}
                 </div>
               </div>
-              <Button onClick={handleCustomizeSubmit} className="w-full h-14 bg-accent text-primary-foreground font-black rounded-2xl hover:bg-accent/80 gap-2 uppercase tracking-[0.2em]">Finalize Setup <ArrowRight size={18} /></Button>
+              <Button onClick={() => setStep('initialize')} className="w-full h-14 bg-accent text-primary-foreground font-black rounded-2xl hover:bg-accent/80 gap-2 uppercase tracking-[0.2em]">Finalize Setup <ArrowRight size={18} /></Button>
             </div>
           </div>
         )}

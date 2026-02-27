@@ -236,7 +236,7 @@ export const Taskbar: React.FC = () => {
                 )}
                 draggable
                 onDragStart={() => handleDragStart(appId, index)}
-                onDragOver={(e) => handleDragOver(e, index)}
+                onDragOver={() => setTargetIndex(index)}
                 onDragEnd={handleDragEnd}
               >
                 <button

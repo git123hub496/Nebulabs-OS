@@ -519,7 +519,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       setUserLocation({ lat: latitude, lon: longitude });
 
       try {
-        // Reverse Geocode for City Name with better retry logic
+        // Reverse Geocode for City Name
         const geoRes = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`, {
           headers: { 'Accept-Language': 'en-US,en;q=0.9' }
         });
@@ -531,8 +531,8 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
         const state = geoData.address.state || "";
         setLocationName(`${city}${state ? ', ' + state : ''}`);
 
-        // Fetch Real Weather
-        const weatherRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true`);
+        // Fetch Accurate Weather in Fahrenheit
+        const weatherRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true&temperature_unit=fahrenheit`);
         if (!weatherRes.ok) throw new Error("Weather Offline");
         
         const wData = await weatherRes.json();
@@ -545,7 +545,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       } catch (err) {
         console.warn("Satellite link restricted. Using simulated telemetry.", err);
         setLocationName("Simulation Mode");
-        setWeatherData({ temp: 22, condition: "Partly Cloudy" });
+        setWeatherData({ temp: 39, condition: "Partly Cloudy" });
         addNotification("Sensor Warning", "Could not reach satellite clusters. Using cached telemetry.", "security");
       }
     }, (error) => {
