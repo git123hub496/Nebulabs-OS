@@ -38,7 +38,8 @@ import {
   Search,
   Cpu,
   Zap,
-  Shield
+  Shield,
+  Ghost
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -88,7 +89,7 @@ type AccountType = 'personal' | 'school' | 'work' | 'kid';
 
 export const LoginScreen: React.FC = () => {
   const { 
-    accounts, login, createAccount, deleteAccount, resetUserPassword, wallpaper, 
+    accounts, login, loginGuest, createAccount, deleteAccount, resetUserPassword, wallpaper, 
     setTheme, theme, accentColor, setAccentColor, shutDown, restart,
     isInverted, setInverted, glassEnabled, setGlassEnabled, biosSettings, updateBIOSSettings, factoryReset, playSound,
     updateUserAvatar, updateUserPassword
@@ -263,29 +264,43 @@ export const LoginScreen: React.FC = () => {
         </div>
 
         {step === 'select' && !selectedAccount && (
-          <div className="flex flex-wrap justify-center gap-8 max-w-2xl px-8 max-h-[60vh] overflow-y-auto custom-scrollbar p-4">
-            {accounts.map(account => (
-              <div key={account.id} className="group relative flex flex-col items-center gap-4 transition-all hover:scale-105">
-                <button onClick={() => handleSelectAccount(account)} className="flex flex-col items-center gap-4">
-                  <div className="w-24 h-24 rounded-full border-4 border-white/10 group-hover:border-accent transition-colors flex items-center justify-center shadow-2xl relative" style={{ backgroundColor: account.avatarColor }}>
-                    <Avatar className="w-full h-full border-none">
-                      <AvatarImage src={account.avatarUrl} className="object-cover" />
-                      <AvatarFallback className="bg-transparent text-white text-3xl font-bold">{account.username[0].toUpperCase()}</AvatarFallback>
-                    </Avatar>
-                    {account.isSchoolAccount && <div className="absolute -top-1 -right-1 bg-blue-500 p-1.5 rounded-full border-2 border-[#1e2731] z-10 shadow-lg"><GraduationCap size={12} className="text-white" /></div>}
-                    {account.isKidAccount && <div className="absolute -top-1 -right-1 bg-pink-500 p-1.5 rounded-full border-2 border-[#1e2731] z-10 shadow-lg"><Smile size={12} className="text-white" /></div>}
-                  </div>
-                  <span className="text-white font-bold text-lg drop-shadow-md group-hover:text-accent transition-colors">{account.username}</span>
-                </button>
-                <button onClick={(e) => { e.stopPropagation(); deleteAccount(account.id); }} className="absolute -top-2 -right-2 bg-destructive text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100 hover:scale-110 transition-all z-20 border-2 border-white shadow-lg"><Trash2 size={12} strokeWidth={3} /></button>
-              </div>
-            ))}
-            <button onClick={() => { playSound('click'); setStep('create'); }} className="group flex flex-col items-center gap-4 transition-all hover:scale-105">
-              <div className="w-24 h-24 rounded-full border-4 border-dashed border-white/20 group-hover:border-white/40 group-hover:bg-white/5 transition-all flex items-center justify-center">
-                <Plus className="text-white/40 group-hover:text-white" size={32} />
-              </div>
-              <span className="text-white/40 font-bold text-lg group-hover:text-white transition-colors">Add User</span>
-            </button>
+          <div className="flex flex-col items-center gap-12">
+            <div className="flex flex-wrap justify-center gap-8 max-w-2xl px-8 max-h-[60vh] overflow-y-auto custom-scrollbar p-4">
+              {accounts.map(account => (
+                <div key={account.id} className="group relative flex flex-col items-center gap-4 transition-all hover:scale-105">
+                  <button onClick={() => handleSelectAccount(account)} className="flex flex-col items-center gap-4">
+                    <div className="w-24 h-24 rounded-full border-4 border-white/10 group-hover:border-accent transition-colors flex items-center justify-center shadow-2xl relative" style={{ backgroundColor: account.avatarColor }}>
+                      <Avatar className="w-full h-full border-none">
+                        <AvatarImage src={account.avatarUrl} className="object-cover" />
+                        <AvatarFallback className="bg-transparent text-white text-3xl font-bold">{account.username[0].toUpperCase()}</AvatarFallback>
+                      </Avatar>
+                      {account.isSchoolAccount && <div className="absolute -top-1 -right-1 bg-blue-500 p-1.5 rounded-full border-2 border-[#1e2731] z-10 shadow-lg"><GraduationCap size={12} className="text-white" /></div>}
+                      {account.isKidAccount && <div className="absolute -top-1 -right-1 bg-pink-500 p-1.5 rounded-full border-2 border-[#1e2731] z-10 shadow-lg"><Smile size={12} className="text-white" /></div>}
+                    </div>
+                    <span className="text-white font-bold text-lg drop-shadow-md group-hover:text-accent transition-colors">{account.username}</span>
+                  </button>
+                  <button onClick={(e) => { e.stopPropagation(); deleteAccount(account.id); }} className="absolute -top-2 -right-2 bg-destructive text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100 hover:scale-110 transition-all z-20 border-2 border-white shadow-lg"><Trash2 size={12} strokeWidth={3} /></button>
+                </div>
+              ))}
+              <button onClick={() => { playSound('click'); setStep('create'); }} className="group flex flex-col items-center gap-4 transition-all hover:scale-105">
+                <div className="w-24 h-24 rounded-full border-4 border-dashed border-white/20 group-hover:border-white/40 group-hover:bg-white/5 transition-all flex items-center justify-center">
+                  <Plus className="text-white/40 group-hover:text-white" size={32} />
+                </div>
+                <span className="text-white/40 font-bold text-lg group-hover:text-white transition-colors">Add User</span>
+              </button>
+            </div>
+
+            <div className="flex flex-col items-center gap-4">
+              <Button 
+                variant="outline" 
+                className="rounded-full px-8 h-12 border-white/10 bg-white/5 hover:bg-white/10 text-white/60 hover:text-white gap-2 text-xs font-bold uppercase tracking-widest"
+                onClick={loginGuest}
+              >
+                <Ghost size={16} />
+                Browse as Guest
+              </Button>
+              <p className="text-[10px] text-white/20 font-bold uppercase tracking-widest italic">Guest sessions are wiped after logout</p>
+            </div>
           </div>
         )}
 

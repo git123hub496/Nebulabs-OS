@@ -67,6 +67,7 @@ export interface LocalUser {
   isWorkAccount?: boolean;
   isSchoolAccount?: boolean;
   isKidAccount?: boolean;
+  isGuest?: boolean;
   districtId?: string;
   uniqueCode?: string;
 }
@@ -238,6 +239,7 @@ interface OSContextType {
   requestLocation: () => Promise<void>;
   
   login: (userId: string, password?: string) => boolean;
+  loginGuest: () => void;
   logout: () => void;
   lock: () => void;
   unlock: (password?: string) => boolean;
@@ -556,7 +558,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   }, [addNotification]);
 
   const saveSetting = useCallback((key: string, value: any) => {
-    if (currentUser) {
+    if (currentUser && !currentUser.isGuest) {
       try {
         const strValue = typeof value === 'object' ? JSON.stringify(value) : String(value);
         localStorage.setItem(`nebula_${currentUser.id}_${key}`, strValue);
@@ -565,6 +567,8 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   }, [currentUser]);
 
   const loadSettings = useCallback((user: LocalUser) => {
+    if (user.isGuest) return;
+    
     const wall = localStorage.getItem(`nebula_${user.id}_wallpaper`);
     if (wall) setWallpaperState(wall);
     const th = localStorage.getItem(`nebula_${user.id}_theme`);
@@ -666,6 +670,31 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     return false;
   }, [accounts, loadSettings]);
 
+  const loginGuest = useCallback(() => {
+    const guestUser: LocalUser = {
+      id: 'guest',
+      username: 'Guest User',
+      avatarColor: '#64748b',
+      isGuest: true,
+      uniqueCode: 'GUEST-SESSION'
+    };
+    setCurrentUser(guestUser);
+    setIsLocked(false);
+    // Reset to defaults for guest
+    setWallpaperState("https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=1920");
+    setThemeState('dark');
+    setAccentColorState('purple');
+    setTaskbarPositionState('bottom');
+    setTaskbarSizeState(48);
+    setTaskbarAutoHideState(false);
+    setGlobalScaleState(1.0);
+    setFileSystem(INITIAL_FILES);
+    setTrash([]);
+    setStickyNotes([]);
+    setNotesInternal("");
+    playSound('open');
+  }, [playSound]);
+
   const logout = useCallback(() => {
     setCurrentUser(null);
     localStorage.removeItem('nebula_current_user_id');
@@ -727,7 +756,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const updateUserPassword = (password: string) => {
-    if (!currentUser || currentUser.isSchoolAccount) return;
+    if (!currentUser || currentUser.isSchoolAccount || currentUser.isGuest) return;
     const updatedUser = { ...currentUser, password };
     setCurrentUser(updatedUser);
     const updatedAccounts = accounts.map(a => a.id === currentUser.id ? updatedUser : a);
@@ -750,7 +779,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const updateUserAvatar = (url: string) => {
-    if (!currentUser) return;
+    if (!currentUser || currentUser.isGuest) return;
     try {
       const updatedUser = { ...currentUser, avatarUrl: url };
       setCurrentUser(updatedUser);
@@ -761,7 +790,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const updateUserWorkStatus = (enabled: boolean) => {
-    if (!currentUser) return;
+    if (!currentUser || currentUser.isGuest) return;
     const updatedUser = { ...currentUser, isWorkAccount: enabled };
     setCurrentUser(updatedUser);
     const updatedAccounts = accounts.map(a => a.id === currentUser.id ? updatedUser : a);
@@ -1242,7 +1271,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       currentDisplayId, displayLayout, isSecurityEnabled, chatMessages, biosSettings,
       startMenuLayout, globalScale,
       userLocation, locationName, weatherData, requestLocation,
-      login, logout, lock, unlock, createAccount, deleteAccount, updateUserPassword, resetUserPassword, updateUserAvatar, updateUserWorkStatus, openApp, closeWindow, minimizeWindow,
+      login, loginGuest, logout, lock, unlock, createAccount, deleteAccount, updateUserPassword, resetUserPassword, updateUserAvatar, updateUserWorkStatus, openApp, closeWindow, minimizeWindow,
       maximizeWindow, snapWindow, focusWindow, updateWindowPosition, moveWindowToDisplay,
       updateDisplayLayout, resetDisplayLayout, installApp, uninstallApp, addNotification, clearNotifications,
       updateWallpaper, setNotes, setTheme, setAccentColor, setCustomAccentHex,

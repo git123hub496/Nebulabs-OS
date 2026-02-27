@@ -7,6 +7,7 @@ import { Wifi, Volume2, FolderOpen, ShoppingBag, MessageSquare, Settings, Lock, 
 import { cn } from '@/lib/utils';
 import { StartMenu } from './StartMenu';
 import { QuickSettings } from './QuickSettings';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   Tooltip,
   TooltipContent,
@@ -284,6 +285,16 @@ export const Taskbar: React.FC = () => {
           >
             <MessageCircle size={iconSize} className={isChatOpen ? (isSchool ? "text-blue-400" : isKid ? "text-pink-400" : "text-accent") : "text-white/60 group-hover:text-white"} />
           </button>
+
+          <Avatar className="w-8 h-8 border border-white/10 cursor-pointer hover:border-accent transition-colors" onClick={(e) => { e.stopPropagation(); setIsQuickSettingsOpen(!isQuickSettingsOpen); }}>
+            <AvatarImage src={currentUser?.avatarUrl} className="object-cover" />
+            <AvatarFallback 
+              className="text-[10px] font-bold text-white"
+              style={{ backgroundColor: currentUser?.avatarColor || 'var(--accent)' }}
+            >
+              {currentUser?.username[0].toUpperCase() || 'G'}
+            </AvatarFallback>
+          </Avatar>
 
           <TooltipProvider>
             <Tooltip>
