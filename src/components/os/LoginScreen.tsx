@@ -215,7 +215,6 @@ export const LoginScreen: React.FC = () => {
   };
 
   const handleSelectAccount = (account: LocalUser) => {
-    // If no password, login directly
     if (!account.password) {
       login(account.id, "");
       playSound('open');
@@ -427,10 +426,10 @@ export const LoginScreen: React.FC = () => {
                 <Progress value={progress} className="h-2 bg-white/5" />
               </div>
               <div className="bg-black/20 rounded-xl p-4 h-32 overflow-hidden border border-white/5 font-mono text-[10px] space-y-1 text-green-500">
-                <div className="font-bold">{currentLog}</div>
-                <div className="opacity-40">{">"} Hardware link active</div>
-                <div className="opacity-40">{">"} Partition wipe successful</div>
-                <div className="opacity-40">{">"} Cryptographic key staged</div>
+                <div className="font-bold">{' > '} {currentLog}</div>
+                <div className="opacity-40">{' > '} Hardware link active</div>
+                <div className="opacity-40">{' > '} Partition wipe successful</div>
+                <div className="opacity-40">{' > '} Cryptographic key staged</div>
               </div>
             </div>
           </div>

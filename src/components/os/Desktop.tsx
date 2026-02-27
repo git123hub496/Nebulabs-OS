@@ -51,7 +51,8 @@ import {
   Layers,
   Store,
   Tv,
-  StickyNote as StickyNoteIcon
+  StickyNote as StickyNoteIcon,
+  Code2
 } from 'lucide-react';
 import { FileExplorer } from '../apps/FileExplorer';
 import { AppStore } from '../apps/AppStore';
@@ -80,6 +81,7 @@ import { NebulaV } from '../apps/NebulaV';
 import { GoogleSearch } from '../apps/GoogleSearch';
 import { ShopNebulabs } from '../apps/ShopNebulabs';
 import { Screencast } from '../apps/Screencast';
+import { NDE } from '../apps/NDE';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -113,6 +115,7 @@ const APP_COMPONENTS: Record<AppId, (win: WindowInstance) => React.ReactNode> = 
   'google-search': (win) => <GoogleSearch />,
   'shop': (win) => <ShopNebulabs />,
   'screencast': (win) => <Screencast />,
+  'nde': (win) => <NDE />,
   'sticky-notes': (win) => <div className="p-8 text-center text-white/40"><p className="text-sm font-bold">Sticky Notes Manager</p><p className="text-[10px] uppercase">A new note has been created on your desktop.</p></div>,
   'info': (win) => (
     <div className="p-8 space-y-6 bg-[#161d25] h-full text-white/90 overflow-auto">
@@ -260,6 +263,10 @@ export const Desktop: React.FC = () => {
         case 'v':
           e.preventDefault();
           setGlobalScale(Math.max(globalScale - 0.1, 0.5));
+          break;
+        case 'd':
+          e.preventDefault();
+          openApp('nde', 'NDE Dev Tool');
           break;
         case 'n': 
           e.preventDefault();
@@ -660,7 +667,7 @@ export const Desktop: React.FC = () => {
 
       {openWindows.filter(w => (w.displayId || '1') === currentDisplayId).map(window => (
         <Window key={window.id} window={window}>
-          {APP_COMPONENTS[window.appId](window)}
+          {APP_COMPONENTS[window.appId] ? APP_COMPONENTS[window.appId](window) : <div className="p-8 text-center">Component Missing: {window.appId}</div>}
         </Window>
       ))}
 

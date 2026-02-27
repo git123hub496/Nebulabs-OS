@@ -41,13 +41,15 @@ import {
   Search,
   Store,
   Tv,
-  StickyNote as StickyNoteIcon
+  StickyNote as StickyNoteIcon,
+  Code2,
+  Braces
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { respondToEmail } from '@/ai/flows/mail-ai-flow';
 import { respondToChat } from '@/ai/flows/chat-ai-flow';
 
-export type AppId = 'store' | 'files' | 'settings' | 'assistant' | 'google-drive' | 'notes' | 'calc' | 'terminal' | 'browser' | 'trash' | 'news' | 'maps' | 'monitor' | 'calendar' | 'snake' | 'minesweeper' | 'image-viewer' | 'update' | 'virus' | 'paint' | 'info' | 'camera' | 'slides' | 'mail' | 'nebula-v' | 'google-search' | 'shop' | 'screencast' | 'sticky-notes';
+export type AppId = 'store' | 'files' | 'settings' | 'assistant' | 'google-drive' | 'notes' | 'calc' | 'terminal' | 'browser' | 'trash' | 'news' | 'maps' | 'monitor' | 'calendar' | 'snake' | 'minesweeper' | 'image-viewer' | 'update' | 'virus' | 'paint' | 'info' | 'camera' | 'slides' | 'mail' | 'nebula-v' | 'google-search' | 'shop' | 'screencast' | 'sticky-notes' | 'nde';
 export type ThemeMode = 'dark' | 'light';
 export type PowerStatus = 'on' | 'off' | 'booting';
 export type TaskbarPosition = 'top' | 'bottom' | 'left' | 'right';
@@ -283,6 +285,7 @@ interface OSContextType {
   playSound: (type: 'click' | 'open' | 'close' | 'notify') => void;
   setGlobalScale: (scale: number) => void;
   factoryReset: () => void;
+  setSystemStats: (stats: Partial<{ cpu: number; ram: number; net: number }>) => void;
   
   createFolder: (name: string, parentId: string | null) => void;
   importFile: (name: string, content: string, size: number, parentId: string | null) => void;
@@ -345,6 +348,7 @@ export const APP_INFO: Record<AppId, { icon: any; label: string }> = {
   'shop': { icon: Store, label: 'Shop Nebulabs' },
   'screencast': { icon: Tv, label: 'Nebula Cast' },
   'sticky-notes': { icon: StickyNoteIcon, label: 'Sticky Notes' },
+  'nde': { icon: Code2, label: 'NDE Dev Tool' },
 };
 
 const INITIAL_FILES: FileSystemItem[] = [
@@ -359,11 +363,11 @@ const INITIAL_DESKTOP: DesktopShortcut[] = [
   { id: 'browser', label: 'Nebula Browser', icon: Globe, x: PADDING, y: PADDING + GRID_Y },
   { id: 'files', label: 'File Explorer', icon: FolderOpen, x: PADDING, y: PADDING + (GRID_Y * 2) },
   { id: 'store', label: 'App Store', icon: ShoppingBag, x: PADDING, y: PADDING + (GRID_Y * 3) },
-  { id: 'shop', label: 'Shop Nebulabs', icon: Store, x: PADDING, y: PADDING + (GRID_Y * 4) },
+  { id: 'nde', label: 'NDE Dev Tool', icon: Braces, x: PADDING, y: PADDING + (GRID_Y * 4) },
 ];
 
-const INITIAL_APPS: AppId[] = ['store', 'files', 'settings', 'assistant', 'notes', 'calc', 'terminal', 'browser', 'trash', 'news', 'maps', 'monitor', 'calendar', 'snake', 'minesweeper', 'update', 'paint', 'info', 'camera', 'slides', 'mail', 'nebula-v', 'google-search', 'shop', 'screencast', 'sticky-notes'];
-const INITIAL_PINNED: AppId[] = ['files', 'store', 'shop', 'assistant', 'google-search', 'browser', 'settings', 'mail', 'sticky-notes'];
+const INITIAL_APPS: AppId[] = ['store', 'files', 'settings', 'assistant', 'notes', 'calc', 'terminal', 'browser', 'trash', 'news', 'maps', 'monitor', 'calendar', 'snake', 'minesweeper', 'update', 'paint', 'info', 'camera', 'slides', 'mail', 'nebula-v', 'google-search', 'shop', 'screencast', 'sticky-notes', 'nde'];
+const INITIAL_PINNED: AppId[] = ['files', 'store', 'shop', 'assistant', 'google-search', 'browser', 'nde', 'settings', 'mail', 'sticky-notes'];
 
 const AVATAR_COLORS = ['#9333ea', '#3b82f6', '#e11d48', '#f97316', '#16a34a', '#ec4899', '#06b6d4'];
 const OFFLINE_WIFI = "Public_Guest_No_Internet";
@@ -372,7 +376,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   const [currentUser, setCurrentUser] = useState<LocalUser | null>(null);
   const [accounts, setAccounts] = useState<LocalUser[]>([]);
   const [powerStatus, setPowerStatusState] = useState<PowerStatus>('booting');
-  const [systemStats, setSystemStats] = useState({ cpu: 12, ram: 42, net: 2 });
+  const [systemStats, setSystemStatsState] = useState({ cpu: 12, ram: 42, net: 2 });
   const [isLocked, setIsLocked] = useState(false);
 
   const [isWidgetsOpen, setIsWidgetsOpenState] = useState(false);
@@ -545,7 +549,6 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   const login = useCallback((userId: string, password?: string): boolean => {
     const user = accounts.find(a => a.id === userId);
     if (user) {
-      // Allow login if no password exists on the account or if password matches
       if (user.password && user.password !== password) return false;
       setCurrentUser(user);
       localStorage.setItem('nebula_current_user_id', userId);
@@ -583,7 +586,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       id: Math.random().toString(36).substr(2, 9),
       username,
       avatarColor: isKid ? '#ec4899' : (isSchool ? '#3b82f6' : AVATAR_COLORS[Math.floor(Math.random() * AVATAR_COLORS.length)]),
-      password: password,
+      password: password || undefined,
       isWorkAccount: isWork,
       isSchoolAccount: isSchool,
       isKidAccount: isKid,
@@ -653,9 +656,9 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     localStorage.setItem('nebula_accounts', JSON.stringify(updatedAccounts));
   };
 
-  const markEmailRead = (id: string) => {
+  const markEmailRead = useCallback((id: string) => {
     setEmails(prev => prev.map(email => email.id === id ? { ...email, isRead: true } : email));
-  };
+  }, []);
 
   const archiveEmail = (id: string) => {
     setEmails(prev => prev.map(e => e.id === id ? { ...e, folder: 'archive' } : e));
@@ -776,6 +779,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     else if (appId === 'notes') { initialWidth = 500; initialHeight = 600; }
     else if (appId === 'assistant') { initialWidth = 400; initialHeight = 650; }
     else if (appId === 'virus') { initialWidth = 300; initialHeight = 250; }
+    else if (appId === 'nde') { initialWidth = 900; initialHeight = 700; }
     const newId = `${appId}-${Date.now()}`;
     const newWindow: WindowInstance = {
       id: newId, appId, title, isMinimized: false, isMaximized: false, zIndex: nextZIndex,
@@ -847,6 +851,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   const setVolume = (v: number) => { setVolumeState(v); saveSetting('volume', v); };
   const setBrightness = (b: number) => { setBrightnessState(b); saveSetting('brightness', b); };
   const setGlobalScale = (s: number) => { setGlobalScaleState(s); saveSetting('global_scale', s); };
+  const setSystemStats = (stats: Partial<{ cpu: number; ram: number; net: number }>) => { setSystemStatsState(prev => ({ ...prev, ...stats })); };
 
   const factoryReset = useCallback(() => {
     if (typeof window !== 'undefined') {
@@ -1117,7 +1122,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       setCursorColor, setMouserScale, setInverted, setGrayscale, setGlassEnabled, setTaskbarPosition, rotateTaskbar, setTaskbarSize,
       setIconSize, connectToWifi, setVolume, setBrightness, setIsWidgetsOpen,
       setIsQuickSettingsOpen, setIsStartOpen, setIsChatOpen, sendChatMessage, setCurrentDisplayId, setSecurityEnabled, updateBIOSSettings, restart, shutDown, powerOn,
-      minimizeAllWindows, playSound, setGlobalScale, factoryReset,
+      minimizeAllWindows, playSound, setGlobalScale, factoryReset, setSystemStats,
       createFolder, importFile, renameFileSystemItem, moveToTrash, restoreFromTrash, emptyTrash, deleteItemPermanently,
       updateDesktopAppPosition, toggleDesktopApp, togglePinApp, reorderPinnedApps,
       reorderStartMenu, createStartFolder, addAppToStartFolder, removeAppFromStartFolder, renameStartFolder, deleteStartFolder,

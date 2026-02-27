@@ -5,11 +5,11 @@
 
 @layer base {
   :root {
-    --background: 210 28% 19%;
+    --background: 210 28% 10%;
     --foreground: 0 0% 100%;
-    --card: 210 29% 25%;
+    --card: 210 29% 15%;
     --card-foreground: 0 0% 100%;
-    --popover: 210 28% 19%;
+    --popover: 210 28% 10%;
     --popover-foreground: 0 0% 100%;
     --primary: 262.1 83.3% 57.8%;
     --primary-foreground: 0 0% 100%;
@@ -19,8 +19,8 @@
     --accent-foreground: 0 0% 100%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
-    --border: 210 29% 35%;
-    --input: 210 29% 35%;
+    --border: 210 29% 25%;
+    --input: 210 29% 25%;
     --ring: 262.1 83.3% 57.8%;
     --radius: 0.75rem;
     --sidebar-background: 210 28% 15%;
@@ -82,18 +82,21 @@
 .glass-disabled .glass { backdrop-filter: none !important; @apply bg-background/95; }
 .light .glass { @apply bg-white/80 border-black/5; }
 
-/* Force accent colors on interactive elements */
-button, [role="button"], input, select, textarea, [data-accented="true"] {
-  --accent: var(--accent);
-  --primary: var(--primary);
-  --ring: var(--ring);
-}
-
 /* Global Accent Propagation */
 .text-accent { color: hsl(var(--accent)) !important; }
 .bg-accent { background-color: hsl(var(--accent)) !important; }
 .border-accent { border-color: hsl(var(--accent)) !important; }
 .ring-accent { --tw-ring-color: hsl(var(--accent)) !important; }
+
+/* Force accent colors on interactive elements */
+button, [role="button"], input, select, textarea, [data-accented="true"], .bg-primary {
+  --accent: var(--accent);
+  --primary: var(--primary);
+  --ring: var(--ring);
+}
+
+.bg-primary { background-color: hsl(var(--accent)) !important; }
+.text-primary { color: hsl(var(--accent)) !important; }
 
 /* Selection fix */
 ::selection {
