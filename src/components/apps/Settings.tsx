@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useState, useRef, useMemo, useEffect } from 'react';
-import { useOS, TaskbarPosition, TaskbarSize, DesktopIconSize, AccentColor, CursorColor, AppId, APP_INFO } from '@/context/os-context';
+import { useOS, TaskbarPosition, TaskbarSize, DesktopIconSize, AccentColor, CursorColor, CursorShape, AppId, APP_INFO } from '@/context/os-context';
 import { 
   Monitor, Palette, User, Shield, Bell, BellOff, HelpCircle, Upload, 
   ImageIcon, Sun, Moon, Layout, Check, MousePointer2, 
@@ -50,7 +50,7 @@ export const Settings: React.FC<SettingsProps> = ({ tab }) => {
     wallpaper, updateWallpaper, theme, setTheme, taskbarPosition, setTaskbarPosition, 
     taskbarSize, setTaskbarSize, taskbarTransparency, setTaskbarTransparency, appTransparency, setAppTransparency, isTaskbarAutoHide, setTaskbarAutoHide, iconSize, setIconSize,
     accentColor, setAccentColor, customAccentHex, 
-    cursorColor, setCursorColor, mouserScale, setMouserScale, isInverted, setInverted,
+    cursorColor, setCursorColor, cursorShape, setCursorShape, mouserScale, setMouserScale, isInverted, setInverted,
     isGrayscale, setGrayscale,
     glassEnabled, setGlassEnabled, brightness, setBrightness,
     currentDisplayId, setCurrentDisplayId, displayLayout, updateDisplayLayout, resetDisplayLayout,
@@ -188,6 +188,19 @@ export const Settings: React.FC<SettingsProps> = ({ tab }) => {
                     <SelectContent className="glass border-white/10"><SelectItem value="black">Black</SelectItem><SelectItem value="white">White</SelectItem><SelectItem value="accent">System Accent</SelectItem></SelectContent>
                   </Select>
                 </div>
+
+                <div className="flex items-center justify-between p-5 bg-foreground/5 rounded-2xl border border-border/50">
+                  <div className="flex items-center gap-4"><div className="p-2.5 rounded-xl bg-accent/10 text-accent"><MousePointer2 size={20} className="rotate-[-45deg]" /></div><div className="space-y-0.5"><Label className="text-sm font-bold">Pointer Architecture</Label><p className="text-[11px] text-muted-foreground">Select hardware cursor geometry</p></div></div>
+                  <Select value={cursorShape} onValueChange={(v) => setCursorShape(v as any)}>
+                    <SelectTrigger className="w-40 rounded-xl bg-foreground/5 border-border/50"><SelectValue /></SelectTrigger>
+                    <SelectContent className="glass border-white/10">
+                      <SelectItem value="nebula">Classic Nebula</SelectItem>
+                      <SelectItem value="windows">Windows 11</SelectItem>
+                      <SelectItem value="macos">macOS Pro</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
                 <div className="flex items-center justify-between p-5 bg-foreground/5 rounded-2xl border border-border/50">
                   <div className="flex items-center gap-4"><div className="p-2.5 rounded-xl bg-accent/10 text-accent"><Pipette size={20} /></div><div className="space-y-0.5"><Label className="text-sm font-bold">Grayscale Mode</Label><p className="text-[11px] text-muted-foreground">Remove all interface colors</p></div></div>
                   <Switch checked={isGrayscale} onCheckedChange={setGrayscale} />

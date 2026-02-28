@@ -201,7 +201,7 @@ export const Taskbar: React.FC = () => {
         </div>
 
         {/* Center Section: Centered Apps */}
-        <div className={cn("flex items-center", isVertical ? "flex-col justify-center gap-2" : "justify-center gap-2")}>
+        <div className={cn("flex items-center justify-center", isVertical ? "flex-col justify-center gap-2" : "justify-center gap-2")}>
           {pinnedApps.map((appId, index) => {
             const info = APP_INFO[appId];
             if (!info) return null;

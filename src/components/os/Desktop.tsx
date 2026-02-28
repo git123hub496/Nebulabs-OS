@@ -173,7 +173,7 @@ export const Desktop: React.FC = () => {
   const { 
     wallpaper, openWindows, openApp, theme, accentColor, customAccentHex,
     powerStatus, powerOn, taskbarPosition, iconSize, currentUser,
-    cursorColor, isInverted, setInverted, isGrayscale, setGrayscale, glassEnabled, setGlassEnabled, desktopApps, updateDesktopAppPosition, toggleDesktopApp,
+    cursorColor, cursorShape, isInverted, setInverted, isGrayscale, setGrayscale, glassEnabled, setGlassEnabled, desktopApps, updateDesktopAppPosition, toggleDesktopApp,
     isWidgetsOpen, setIsWidgetsOpen, isQuickSettingsOpen, setIsQuickSettingsOpen,
     isStartOpen, setIsStartOpen, isChatOpen, setIsChatOpen, activeWindowId, closeWindow, minimizeAllWindows,
     brightness, currentDisplayId, displayLayout, isSecurityEnabled, addNotification,
@@ -487,9 +487,19 @@ export const Desktop: React.FC = () => {
     }
 
     const size = 24 * mouserScale;
-    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24" fill="${color.replace('#', '%23')}" stroke="white" stroke-width="1.5"><path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z"/></svg>`;
-    return { '--cursor-url': `url('data:image/svg+xml;utf8,${svg}'), auto` } as React.CSSProperties;
-  }, [cursorColor, mouserScale, isClient, accentColor, customAccentHex]);
+    
+    let cursorPath = '<path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z"/>'; // Classic Nebula
+    
+    if (cursorShape === 'windows') {
+      cursorPath = '<path d="M5.5 3.21V20.8c0 .45.54.67.85.35l4.83-4.83 2.3 5.17c.14.32.53.45.82.28l2.12-.94c.29-.13.43-.48.33-.79l-2.32-5.15 6.42.06c.31 0 .5-.32.36-.59L6.35 2.86c-.18-.32-.85-.19-.85.35z"/>';
+    } else if (cursorShape === 'macos') {
+      cursorPath = '<path d="M5.65 3.12L18.15 15.62L12.15 15.62L15.65 22.12L12.65 23.62L9.15 17.12L3.15 23.12L3.15 3.12L5.65 3.12Z"/>';
+    }
+
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24" fill="${color.replace('#', '%23')}" stroke="${cursorShape === 'macos' ? 'white' : 'white'}" stroke-width="${cursorShape === 'macos' ? '1.5' : '1.5'}">${cursorPath}</svg>`;
+    const base64Svg = btoa(svg);
+    return { '--cursor-url': `url('data:image/svg+xml;base64,${base64Svg}'), auto` } as React.CSSProperties;
+  }, [cursorColor, cursorShape, mouserScale, isClient, accentColor, customAccentHex]);
 
   const systemVars = {
     '--accent': accentVarMap[accentColor] || accentVarMap['purple'],
