@@ -145,7 +145,7 @@ export const Taskbar: React.FC = () => {
           taskbarPosition === 'top' && "top-0 left-0 right-0 border-b",
           taskbarPosition === 'left' && "left-0 top-0 bottom-0 border-r",
           taskbarPosition === 'right' && "right-0 top-0 bottom-0 border-l",
-          isVertical ? "grid-rows-[auto_1fr_auto] py-2 w-full" : "grid-cols-[1fr_auto_1fr] items-center px-2",
+          isVertical ? "grid-rows-[auto_1fr_auto] py-2 w-full" : "grid-cols-[1fr_auto_1fr] items-center px-4",
           isSchool && "border-blue-500/20",
           isKid && "border-pink-500/20"
         )}
@@ -159,8 +159,8 @@ export const Taskbar: React.FC = () => {
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
-        {/* Left Section: Start & Search - Pinned to left edge */}
-        <div className={cn("flex items-center", isVertical ? "flex-col gap-2 w-full" : "gap-2 justify-start")}>
+        {/* Left Section: Start & Widgets & Search */}
+        <div className={cn("flex items-center", isVertical ? "flex-col gap-2 w-full" : "gap-4 justify-start")}>
           <div className="relative">
             <button
               onClick={(e) => { e.stopPropagation(); setIsStartOpen(!isStartOpen); }}
@@ -178,30 +178,26 @@ export const Taskbar: React.FC = () => {
             )}
           </div>
 
-          {!isVertical ? (
+          {!isVertical && (
             <form onSubmit={handleSearch} className="flex items-center bg-white/5 border border-white/5 rounded-xl px-3 py-1 gap-2 focus-within:border-accent/40 focus-within:bg-white/10 transition-all w-48 lg:w-64 group">
               <Search size={14} className="text-white/20 group-focus-within:text-accent transition-colors" />
               <input 
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Search Nebula..."
+                placeholder="Search Google..."
                 className="bg-transparent border-none outline-none text-xs text-white placeholder:text-white/20 w-full"
               />
             </form>
-          ) : (
-            <button className="p-2 rounded-xl hover:bg-white/10 text-white/40 hover:text-accent transition-all" onClick={() => openApp('google-search', 'Nebula Search')}>
-              <Search size={iconSize} />
-            </button>
           )}
           
-          {!isSchool && !isKid && (
+          {!isSchool && !isKid && !isVertical && (
             <button onClick={() => setIsWidgetsOpen(!isWidgetsOpen)} className={cn("p-2 rounded-xl hover:bg-white/10 transition-all active:scale-95", isWidgetsOpen && "bg-accent/20 text-accent")}>
               <LayoutGrid size={iconSize} className={isWidgetsOpen ? "text-accent" : "text-white/60"} />
             </button>
           )}
         </div>
 
-        {/* Center Section: Centered Apps - Perfectly centered */}
+        {/* Center Section: Perfectly Centered Apps */}
         <div className={cn("flex items-center justify-center", isVertical ? "flex-col justify-center gap-2 w-full" : "justify-center gap-2")}>
           {pinnedApps.map((appId, index) => {
             const info = APP_INFO[appId];
@@ -229,25 +225,11 @@ export const Taskbar: React.FC = () => {
           })}
         </div>
 
-        {/* Right Section: Identity & Quick Settings - Pinned to right edge */}
-        <div className={cn("flex items-center", isVertical ? "flex-col pb-2 gap-2 w-full" : "justify-end gap-2")}>
+        {/* Right Section: System Cluster & Identity - Pinned to the right edge */}
+        <div className={cn("flex items-center", isVertical ? "flex-col pb-2 gap-2 w-full" : "justify-end gap-3")}>
           <button onClick={() => setIsChatOpen(!isChatOpen)} className={cn("p-2 rounded-xl hover:bg-white/10", isChatOpen && "bg-accent/20")}>
             <MessageCircle size={iconSize} className={isChatOpen ? "text-accent" : "text-white/60"} />
           </button>
-
-          <Avatar 
-            className="w-8 h-8 border border-white/10 cursor-pointer hover:border-accent transition-all active:scale-90 shrink-0" 
-            onClick={(e) => { 
-              e.stopPropagation(); 
-              openApp('settings', 'Settings', { tab: 'accounts' });
-            }}
-            title="Account Settings"
-          >
-            <AvatarImage src={currentUser?.avatarUrl} className="object-cover" />
-            <AvatarFallback className="text-[10px] font-bold text-white" style={{ backgroundColor: currentUser?.avatarColor || 'var(--accent)' }}>
-              {currentUser?.username[0].toUpperCase() || 'G'}
-            </AvatarFallback>
-          </Avatar>
 
           <div className="relative">
             <button
@@ -276,6 +258,20 @@ export const Taskbar: React.FC = () => {
               </div>
             )}
           </div>
+
+          <Avatar 
+            className="w-8 h-8 border border-white/10 cursor-pointer hover:border-accent hover:scale-110 transition-all active:scale-90 shrink-0" 
+            onClick={(e) => { 
+              e.stopPropagation(); 
+              openApp('settings', 'Settings', { tab: 'accounts' });
+            }}
+            title="Account Identity"
+          >
+            <AvatarImage src={currentUser?.avatarUrl} className="object-cover" />
+            <AvatarFallback className="text-[10px] font-bold text-white" style={{ backgroundColor: currentUser?.avatarColor || 'var(--accent)' }}>
+              {currentUser?.username[0].toUpperCase() || 'G'}
+            </AvatarFallback>
+          </Avatar>
 
           <button onClick={() => minimizeAllWindows()} className={cn("border-white/10 hover:bg-white/10 transition-colors", isVertical ? "w-full h-2 border-t mt-1" : "h-full w-2 border-l ml-1")} title="Show Desktop" />
         </div>

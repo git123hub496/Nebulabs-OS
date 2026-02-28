@@ -45,7 +45,8 @@ import {
   Code2,
   Braces,
   Type,
-  Car
+  Car,
+  Clock
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { respondToEmail } from '@/ai/flows/mail-ai-flow';
@@ -422,6 +423,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   const [accounts, setAccounts] = useState<LocalUser[]>([]);
   const [powerStatus, setPowerStatusState] = useState<PowerStatus>('booting');
   const [systemStats, setSystemStatsState] = useState({ cpu: 12, ram: 42, net: 2 });
+  const [systemLoad, setSystemLoad] = useState({ cpu: 0, net: 0 }); // Spikes
   const [isLocked, setIsLocked] = useState(false);
   const [isNDEEnabled, setIsNDEEnabledState] = useState(false);
 
@@ -509,6 +511,41 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       audio.volume = 0.2;
       audio.play().catch(() => {});
     } catch (e) {}
+  }, []);
+
+  // System Stats Realism Logic
+  useEffect(() => {
+    if (powerStatus !== 'on') return;
+
+    const statsInterval = setInterval(() => {
+      // Baseline calculation
+      const windowCount = openWindows.length;
+      const baseRam = Math.min(95, 20 + (windowCount * 8) + (Math.random() * 5));
+      const baseCpu = Math.min(90, 5 + (windowCount * 4) + (Math.random() * 3));
+      const baseNet = isOnline ? (1 + (Math.random() * 5)) : 0;
+
+      // Combine with spikes
+      setSystemStatsState({
+        cpu: Math.round(Math.min(100, baseCpu + systemLoad.cpu)),
+        ram: Math.round(baseRam),
+        net: Math.round(Math.min(1000, baseNet + systemLoad.net))
+      });
+
+      // Decay spikes
+      setSystemLoad(prev => ({
+        cpu: Math.max(0, prev.cpu - 5),
+        net: Math.max(0, prev.net - 10)
+      }));
+    }, 1000);
+
+    return () => clearInterval(statsInterval);
+  }, [powerStatus, openWindows.length, isOnline, systemLoad]);
+
+  const triggerSpike = useCallback((type: 'cpu' | 'net', amount: number) => {
+    setSystemLoad(prev => ({
+      ...prev,
+      [type]: prev[type] + amount
+    }));
   }, []);
 
   const addNotification = useCallback((title: string, message: string, type: SystemNotification['type'] = 'system') => {
@@ -653,7 +690,6 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       if (parsedBios.isLite) {
         setInstalledApps(LITE_APPS);
         setPinnedApps(LITE_PINNED);
-        setGlassEnabledState(false);
       } else {
         setInstalledApps(FULL_APPS);
         setPinnedApps(FULL_PINNED);
@@ -708,21 +744,13 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     };
     setCurrentUser(guestUser);
     setIsLocked(false);
-    // Reset to defaults for guest
     setWallpaperState("https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=1920");
     setThemeState('dark');
     setAccentColorState('purple');
-    setTaskbarPositionState('bottom');
-    setTaskbarSizeState(48);
-    setTaskbarAutoHideState(false);
-    setGlobalScaleState(1.0);
-    setTaskbarTransparencyState(80);
-    setAppTransparencyState(80);
     setFileSystem(INITIAL_FILES);
     setTrash([]);
     setStickyNotes([]);
     setNotesInternal("");
-    setCustomCursorUrlState("");
     playSound('open');
   }, [playSound]);
 
@@ -744,12 +772,6 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     }
     return false;
   }, [currentUser]);
-
-  useEffect(() => {
-    if (currentUser && isLocked && !currentUser.password) {
-      unlock("");
-    }
-  }, [currentUser, isLocked, unlock]);
 
   const createAccount = useCallback((username: string, password?: string, isSchool: boolean = false, isWork: boolean = false, isKid: boolean = false, districtId?: string) => {
     const effectiveDistrictId = districtId || (isSchool ? "NHU-7" : undefined);
@@ -850,6 +872,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const sendEmail = async (to: string, subject: string, content: string) => {
+    triggerSpike('net', 150);
     const newId = Math.random().toString(36).substr(2, 9);
     const sentEmail: Email = {
       id: newId,
@@ -882,6 +905,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
         };
         setEmails(prev => [replyEmail, ...prev]);
         addNotification(`New Mail: ${firstRecipient}`, response.responseSubject, 'app');
+        triggerSpike('net', 100);
       }, 3000 + Math.random() * 5000);
     } catch (e) {
       console.error("AI Mail Core: Response generation failed.", e);
@@ -894,6 +918,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       return;
     }
 
+    triggerSpike('net', 50);
     const msg: ChatMessage = {
       id: Math.random().toString(36).substr(2, 9),
       sender: currentUser?.username || 'Me',
@@ -924,6 +949,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
           isBot: true
         };
         setChatMessages(prev => [...prev, botMsg]);
+        triggerSpike('net', 50);
         if (!isChatOpen) {
           addNotification(`Chat: ${recipient}`, response.response.slice(0, 30) + '...', 'app');
         }
@@ -934,12 +960,9 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const openApp = (appId: AppId, title: string, params?: any) => {
+    triggerSpike('cpu', 40); // Spike CPU when opening app
     if (appId === 'sticky-notes') {
       createStickyNote();
-      return;
-    }
-    if (appId === 'nde' && !isNDEEnabled) {
-      addNotification("Launch Failed", "Developer Environment is currently disabled.", "security");
       return;
     }
     const existing = openWindows.find(w => w.appId === appId && JSON.stringify(w.params) === JSON.stringify(params));
@@ -1009,7 +1032,12 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     setOpenWindows(prev => prev.map(w => w.id === windowId ? { ...w, displayId } : w));
   };
 
-  const setNotes = (content: string) => { if (!isOnline) return; setNotesInternal(content); saveSetting('notes', content); };
+  const setNotes = (content: string) => { 
+    if (!isOnline) return; 
+    triggerSpike('cpu', 10);
+    setNotesInternal(content); 
+    saveSetting('notes', content); 
+  };
   const setTheme = (t: ThemeMode) => { setThemeState(t); saveSetting('theme', t); };
   const setAccentColor = (c: AccentColor) => { setAccentColorState(c); saveSetting('accent', c); };
   const setCustomAccentHex = (h: string) => { setCustomAccentHexState(h); saveSetting('custom_accent', h); };
@@ -1114,6 +1142,8 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const importFile = (name: string, content: string, size: number, parentId: string | null) => {
+    triggerSpike('net', 300);
+    triggerSpike('cpu', 20);
     const newFile: FileSystemItem = { id: Math.random().toString(36).substr(2, 9), name, type: 'file', parentId, content, size };
     setFileSystem(prev => [...prev, newFile]);
   };
