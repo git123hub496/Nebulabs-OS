@@ -611,6 +611,9 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     const sn = localStorage.getItem(`nebula_${user.id}_sticky_notes`);
     if (sn) setStickyNotes(JSON.parse(sn));
 
+    const pa = localStorage.getItem(`nebula_${user.id}_pinned_apps`);
+    if (pa) setPinnedApps(JSON.parse(pa));
+
     const sl = localStorage.getItem(`nebula_${user.id}_start_layout`);
     if (sl) setStartMenuLayout(JSON.parse(sl));
   }, []);
@@ -1159,10 +1162,17 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const togglePinApp = (id: AppId) => {
-    setPinnedApps(prev => prev.includes(id) ? prev.filter(a => a !== id) : [...prev, id]);
+    setPinnedApps(prev => {
+      const next = prev.includes(id) ? prev.filter(a => a !== id) : [...prev, id];
+      saveSetting('pinned_apps', next);
+      return next;
+    });
   };
 
-  const reorderPinnedApps = (newOrder: AppId[]) => setPinnedApps(newOrder);
+  const reorderPinnedApps = (newOrder: AppId[]) => {
+    setPinnedApps(newOrder);
+    saveSetting('pinned_apps', newOrder);
+  };
 
   const reorderStartMenu = (newLayout: StartMenuItem[]) => {
     setStartMenuLayout(newLayout);

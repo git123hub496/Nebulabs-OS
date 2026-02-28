@@ -91,7 +91,7 @@ export const BIOS: React.FC<{ onClose: () => void }> = ({ onClose }) => {
         if (selectedItem === 1) setSettings(s => ({ ...s, networkStack: !s.networkStack }));
         if (selectedItem === 2) setSettings(s => ({ ...s, virtualization: !s.virtualization }));
         if (selectedItem === 3) setSettings(s => ({ ...s, integratedGfx: !s.integratedGfx }));
-        if (selectedItem === 4) setSettings(s => ({ ...s, isLite: !s.isLite })); // Lite Mode
+        if (selectedItem === 4) setSettings(s => ({ ...s, isLite: !s.isLite })); // Edition toggle
         if (selectedItem === 6) setSettings(s => ({ ...s, fastBoot: !s.fastBoot }));
       }
       if (activeSection === 'Power') {
@@ -225,7 +225,7 @@ export const BIOS: React.FC<{ onClose: () => void }> = ({ onClose }) => {
               { label: 'Network Stack', value: settings.networkStack ? '[Enabled]' : '[Disabled]' },
               { label: 'Virtualization Technology', value: settings.virtualization ? '[Enabled]' : '[Disabled]' },
               { label: 'Integrated Graphics Bridge', value: settings.integratedGfx ? '[Enabled]' : '[Disabled]' },
-              { label: 'System Edition', value: settings.isLite ? '[Lite Mode]' : '[Standard]' },
+              { label: 'System Edition', value: settings.isLite ? '[Lite Edition]' : '[Standard Pro]' },
               { label: 'USB Port Configuration', value: '[All Ports Enabled]' },
               { label: 'Fast Boot Support', value: settings.fastBoot ? '[Enabled]' : '[Disabled]' },
             ].map((item, i) => (
