@@ -57,7 +57,8 @@ import {
   Smartphone,
   ShieldCheck,
   ShieldAlert,
-  Type
+  Type,
+  Car
 } from 'lucide-react';
 import { FileExplorer } from '../apps/FileExplorer';
 import { AppStore } from '../apps/AppStore';
@@ -88,6 +89,7 @@ import { ShopNebulabs } from '../apps/ShopNebulabs';
 import { Screencast } from '../apps/Screencast';
 import { NDE } from '../apps/NDE';
 import { NebulaDocs } from '../apps/NebulaDocs';
+import { NebulaGo } from '../apps/NebulaGo';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -123,6 +125,7 @@ const APP_COMPONENTS: Record<AppId, (win: WindowInstance) => React.ReactNode> = 
   'screencast': (win) => <Screencast />,
   'nde': (win) => <NDE />,
   'docs': (win) => <NebulaDocs />,
+  'go': (win) => <NebulaGo />,
   'sticky-notes': (win) => <div className="p-8 text-center text-white/40"><p className="text-sm font-bold">Sticky Notes Manager</p><p className="text-[10px] uppercase">A new note has been created on your desktop.</p></div>,
   'info': (win) => (
     <DesktopInfoApp />

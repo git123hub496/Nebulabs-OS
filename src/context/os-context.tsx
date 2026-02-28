@@ -44,13 +44,14 @@ import {
   StickyNote as StickyNoteIcon,
   Code2,
   Braces,
-  Type
+  Type,
+  Car
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { respondToEmail } from '@/ai/flows/mail-ai-flow';
 import { respondToChat } from '@/ai/flows/chat-ai-flow';
 
-export type AppId = 'store' | 'files' | 'settings' | 'assistant' | 'google-drive' | 'notes' | 'calc' | 'terminal' | 'browser' | 'trash' | 'news' | 'maps' | 'monitor' | 'calendar' | 'snake' | 'minesweeper' | 'image-viewer' | 'update' | 'virus' | 'paint' | 'info' | 'camera' | 'slides' | 'mail' | 'nebula-v' | 'google-search' | 'shop' | 'screencast' | 'sticky-notes' | 'nde' | 'docs';
+export type AppId = 'store' | 'files' | 'settings' | 'assistant' | 'google-drive' | 'notes' | 'calc' | 'terminal' | 'browser' | 'trash' | 'news' | 'maps' | 'monitor' | 'calendar' | 'snake' | 'minesweeper' | 'image-viewer' | 'update' | 'virus' | 'paint' | 'info' | 'camera' | 'slides' | 'mail' | 'nebula-v' | 'google-search' | 'shop' | 'screencast' | 'sticky-notes' | 'nde' | 'docs' | 'go';
 export type ThemeMode = 'dark' | 'light';
 export type PowerStatus = 'on' | 'off' | 'booting';
 export type TaskbarPosition = 'top' | 'bottom' | 'left' | 'right';
@@ -366,6 +367,7 @@ export const APP_INFO: Record<AppId, { icon: any; label: string }> = {
   'sticky-notes': { icon: StickyNoteIcon, label: 'Sticky Notes' },
   'nde': { icon: Code2, label: 'NDE Dev Tool' },
   'docs': { icon: Type, label: 'Nebula Docs' },
+  'go': { icon: Car, label: 'Nebula Go' },
 };
 
 const INITIAL_FILES: FileSystemItem[] = [
@@ -389,10 +391,10 @@ const INITIAL_DESKTOP: DesktopShortcut[] = [
   { id: 'store', label: 'App Store', icon: ShoppingBag, x: PADDING, y: PADDING + (GRID_Y * 3) },
 ];
 
-const FULL_APPS: AppId[] = ['store', 'files', 'settings', 'assistant', 'notes', 'calc', 'terminal', 'browser', 'trash', 'news', 'maps', 'monitor', 'calendar', 'snake', 'minesweeper', 'update', 'paint', 'info', 'camera', 'slides', 'mail', 'nebula-v', 'google-search', 'shop', 'screencast', 'sticky-notes', 'nde', 'docs'];
+const FULL_APPS: AppId[] = ['store', 'files', 'settings', 'assistant', 'notes', 'calc', 'terminal', 'browser', 'trash', 'news', 'maps', 'monitor', 'calendar', 'snake', 'minesweeper', 'update', 'paint', 'info', 'camera', 'slides', 'mail', 'nebula-v', 'google-search', 'shop', 'screencast', 'sticky-notes', 'nde', 'docs', 'go'];
 const LITE_APPS: AppId[] = ['files', 'settings', 'browser', 'notes', 'calc', 'trash', 'info', 'sticky-notes'];
 
-const FULL_PINNED: AppId[] = ['files', 'store', 'shop', 'assistant', 'google-search', 'browser', 'settings', 'mail', 'sticky-notes', 'docs'];
+const FULL_PINNED: AppId[] = ['files', 'store', 'shop', 'assistant', 'google-search', 'browser', 'settings', 'mail', 'sticky-notes', 'docs', 'go'];
 const LITE_PINNED: AppId[] = ['files', 'browser', 'settings', 'notes'];
 
 const AVATAR_COLORS = ['#9333ea', '#3b82f6', '#e11d48', '#f97316', '#16a34a', '#ec4899', '#06b6d4'];
@@ -944,6 +946,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     else if (appId === 'virus') { initialWidth = 300; initialHeight = 250; }
     else if (appId === 'nde') { initialWidth = 900; initialHeight = 700; }
     else if (appId === 'docs') { initialWidth = 900; initialHeight = 800; }
+    else if (appId === 'go') { initialWidth = 1000; initialHeight = 600; }
     const newId = `${appId}-${Date.now()}`;
     const newWindow: WindowInstance = {
       id: newId, appId, title, isMinimized: false, isMaximized: false, zIndex: nextZIndex,
