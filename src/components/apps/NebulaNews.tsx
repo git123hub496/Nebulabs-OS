@@ -146,16 +146,6 @@ export const NebulaNews: React.FC = () => {
 
       {/* Main Content */}
       <div className="flex-1 flex overflow-hidden">
-        {/* Sidebar Categories */}
-        <div className="w-48 border-r border-white/5 bg-black/10 p-4 space-y-2 hidden lg:block">
-          <h3 className="text-[10px] font-bold text-white/20 uppercase tracking-widest mb-4">Categories</h3>
-          <Button variant="ghost" className="w-full justify-start gap-3 bg-accent/10 text-accent font-bold"><Globe size={14} /> World</Button>
-          <Button variant="ghost" className="w-full justify-start gap-3 text-white/40"><TrendingUp size={14} /> Trending</Button>
-          <Button variant="ghost" className="w-full justify-start gap-3 text-white/40"><Zap size={14} /> Technology</Button>
-          <Button variant="ghost" className="w-full justify-start gap-3 text-white/40"><Search size={14} /> Science</Button>
-          <Button variant="ghost" className="w-full justify-start gap-3 text-white/40"><Bookmark size={14} /> Business</Button>
-        </div>
-
         {/* Article Grid */}
         <ScrollArea className="flex-1 p-6">
           <div className="max-w-4xl mx-auto space-y-8">
