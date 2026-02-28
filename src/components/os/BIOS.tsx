@@ -4,6 +4,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useOS, BIOSSettings as KernelBIOSSettings } from '@/context/os-context';
 import { cn } from '@/lib/utils';
+import { ChevronUp, ChevronDown, ChevronLeft, ChevronRight, CornerDownLeft, X } from 'lucide-react';
 
 type BIOSSection = 'Main' | 'Advanced' | 'Power' | 'Security' | 'Boot' | 'Exit';
 
@@ -30,7 +31,8 @@ export const BIOS: React.FC<{ onClose: () => void }> = ({ onClose }) => {
     deviceName: biosSettings.deviceName || 'SuperNova',
     integratedGfx: biosSettings.integratedGfx,
     acLossPolicy: biosSettings.acLossPolicy || 'Stay Off',
-    wakeOnLan: biosSettings.wakeOnLan
+    wakeOnLan: biosSettings.wakeOnLan,
+    isLite: biosSettings.isLite
   });
 
   const [bootOrder, setBootOrder] = useState(['Nebulabs Virtual SSD-0', 'Network PXE', 'USB Flash Device']);
@@ -54,13 +56,20 @@ export const BIOS: React.FC<{ onClose: () => void }> = ({ onClose }) => {
     }
   }, [isInitializing]);
 
-  const handleAction = useCallback((direction: 'up' | 'down' | 'enter' | 'toggle') => {
+  const handleAction = useCallback((direction: 'up' | 'down' | 'enter' | 'toggle' | 'left' | 'right') => {
     if (isEditing && direction !== 'enter') return;
 
     if (direction === 'up') setSelectedItem(prev => Math.max(0, prev - 1));
     if (direction === 'down') {
-      const limits: Record<BIOSSection, number> = { Main: 3, Advanced: 5, Power: 3, Security: 2, Boot: 2, Exit: 2 };
+      const limits: Record<BIOSSection, number> = { Main: 3, Advanced: 6, Power: 3, Security: 2, Boot: 2, Exit: 2 };
       setSelectedItem(prev => Math.min(limits[activeSection], prev + 1));
+    }
+    if (direction === 'left' || direction === 'right') {
+      const sections: BIOSSection[] = ['Main', 'Advanced', 'Power', 'Security', 'Boot', 'Exit'];
+      const currentIndex = sections.indexOf(activeSection);
+      const nextIdx = direction === 'right' ? (currentIndex + 1) % sections.length : (currentIndex - 1 + sections.length) % sections.length;
+      setActiveSection(sections[nextIdx]);
+      setSelectedItem(0);
     }
 
     if (direction === 'toggle' || direction === 'enter') {
@@ -82,7 +91,8 @@ export const BIOS: React.FC<{ onClose: () => void }> = ({ onClose }) => {
         if (selectedItem === 1) setSettings(s => ({ ...s, networkStack: !s.networkStack }));
         if (selectedItem === 2) setSettings(s => ({ ...s, virtualization: !s.virtualization }));
         if (selectedItem === 3) setSettings(s => ({ ...s, integratedGfx: !s.integratedGfx }));
-        if (selectedItem === 5) setSettings(s => ({ ...s, fastBoot: !s.fastBoot }));
+        if (selectedItem === 4) setSettings(s => ({ ...s, isLite: !s.isLite })); // Lite Mode
+        if (selectedItem === 6) setSettings(s => ({ ...s, fastBoot: !s.fastBoot }));
       }
       if (activeSection === 'Power') {
         if (selectedItem === 0) {
@@ -102,8 +112,19 @@ export const BIOS: React.FC<{ onClose: () => void }> = ({ onClose }) => {
         newOrder[selectedItem + 1] = temp;
         setBootOrder(newOrder);
       }
+      if (activeSection === 'Exit') {
+        if (selectedItem === 0) {
+          setIsSaving(true);
+          updateBIOSSettings(settings);
+          setTimeout(() => { restart(); onClose(); }, 1500);
+        } else if (selectedItem === 1) {
+          onClose();
+        } else if (selectedItem === 2) {
+          factoryReset();
+        }
+      }
     }
-  }, [activeSection, selectedItem, bootOrder, isEditing, settings.acLossPolicy]);
+  }, [activeSection, selectedItem, bootOrder, isEditing, settings, onClose, restart, updateBIOSSettings, factoryReset]);
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     if (isSaving || isInitializing) return;
@@ -121,37 +142,13 @@ export const BIOS: React.FC<{ onClose: () => void }> = ({ onClose }) => {
       return;
     }
 
-    if (e.key === 'ArrowRight') {
-      const sections: BIOSSection[] = ['Main', 'Advanced', 'Power', 'Security', 'Boot', 'Exit'];
-      const currentIndex = sections.indexOf(activeSection);
-      setActiveSection(sections[(currentIndex + 1) % sections.length]);
-      setSelectedItem(0);
-    }
-    if (e.key === 'ArrowLeft') {
-      const sections: BIOSSection[] = ['Main', 'Advanced', 'Power', 'Security', 'Boot', 'Exit'];
-      const currentIndex = sections.indexOf(activeSection);
-      setActiveSection(sections[(currentIndex - 1 + sections.length) % sections.length]);
-      setSelectedItem(0);
-    }
+    if (e.key === 'ArrowRight') handleAction('right');
+    if (e.key === 'ArrowLeft') handleAction('left');
     if (e.key === 'ArrowUp') handleAction('up');
     if (e.key === 'ArrowDown') handleAction('down');
-    if (e.key === 'Enter') {
-      if (activeSection === 'Exit') {
-        if (selectedItem === 0) {
-          setIsSaving(true);
-          updateBIOSSettings(settings);
-          setTimeout(() => { restart(); onClose(); }, 1500);
-        } else if (selectedItem === 1) {
-          onClose();
-        } else {
-          factoryReset();
-        }
-      } else {
-        handleAction('enter');
-      }
-    }
+    if (e.key === 'Enter') handleAction('enter');
     if (e.key === ' ' || e.key === '+' || e.key === '=') handleAction('toggle');
-  }, [activeSection, handleAction, onClose, restart, isSaving, isInitializing, selectedItem, settings, updateBIOSSettings, isEditing, biosSettings, factoryReset]);
+  }, [handleAction, onClose, isSaving, isInitializing, isEditing]);
 
   useEffect(() => {
     window.addEventListener('keydown', handleKeyDown);
@@ -228,6 +225,7 @@ export const BIOS: React.FC<{ onClose: () => void }> = ({ onClose }) => {
               { label: 'Network Stack', value: settings.networkStack ? '[Enabled]' : '[Disabled]' },
               { label: 'Virtualization Technology', value: settings.virtualization ? '[Enabled]' : '[Disabled]' },
               { label: 'Integrated Graphics Bridge', value: settings.integratedGfx ? '[Enabled]' : '[Disabled]' },
+              { label: 'System Edition', value: settings.isLite ? '[Lite Mode]' : '[Standard]' },
               { label: 'USB Port Configuration', value: '[All Ports Enabled]' },
               { label: 'Fast Boot Support', value: settings.fastBoot ? '[Enabled]' : '[Disabled]' },
             ].map((item, i) => (
@@ -407,9 +405,19 @@ export const BIOS: React.FC<{ onClose: () => void }> = ({ onClose }) => {
           <div className="text-white font-black mb-4 uppercase tracking-widest border-b border-white/20 pb-2 shrink-0">Item Specific Help</div>
           <div className="leading-relaxed opacity-90 text-[#ccc] flex-1 overflow-y-auto pr-2 custom-scrollbar">
             {activeSection === 'Main' && "Displays general system information. Select 'System Model' to toggle hardware type."}
-            {activeSection === 'Advanced' && "Configure specialized hardware parameters."}
+            {activeSection === 'Advanced' && "Configure specialized hardware parameters. 'System Edition' toggles performance mode."}
             {activeSection === 'Exit' && "Commit settings to the Nebulabs Virtual CMOS memory and restart."}
           </div>
+          
+          <div className="mt-4 grid grid-cols-3 gap-2 bg-black/20 p-4 rounded border border-white/10">
+            <button onClick={() => handleAction('up')} className="p-2 bg-white/5 hover:bg-white/10 rounded flex items-center justify-center"><ChevronUp size={16} /></button>
+            <button onClick={() => handleAction('enter')} className="p-2 bg-white/10 hover:bg-white/20 rounded flex items-center justify-center col-span-2 text-[10px] font-black uppercase"><CornerDownLeft size={14} className="mr-2" /> Select</button>
+            <button onClick={() => handleAction('left')} className="p-2 bg-white/5 hover:bg-white/10 rounded flex items-center justify-center"><ChevronLeft size={16} /></button>
+            <button onClick={() => handleAction('down')} className="p-2 bg-white/5 hover:bg-white/10 rounded flex items-center justify-center"><ChevronDown size={16} /></button>
+            <button onClick={() => handleAction('right')} className="p-2 bg-white/5 hover:bg-white/10 rounded flex items-center justify-center"><ChevronRight size={16} /></button>
+            <button onClick={onClose} className="p-2 bg-destructive/20 hover:bg-destructive/40 rounded flex items-center justify-center col-span-3 text-[10px] font-black uppercase text-white/60"><X size={14} className="mr-2" /> Exit Setup</button>
+          </div>
+
           <div className="mt-auto space-y-1 opacity-80 border-t border-white/20 pt-4 text-white shrink-0">
             <div className="flex justify-between"><span>↑↓</span> <span>Select Item</span></div>
             <div className="flex justify-between"><span>←→</span> <span>Select Menu</span></div>

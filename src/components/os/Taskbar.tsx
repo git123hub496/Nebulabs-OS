@@ -60,22 +60,6 @@ export const Taskbar: React.FC = () => {
     return () => clearInterval(timer);
   }, []);
 
-  useEffect(() => {
-    const handleClickOutside = () => setTaskbarMenu(null);
-    if (taskbarMenu) {
-      window.addEventListener('click', handleClickOutside);
-      return () => window.removeEventListener('click', handleClickOutside);
-    }
-  }, [taskbarMenu]);
-
-  const formatTime = (date: Date) => {
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  };
-
-  const formatLongDate = (date: Date) => {
-    return date.toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
-  };
-
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchTerm.trim()) {
@@ -120,35 +104,20 @@ export const Taskbar: React.FC = () => {
   const handleTaskbarContextMenu = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    
-    const menuWidth = 208;
-    const menuHeight = 120;
-    let x = e.clientX;
-    let y = e.clientY;
-
-    if (x + menuWidth > window.innerWidth) x -= menuWidth;
-    if (y + menuHeight > window.innerHeight) y -= menuHeight;
-
+    const x = e.clientX;
+    const y = e.clientY;
     setTaskbarMenu({ x, y, type: 'taskbar' });
   };
 
   const handleAppContextMenu = (e: React.MouseEvent, appId: AppId) => {
     e.preventDefault();
     e.stopPropagation();
-    
-    const menuWidth = 208;
-    const menuHeight = 60;
-    let x = e.clientX;
-    let y = e.clientY;
-
-    if (x + menuWidth > window.innerWidth) x -= menuWidth;
-    if (y + menuHeight > window.innerHeight) y -= menuHeight;
-
+    const x = e.clientX;
+    const y = e.clientY;
     setTaskbarMenu({ x, y, type: 'app', appId });
   };
 
   const VolumeIcon = volume === 0 ? VolumeX : volume < 50 ? Volume1 : Volume2;
-
   const isHidden = isTaskbarAutoHide && !isHovered && !isStartOpen && !isQuickSettingsOpen && !isChatOpen && !isWidgetsOpen;
   
   const hideTransforms = {
@@ -156,13 +125,6 @@ export const Taskbar: React.FC = () => {
     top: isHidden ? 'translateY(-100%)' : 'translateY(0)',
     left: isHidden ? 'translateX(-100%)' : 'translateX(0)',
     right: isHidden ? 'translateX(100%)' : 'translateX(0)',
-  };
-
-  const triggerClasses = {
-    bottom: 'bottom-0 left-0 right-0 h-1 cursor-pointer',
-    top: 'top-0 left-0 right-0 h-1 cursor-pointer',
-    left: 'left-0 top-0 bottom-0 w-1 cursor-pointer',
-    right: 'right-0 top-0 bottom-0 w-1 cursor-pointer',
   };
 
   const bgStyle = {
@@ -174,7 +136,7 @@ export const Taskbar: React.FC = () => {
     <>
       {isTaskbarAutoHide && (
         <div 
-          className={cn("fixed z-[9998] bg-transparent hover:bg-accent/5 transition-colors", triggerClasses[taskbarPosition])}
+          className={cn("fixed z-[9998] bg-transparent h-1 bottom-0 left-0 right-0 cursor-pointer")}
           onMouseEnter={() => setIsHovered(true)}
         />
       )}
@@ -200,9 +162,9 @@ export const Taskbar: React.FC = () => {
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
-        {/* Left Section: Start, Search, Widgets */}
+        {/* Left Section: Start & Search */}
         <div className={cn("flex items-center", isVertical ? "flex-col gap-2" : "gap-2 justify-start")}>
-          <div className="relative flex items-center justify-center">
+          <div className="relative">
             <button
               onClick={(e) => { e.stopPropagation(); setIsStartOpen(!isStartOpen); }}
               className={cn(
@@ -210,18 +172,7 @@ export const Taskbar: React.FC = () => {
                 isStartOpen && "bg-white/10"
               )}
             >
-              {isSchool ? (
-                <GraduationCap size={iconSize} className="text-blue-400" />
-              ) : isKid ? (
-                <Smile size={iconSize} className="text-pink-400" />
-              ) : (
-                <span 
-                  className="font-black text-accent font-headline tracking-tighter select-none leading-none"
-                  style={{ fontSize: `${logoFontSize}px` }}
-                >
-                  N
-                </span>
-              )}
+              {isSchool ? <GraduationCap size={iconSize} className="text-blue-400" /> : isKid ? <Smile size={iconSize} className="text-pink-400" /> : <span className="font-black text-accent font-headline tracking-tighter select-none leading-none" style={{ fontSize: `${logoFontSize}px` }}>N</span>}
             </button>
             {isStartOpen && (
               <div className={cn("absolute z-[10000]", taskbarPosition === 'top' ? "top-full mt-2" : "bottom-full mb-2")}>
@@ -243,55 +194,25 @@ export const Taskbar: React.FC = () => {
           )}
           
           {!isSchool && !isKid && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setIsWidgetsOpen(!isWidgetsOpen);
-              }}
-              className={cn(
-                "p-2 rounded-md hover:bg-white/10 transition-all active:scale-95 group flex items-center justify-center min-w-[32px] min-h-[32px]",
-                isWidgetsOpen && "bg-accent/20 text-accent"
-              )}
-            >
-              <LayoutGrid size={iconSize} className={isWidgetsOpen ? "text-accent" : "text-white/60 group-hover:text-white"} />
+            <button onClick={() => setIsWidgetsOpen(!isWidgetsOpen)} className={cn("p-2 rounded-md hover:bg-white/10 transition-all active:scale-95", isWidgetsOpen && "bg-accent/20 text-accent")}>
+              <LayoutGrid size={iconSize} className={isWidgetsOpen ? "text-accent" : "text-white/60"} />
             </button>
           )}
         </div>
 
-        {/* Center Section: Applications */}
-        <div className={cn(
-          "flex items-center",
-          isVertical ? "flex-col justify-center gap-2" : "justify-center gap-2"
-        )}>
+        {/* Center Section: Centered Apps */}
+        <div className={cn("flex items-center", isVertical ? "flex-col justify-center gap-2" : "justify-center gap-2")}>
           {pinnedApps.map((appId, index) => {
-            if (isKid && (appId === 'terminal' || appId === 'virus')) return null;
-
             const info = APP_INFO[appId];
             if (!info) return null;
             const Icon = info.icon;
-            const isAppOpen = openWindows.some(w => w.appId === appId);
             const isActive = openWindows.some(w => w.appId === appId && w.id === activeWindowId);
-            const isTarget = targetIndex === index;
-            const isDragging = draggingAppId === appId;
+            const isAppOpen = openWindows.some(w => w.appId === appId);
             
             return (
-              <div 
-                key={appId} 
-                className={cn(
-                  "relative group transition-all duration-200",
-                  isTarget && (index > (dragIndex ?? 0) ? "translate-x-2" : "-translate-x-2"),
-                  isDragging && "opacity-20 scale-75"
-                )}
-                draggable
-                onDragStart={() => handleDragStart(appId, index)}
-                onDragOver={(e) => handleDragOver(e, index)}
-                onDragEnd={handleDragEnd}
-              >
+              <div key={appId} className="relative group" draggable onDragStart={() => handleDragStart(appId, index)} onDragOver={(e) => handleDragOver(e, index)} onDragEnd={handleDragEnd}>
                 <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    openApp(appId, info.label);
-                  }}
+                  onClick={() => openApp(appId, info.label)}
                   onContextMenu={(e) => handleAppContextMenu(e, appId)}
                   className={cn(
                     "p-2 rounded-md transition-all active:scale-90 flex items-center justify-center",
@@ -301,187 +222,68 @@ export const Taskbar: React.FC = () => {
                 >
                   <Icon size={iconSize} className={isSchool && isActive ? "text-blue-400" : isKid && isActive ? "text-pink-400" : ""} />
                 </button>
-                {isAppOpen && (
-                  <div className={cn(
-                    "absolute rounded-full transition-all",
-                    isSchool ? "bg-blue-500" : isKid ? "bg-pink-500" : "bg-accent",
-                    isVertical 
-                      ? "w-1.5 h-6 -right-1 top-1/2 -translate-y-1/2" 
-                      : "h-1 w-6 -bottom-1 left-1/2 -translate-x-1/2"
-                  )} />
-                )}
+                {isAppOpen && <div className={cn("absolute rounded-full", isSchool ? "bg-blue-500" : isKid ? "bg-pink-500" : "bg-accent", isVertical ? "w-1 h-6 -right-1 top-1/2 -translate-y-1/2" : "h-1 w-6 -bottom-1 left-1/2 -translate-x-1/2")} />}
               </div>
             );
           })}
         </div>
 
-        {/* Right Section: Status HUD and Identity */}
-        <div className={cn(
-          "flex items-center",
-          isVertical ? "flex-col pb-2 gap-3" : "justify-end gap-2"
-        )}>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              setIsChatOpen(!isChatOpen);
-            }}
-            className={cn(
-              "p-2 rounded-md hover:bg-white/10 transition-all active:scale-95 group flex items-center justify-center min-w-[32px] min-h-[32px]",
-              isChatOpen && (isSchool ? "bg-blue-500/20 text-blue-400" : isKid ? "bg-pink-500/20 text-pink-400" : "bg-accent/20 text-accent")
-            )}
-            title="Chat Hub"
-          >
-            <MessageCircle size={iconSize} className={isChatOpen ? (isSchool ? "text-blue-400" : isKid ? "text-pink-400" : "text-accent") : "text-white/60 group-hover:text-white"} />
+        {/* Right Section: Identity & Quick Settings */}
+        <div className={cn("flex items-center", isVertical ? "flex-col pb-2 gap-3" : "justify-end gap-2")}>
+          <button onClick={() => setIsChatOpen(!isChatOpen)} className={cn("p-2 rounded-md hover:bg-white/10", isChatOpen && "bg-accent/20")}>
+            <MessageCircle size={iconSize} className={isChatOpen ? "text-accent" : "text-white/60"} />
           </button>
 
-          <div className="relative flex items-center">
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setIsQuickSettingsOpen(!isQuickSettingsOpen);
-                    }}
-                    className={cn(
-                      "flex items-center gap-2 px-3 py-1.5 rounded-xl hover:bg-white/10 transition-all active:scale-95 group",
-                      isQuickSettingsOpen && (isSchool ? "bg-blue-500/20 text-blue-400" : isKid ? "bg-pink-500/20 text-pink-400" : "bg-accent/20 text-accent"),
-                      isVertical ? "flex-col py-3 px-1.5" : ""
-                    )}
-                  >
-                    <div className={cn(
-                      "flex items-center gap-2 mr-2 border-white/10 pr-2",
-                      isVertical ? "flex-col mr-0 pr-0 mb-2 border-b pb-2 border-r-0" : "border-r"
-                    )}>
-                      {isWifiConnecting ? (
-                        <Loader2 size={14} className="animate-spin text-blue-400" />
-                      ) : (
-                        <Wifi size={14} className={cn(isOnline ? (isQuickSettingsOpen ? (isSchool ? "text-blue-400" : isKid ? "text-pink-400" : "text-accent") : "text-white/60") : "text-destructive")} />
-                      )}
-                      <VolumeIcon size={14} className={cn(isQuickSettingsOpen ? (isSchool ? "text-blue-400" : isKid ? "text-pink-400" : "text-accent") : "text-white/60")} />
-                      <BatteryMedium size={14} className={cn(isQuickSettingsOpen ? (isSchool ? "text-blue-400" : isKid ? "text-pink-400" : "text-accent") : "text-white/60")} />
-                    </div>
-                    
-                    <div className={cn(
-                      "flex flex-col leading-none",
-                      isVertical ? "items-center" : "items-end min-w-[50px]"
-                    )}>
-                      {mounted && time ? (
-                        <span className="text-[11px] font-bold whitespace-nowrap">{formatTime(time)}</span>
-                      ) : (
-                        <div className="h-3 w-10 bg-white/10 rounded animate-pulse" />
-                      )}
-                    </div>
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent side={taskbarPosition === 'top' ? 'bottom' : 'top'} className="glass border-white/10 p-4 space-y-2 mb-2 animate-in fade-in zoom-in-95">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-accent/20 flex items-center justify-center text-accent">
-                      <ClockIcon size={16} />
-                    </div>
-                    <div>
-                      <p className="text-[10px] font-black uppercase text-accent tracking-widest">Local Time</p>
-                      <p className="text-sm font-bold text-white">
-                        {time?.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3 border-t border-white/5 pt-2">
-                    <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-white/40">
-                      <CalendarIcon size={16} />
-                    </div>
-                    <p className="text-[10px] font-bold text-white/60">
-                      {time ? formatLongDate(time) : ''}
-                    </p>
-                  </div>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-            {isQuickSettingsOpen && (
-              <div className={cn("absolute z-[10000]", taskbarPosition === 'top' ? "top-full mt-2" : "bottom-full mb-2", "right-0")}>
-                <QuickSettings />
-              </div>
-            )}
-          </div>
-
+          {/* User Icon Hub - Before Quick Settings */}
           <Avatar 
             className="w-8 h-8 border border-white/10 cursor-pointer hover:border-accent transition-all active:scale-90 shrink-0" 
             onClick={(e) => { 
               e.stopPropagation(); 
               openApp('settings', 'Settings', { tab: 'accounts' });
             }}
-            title="Account Identity"
+            title="Account Settings"
           >
             <AvatarImage src={currentUser?.avatarUrl} className="object-cover" />
-            <AvatarFallback 
-              className="text-[10px] font-bold text-white"
-              style={{ backgroundColor: currentUser?.avatarColor || 'var(--accent)' }}
-            >
+            <AvatarFallback className="text-[10px] font-bold text-white" style={{ backgroundColor: currentUser?.avatarColor || 'var(--accent)' }}>
               {currentUser?.username[0].toUpperCase() || 'G'}
             </AvatarFallback>
           </Avatar>
 
-          <button
-            onClick={() => minimizeAllWindows()}
-            className={cn(
-              "border-white/10 hover:bg-white/10 transition-colors active:bg-accent/40",
-              isVertical ? "w-full h-2 border-t mt-1" : "h-full w-2 border-l ml-1"
+          <div className="relative">
+            <button
+              onClick={() => setIsQuickSettingsOpen(!isQuickSettingsOpen)}
+              className={cn("flex items-center gap-2 px-3 py-1.5 rounded-xl hover:bg-white/10", isQuickSettingsOpen && "bg-accent/20")}
+            >
+              <div className={cn("flex items-center gap-2 mr-2 border-r border-white/10 pr-2", isVertical && "flex-col border-r-0 border-b pb-2 mb-2")}>
+                {isWifiConnecting ? <Loader2 size={14} className="animate-spin text-blue-400" /> : <Wifi size={14} className={cn(isOnline ? "text-white/60" : "text-destructive")} />}
+                <VolumeIcon size={14} className="text-white/60" />
+                <BatteryMedium size={14} className="text-white/60" />
+              </div>
+              <span className="text-[11px] font-bold whitespace-nowrap">{mounted && time ? time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--'}</span>
+            </button>
+            {isQuickSettingsOpen && (
+              <div className={cn("absolute z-[10000] right-0", taskbarPosition === 'top' ? "top-full mt-2" : "bottom-full mb-2")}>
+                <QuickSettings />
+              </div>
             )}
-            title="Show Desktop"
-          />
+          </div>
+
+          <button onClick={() => minimizeAllWindows()} className={cn("border-white/10 hover:bg-white/10", isVertical ? "w-full h-2 border-t mt-1" : "h-full w-2 border-l ml-1")} />
         </div>
       </div>
 
       {taskbarMenu && (
         <div 
-          className="fixed z-[100000] w-52 glass rounded-xl border border-white/10 shadow-2xl backdrop-blur-3xl p-1.5 flex flex-col gap-0.5 animate-in fade-in zoom-in-95 duration-100"
+          className="fixed z-[100000] w-52 glass rounded-xl border border-white/10 p-1.5 flex flex-col gap-0.5 animate-in fade-in zoom-in-95"
           style={{ left: taskbarMenu.x, top: taskbarMenu.y }}
-          onClick={(e) => e.stopPropagation()}
-          onContextMenu={(e) => e.preventDefault()}
         >
           {taskbarMenu.type === 'taskbar' ? (
             <>
-              <button 
-                onClick={() => {
-                  rotateTaskbar();
-                  setTaskbarMenu(null);
-                  playSound('click');
-                }}
-                className="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-accent/20 text-xs font-medium text-white/80 hover:text-accent transition-colors group"
-              >
-                <div className="flex items-center gap-3">
-                  <RotateCw size={14} className="text-accent/60 group-hover:text-accent" />
-                  <span>Rotate Taskbar</span>
-                </div>
-              </button>
-              <button 
-                onClick={() => {
-                  setTaskbarAutoHide(!isTaskbarAutoHide);
-                  setTaskbarMenu(null);
-                  playSound('click');
-                }}
-                className="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-accent/20 text-xs font-medium text-white/80 hover:text-accent transition-colors group"
-              >
-                <div className="flex items-center gap-3">
-                  {isTaskbarAutoHide ? <Eye size={14} className="text-accent/60 group-hover:text-accent" /> : <EyeOff size={14} className="text-accent/60 group-hover:text-accent" />}
-                  <span>{isTaskbarAutoHide ? "Lock Taskbar" : "Auto-hide Taskbar"}</span>
-                </div>
-              </button>
+              <button onClick={() => { rotateTaskbar(); setTaskbarMenu(null); }} className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/10 text-xs text-white/80"><RotateCw size={14} /> Rotate Taskbar</button>
+              <button onClick={() => { setTaskbarAutoHide(!isTaskbarAutoHide); setTaskbarMenu(null); }} className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/10 text-xs text-white/80">{isTaskbarAutoHide ? <Eye size={14} /> : <EyeOff size={14} />} Auto-hide Taskbar</button>
             </>
           ) : (
-            <button 
-              onClick={() => {
-                if (taskbarMenu.appId) togglePinApp(taskbarMenu.appId);
-                setTaskbarMenu(null);
-                playSound('click');
-              }}
-              className="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-destructive/20 text-xs font-medium text-white/80 hover:text-destructive transition-colors group"
-            >
-              <div className="flex items-center gap-3">
-                <PinOff size={14} className="text-destructive/60 group-hover:text-destructive" />
-                <span>Unpin from Taskbar</span>
-              </div>
-            </button>
+            <button onClick={() => { if (taskbarMenu.appId) togglePinApp(taskbarMenu.appId); setTaskbarMenu(null); }} className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-destructive/20 text-xs text-destructive"><PinOff size={14} /> Unpin</button>
           )}
         </div>
       )}
