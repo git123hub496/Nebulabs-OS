@@ -138,9 +138,9 @@ export const NebulaNews: React.FC = () => {
               className="h-8 w-48 bg-white/5 border-white/10 text-xs pl-8 rounded-lg focus-visible:ring-accent" 
             />
           </div>
-          <Button variant="ghost" size="icon" className="h-8 w-8 text-white/40 hover:text-accent" onClick={refreshNews}>
+          <button onClick={refreshNews} className="p-2 text-white/40 hover:text-accent transition-colors">
             <RefreshCw size={14} className={isLoading ? "animate-spin" : ""} />
-          </Button>
+          </button>
         </div>
       </div>
 

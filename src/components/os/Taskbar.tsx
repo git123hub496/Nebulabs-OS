@@ -21,7 +21,8 @@ import {
   Loader2,
   GraduationCap,
   Smile,
-  Search
+  Search,
+  Check
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { StartMenu } from './StartMenu';
@@ -104,17 +105,13 @@ export const Taskbar: React.FC = () => {
   const handleTaskbarContextMenu = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    const x = e.clientX;
-    const y = e.clientY;
-    setTaskbarMenu({ x, y, type: 'taskbar' });
+    setTaskbarMenu({ x: e.clientX, y: e.clientY, type: 'taskbar' });
   };
 
   const handleAppContextMenu = (e: React.MouseEvent, appId: AppId) => {
     e.preventDefault();
     e.stopPropagation();
-    const x = e.clientX;
-    const y = e.clientY;
-    setTaskbarMenu({ x, y, type: 'app', appId });
+    setTaskbarMenu({ x: e.clientX, y: e.clientY, type: 'app', appId });
   };
 
   const VolumeIcon = volume === 0 ? VolumeX : volume < 50 ? Volume1 : Volume2;
@@ -136,7 +133,7 @@ export const Taskbar: React.FC = () => {
     <>
       {isTaskbarAutoHide && (
         <div 
-          className={cn("fixed z-[9998] bg-transparent h-1 bottom-0 left-0 right-0 cursor-pointer")}
+          className="fixed z-[9998] bg-transparent h-1 bottom-0 left-0 right-0 cursor-pointer"
           onMouseEnter={() => setIsHovered(true)}
         />
       )}
@@ -148,7 +145,7 @@ export const Taskbar: React.FC = () => {
           taskbarPosition === 'top' && "top-0 left-0 right-0 border-b",
           taskbarPosition === 'left' && "left-0 top-0 bottom-0 border-r",
           taskbarPosition === 'right' && "right-0 top-0 bottom-0 border-l",
-          isVertical ? "grid-rows-[auto_1fr_auto] py-2 w-full" : "grid-cols-[1fr_auto_1fr] items-center px-4",
+          isVertical ? "grid-rows-[auto_1fr_auto] py-2 w-full" : "grid-cols-[1fr_auto_1fr] items-center px-2",
           isSchool && "border-blue-500/20",
           isKid && "border-pink-500/20"
         )}
@@ -162,13 +159,13 @@ export const Taskbar: React.FC = () => {
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
-        {/* Left Section: Start & Search */}
+        {/* Left Section: Start & Search - Pinned to left edge */}
         <div className={cn("flex items-center", isVertical ? "flex-col gap-2 w-full" : "gap-2 justify-start")}>
-          <div className="relative w-full flex justify-center">
+          <div className="relative">
             <button
               onClick={(e) => { e.stopPropagation(); setIsStartOpen(!isStartOpen); }}
               className={cn(
-                "p-2 rounded-md hover:bg-white/10 transition-all active:scale-95 group flex items-center justify-center min-w-[32px] min-h-[32px]",
+                "p-2 rounded-xl hover:bg-white/10 transition-all active:scale-95 group flex items-center justify-center min-w-[36px] min-h-[36px]",
                 isStartOpen && "bg-white/10"
               )}
             >
@@ -182,7 +179,7 @@ export const Taskbar: React.FC = () => {
           </div>
 
           {!isVertical ? (
-            <form onSubmit={handleSearch} className="flex items-center bg-white/5 border border-white/5 rounded-full px-3 py-1 gap-2 focus-within:border-accent/40 focus-within:bg-white/10 transition-all w-48 lg:w-64 group">
+            <form onSubmit={handleSearch} className="flex items-center bg-white/5 border border-white/5 rounded-xl px-3 py-1 gap-2 focus-within:border-accent/40 focus-within:bg-white/10 transition-all w-48 lg:w-64 group">
               <Search size={14} className="text-white/20 group-focus-within:text-accent transition-colors" />
               <input 
                 value={searchTerm}
@@ -192,19 +189,19 @@ export const Taskbar: React.FC = () => {
               />
             </form>
           ) : (
-            <button className="p-2 rounded-md hover:bg-white/10 text-white/40 hover:text-accent transition-all" onClick={() => openApp('google-search', 'Nebula Search')}>
+            <button className="p-2 rounded-xl hover:bg-white/10 text-white/40 hover:text-accent transition-all" onClick={() => openApp('google-search', 'Nebula Search')}>
               <Search size={iconSize} />
             </button>
           )}
           
           {!isSchool && !isKid && (
-            <button onClick={() => setIsWidgetsOpen(!isWidgetsOpen)} className={cn("p-2 rounded-md hover:bg-white/10 transition-all active:scale-95", isWidgetsOpen && "bg-accent/20 text-accent")}>
+            <button onClick={() => setIsWidgetsOpen(!isWidgetsOpen)} className={cn("p-2 rounded-xl hover:bg-white/10 transition-all active:scale-95", isWidgetsOpen && "bg-accent/20 text-accent")}>
               <LayoutGrid size={iconSize} className={isWidgetsOpen ? "text-accent" : "text-white/60"} />
             </button>
           )}
         </div>
 
-        {/* Center Section: Centered Apps */}
+        {/* Center Section: Centered Apps - Perfectly centered */}
         <div className={cn("flex items-center justify-center", isVertical ? "flex-col justify-center gap-2 w-full" : "justify-center gap-2")}>
           {pinnedApps.map((appId, index) => {
             const info = APP_INFO[appId];
@@ -214,17 +211,17 @@ export const Taskbar: React.FC = () => {
             const isAppOpen = openWindows.some(w => w.appId === appId);
             
             return (
-              <div key={appId} className="relative group w-full flex justify-center" draggable onDragStart={() => handleDragStart(appId, index)} onDragOver={(e) => handleDragOver(e, index)} onDragEnd={handleDragEnd}>
+              <div key={appId} className="relative group flex justify-center" draggable onDragStart={() => handleDragStart(appId, index)} onDragOver={(e) => handleDragOver(e, index)} onDragEnd={handleDragEnd}>
                 <button
                   onClick={() => openApp(appId, info.label)}
                   onContextMenu={(e) => handleAppContextMenu(e, appId)}
                   className={cn(
-                    "p-2 rounded-md transition-all active:scale-90 flex items-center justify-center",
+                    "p-2 rounded-xl transition-all active:scale-90 flex items-center justify-center min-w-[36px] min-h-[36px]",
                     isActive ? "bg-white/10" : "hover:bg-white/10 text-white/60 hover:text-accent"
                   )}
                   title={info.label}
                 >
-                  <Icon size={iconSize} className={isSchool && isActive ? "text-blue-400" : isKid && isActive ? "text-pink-400" : ""} />
+                  <Icon size={iconSize} className={cn("transition-colors", isSchool && isActive ? "text-blue-400" : isKid && isActive ? "text-pink-400" : "")} />
                 </button>
                 {isAppOpen && <div className={cn("absolute rounded-full", isSchool ? "bg-blue-500" : isKid ? "bg-pink-500" : "bg-accent", isVertical ? "w-1 h-6 -right-1 top-1/2 -translate-y-1/2" : "h-1 w-6 -bottom-1 left-1/2 -translate-x-1/2")} />}
               </div>
@@ -232,9 +229,9 @@ export const Taskbar: React.FC = () => {
           })}
         </div>
 
-        {/* Right Section: Identity & Quick Settings */}
-        <div className={cn("flex items-center", isVertical ? "flex-col pb-2 gap-3 w-full" : "justify-end gap-2")}>
-          <button onClick={() => setIsChatOpen(!isChatOpen)} className={cn("p-2 rounded-md hover:bg-white/10", isChatOpen && "bg-accent/20")}>
+        {/* Right Section: Identity & Quick Settings - Pinned to right edge */}
+        <div className={cn("flex items-center", isVertical ? "flex-col pb-2 gap-2 w-full" : "justify-end gap-2")}>
+          <button onClick={() => setIsChatOpen(!isChatOpen)} className={cn("p-2 rounded-xl hover:bg-white/10", isChatOpen && "bg-accent/20")}>
             <MessageCircle size={iconSize} className={isChatOpen ? "text-accent" : "text-white/60"} />
           </button>
 
@@ -252,7 +249,7 @@ export const Taskbar: React.FC = () => {
             </AvatarFallback>
           </Avatar>
 
-          <div className="relative w-full flex justify-center">
+          <div className="relative">
             <button
               onClick={() => setIsQuickSettingsOpen(!isQuickSettingsOpen)}
               className={cn("flex items-center rounded-xl hover:bg-white/10 transition-all", isQuickSettingsOpen && "bg-accent/20", isVertical ? "flex-col p-2" : "gap-2 px-3 py-1.5")}
@@ -288,14 +285,15 @@ export const Taskbar: React.FC = () => {
         <div 
           className="fixed z-[100000] w-52 glass rounded-xl border border-white/10 p-1.5 flex flex-col gap-0.5 animate-in fade-in zoom-in-95"
           style={{ left: taskbarMenu.x, top: taskbarMenu.y }}
+          onClick={() => setTaskbarMenu(null)}
         >
           {taskbarMenu.type === 'taskbar' ? (
             <>
-              <button onClick={() => { rotateTaskbar(); setTaskbarMenu(null); }} className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/10 text-xs text-white/80"><RotateCw size={14} /> Rotate Taskbar</button>
-              <button onClick={() => { setTaskbarAutoHide(!isTaskbarAutoHide); setTaskbarMenu(null); }} className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/10 text-xs text-white/80">{isTaskbarAutoHide ? <Eye size={14} /> : <EyeOff size={14} />} Auto-hide Taskbar</button>
+              <button onClick={(e) => { e.stopPropagation(); rotateTaskbar(); }} className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/10 text-xs text-white/80"><RotateCw size={14} /> Rotate Taskbar</button>
+              <button onClick={(e) => { e.stopPropagation(); setTaskbarAutoHide(!isTaskbarAutoHide); }} className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/10 text-xs text-white/80">{isTaskbarAutoHide ? <Eye size={14} /> : <EyeOff size={14} />} Auto-hide Taskbar</button>
             </>
           ) : (
-            <button onClick={() => { if (taskbarMenu.appId) togglePinApp(taskbarMenu.appId); setTaskbarMenu(null); }} className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-destructive/20 text-xs text-destructive"><PinOff size={14} /> Unpin</button>
+            <button onClick={(e) => { e.stopPropagation(); if (taskbarMenu.appId) togglePinApp(taskbarMenu.appId); }} className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-destructive/20 text-xs text-destructive"><PinOff size={14} /> Unpin</button>
           )}
         </div>
       )}
