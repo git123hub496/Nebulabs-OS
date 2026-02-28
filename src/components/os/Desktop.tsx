@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
@@ -95,13 +96,13 @@ import { Progress } from '@/components/ui/progress';
 const APP_COMPONENTS: Record<AppId, (win: WindowInstance) => React.ReactNode> = {
   'store': (win) => <AppStore />,
   'files': (win) => <FileExplorer />,
-  'settings': (win) => <Settings />,
+  'settings': (win) => <Settings tab={win.params?.tab} />,
   'assistant': (win) => <AIAssistant />,
   'google-drive': (win) => <GoogleAppPlaceholder type="drive" />,
   'notes': (win) => <Notes />,
   'calc': (win) => <Calculator />,
   'terminal': (win) => <Terminal />,
-  'browser': (win) => <NebulaBrowser />,
+  'browser': (win) => <NebulaBrowser initialUrl={win.params?.url} />,
   'trash': (win) => <RecyclingBin />,
   'news': (win) => <NebulaNews />,
   'maps': (win) => <NebulaMaps />,
@@ -209,7 +210,7 @@ export const Desktop: React.FC = () => {
     if (powerStatus === 'on') {
       setBootOpacity(0);
       const timer = setTimeout(() => setShouldRenderBoot(false), 1000);
-      return () => clearTimeout(false);
+      return () => clearTimeout(timer);
     } else if (powerStatus === 'booting') {
       setShouldRenderBoot(true);
       setBootOpacity(1);
@@ -609,7 +610,6 @@ export const Desktop: React.FC = () => {
 
       {currentDisplayId === '1' && desktopApps.map(shortcut => {
         if (isKid && (shortcut.id === 'terminal' || shortcut.id === 'virus')) return null;
-        if (shortcut.id === 'nde' && !isNDEEnabled) return null;
 
         const Icon = shortcut.icon;
         const isDragging = draggingAppId === shortcut.id;

@@ -1,18 +1,29 @@
 
 "use client"
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Globe, ArrowLeft, ArrowRight, RotateCcw, Home, ExternalLink, ShieldCheck, Search, Info, WifiOff, ShieldAlert } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useOS } from '@/context/os-context';
 import { cn } from '@/lib/utils';
 
-export const NebulaBrowser: React.FC = () => {
+interface NebulaBrowserProps {
+  initialUrl?: string;
+}
+
+export const NebulaBrowser: React.FC<NebulaBrowserProps> = ({ initialUrl }) => {
   const { isOnline, biosSettings } = useOS();
-  const [url, setUrl] = useState("https://www.google.com/search?igu=1");
-  const [inputUrl, setInputUrl] = useState("https://www.google.com/search?igu=1");
+  const [url, setUrl] = useState(initialUrl || "https://www.google.com/search?igu=1");
+  const [inputUrl, setInputUrl] = useState(initialUrl || "https://www.google.com/search?igu=1");
   const [showHint, setShowHint] = useState(true);
+
+  useEffect(() => {
+    if (initialUrl) {
+      setUrl(initialUrl);
+      setInputUrl(initialUrl);
+    }
+  }, [initialUrl]);
 
   if (!biosSettings.networkStack) {
     return (
@@ -40,7 +51,6 @@ export const NebulaBrowser: React.FC = () => {
         targetUrl = 'https://' + targetUrl;
       }
     } else {
-      // Use Google Search for better compatibility and matching user preference
       targetUrl = `https://www.google.com/search?q=${encodeURIComponent(targetUrl)}&igu=1`;
     }
     
@@ -117,7 +127,6 @@ export const NebulaBrowser: React.FC = () => {
               sandbox="allow-forms allow-scripts allow-same-origin allow-popups"
             />
             
-            {/* Visual feedback overlay */}
             <div className="absolute top-4 right-4 pointer-events-none opacity-20 flex items-center gap-2">
               <ShieldCheck size={14} className="text-black" />
               <span className="text-[10px] font-bold text-black uppercase tracking-widest">Isolated View</span>

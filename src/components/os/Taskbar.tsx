@@ -20,7 +20,8 @@ import {
   RotateCw, 
   Loader2,
   GraduationCap,
-  Smile
+  Smile,
+  Search
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { StartMenu } from './StartMenu';
@@ -48,6 +49,7 @@ export const Taskbar: React.FC = () => {
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [targetIndex, setTargetIndex] = useState<number | null>(null);
   const [isHovered, setIsHovered] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
   
   const [taskbarMenu, setTaskbarMenu] = useState<{ x: number, y: number, type: 'taskbar' | 'app', appId?: AppId } | null>(null);
 
@@ -72,6 +74,15 @@ export const Taskbar: React.FC = () => {
 
   const formatLongDate = (date: Date) => {
     return date.toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+  };
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchTerm.trim()) {
+      const url = `https://www.google.com/search?q=${encodeURIComponent(searchTerm)}&igu=1`;
+      openApp('browser', 'Nebula Browser', { url });
+      setSearchTerm("");
+    }
   };
 
   const isVertical = taskbarPosition === 'left' || taskbarPosition === 'right';
@@ -104,11 +115,6 @@ export const Taskbar: React.FC = () => {
     setDraggingAppId(null);
     setDragIndex(null);
     setTargetIndex(null);
-  };
-
-  const handleStartToggle = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setIsStartOpen(!isStartOpen);
   };
 
   const handleTaskbarContextMenu = (e: React.MouseEvent) => {
@@ -180,7 +186,7 @@ export const Taskbar: React.FC = () => {
           taskbarPosition === 'top' && "top-0 left-0 right-0 border-b",
           taskbarPosition === 'left' && "left-0 top-0 bottom-0 border-r",
           taskbarPosition === 'right' && "right-0 top-0 bottom-0 border-l",
-          isVertical ? "grid-rows-[auto_1fr_auto] py-2" : "grid-cols-[1fr_auto_1fr] items-center px-2",
+          isVertical ? "grid-rows-[auto_1fr_auto] py-2" : "grid-cols-[1fr_auto_1fr] items-center px-4",
           isSchool && "border-blue-500/20",
           isKid && "border-pink-500/20"
         )}
@@ -194,11 +200,11 @@ export const Taskbar: React.FC = () => {
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
-        {/* Left Section: Start and Widgets */}
-        <div className={cn("flex items-center", isVertical ? "flex-col gap-1" : "gap-1 justify-start")}>
+        {/* Left Section: Start, Search, Widgets */}
+        <div className={cn("flex items-center", isVertical ? "flex-col gap-2" : "gap-2 justify-start")}>
           <div className="relative flex items-center justify-center">
             <button
-              onClick={handleStartToggle}
+              onClick={(e) => { e.stopPropagation(); setIsStartOpen(!isStartOpen); }}
               className={cn(
                 "p-2 rounded-md hover:bg-white/10 transition-all active:scale-95 group flex items-center justify-center min-w-[32px] min-h-[32px]",
                 isStartOpen && "bg-white/10"
@@ -218,11 +224,23 @@ export const Taskbar: React.FC = () => {
               )}
             </button>
             {isStartOpen && (
-              <div className="absolute bottom-full mb-2 left-0">
+              <div className={cn("absolute z-[10000]", taskbarPosition === 'top' ? "top-full mt-2" : "bottom-full mb-2")}>
                 <StartMenu onClose={() => setIsStartOpen(false)} />
               </div>
             )}
           </div>
+
+          {!isVertical && (
+            <form onSubmit={handleSearch} className="flex items-center bg-white/5 border border-white/5 rounded-full px-3 py-1 gap-2 focus-within:border-accent/40 focus-within:bg-white/10 transition-all w-48 lg:w-64 group">
+              <Search size={14} className="text-white/20 group-focus-within:text-accent transition-colors" />
+              <input 
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Search Nebula..."
+                className="bg-transparent border-none outline-none text-xs text-white placeholder:text-white/20 w-full"
+              />
+            </form>
+          )}
           
           {!isSchool && !isKid && (
             <button
@@ -240,7 +258,7 @@ export const Taskbar: React.FC = () => {
           )}
         </div>
 
-        {/* Center Section: Applications (Pinned and Active) */}
+        {/* Center Section: Applications */}
         <div className={cn(
           "flex items-center",
           isVertical ? "flex-col justify-center gap-2" : "justify-center gap-2"
@@ -300,7 +318,7 @@ export const Taskbar: React.FC = () => {
         {/* Right Section: Status HUD and Identity */}
         <div className={cn(
           "flex items-center",
-          isVertical ? "flex-col pb-2 gap-3" : "justify-end px-1 gap-2"
+          isVertical ? "flex-col pb-2 gap-3" : "justify-end gap-2"
         )}>
           <button
             onClick={(e) => {
@@ -315,23 +333,6 @@ export const Taskbar: React.FC = () => {
           >
             <MessageCircle size={iconSize} className={isChatOpen ? (isSchool ? "text-blue-400" : isKid ? "text-pink-400" : "text-accent") : "text-white/60 group-hover:text-white"} />
           </button>
-
-          <Avatar 
-            className="w-8 h-8 border border-white/10 cursor-pointer hover:border-accent transition-all active:scale-90 shrink-0" 
-            onClick={(e) => { 
-              e.stopPropagation(); 
-              openApp('settings', 'Settings', { tab: 'accounts' });
-            }}
-            title="Account Identity"
-          >
-            <AvatarImage src={currentUser?.avatarUrl} className="object-cover" />
-            <AvatarFallback 
-              className="text-[10px] font-bold text-white"
-              style={{ backgroundColor: currentUser?.avatarColor || 'var(--accent)' }}
-            >
-              {currentUser?.username[0].toUpperCase() || 'G'}
-            </AvatarFallback>
-          </Avatar>
 
           <div className="relative flex items-center">
             <TooltipProvider>
@@ -397,11 +398,28 @@ export const Taskbar: React.FC = () => {
               </Tooltip>
             </TooltipProvider>
             {isQuickSettingsOpen && (
-              <div className="absolute bottom-full mb-2 right-0">
+              <div className={cn("absolute z-[10000]", taskbarPosition === 'top' ? "top-full mt-2" : "bottom-full mb-2", "right-0")}>
                 <QuickSettings />
               </div>
             )}
           </div>
+
+          <Avatar 
+            className="w-8 h-8 border border-white/10 cursor-pointer hover:border-accent transition-all active:scale-90 shrink-0" 
+            onClick={(e) => { 
+              e.stopPropagation(); 
+              openApp('settings', 'Settings', { tab: 'accounts' });
+            }}
+            title="Account Identity"
+          >
+            <AvatarImage src={currentUser?.avatarUrl} className="object-cover" />
+            <AvatarFallback 
+              className="text-[10px] font-bold text-white"
+              style={{ backgroundColor: currentUser?.avatarColor || 'var(--accent)' }}
+            >
+              {currentUser?.username[0].toUpperCase() || 'G'}
+            </AvatarFallback>
+          </Avatar>
 
           <button
             onClick={() => minimizeAllWindows()}
