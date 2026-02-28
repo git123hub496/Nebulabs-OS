@@ -172,7 +172,7 @@ const DesktopInfoApp = () => {
 export const Desktop: React.FC = () => {
   const { 
     wallpaper, openWindows, openApp, theme, accentColor, customAccentHex,
-    powerStatus, powerOn, taskbarPosition, iconSize, currentUser,
+    powerStatus, powerOn, taskbarPosition, taskbarSize, iconSize, currentUser,
     cursorColor, cursorShape, customCursorUrl, isInverted, setInverted, isGrayscale, setGrayscale, glassEnabled, setGlassEnabled, desktopApps, updateDesktopAppPosition, toggleDesktopApp,
     isWidgetsOpen, setIsWidgetsOpen, isQuickSettingsOpen, setIsQuickSettingsOpen,
     isStartOpen, setIsStartOpen, isChatOpen, setIsChatOpen, activeWindowId, closeWindow, minimizeAllWindows,
@@ -552,7 +552,10 @@ export const Desktop: React.FC = () => {
         >
           <Power size={40} className="group-hover:scale-110 transition-transform duration-500 group-active:scale-90" />
         </Button>
-        <p className="text-[10px] text-white/20 font-black uppercase tracking-[0.4em] animate-pulse">Press [B] for Setup</p>
+        <div className="flex flex-col items-center gap-4">
+          <p className="text-[10px] text-white/20 font-black uppercase tracking-[0.4em] animate-pulse text-center">Press [B] for Setup</p>
+          <Button variant="ghost" className="text-[10px] uppercase font-bold text-white/40 hover:text-accent" onClick={() => setShowBIOS(true)}>Enter System Setup</Button>
+        </div>
       </div>
     );
   }
@@ -566,6 +569,16 @@ export const Desktop: React.FC = () => {
   const scaledContainerWidth = 96 * currentScale;
   const scaledIconSize = 28 * currentScale;
   const scaledFontSize = 11 * currentScale;
+
+  // Offset desktop icons based on taskbar position
+  const getShortcutOffset = () => {
+    if (taskbarPosition === 'left') return taskbarSize + 10;
+    return 0;
+  };
+  const getShortcutTopOffset = () => {
+    if (taskbarPosition === 'top') return taskbarSize + 10;
+    return 0;
+  };
 
   return (
     <div 
@@ -640,8 +653,8 @@ export const Desktop: React.FC = () => {
               isDragging ? "z-50 opacity-50 pointer-events-none transition-none" : "duration-200"
             )}
             style={{ 
-              left: isDragging ? currentDragPos.x : shortcut.x, 
-              top: isDragging ? currentDragPos.y : shortcut.y,
+              left: (isDragging ? currentDragPos.x : shortcut.x) + getShortcutOffset(), 
+              top: (isDragging ? currentDragPos.y : shortcut.y) + getShortcutTopOffset(),
               width: `${scaledContainerWidth}px`,
             }}
             onMouseDown={(e) => handleMouseDown(e, shortcut.id)}
@@ -799,6 +812,7 @@ export const Desktop: React.FC = () => {
           </div>
           <div className="mt-6 flex flex-col items-center gap-2">
              <p className="text-[10px] text-white/40 font-black tracking-widest uppercase animate-pulse">Press [B] for Setup</p>
+             <Button variant="ghost" className="text-[10px] uppercase font-bold text-white/40 hover:text-accent pointer-events-auto" onClick={() => setShowBIOS(true)}>Enter System Setup</Button>
           </div>
           <p className="fixed bottom-12 text-[10px] text-white/20 font-bold tracking-widest uppercase">Proprietary Kernel v4.5.2 • © 2026</p>
         </div>

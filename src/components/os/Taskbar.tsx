@@ -148,7 +148,7 @@ export const Taskbar: React.FC = () => {
           taskbarPosition === 'top' && "top-0 left-0 right-0 border-b",
           taskbarPosition === 'left' && "left-0 top-0 bottom-0 border-r",
           taskbarPosition === 'right' && "right-0 top-0 bottom-0 border-l",
-          isVertical ? "grid-rows-[auto_1fr_auto] py-2" : "grid-cols-[1fr_auto_1fr] items-center px-4",
+          isVertical ? "grid-rows-[auto_1fr_auto] py-2 w-full" : "grid-cols-[1fr_auto_1fr] items-center px-4",
           isSchool && "border-blue-500/20",
           isKid && "border-pink-500/20"
         )}
@@ -163,8 +163,8 @@ export const Taskbar: React.FC = () => {
         onMouseLeave={() => setIsHovered(false)}
       >
         {/* Left Section: Start & Search */}
-        <div className={cn("flex items-center", isVertical ? "flex-col gap-2" : "gap-2 justify-start")}>
-          <div className="relative">
+        <div className={cn("flex items-center", isVertical ? "flex-col gap-2 w-full" : "gap-2 justify-start")}>
+          <div className="relative w-full flex justify-center">
             <button
               onClick={(e) => { e.stopPropagation(); setIsStartOpen(!isStartOpen); }}
               className={cn(
@@ -175,13 +175,13 @@ export const Taskbar: React.FC = () => {
               {isSchool ? <GraduationCap size={iconSize} className="text-blue-400" /> : isKid ? <Smile size={iconSize} className="text-pink-400" /> : <span className="font-black text-accent font-headline tracking-tighter select-none leading-none" style={{ fontSize: `${logoFontSize}px` }}>N</span>}
             </button>
             {isStartOpen && (
-              <div className={cn("absolute z-[10000]", taskbarPosition === 'top' ? "top-full mt-2" : "bottom-full mb-2")}>
+              <div className={cn("absolute z-[10000]", taskbarPosition === 'top' ? "top-full mt-2" : "bottom-full mb-2", isVertical ? "left-full ml-2 top-0" : "left-0")}>
                 <StartMenu onClose={() => setIsStartOpen(false)} />
               </div>
             )}
           </div>
 
-          {!isVertical && (
+          {!isVertical ? (
             <form onSubmit={handleSearch} className="flex items-center bg-white/5 border border-white/5 rounded-full px-3 py-1 gap-2 focus-within:border-accent/40 focus-within:bg-white/10 transition-all w-48 lg:w-64 group">
               <Search size={14} className="text-white/20 group-focus-within:text-accent transition-colors" />
               <input 
@@ -191,6 +191,10 @@ export const Taskbar: React.FC = () => {
                 className="bg-transparent border-none outline-none text-xs text-white placeholder:text-white/20 w-full"
               />
             </form>
+          ) : (
+            <button className="p-2 rounded-md hover:bg-white/10 text-white/40 hover:text-accent transition-all" onClick={() => openApp('google-search', 'Nebula Search')}>
+              <Search size={iconSize} />
+            </button>
           )}
           
           {!isSchool && !isKid && (
@@ -201,7 +205,7 @@ export const Taskbar: React.FC = () => {
         </div>
 
         {/* Center Section: Centered Apps */}
-        <div className={cn("flex items-center justify-center", isVertical ? "flex-col justify-center gap-2" : "justify-center gap-2")}>
+        <div className={cn("flex items-center justify-center", isVertical ? "flex-col justify-center gap-2 w-full" : "justify-center gap-2")}>
           {pinnedApps.map((appId, index) => {
             const info = APP_INFO[appId];
             if (!info) return null;
@@ -210,7 +214,7 @@ export const Taskbar: React.FC = () => {
             const isAppOpen = openWindows.some(w => w.appId === appId);
             
             return (
-              <div key={appId} className="relative group" draggable onDragStart={() => handleDragStart(appId, index)} onDragOver={(e) => handleDragOver(e, index)} onDragEnd={handleDragEnd}>
+              <div key={appId} className="relative group w-full flex justify-center" draggable onDragStart={() => handleDragStart(appId, index)} onDragOver={(e) => handleDragOver(e, index)} onDragEnd={handleDragEnd}>
                 <button
                   onClick={() => openApp(appId, info.label)}
                   onContextMenu={(e) => handleAppContextMenu(e, appId)}
@@ -229,7 +233,7 @@ export const Taskbar: React.FC = () => {
         </div>
 
         {/* Right Section: Identity & Quick Settings */}
-        <div className={cn("flex items-center", isVertical ? "flex-col pb-2 gap-3" : "justify-end gap-2")}>
+        <div className={cn("flex items-center", isVertical ? "flex-col pb-2 gap-3 w-full" : "justify-end gap-2")}>
           <button onClick={() => setIsChatOpen(!isChatOpen)} className={cn("p-2 rounded-md hover:bg-white/10", isChatOpen && "bg-accent/20")}>
             <MessageCircle size={iconSize} className={isChatOpen ? "text-accent" : "text-white/60"} />
           </button>
@@ -248,26 +252,35 @@ export const Taskbar: React.FC = () => {
             </AvatarFallback>
           </Avatar>
 
-          <div className="relative">
+          <div className="relative w-full flex justify-center">
             <button
               onClick={() => setIsQuickSettingsOpen(!isQuickSettingsOpen)}
-              className={cn("flex items-center gap-2 px-3 py-1.5 rounded-xl hover:bg-white/10", isQuickSettingsOpen && "bg-accent/20")}
+              className={cn("flex items-center rounded-xl hover:bg-white/10 transition-all", isQuickSettingsOpen && "bg-accent/20", isVertical ? "flex-col p-2" : "gap-2 px-3 py-1.5")}
             >
-              <div className={cn("flex items-center gap-2 mr-2 border-r border-white/10 pr-2", isVertical && "flex-col border-r-0 border-b pb-2 mb-2")}>
+              <div className={cn("flex items-center gap-2 border-white/10", isVertical ? "flex-col border-b pb-2 mb-2" : "mr-2 border-r pr-2")}>
                 {isWifiConnecting ? <Loader2 size={14} className="animate-spin text-blue-400" /> : <Wifi size={14} className={cn(isOnline ? "text-white/60" : "text-destructive")} />}
                 <VolumeIcon size={14} className="text-white/60" />
                 <BatteryMedium size={14} className="text-white/60" />
               </div>
-              <span className="text-[11px] font-bold whitespace-nowrap">{mounted && time ? time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--'}</span>
+              <div className={cn("flex flex-col items-center leading-tight font-bold", isVertical ? "gap-0.5" : "")}>
+                {isVertical ? (
+                  <>
+                    <span className="text-[10px]">{mounted && time ? time.getHours().toString().padStart(2, '0') : '--'}</span>
+                    <span className="text-[10px]">{mounted && time ? time.getMinutes().toString().padStart(2, '0') : '--'}</span>
+                  </>
+                ) : (
+                  <span className="text-[11px] whitespace-nowrap">{mounted && time ? time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--'}</span>
+                )}
+              </div>
             </button>
             {isQuickSettingsOpen && (
-              <div className={cn("absolute z-[10000] right-0", taskbarPosition === 'top' ? "top-full mt-2" : "bottom-full mb-2")}>
+              <div className={cn("absolute z-[10000]", taskbarPosition === 'top' ? "top-full mt-2" : "bottom-full mb-2", isVertical ? (taskbarPosition === 'left' ? 'left-full ml-2 bottom-0' : 'right-full mr-2 bottom-0') : "right-0")}>
                 <QuickSettings />
               </div>
             )}
           </div>
 
-          <button onClick={() => minimizeAllWindows()} className={cn("border-white/10 hover:bg-white/10", isVertical ? "w-full h-2 border-t mt-1" : "h-full w-2 border-l ml-1")} />
+          <button onClick={() => minimizeAllWindows()} className={cn("border-white/10 hover:bg-white/10 transition-colors", isVertical ? "w-full h-2 border-t mt-1" : "h-full w-2 border-l ml-1")} title="Show Desktop" />
         </div>
       </div>
 
