@@ -22,7 +22,9 @@ import {
   Search,
   Zap,
   Home,
-  Menu
+  Menu,
+  Globe,
+  Newspaper
 } from 'lucide-react';
 import { useOS } from '@/context/os-context';
 import { Button } from '@/components/ui/button';

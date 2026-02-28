@@ -1139,7 +1139,11 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
 
   const uninstallApp = (appId: AppId) => {
     setInstalledApps(prev => prev.filter(id => id !== appId));
-    setPinnedApps(prev => prev.filter(id => id !== appId));
+    setPinnedApps(prev => {
+      const next = prev.filter(id => id !== appId);
+      saveSetting('pinned_apps', next);
+      return next;
+    });
     setDesktopApps(prev => prev.filter(item => item.id !== appId));
     setOpenWindows(prev => prev.filter(win => win.appId !== appId));
     addNotification("App Uninstalled", `${APP_INFO[appId]?.label || appId} has been removed.`, 'system');

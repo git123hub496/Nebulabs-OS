@@ -234,7 +234,6 @@ export const Taskbar: React.FC = () => {
             <MessageCircle size={iconSize} className={isChatOpen ? "text-accent" : "text-white/60"} />
           </button>
 
-          {/* User Icon Hub - Before Quick Settings */}
           <Avatar 
             className="w-8 h-8 border border-white/10 cursor-pointer hover:border-accent transition-all active:scale-90 shrink-0" 
             onClick={(e) => { 
