@@ -46,7 +46,9 @@ import {
   Braces,
   Type,
   Car,
-  Clock
+  Clock,
+  Maximize2,
+  Minimize2
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { respondToEmail } from '@/ai/flows/mail-ai-flow';
@@ -240,6 +242,8 @@ interface OSContextType {
   biosSettings: BIOSSettings;
   startMenuLayout: StartMenuItem[];
   globalScale: number;
+  isFullscreen: boolean;
+  toggleFullscreen: () => void;
   
   userLocation: { lat: number, lon: number } | null;
   locationName: string;
@@ -423,7 +427,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   const [accounts, setAccounts] = useState<LocalUser[]>([]);
   const [powerStatus, setPowerStatusState] = useState<PowerStatus>('booting');
   const [systemStats, setSystemStatsState] = useState({ cpu: 12, ram: 42, net: 2 });
-  const [systemLoad, setSystemLoad] = useState({ cpu: 0, net: 0 }); // Spikes
+  const [systemLoad, setSystemLoad] = useState({ cpu: 0, net: 0 }); 
   const [isLocked, setIsLocked] = useState(false);
   const [isNDEEnabled, setIsNDEEnabledState] = useState(false);
 
@@ -449,6 +453,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   const [glassEnabled, setGlassEnabledState] = useState(true);
   const [brightness, setBrightnessState] = useState(100);
   const [volume, setVolumeState] = useState(75);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   const [taskbarPosition, setTaskbarPositionState] = useState<TaskbarPosition>('bottom');
   const [taskbarSize, setTaskbarSizeState] = useState<number>(48);
@@ -513,31 +518,39 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     } catch (e) {}
   }, []);
 
-  // System Stats Realism Logic
+  useEffect(() => {
+    const handler = () => setIsFullscreen(!!document.fullscreenElement);
+    document.addEventListener('fullscreenchange', handler);
+    return () => document.removeEventListener('fullscreenchange', handler);
+  }, []);
+
+  const toggleFullscreen = useCallback(() => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(err => {
+        console.warn(`Fullscreen Error: ${err.message}`);
+      });
+    } else {
+      document.exitFullscreen();
+    }
+  }, []);
+
   useEffect(() => {
     if (powerStatus !== 'on') return;
-
     const statsInterval = setInterval(() => {
-      // Baseline calculation
       const windowCount = openWindows.length;
       const baseRam = Math.min(95, 20 + (windowCount * 8) + (Math.random() * 5));
       const baseCpu = Math.min(90, 5 + (windowCount * 4) + (Math.random() * 3));
       const baseNet = isOnline ? (1 + (Math.random() * 5)) : 0;
-
-      // Combine with spikes
       setSystemStatsState({
         cpu: Math.round(Math.min(100, baseCpu + systemLoad.cpu)),
         ram: Math.round(baseRam),
         net: Math.round(Math.min(1000, baseNet + systemLoad.net))
       });
-
-      // Decay spikes
       setSystemLoad(prev => ({
         cpu: Math.max(0, prev.cpu - 5),
         net: Math.max(0, prev.net - 10)
       }));
     }, 1000);
-
     return () => clearInterval(statsInterval);
   }, [powerStatus, openWindows.length, isOnline, systemLoad]);
 
@@ -571,37 +584,28 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       addNotification("Hardware Locked", "Geolocation sensors not detected.", "security");
       return;
     }
-
     addNotification("Sensor Link", "Establishing GPS handshake...", "system");
-
     navigator.geolocation.getCurrentPosition(async (position) => {
       const { latitude, longitude } = position.coords;
       setUserLocation({ lat: latitude, lon: longitude });
-
       try {
         const geoRes = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`, {
           headers: { 'Accept-Language': 'en-US,en;q=0.9', 'User-Agent': 'Nebulabs-WebOS/1.0' }
         });
-        
         if (!geoRes.ok) throw new Error("API Limit Reached");
-        
         const geoData = await geoRes.json();
         const city = geoData.address.city || geoData.address.town || geoData.address.village || "Unknown Area";
         const state = geoData.address.state || "";
         setLocationName(`${city}${state ? ', ' + state : ''}`);
-
         const weatherRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true&temperature_unit=fahrenheit`);
         if (!weatherRes.ok) throw new Error("Weather Offline");
-        
         const wData = await weatherRes.json();
         setWeatherData({
           temp: Math.round(wData.current_weather.temperature),
           condition: getWeatherCondition(wData.current_weather.weathercode)
         });
-        
         addNotification("Location Established", `System synced to ${city}.`, "system");
       } catch (err) {
-        console.warn("Satellite link restricted. Using simulated telemetry.", err);
         setLocationName("Simulation Mode");
         setWeatherData({ temp: 39, condition: "Partly Cloudy" });
         addNotification("Sensor Warning", "Could not reach satellite clusters. Using cached telemetry.", "security");
@@ -622,7 +626,6 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
 
   const loadSettings = useCallback((user: LocalUser) => {
     if (user.isGuest) return;
-    
     const wall = localStorage.getItem(`nebula_${user.id}_wallpaper`);
     if (wall) setWallpaperState(wall);
     const th = localStorage.getItem(`nebula_${user.id}_theme`);
@@ -657,13 +660,10 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     if (gr) setGrayscaleState(gr === 'true');
     const nde = localStorage.getItem(`nebula_${user.id}_nde_enabled`);
     if (nde) setIsNDEEnabledState(nde === 'true');
-    
     const sn = localStorage.getItem(`nebula_${user.id}_sticky_notes`);
     if (sn) setStickyNotes(JSON.parse(sn));
-
     const pa = localStorage.getItem(`nebula_${user.id}_pinned_apps`);
     if (pa) setPinnedApps(JSON.parse(pa));
-
     const sl = localStorage.getItem(`nebula_${user.id}_start_layout`);
     if (sl) setStartMenuLayout(JSON.parse(sl));
   }, []);
@@ -673,7 +673,6 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     if (savedAccounts) {
       const parsed = JSON.parse(savedAccounts);
       setAccounts(parsed);
-      
       const lastUserId = localStorage.getItem('nebula_current_user_id');
       if (lastUserId) {
         const lastUser = parsed.find((u: LocalUser) => u.id === lastUserId);
@@ -698,7 +697,6 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       setInstalledApps(FULL_APPS);
       setPinnedApps(FULL_PINNED);
     }
-
     const timer = setTimeout(() => setPowerStatusState('on'), 800);
     return () => clearTimeout(timer);
   }, [loadSettings]);
@@ -717,31 +715,19 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   const login = useCallback((userId: string, password?: string): boolean => {
     const user = accounts.find(a => a.id === userId);
     if (user) {
-      if (!user.password) {
+      if (!user.password || user.password === password) {
         setCurrentUser(user);
         localStorage.setItem('nebula_current_user_id', userId);
         setIsLocked(false);
         loadSettings(user);
         return true;
       }
-      if (user.password !== password) return false;
-      setCurrentUser(user);
-      localStorage.setItem('nebula_current_user_id', userId);
-      setIsLocked(false);
-      loadSettings(user);
-      return true;
     }
     return false;
   }, [accounts, loadSettings]);
 
   const loginGuest = useCallback(() => {
-    const guestUser: LocalUser = {
-      id: 'guest',
-      username: 'Guest User',
-      avatarColor: '#64748b',
-      isGuest: true,
-      uniqueCode: 'GUEST-SESSION'
-    };
+    const guestUser: LocalUser = { id: 'guest', username: 'Guest User', avatarColor: '#64748b', isGuest: true, uniqueCode: 'GUEST-SESSION' };
     setCurrentUser(guestUser);
     setIsLocked(false);
     setWallpaperState("https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=1920");
@@ -776,7 +762,6 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   const createAccount = useCallback((username: string, password?: string, isSchool: boolean = false, isWork: boolean = false, isKid: boolean = false, districtId?: string) => {
     const effectiveDistrictId = districtId || (isSchool ? "NHU-7" : undefined);
     const uniqueCode = `${effectiveDistrictId || (isKid ? 'KID' : (isWork ? 'WRK' : 'USR'))}-${Math.floor(1000 + Math.random() * 9000)}-X`;
-    
     const newAcc: LocalUser = {
       id: Math.random().toString(36).substr(2, 9),
       username,
@@ -875,33 +860,16 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     triggerSpike('net', 150);
     const newId = Math.random().toString(36).substr(2, 9);
     const sentEmail: Email = {
-      id: newId,
-      from: currentUser?.username || 'user',
-      to,
-      subject,
-      content,
-      timestamp: 'Just now',
-      isRead: true,
-      folder: 'sent'
+      id: newId, from: currentUser?.username || 'user', to, subject, content, timestamp: 'Just now', isRead: true, folder: 'sent'
     };
-
     setEmails(prev => [sentEmail, ...prev]);
     addNotification("Email Sent", `Message delivered to ${to}.`, 'app');
-
     try {
       const firstRecipient = to.split(',')[0].trim();
       const response = await respondToEmail({ toName: firstRecipient, subject, content });
-      
       setTimeout(() => {
         const replyEmail: Email = {
-          id: Math.random().toString(36).substr(2, 9),
-          from: firstRecipient,
-          to: currentUser?.username || 'user',
-          subject: response.responseSubject,
-          content: response.responseContent,
-          timestamp: 'Just now',
-          isRead: false,
-          folder: 'inbox'
+          id: Math.random().toString(36).substr(2, 9), from: firstRecipient, to: currentUser?.username || 'user', subject: response.responseSubject, content: response.responseContent, timestamp: 'Just now', isRead: false, folder: 'inbox'
         };
         setEmails(prev => [replyEmail, ...prev]);
         addNotification(`New Mail: ${firstRecipient}`, response.responseSubject, 'app');
@@ -917,42 +885,17 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       addNotification("Hardware Error", "Network stack is disabled in BIOS.", "security");
       return;
     }
-
     triggerSpike('net', 50);
-    const msg: ChatMessage = {
-      id: Math.random().toString(36).substr(2, 9),
-      sender: currentUser?.username || 'Me',
-      recipient: recipient,
-      text,
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      isBot: false
-    };
+    const msg: ChatMessage = { id: Math.random().toString(36).substr(2, 9), sender: currentUser?.username || 'Me', recipient: recipient, text, timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), isBot: false };
     setChatMessages(prev => [...prev, msg]);
-
     try {
       const chatHistory = chatMessages.slice(-5).map(m => `${m.sender}: ${m.text}`);
-      const response = await respondToChat({ 
-        colleagueName: recipient, 
-        colleagueRole: role, 
-        message: text,
-        history: chatHistory,
-        isWorkMode: currentUser?.isWorkAccount
-      });
-
+      const response = await respondToChat({ colleagueName: recipient, colleagueRole: role, message: text, history: chatHistory, isWorkMode: currentUser?.isWorkAccount });
       setTimeout(() => {
-        const botMsg: ChatMessage = {
-          id: Math.random().toString(36).substr(2, 9),
-          sender: recipient,
-          recipient: currentUser?.username || 'user',
-          text: response.response,
-          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          isBot: true
-        };
+        const botMsg: ChatMessage = { id: Math.random().toString(36).substr(2, 9), sender: recipient, recipient: currentUser?.username || 'user', text: response.response, timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), isBot: true };
         setChatMessages(prev => [...prev, botMsg]);
         triggerSpike('net', 50);
-        if (!isChatOpen) {
-          addNotification(`Chat: ${recipient}`, response.response.slice(0, 30) + '...', 'app');
-        }
+        if (!isChatOpen) addNotification(`Chat: ${recipient}`, response.response.slice(0, 30) + '...', 'app');
       }, 1000 + Math.random() * 1000);
     } catch (error) {
       console.error("Chat AI Failure:", error);
@@ -960,7 +903,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const openApp = (appId: AppId, title: string, params?: any) => {
-    triggerSpike('cpu', 40); // Spike CPU when opening app
+    triggerSpike('cpu', 40);
     if (appId === 'sticky-notes') {
       createStickyNote();
       return;
@@ -1032,12 +975,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     setOpenWindows(prev => prev.map(w => w.id === windowId ? { ...w, displayId } : w));
   };
 
-  const setNotes = (content: string) => { 
-    if (!isOnline) return; 
-    triggerSpike('cpu', 10);
-    setNotesInternal(content); 
-    saveSetting('notes', content); 
-  };
+  const setNotes = (content: string) => { if (!isOnline) return; triggerSpike('cpu', 10); setNotesInternal(content); saveSetting('notes', content); };
   const setTheme = (t: ThemeMode) => { setThemeState(t); saveSetting('theme', t); };
   const setAccentColor = (c: AccentColor) => { setAccentColorState(c); saveSetting('accent', c); };
   const setCustomAccentHex = (h: string) => { setCustomAccentHexState(h); saveSetting('custom_accent', h); };
@@ -1066,51 +1004,21 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   const setSystemStats = (stats: Partial<{ cpu: number; ram: number; net: number }>) => { setSystemStatsState(prev => ({ ...prev, ...stats })); };
 
   const factoryReset = useCallback(() => {
-    if (typeof window !== 'undefined') {
-      localStorage.clear();
-      window.location.reload();
-    }
+    if (typeof window !== 'undefined') { localStorage.clear(); window.location.reload(); }
   }, []);
 
-  const setIsWidgetsOpen = (open: boolean) => {
-    setIsWidgetsOpenState(open);
-    if (open) { setIsStartOpenState(false); setIsQuickSettingsOpenState(false); setIsChatOpenState(false); playSound('open'); }
-    else { playSound('close'); }
-  };
-
-  const setIsQuickSettingsOpen = (open: boolean) => {
-    setIsQuickSettingsOpenState(open);
-    if (open) { setIsStartOpenState(false); setIsWidgetsOpenState(false); setIsChatOpenState(false); playSound('open'); }
-    else { playSound('close'); }
-  };
-
-  const setIsStartOpen = (open: boolean) => {
-    setIsStartOpenState(open);
-    if (open) { setIsQuickSettingsOpenState(false); setIsWidgetsOpenState(false); setIsChatOpenState(false); playSound('open'); }
-    else { playSound('close'); }
-  };
-
-  const setIsChatOpen = (open: boolean) => {
-    setIsChatOpenState(open);
-    if (open) { setIsStartOpenState(false); setIsQuickSettingsOpenState(false); setIsWidgetsOpenState(false); playSound('open'); }
-    else { playSound('close'); }
-  };
+  const setIsWidgetsOpen = (open: boolean) => { setIsWidgetsOpenState(open); if (open) { setIsStartOpenState(false); setIsQuickSettingsOpenState(false); setIsChatOpenState(false); playSound('open'); } else { playSound('close'); } };
+  const setIsQuickSettingsOpen = (open: boolean) => { setIsQuickSettingsOpenState(open); if (open) { setIsStartOpenState(false); setIsWidgetsOpenState(false); setIsChatOpenState(false); playSound('open'); } else { playSound('close'); } };
+  const setIsStartOpen = (open: boolean) => { setIsStartOpenState(open); if (open) { setIsQuickSettingsOpenState(false); setIsWidgetsOpenState(false); setIsChatOpenState(false); playSound('open'); } else { playSound('close'); } };
+  const setIsChatOpen = (open: boolean) => { setIsChatOpenState(open); if (open) { setIsStartOpenState(false); setIsQuickSettingsOpenState(false); setIsWidgetsOpenState(false); playSound('open'); } else { playSound('close'); } };
 
   const connectToWifi = (ssid: string) => {
     setIsWifiConnecting(true);
-    setTimeout(() => {
-      setCurrentWifiState(ssid);
-      setIsOnline(ssid !== OFFLINE_WIFI);
-      setIsWifiConnecting(false);
-    }, 2000);
+    setTimeout(() => { setCurrentWifiState(ssid); setIsOnline(ssid !== OFFLINE_WIFI); setIsWifiConnecting(false); }, 2000);
   };
 
-  const setSecurityEnabled = (enabled: boolean) => {
-    setSecurityEnabledState(enabled);
-  };
-
+  const setSecurityEnabled = (enabled: boolean) => { setSecurityEnabledState(enabled); };
   const setCurrentDisplayId = (id: string) => setDisplayIdState(id);
-
   const updateDisplayLayout = (fromId: string, direction: DisplayDirection, toId: string) => {
     const updated = { ...displayLayout };
     const reverseMap: Record<DisplayDirection, DisplayDirection> = { left: 'right', right: 'left', top: 'bottom', bottom: 'top' };
@@ -1120,12 +1028,10 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       updated[fromId][direction] = toId;
       if (!updated[toId]) updated[toId] = {};
       updated[toId][revDir] = fromId;
-    } else {
-      if (updated[fromId]) {
-        const oldToId = updated[fromId][direction];
-        delete updated[fromId][direction];
-        if (oldToId && updated[oldToId]) delete updated[oldToId][revDir];
-      }
+    } else if (updated[fromId]) {
+      const oldToId = updated[fromId][direction];
+      delete updated[fromId][direction];
+      if (oldToId && updated[oldToId]) delete updated[oldToId][revDir];
     }
     setDisplayLayoutState(updated);
   };
@@ -1142,8 +1048,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const importFile = (name: string, content: string, size: number, parentId: string | null) => {
-    triggerSpike('net', 300);
-    triggerSpike('cpu', 20);
+    triggerSpike('net', 300); triggerSpike('cpu', 20);
     const newFile: FileSystemItem = { id: Math.random().toString(36).substr(2, 9), name, type: 'file', parentId, content, size };
     setFileSystem(prev => [...prev, newFile]);
   };
@@ -1156,13 +1061,8 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   const moveToTrash = (id: string) => {
     const item = fileSystem.find(i => i.id === id);
     if (item) {
-      if (item.isSystem && !isNDEEnabled) {
-        addNotification("Access Denied", "Core system files require NDE elevation to modify.", "security");
-        playSound('close');
-        return;
-      }
-      setFileSystem(prev => prev.filter(i => i.id !== id));
-      setTrash(prev => [...prev, item]);
+      if (item.isSystem && !isNDEEnabled) { addNotification("Access Denied", "Core system files require NDE elevation to modify.", "security"); playSound('close'); return; }
+      setFileSystem(prev => prev.filter(i => i.id !== id)); setTrash(prev => [...prev, item]);
     }
   };
 
@@ -1175,23 +1075,15 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   const deleteItemPermanently = (id: string) => setTrash(prev => prev.filter(item => item.id !== id));
 
   const installApp = (appId: AppId) => {
-    if (!installedApps.includes(appId)) {
-      setInstalledApps(prev => [...prev, appId]);
-      addNotification("App Installed", `${APP_INFO[appId]?.label || appId} is now available in your workspace.`, 'app');
-    }
+    if (!installedApps.includes(appId)) { setInstalledApps(prev => [...prev, appId]); addNotification("App Installed", `${APP_INFO[appId]?.label || appId} available in workspace.`, 'app'); }
   };
 
   const uninstallApp = (appId: AppId) => {
     setInstalledApps(prev => prev.filter(id => id !== appId));
-    setPinnedApps(prev => {
-      const next = prev.filter(id => id !== appId);
-      saveSetting('pinned_apps', next);
-      return next;
-    });
+    setPinnedApps(prev => { const next = prev.filter(id => id !== appId); saveSetting('pinned_apps', next); return next; });
     setDesktopApps(prev => prev.filter(item => item.id !== appId));
     setOpenWindows(prev => prev.filter(win => win.appId !== appId));
-    addNotification("App Uninstalled", `${APP_INFO[appId]?.label || appId} has been removed.`, 'system');
-    playSound('close');
+    addNotification("App Uninstalled", `${APP_INFO[appId]?.label || appId} has been removed.`, 'system'); playSound('close');
   };
 
   const updateDesktopAppPosition = (id: AppId, x: number, y: number) => {
@@ -1202,146 +1094,51 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
 
   const toggleDesktopApp = (id: AppId) => {
     const exists = desktopApps.find(app => app.id === id);
-    if (exists) {
-      if (['trash', 'files', 'store'].includes(id)) return;
-      setDesktopApps(prev => prev.filter(app => app.id !== id));
-    } else {
-      const info = APP_INFO[id];
-      const newApp = { id, label: info.label, icon: info.icon, x: PADDING, y: PADDING + (desktopApps.length * GRID_Y) };
-      setDesktopApps(prev => [...prev, newApp]);
-    }
+    if (exists) { if (['trash', 'files', 'store'].includes(id)) return; setDesktopApps(prev => prev.filter(app => app.id !== id)); }
+    else { const info = APP_INFO[id]; const newApp = { id, label: info.label, icon: info.icon, x: PADDING, y: PADDING + (desktopApps.length * GRID_Y) }; setDesktopApps(prev => [...prev, newApp]); }
   };
 
   const togglePinApp = (id: AppId) => {
-    setPinnedApps(prev => {
-      const next = prev.includes(id) ? prev.filter(a => a !== id) : [...prev, id];
-      saveSetting('pinned_apps', next);
-      return next;
-    });
+    setPinnedApps(prev => { const next = prev.includes(id) ? prev.filter(a => a !== id) : [...prev, id]; saveSetting('pinned_apps', next); return next; });
   };
 
-  const reorderPinnedApps = (newOrder: AppId[]) => {
-    setPinnedApps(newOrder);
-    saveSetting('pinned_apps', newOrder);
-  };
-
-  const reorderStartMenu = (newLayout: StartMenuItem[]) => {
-    setStartMenuLayout(newLayout);
-    saveSetting('start_layout', newLayout);
-  };
+  const reorderPinnedApps = (newOrder: AppId[]) => { setPinnedApps(newOrder); saveSetting('pinned_apps', newOrder); };
+  const reorderStartMenu = (newLayout: StartMenuItem[]) => { setStartMenuLayout(newLayout); saveSetting('start_layout', newLayout); };
 
   const createStartFolder = (name: string, firstAppId: AppId, secondAppId: AppId) => {
     const newFolder = { id: Math.random().toString(36).substr(2, 9), name, apps: [firstAppId, secondAppId] };
     const newItem: StartMenuItem = { id: `folder-${newFolder.id}`, type: 'folder', folder: newFolder };
-    setStartMenuLayout(prev => {
-      const filtered = prev.filter(item => item.appId !== firstAppId && item.appId !== secondAppId);
-      const updated = [...filtered, newItem];
-      saveSetting('start_layout', updated);
-      return updated;
-    });
+    setStartMenuLayout(prev => { const filtered = prev.filter(item => item.appId !== firstAppId && item.appId !== secondAppId); const updated = [...filtered, newItem]; saveSetting('start_layout', updated); return updated; });
   };
 
   const addAppToStartFolder = (appId: AppId, folderId: string) => {
-    setStartMenuLayout(prev => {
-      const updated = prev.map(item => {
-        if (item.type === 'folder' && item.folder?.id === folderId) {
-          if (!item.folder.apps.includes(appId)) {
-            return { ...item, folder: { ...item.folder, apps: [...item.folder.apps, appId] } };
-          }
-        }
-        return item;
-      }).filter(item => item.appId !== appId);
-      saveSetting('start_layout', updated);
-      return updated;
-    });
+    setStartMenuLayout(prev => { const updated = prev.map(item => { if (item.type === 'folder' && item.folder?.id === folderId) { if (!item.folder.apps.includes(appId)) return { ...item, folder: { ...item.folder, apps: [...item.folder.apps, appId] } }; } return item; }).filter(item => item.appId !== appId); saveSetting('start_layout', updated); return updated; });
   };
 
   const removeAppFromStartFolder = (appId: AppId, folderId: string) => {
-    setStartMenuLayout(prev => {
-      const appItem: StartMenuItem = { id: `item-${appId}`, type: 'app', appId };
-      const updated = prev.map(item => {
-        if (item.type === 'folder' && item.folder?.id === folderId) {
-          return { ...item, folder: { ...item.folder, apps: item.folder.apps.filter(id => id !== appId) } };
-        }
-        return item;
-      });
-      const final = [...updated, appItem];
-      saveSetting('start_layout', final);
-      return final;
-    });
+    setStartMenuLayout(prev => { const appItem: StartMenuItem = { id: `item-${appId}`, type: 'app', appId }; const updated = prev.map(item => { if (item.type === 'folder' && item.folder?.id === folderId) return { ...item, folder: { ...item.folder, apps: item.folder.apps.filter(id => id !== appId) } }; return item; }); const final = [...updated, appItem]; saveSetting('start_layout', final); return final; });
   };
 
   const renameStartFolder = (folderId: string, newName: string) => {
-    setStartMenuLayout(prev => {
-      const updated = prev.map(item => {
-        if (item.type === 'folder' && item.folder?.id === folderId) {
-          return { ...item, folder: { ...item.folder, name: newName } };
-        }
-        return item;
-      });
-      saveSetting('start_layout', updated);
-      return updated;
-    });
+    setStartMenuLayout(prev => { const updated = prev.map(item => { if (item.type === 'folder' && item.folder?.id === folderId) return { ...item, folder: { ...item.folder, name: newName } }; return item; }); saveSetting('start_layout', updated); return updated; });
   };
 
   const deleteStartFolder = (folderId: string) => {
-    setStartMenuLayout(prev => {
-      const folderItem = prev.find(item => item.type === 'folder' && item.folder?.id === folderId);
-      if (!folderItem || !folderItem.folder) return prev;
-      const appsToRestore: StartMenuItem[] = folderItem.folder.apps.map(id => ({ id: `item-${id}`, type: 'app', appId: id }));
-      const filtered = prev.filter(item => !(item.type === 'folder' && item.folder?.id === folderId));
-      const updated = [...filtered, ...appsToRestore];
-      saveSetting('start_layout', updated);
-      return updated;
-    });
+    setStartMenuLayout(prev => { const folderItem = prev.find(item => item.type === 'folder' && item.folder?.id === folderId); if (!folderItem || !folderItem.folder) return prev; const appsToRestore: StartMenuItem[] = folderItem.folder.apps.map(id => ({ id: `item-${id}`, type: 'app', appId: id })); const filtered = prev.filter(item => !(item.type === 'folder' && item.folder?.id === folderId)); const updated = [...filtered, ...appsToRestore]; saveSetting('start_layout', updated); return updated; });
   };
 
-  const updateWallpaper = (url: string) => {
-    setWallpaperState(url);
-    saveSetting('wallpaper', url);
-  };
-
-  const createStickyNote = () => {
-    const newNote: StickyNote = {
-      id: Math.random().toString(36).substr(2, 9),
-      content: "New Note...",
-      x: 300 + (stickyNotes.length * 20),
-      y: 100 + (stickyNotes.length * 20),
-      color: '#fef08a'
-    };
-    const updated = [...stickyNotes, newNote];
-    setStickyNotes(updated);
-    saveSetting('sticky_notes', updated);
-    playSound('click');
-  };
-
-  const updateStickyNote = (id: string, updates: Partial<StickyNote>) => {
-    const updated = stickyNotes.map(n => n.id === id ? { ...n, ...updates } : n);
-    setStickyNotes(updated);
-    saveSetting('sticky_notes', updated);
-  };
-
-  const deleteStickyNote = (id: string) => {
-    const updated = stickyNotes.filter(n => n.id !== id);
-    setStickyNotes(updated);
-    saveSetting('sticky_notes', updated);
-    playSound('close');
-  };
-
-  const updateBIOSSettings = useCallback((updates: Partial<BIOSSettings>) => {
-    setBiosSettings(prev => {
-      const updated = { ...prev, ...updates };
-      localStorage.setItem('nebula_bios_settings', JSON.stringify(updated));
-      return updated;
-    });
-  }, []);
+  const updateWallpaper = (url: string) => { setWallpaperState(url); saveSetting('wallpaper', url); };
+  const createStickyNote = () => { const newNote: StickyNote = { id: Math.random().toString(36).substr(2, 9), content: "New Note...", x: 300 + (stickyNotes.length * 20), y: 100 + (stickyNotes.length * 20), color: '#fef08a' }; const updated = [...stickyNotes, newNote]; setStickyNotes(updated); saveSetting('sticky_notes', updated); playSound('click'); };
+  const updateStickyNote = (id: string, updates: Partial<StickyNote>) => { const updated = stickyNotes.map(n => n.id === id ? { ...n, ...updates } : n); setStickyNotes(updated); saveSetting('sticky_notes', updated); };
+  const deleteStickyNote = (id: string) => { const updated = stickyNotes.filter(n => n.id !== id); setStickyNotes(updated); saveSetting('sticky_notes', updated); playSound('close'); };
+  const updateBIOSSettings = useCallback((updates: Partial<BIOSSettings>) => { setBiosSettings(prev => { const updated = { ...prev, ...updates }; localStorage.setItem('nebula_bios_settings', JSON.stringify(updated)); return updated; }); }, []);
 
   return (
     <OSContext.Provider value={{
       currentUser, accounts, openWindows, activeWindowId, installedApps, pinnedApps,
       fileSystem, trash, desktopApps, notifications, emails, markEmailRead, sendEmail, 
       archiveEmail, deleteEmail, restoreEmail, permanentlyDeleteEmail,
-      wallpaper, notes, theme, accentColor, mouserScale,
+      wallpaper, notes, theme, accentColor, mouserScale, isFullscreen, toggleFullscreen,
       customAccentHex, cursorColor, cursorShape, customCursorUrl, isInverted, isGrayscale, glassEnabled, powerStatus,
       taskbarPosition, taskbarSize, taskbarTransparency, appTransparency, isTaskbarAutoHide, setTaskbarAutoHide, iconSize, currentWifi, isWifiConnecting,
       isOnline, volume, brightness, isWidgetsOpen, isQuickSettingsOpen, 

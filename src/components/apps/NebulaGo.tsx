@@ -142,7 +142,7 @@ export const NebulaGo: React.FC = () => {
                   </div>
                 </div>
                 <Button 
-                  onClick={() => setActiveTab('maps')}
+                  onClick={() => handleTabChange('maps')}
                   className="rounded-full bg-white text-black hover:bg-white/90 font-black h-12 px-6"
                 >
                   FULL MAP

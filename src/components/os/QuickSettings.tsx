@@ -20,7 +20,10 @@ import {
   Check,
   Plus,
   Layout,
-  RefreshCcw
+  RefreshCcw,
+  Maximize2,
+  Minimize2,
+  Smartphone
 } from 'lucide-react';
 import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
@@ -47,7 +50,7 @@ export const QuickSettings: React.FC = () => {
     currentUser, logout, shutDown, openApp,
     taskbarPosition, currentDisplayId, setCurrentDisplayId,
     displayLayout, updateDisplayLayout, resetDisplayLayout,
-    playSound
+    playSound, isFullscreen, toggleFullscreen, biosSettings
   } = useOS();
 
   if (!isQuickSettingsOpen) return null;
@@ -65,11 +68,6 @@ export const QuickSettings: React.FC = () => {
 
   const handleToggleTheme = () => {
     setTheme(theme === 'dark' ? 'light' : 'dark');
-    playSound('click');
-  };
-
-  const addDisplay = () => {
-    window.open(window.location.href, '_blank', 'width=1280,height=720');
     playSound('click');
   };
 
@@ -145,85 +143,22 @@ export const QuickSettings: React.FC = () => {
           </div>
         </button>
 
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button 
-              className="flex items-center gap-3 p-3 rounded-xl border bg-white/5 border-white/5 text-muted-foreground hover:bg-white/10 transition-all text-left"
-              onClick={() => playSound('click')}
-            >
-              <Monitor size={18} className="text-accent" />
-              <div className="flex flex-col min-w-0">
-                <span className="text-[11px] font-bold text-foreground">Displays</span>
-                <span className="text-[9px] truncate opacity-60">ID: {currentDisplayId}</span>
-              </div>
-            </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent className="glass border-white/10 w-56 backdrop-blur-3xl shadow-2xl">
-             <div className="px-2 py-1.5 text-[10px] font-black uppercase text-muted-foreground tracking-widest">Identify This Screen</div>
-             {['1', '2', '3'].map(id => (
-               <DropdownMenuItem 
-                 key={id} 
-                 onClick={() => {
-                   playSound('click');
-                   setCurrentDisplayId(id);
-                 }}
-                 className="gap-2"
-               >
-                 <Monitor size={12} className={id === currentDisplayId ? "text-accent" : ""} />
-                 Display {id} {id === currentDisplayId ? '(This Tab)' : ''}
-               </DropdownMenuItem>
-             ))}
-             
-             <Separator className="my-1 bg-white/5" />
-             <div className="px-2 py-1.5 text-[10px] font-black uppercase text-muted-foreground tracking-widest">Physical Layout</div>
-             
-             {['1', '2', '3'].map(fromId => (
-               <DropdownMenuSub key={fromId}>
-                 <DropdownMenuSubTrigger className="gap-2 text-[11px]">
-                   <Layout size={12} />
-                   Arrange Display {fromId}
-                 </DropdownMenuSubTrigger>
-                 <DropdownMenuSubContent className="glass border-white/10 w-48 backdrop-blur-3xl shadow-2xl">
-                    {['left', 'right', 'top', 'bottom'].map(dir => (
-                      <DropdownMenuSub key={dir}>
-                        <DropdownMenuSubTrigger className="text-[10px]">{dir} is...</DropdownMenuSubTrigger>
-                        <DropdownMenuSubContent className="glass border-white/10 backdrop-blur-3xl">
-                          <DropdownMenuItem onClick={() => { playSound('click'); updateDisplayLayout(fromId, dir as any, 'none'); }} className="text-[10px]">
-                            None
-                            {!displayLayout[fromId]?.[dir as any] && <Check size={12} className="ml-auto text-accent" />}
-                          </DropdownMenuItem>
-                          {['1', '2', '3'].filter(id => id !== fromId).map(toId => (
-                            <DropdownMenuItem 
-                              key={toId} 
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                playSound('click');
-                                updateDisplayLayout(fromId, dir as any, toId);
-                              }}
-                              className="text-[10px]"
-                            >
-                              Display {toId}
-                              {displayLayout[fromId]?.[dir as any] === toId && <Check size={12} className="ml-auto text-accent" />}
-                            </DropdownMenuItem>
-                          ))}
-                        </DropdownMenuSubContent>
-                      </DropdownMenuSub>
-                    ))}
-                 </DropdownMenuSubContent>
-               </DropdownMenuSub>
-             ))}
-
-             <Separator className="my-1 bg-white/5" />
-             <DropdownMenuItem onClick={() => { playSound('click'); resetDisplayLayout(); }} className="gap-2 text-destructive">
-               <RefreshCcw size={12} />
-               Reset All Arrangements
-             </DropdownMenuItem>
-             <DropdownMenuItem onClick={addDisplay} className="gap-2 text-accent">
-               <Plus size={12} />
-               Connect New Display
-             </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <button 
+          onClick={() => {
+            playSound('click');
+            toggleFullscreen();
+          }}
+          className={cn(
+            "flex items-center gap-3 p-3 rounded-xl border transition-all text-left",
+            isFullscreen ? "bg-blue-500/20 border-blue-500/30 text-blue-400" : "bg-white/5 border-white/5 text-muted-foreground hover:bg-white/10"
+          )}
+        >
+          {isFullscreen ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
+          <div className="flex flex-col min-w-0">
+            <span className="text-[11px] font-bold">Fullscreen</span>
+            <span className="text-[9px] truncate opacity-60">Touch Immersive</span>
+          </div>
+        </button>
 
         <button 
           onClick={handleToggleTheme}

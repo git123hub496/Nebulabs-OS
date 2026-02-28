@@ -159,7 +159,7 @@ export const Taskbar: React.FC = () => {
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
-        {/* Left Section: Start & Widgets & Search */}
+        {/* Left Section: Start & Search & Widgets */}
         <div className={cn("flex items-center", isVertical ? "flex-col gap-2 w-full" : "gap-4 justify-start")}>
           <div className="relative">
             <button
@@ -197,35 +197,41 @@ export const Taskbar: React.FC = () => {
           )}
         </div>
 
-        {/* Center Section: Perfectly Centered Apps */}
+        {/* Center Section: Perfectly Centered Pinned Apps */}
         <div className={cn("flex items-center justify-center", isVertical ? "flex-col justify-center gap-2 w-full" : "justify-center gap-2")}>
-          {pinnedApps.map((appId, index) => {
-            const info = APP_INFO[appId];
-            if (!info) return null;
-            const Icon = info.icon;
-            const isActive = openWindows.some(w => w.appId === appId && w.id === activeWindowId);
-            const isAppOpen = openWindows.some(w => w.appId === appId);
-            
-            return (
-              <div key={appId} className="relative group flex justify-center" draggable onDragStart={() => handleDragStart(appId, index)} onDragOver={(e) => handleDragOver(e, index)} onDragEnd={handleDragEnd}>
-                <button
-                  onClick={() => openApp(appId, info.label)}
-                  onContextMenu={(e) => handleAppContextMenu(e, appId)}
-                  className={cn(
-                    "p-2 rounded-xl transition-all active:scale-90 flex items-center justify-center min-w-[36px] min-h-[36px]",
-                    isActive ? "bg-white/10" : "hover:bg-white/10 text-white/60 hover:text-accent"
-                  )}
-                  title={info.label}
-                >
-                  <Icon size={iconSize} className={cn("transition-colors", isSchool && isActive ? "text-blue-400" : isKid && isActive ? "text-pink-400" : "")} />
-                </button>
-                {isAppOpen && <div className={cn("absolute rounded-full", isSchool ? "bg-blue-500" : isKid ? "bg-pink-500" : "bg-accent", isVertical ? "w-1 h-6 -right-1 top-1/2 -translate-y-1/2" : "h-1 w-6 -bottom-1 left-1/2 -translate-x-1/2")} />}
-              </div>
-            );
-          })}
+          <TooltipProvider delayDuration={0}>
+            {pinnedApps.map((appId, index) => {
+              const info = APP_INFO[appId];
+              if (!info) return null;
+              const Icon = info.icon;
+              const isActive = openWindows.some(w => w.appId === appId && w.id === activeWindowId);
+              const isAppOpen = openWindows.some(w => w.appId === appId);
+              
+              return (
+                <div key={appId} className="relative group flex justify-center" draggable onDragStart={() => handleDragStart(appId, index)} onDragOver={(e) => handleDragOver(e, index)} onDragEnd={handleDragEnd}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        onClick={() => openApp(appId, info.label)}
+                        onContextMenu={(e) => handleAppContextMenu(e, appId)}
+                        className={cn(
+                          "p-2 rounded-xl transition-all active:scale-90 flex items-center justify-center min-w-[36px] min-h-[36px]",
+                          isActive ? "bg-white/10" : "hover:bg-white/10 text-white/60 hover:text-accent"
+                        )}
+                      >
+                        <Icon size={iconSize} className={cn("transition-colors", isSchool && isActive ? "text-blue-400" : isKid && isActive ? "text-pink-400" : "")} />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent className="glass border-white/10 text-xs font-bold text-accent uppercase tracking-widest">{info.label}</TooltipContent>
+                  </Tooltip>
+                  {isAppOpen && <div className={cn("absolute rounded-full", isSchool ? "bg-blue-500" : isKid ? "bg-pink-500" : "bg-accent", isVertical ? "w-1 h-6 -right-1 top-1/2 -translate-y-1/2" : "h-1 w-6 -bottom-1 left-1/2 -translate-x-1/2")} />}
+                </div>
+              );
+            })}
+          </TooltipProvider>
         </div>
 
-        {/* Right Section: System Cluster & Identity - Pinned to the right edge */}
+        {/* Right Section: System Cluster & Identity */}
         <div className={cn("flex items-center", isVertical ? "flex-col pb-2 gap-2 w-full" : "justify-end gap-3")}>
           <button onClick={() => setIsChatOpen(!isChatOpen)} className={cn("p-2 rounded-xl hover:bg-white/10", isChatOpen && "bg-accent/20")}>
             <MessageCircle size={iconSize} className={isChatOpen ? "text-accent" : "text-white/60"} />
@@ -233,7 +239,7 @@ export const Taskbar: React.FC = () => {
 
           <div className="relative">
             <button
-              onClick={() => setIsQuickSettingsOpen(!isQuickSettingsOpen)}
+              onClick={(e) => { e.stopPropagation(); setIsQuickSettingsOpen(!isQuickSettingsOpen); }}
               className={cn("flex items-center rounded-xl hover:bg-white/10 transition-all", isQuickSettingsOpen && "bg-accent/20", isVertical ? "flex-col p-2" : "gap-2 px-3 py-1.5")}
             >
               <div className={cn("flex items-center gap-2 border-white/10", isVertical ? "flex-col border-b pb-2 mb-2" : "mr-2 border-r pr-2")}>
@@ -265,7 +271,6 @@ export const Taskbar: React.FC = () => {
               e.stopPropagation(); 
               openApp('settings', 'Settings', { tab: 'accounts' });
             }}
-            title="Account Identity"
           >
             <AvatarImage src={currentUser?.avatarUrl} className="object-cover" />
             <AvatarFallback className="text-[10px] font-bold text-white" style={{ backgroundColor: currentUser?.avatarColor || 'var(--accent)' }}>
