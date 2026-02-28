@@ -1,9 +1,27 @@
 
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useOS, AppId, APP_INFO } from '@/context/os-context';
-import { Wifi, Volume2, MessageCircle, PinOff, EyeOff, LayoutGrid, BatteryMedium, VolumeX, Volume1, Clock as ClockIcon, Calendar as CalendarIcon, ChevronUp, Eye, User, RotateCw, Loader2 } from 'lucide-react';
+import { 
+  Wifi, 
+  Volume2, 
+  MessageCircle, 
+  PinOff, 
+  EyeOff, 
+  LayoutGrid, 
+  BatteryMedium, 
+  VolumeX, 
+  Volume1, 
+  Clock as ClockIcon, 
+  Calendar as CalendarIcon, 
+  ChevronUp, 
+  Eye, 
+  RotateCw, 
+  Loader2,
+  GraduationCap,
+  Smile
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { StartMenu } from './StartMenu';
 import { QuickSettings } from './QuickSettings';
@@ -176,7 +194,7 @@ export const Taskbar: React.FC = () => {
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
-        {/* Left: Start and Widgets */}
+        {/* Left Section: Start and Widgets */}
         <div className={cn("flex items-center", isVertical ? "flex-col gap-1" : "gap-1 justify-start")}>
           <div className="relative flex items-center justify-center">
             <button
@@ -199,7 +217,11 @@ export const Taskbar: React.FC = () => {
                 </span>
               )}
             </button>
-            {isStartOpen && <StartMenu onClose={() => setIsStartOpen(false)} />}
+            {isStartOpen && (
+              <div className="absolute bottom-full mb-2 left-0">
+                <StartMenu onClose={() => setIsStartOpen(false)} />
+              </div>
+            )}
           </div>
           
           {!isSchool && !isKid && (
@@ -218,7 +240,7 @@ export const Taskbar: React.FC = () => {
           )}
         </div>
 
-        {/* Center: Applications (Pinned and Active) - ALWAYS CENTERED */}
+        {/* Center Section: Applications (Pinned and Active) */}
         <div className={cn(
           "flex items-center",
           isVertical ? "flex-col justify-center gap-2" : "justify-center gap-2"
@@ -244,7 +266,7 @@ export const Taskbar: React.FC = () => {
                 )}
                 draggable
                 onDragStart={() => handleDragStart(appId, index)}
-                onDragOver={() => setTargetIndex(index)}
+                onDragOver={(e) => handleDragOver(e, index)}
                 onDragEnd={handleDragEnd}
               >
                 <button
@@ -275,10 +297,10 @@ export const Taskbar: React.FC = () => {
           })}
         </div>
 
-        {/* Right: Status HUD and Identity */}
+        {/* Right Section: Status HUD and Identity */}
         <div className={cn(
           "flex items-center",
-          isVertical ? "flex-col pb-2 gap-3" : "justify-end px-1 gap-3"
+          isVertical ? "flex-col pb-2 gap-3" : "justify-end px-1 gap-2"
         )}>
           <button
             onClick={(e) => {
@@ -294,8 +316,25 @@ export const Taskbar: React.FC = () => {
             <MessageCircle size={iconSize} className={isChatOpen ? (isSchool ? "text-blue-400" : isKid ? "text-pink-400" : "text-accent") : "text-white/60 group-hover:text-white"} />
           </button>
 
-          <TooltipProvider>
-            <div className="relative flex items-center">
+          <Avatar 
+            className="w-8 h-8 border border-white/10 cursor-pointer hover:border-accent transition-all active:scale-90 shrink-0" 
+            onClick={(e) => { 
+              e.stopPropagation(); 
+              openApp('settings', 'Settings', { tab: 'accounts' });
+            }}
+            title="Account Identity"
+          >
+            <AvatarImage src={currentUser?.avatarUrl} className="object-cover" />
+            <AvatarFallback 
+              className="text-[10px] font-bold text-white"
+              style={{ backgroundColor: currentUser?.avatarColor || 'var(--accent)' }}
+            >
+              {currentUser?.username[0].toUpperCase() || 'G'}
+            </AvatarFallback>
+          </Avatar>
+
+          <div className="relative flex items-center">
+            <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <button
@@ -304,7 +343,7 @@ export const Taskbar: React.FC = () => {
                       setIsQuickSettingsOpen(!isQuickSettingsOpen);
                     }}
                     className={cn(
-                      "flex items-center gap-2 px-3 py-1.5 rounded-xl hover:bg-white/10 transition-all active:scale-95 group relative",
+                      "flex items-center gap-2 px-3 py-1.5 rounded-xl hover:bg-white/10 transition-all active:scale-95 group",
                       isQuickSettingsOpen && (isSchool ? "bg-blue-500/20 text-blue-400" : isKid ? "bg-pink-500/20 text-pink-400" : "bg-accent/20 text-accent"),
                       isVertical ? "flex-col py-3 px-1.5" : ""
                     )}
@@ -356,27 +395,13 @@ export const Taskbar: React.FC = () => {
                   </div>
                 </TooltipContent>
               </Tooltip>
-              {isQuickSettingsOpen && <QuickSettings />}
-            </div>
-          </TooltipProvider>
-
-          {/* FAR RIGHT IDENTITY - Opens Accounts directly */}
-          <Avatar 
-            className="w-8 h-8 border border-white/10 cursor-pointer hover:border-accent transition-colors" 
-            onClick={(e) => { 
-              e.stopPropagation(); 
-              openApp('settings', 'Settings', { tab: 'accounts' });
-            }}
-            title="Account Identity"
-          >
-            <AvatarImage src={currentUser?.avatarUrl} className="object-cover" />
-            <AvatarFallback 
-              className="text-[10px] font-bold text-white"
-              style={{ backgroundColor: currentUser?.avatarColor || 'var(--accent)' }}
-            >
-              {currentUser?.username[0].toUpperCase() || 'G'}
-            </AvatarFallback>
-          </Avatar>
+            </TooltipProvider>
+            {isQuickSettingsOpen && (
+              <div className="absolute bottom-full mb-2 right-0">
+                <QuickSettings />
+              </div>
+            )}
+          </div>
 
           <button
             onClick={() => minimizeAllWindows()}
