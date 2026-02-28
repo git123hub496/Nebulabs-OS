@@ -125,7 +125,6 @@ export const Taskbar: React.FC = () => {
 
   const VolumeIcon = volume === 0 ? VolumeX : volume < 50 ? Volume1 : Volume2;
 
-  // Auto-hide logic classes
   const isHidden = isTaskbarAutoHide && !isHovered && !isStartOpen && !isQuickSettingsOpen && !isChatOpen && !isWidgetsOpen;
   
   const hideTransforms = {
@@ -149,7 +148,6 @@ export const Taskbar: React.FC = () => {
 
   return (
     <>
-      {/* Invisible Trigger for Auto-Hide */}
       {isTaskbarAutoHide && (
         <div 
           className={cn("fixed z-[9998] bg-transparent hover:bg-accent/5 transition-colors", triggerClasses[taskbarPosition])}
@@ -180,27 +178,29 @@ export const Taskbar: React.FC = () => {
       >
         {/* Left: Start and Widgets */}
         <div className={cn("flex items-center", isVertical ? "flex-col gap-1" : "gap-1 justify-start")}>
-          <button
-            onClick={handleStartToggle}
-            className={cn(
-              "p-2 rounded-md hover:bg-white/10 transition-all active:scale-95 group flex items-center justify-center min-w-[32px] min-h-[32px] relative",
-              isStartOpen && "bg-white/10"
-            )}
-          >
-            {isSchool ? (
-              <GraduationCap size={iconSize} className="text-blue-400" />
-            ) : isKid ? (
-              <Smile size={iconSize} className="text-pink-400" />
-            ) : (
-              <span 
-                className="font-black text-accent font-headline tracking-tighter select-none leading-none"
-                style={{ fontSize: `${logoFontSize}px` }}
-              >
-                N
-              </span>
-            )}
+          <div className="relative flex items-center justify-center">
+            <button
+              onClick={handleStartToggle}
+              className={cn(
+                "p-2 rounded-md hover:bg-white/10 transition-all active:scale-95 group flex items-center justify-center min-w-[32px] min-h-[32px]",
+                isStartOpen && "bg-white/10"
+              )}
+            >
+              {isSchool ? (
+                <GraduationCap size={iconSize} className="text-blue-400" />
+              ) : isKid ? (
+                <Smile size={iconSize} className="text-pink-400" />
+              ) : (
+                <span 
+                  className="font-black text-accent font-headline tracking-tighter select-none leading-none"
+                  style={{ fontSize: `${logoFontSize}px` }}
+                >
+                  N
+                </span>
+              )}
+            </button>
             {isStartOpen && <StartMenu onClose={() => setIsStartOpen(false)} />}
-          </button>
+          </div>
           
           {!isSchool && !isKid && (
             <button
@@ -218,7 +218,7 @@ export const Taskbar: React.FC = () => {
           )}
         </div>
 
-        {/* Center: Applications (Pinned and Active) */}
+        {/* Center: Applications (Pinned and Active) - ALWAYS CENTERED */}
         <div className={cn(
           "flex items-center",
           isVertical ? "flex-col justify-center gap-2" : "justify-center gap-2"
@@ -294,13 +294,80 @@ export const Taskbar: React.FC = () => {
             <MessageCircle size={iconSize} className={isChatOpen ? (isSchool ? "text-blue-400" : isKid ? "text-pink-400" : "text-accent") : "text-white/60 group-hover:text-white"} />
           </button>
 
+          <TooltipProvider>
+            <div className="relative flex items-center">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setIsQuickSettingsOpen(!isQuickSettingsOpen);
+                    }}
+                    className={cn(
+                      "flex items-center gap-2 px-3 py-1.5 rounded-xl hover:bg-white/10 transition-all active:scale-95 group relative",
+                      isQuickSettingsOpen && (isSchool ? "bg-blue-500/20 text-blue-400" : isKid ? "bg-pink-500/20 text-pink-400" : "bg-accent/20 text-accent"),
+                      isVertical ? "flex-col py-3 px-1.5" : ""
+                    )}
+                  >
+                    <div className={cn(
+                      "flex items-center gap-2 mr-2 border-white/10 pr-2",
+                      isVertical ? "flex-col mr-0 pr-0 mb-2 border-b pb-2 border-r-0" : "border-r"
+                    )}>
+                      {isWifiConnecting ? (
+                        <Loader2 size={14} className="animate-spin text-blue-400" />
+                      ) : (
+                        <Wifi size={14} className={cn(isOnline ? (isQuickSettingsOpen ? (isSchool ? "text-blue-400" : isKid ? "text-pink-400" : "text-accent") : "text-white/60") : "text-destructive")} />
+                      )}
+                      <VolumeIcon size={14} className={cn(isQuickSettingsOpen ? (isSchool ? "text-blue-400" : isKid ? "text-pink-400" : "text-accent") : "text-white/60")} />
+                      <BatteryMedium size={14} className={cn(isQuickSettingsOpen ? (isSchool ? "text-blue-400" : isKid ? "text-pink-400" : "text-accent") : "text-white/60")} />
+                    </div>
+                    
+                    <div className={cn(
+                      "flex flex-col leading-none",
+                      isVertical ? "items-center" : "items-end min-w-[50px]"
+                    )}>
+                      {mounted && time ? (
+                        <span className="text-[11px] font-bold whitespace-nowrap">{formatTime(time)}</span>
+                      ) : (
+                        <div className="h-3 w-10 bg-white/10 rounded animate-pulse" />
+                      )}
+                    </div>
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side={taskbarPosition === 'top' ? 'bottom' : 'top'} className="glass border-white/10 p-4 space-y-2 mb-2 animate-in fade-in zoom-in-95">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-accent/20 flex items-center justify-center text-accent">
+                      <ClockIcon size={16} />
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-black uppercase text-accent tracking-widest">Local Time</p>
+                      <p className="text-sm font-bold text-white">
+                        {time?.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 border-t border-white/5 pt-2">
+                    <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-white/40">
+                      <CalendarIcon size={16} />
+                    </div>
+                    <p className="text-[10px] font-bold text-white/60">
+                      {time ? formatLongDate(time) : ''}
+                    </p>
+                  </div>
+                </TooltipContent>
+              </Tooltip>
+              {isQuickSettingsOpen && <QuickSettings />}
+            </div>
+          </TooltipProvider>
+
+          {/* FAR RIGHT IDENTITY - Opens Accounts directly */}
           <Avatar 
             className="w-8 h-8 border border-white/10 cursor-pointer hover:border-accent transition-colors" 
             onClick={(e) => { 
               e.stopPropagation(); 
-              openApp('settings', 'Settings');
+              openApp('settings', 'Settings', { tab: 'accounts' });
             }}
-            title="Edit Identity"
+            title="Account Identity"
           >
             <AvatarImage src={currentUser?.avatarUrl} className="object-cover" />
             <AvatarFallback 
@@ -311,71 +378,6 @@ export const Taskbar: React.FC = () => {
             </AvatarFallback>
           </Avatar>
 
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setIsQuickSettingsOpen(!isQuickSettingsOpen);
-                  }}
-                  className={cn(
-                    "flex items-center gap-2 px-3 py-1.5 rounded-xl hover:bg-white/10 transition-all active:scale-95 group relative",
-                    isQuickSettingsOpen && (isSchool ? "bg-blue-500/20 text-blue-400" : isKid ? "bg-pink-500/20 text-pink-400" : "bg-accent/20 text-accent"),
-                    isVertical ? "flex-col py-3 px-1.5" : ""
-                  )}
-                >
-                  <div className={cn(
-                    "flex items-center gap-2 mr-2 border-white/10 pr-2",
-                    isVertical ? "flex-col mr-0 pr-0 mb-2 border-b pb-2 border-r-0" : "border-r"
-                  )}>
-                    {isWifiConnecting ? (
-                      <Loader2 size={14} className="animate-spin text-blue-400" />
-                    ) : (
-                      <Wifi size={14} className={cn(isOnline ? (isQuickSettingsOpen ? (isSchool ? "text-blue-400" : isKid ? "text-pink-400" : "text-accent") : "text-white/60") : "text-destructive")} />
-                    )}
-                    <VolumeIcon size={14} className={cn(isQuickSettingsOpen ? (isSchool ? "text-blue-400" : isKid ? "text-pink-400" : "text-accent") : "text-white/60")} />
-                    <BatteryMedium size={14} className={cn(isQuickSettingsOpen ? (isSchool ? "text-blue-400" : isKid ? "text-pink-400" : "text-accent") : "text-white/60")} />
-                  </div>
-                  
-                  <div className={cn(
-                    "flex flex-col leading-none",
-                    isVertical ? "items-center" : "items-end min-w-[50px]"
-                  )}>
-                    {mounted && time ? (
-                      <span className="text-[11px] font-bold whitespace-nowrap">{formatTime(time)}</span>
-                    ) : (
-                      <div className="h-3 w-10 bg-white/10 rounded animate-pulse" />
-                    )}
-                  </div>
-                  {isQuickSettingsOpen && <QuickSettings />}
-                </button>
-              </TooltipTrigger>
-              <TooltipContent side={taskbarPosition === 'top' ? 'bottom' : 'top'} className="glass border-white/10 p-4 space-y-2 mb-2 animate-in fade-in zoom-in-95">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-accent/20 flex items-center justify-center text-accent">
-                    <ClockIcon size={16} />
-                  </div>
-                  <div>
-                    <p className="text-[10px] font-black uppercase text-accent tracking-widest">Local Time</p>
-                    <p className="text-sm font-bold text-white">
-                      {time?.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3 border-t border-white/5 pt-2">
-                  <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-white/40">
-                    <CalendarIcon size={16} />
-                  </div>
-                  <p className="text-[10px] font-bold text-white/60">
-                    {time ? formatLongDate(time) : ''}
-                  </p>
-                </div>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-
-          {/* Show Desktop Trigger */}
           <button
             onClick={() => minimizeAllWindows()}
             className={cn(

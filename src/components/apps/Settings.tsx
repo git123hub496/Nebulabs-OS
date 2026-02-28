@@ -1,6 +1,7 @@
+
 'use client';
 
-import React, { useState, useRef, useMemo } from 'react';
+import React, { useState, useRef, useMemo, useEffect } from 'react';
 import { useOS, TaskbarPosition, TaskbarSize, DesktopIconSize, AccentColor, CursorColor, AppId, APP_INFO } from '@/context/os-context';
 import { 
   Monitor, Palette, User, Shield, Bell, BellOff, HelpCircle, Upload, 
@@ -30,6 +31,10 @@ import { PlaceHolderImages } from '@/lib/placeholder-images';
 
 type SettingsTab = 'personalization' | 'display' | 'apps' | 'accessibility' | 'notifications' | 'accounts' | 'security' | 'updates' | 'about';
 
+interface SettingsProps {
+  tab?: SettingsTab;
+}
+
 const ACCENT_COLORS: { id: AccentColor; class: string; label: string }[] = [
   { id: 'purple', class: 'bg-[#9333ea]', label: 'Purple' },
   { id: 'blue', class: 'bg-[#3b82f6]', label: 'Blue' },
@@ -40,7 +45,7 @@ const ACCENT_COLORS: { id: AccentColor; class: string; label: string }[] = [
   { id: 'default', class: 'bg-black/20 border-white/10', label: 'Nebula' },
 ];
 
-export const Settings: React.FC = () => {
+export const Settings: React.FC<SettingsProps> = ({ tab }) => {
   const { 
     wallpaper, updateWallpaper, theme, setTheme, taskbarPosition, setTaskbarPosition, 
     taskbarSize, setTaskbarSize, taskbarTransparency, setTaskbarTransparency, appTransparency, setAppTransparency, isTaskbarAutoHide, setTaskbarAutoHide, iconSize, setIconSize,
@@ -54,10 +59,14 @@ export const Settings: React.FC = () => {
     installedApps, uninstallApp, biosSettings, factoryReset, isNDEEnabled, setIsNDEEnabled
   } = useOS();
 
-  const [activeTab, setActiveTab] = useState<SettingsTab>('personalization');
+  const [activeTab, setActiveTab] = useState<SettingsTab>(tab || 'personalization');
   const [searchQuery, setSearchQuery] = useState("");
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const wallpaperInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (tab) setActiveTab(tab);
+  }, [tab]);
 
   const tabs = useMemo(() => {
     const allTabs: { id: SettingsTab; label: string; icon: any; keywords: string[] }[] = [
