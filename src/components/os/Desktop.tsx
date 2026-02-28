@@ -173,7 +173,7 @@ export const Desktop: React.FC = () => {
   const { 
     wallpaper, openWindows, openApp, theme, accentColor, customAccentHex,
     powerStatus, powerOn, taskbarPosition, iconSize, currentUser,
-    cursorColor, cursorShape, isInverted, setInverted, isGrayscale, setGrayscale, glassEnabled, setGlassEnabled, desktopApps, updateDesktopAppPosition, toggleDesktopApp,
+    cursorColor, cursorShape, customCursorUrl, isInverted, setInverted, isGrayscale, setGrayscale, glassEnabled, setGlassEnabled, desktopApps, updateDesktopAppPosition, toggleDesktopApp,
     isWidgetsOpen, setIsWidgetsOpen, isQuickSettingsOpen, setIsQuickSettingsOpen,
     isStartOpen, setIsStartOpen, isChatOpen, setIsChatOpen, activeWindowId, closeWindow, minimizeAllWindows,
     brightness, currentDisplayId, displayLayout, isSecurityEnabled, addNotification,
@@ -479,6 +479,11 @@ export const Desktop: React.FC = () => {
   const cursorStyle = useMemo(() => {
     if (!isClient) return {};
     
+    // Check if custom cursor image is set
+    if (cursorShape === 'custom' && customCursorUrl) {
+      return { '--cursor-url': `url('${customCursorUrl}'), auto` } as React.CSSProperties;
+    }
+
     let color = '#000000';
     if (cursorColor === 'white') color = '#ffffff';
     else if (cursorColor === 'accent') {
@@ -499,7 +504,7 @@ export const Desktop: React.FC = () => {
     const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24" fill="${color.replace('#', '%23')}" stroke="${cursorShape === 'macos' ? 'white' : 'white'}" stroke-width="${cursorShape === 'macos' ? '1.5' : '1.5'}">${cursorPath}</svg>`;
     const base64Svg = btoa(svg);
     return { '--cursor-url': `url('data:image/svg+xml;base64,${base64Svg}'), auto` } as React.CSSProperties;
-  }, [cursorColor, cursorShape, mouserScale, isClient, accentColor, customAccentHex]);
+  }, [cursorColor, cursorShape, customCursorUrl, mouserScale, isClient, accentColor, customAccentHex]);
 
   const systemVars = {
     '--accent': accentVarMap[accentColor] || accentVarMap['purple'],

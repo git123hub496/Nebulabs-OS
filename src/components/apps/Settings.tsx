@@ -50,7 +50,7 @@ export const Settings: React.FC<SettingsProps> = ({ tab }) => {
     wallpaper, updateWallpaper, theme, setTheme, taskbarPosition, setTaskbarPosition, 
     taskbarSize, setTaskbarSize, taskbarTransparency, setTaskbarTransparency, appTransparency, setAppTransparency, isTaskbarAutoHide, setTaskbarAutoHide, iconSize, setIconSize,
     accentColor, setAccentColor, customAccentHex, 
-    cursorColor, setCursorColor, cursorShape, setCursorShape, mouserScale, setMouserScale, isInverted, setInverted,
+    cursorColor, setCursorColor, cursorShape, setCursorShape, customCursorUrl, setCustomCursorUrl, mouserScale, setMouserScale, isInverted, setInverted,
     isGrayscale, setGrayscale,
     glassEnabled, setGlassEnabled, brightness, setBrightness,
     currentDisplayId, setCurrentDisplayId, displayLayout, updateDisplayLayout, resetDisplayLayout,
@@ -63,6 +63,7 @@ export const Settings: React.FC<SettingsProps> = ({ tab }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const wallpaperInputRef = useRef<HTMLInputElement>(null);
+  const cursorInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (tab) setActiveTab(tab);
@@ -73,7 +74,7 @@ export const Settings: React.FC<SettingsProps> = ({ tab }) => {
       { id: 'personalization', label: 'Personalization', icon: Palette, keywords: ['theme', 'wallpaper', 'taskbar', 'accent', 'color', 'dark mode', 'light mode', 'transparency'] },
       { id: 'display', label: 'Display', icon: Monitor, keywords: ['brightness', 'monitor', 'screen', 'resolution', 'multi-display'] },
       { id: 'apps', label: 'Apps', icon: AppWindow, keywords: ['installed', 'applications', 'software', 'management', 'uninstall'] },
-      { id: 'accessibility', label: 'Accessibility', icon: Eye, keywords: ['contrast', 'grayscale', 'glass', 'transparency', 'cursor', 'pointer', 'mouse', 'scale'] },
+      { id: 'accessibility', label: 'Accessibility', icon: Eye, keywords: ['contrast', 'grayscale', 'glass', 'transparency', 'cursor', 'pointer', 'mouse', 'scale', 'custom'] },
       { id: 'notifications', label: 'Notifications', icon: Bell, keywords: ['alerts', 'messages', 'activity', 'dnd'] },
       { id: 'accounts', label: 'Accounts', icon: User, keywords: ['profile', 'identity', 'password', 'avatar', 'user', 'sign out'] },
       { id: 'security', label: 'Security', icon: Shield, keywords: ['encryption', 'lockdown', 'defender', 'kernel', 'developer', 'nde'] },
@@ -197,9 +198,44 @@ export const Settings: React.FC<SettingsProps> = ({ tab }) => {
                       <SelectItem value="nebula">Classic Nebula</SelectItem>
                       <SelectItem value="windows">Windows 11</SelectItem>
                       <SelectItem value="macos">macOS Pro</SelectItem>
+                      <SelectItem value="custom">Custom Image</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
+
+                {cursorShape === 'custom' && (
+                  <div className="p-5 bg-accent/5 rounded-2xl border border-accent/20 animate-in slide-in-from-top-2">
+                    <div className="flex items-center justify-between mb-4">
+                      <Label className="text-sm font-bold">Custom Pointer Image</Label>
+                      <Button variant="outline" size="sm" className="h-8 text-[10px] uppercase font-bold gap-2" onClick={() => cursorInputRef.current?.click()}>
+                        <Upload size={12} /> Upload Image
+                      </Button>
+                      <input type="file" ref={cursorInputRef} className="hidden" accept="image/*" onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          const reader = new FileReader();
+                          reader.onload = (event) => setCustomCursorUrl(event.target?.result as string);
+                          reader.readAsDataURL(file);
+                        }
+                      }} />
+                    </div>
+                    {customCursorUrl ? (
+                      <div className="flex items-center gap-4 p-3 bg-white/5 rounded-xl">
+                        <div className="w-10 h-10 bg-white/10 rounded flex items-center justify-center overflow-hidden">
+                          <img src={customCursorUrl} alt="custom cursor" className="w-6 h-6 object-contain" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[10px] font-bold text-white/60 truncate">Pointer active</p>
+                        </div>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => setCustomCursorUrl("")}>
+                          <Trash size={14} />
+                        </Button>
+                      </div>
+                    ) : (
+                      <p className="text-[10px] text-white/40 italic">No image uploaded. (Suggested size: 32x32px)</p>
+                    )}
+                  </div>
+                )}
 
                 <div className="flex items-center justify-between p-5 bg-foreground/5 rounded-2xl border border-border/50">
                   <div className="flex items-center gap-4"><div className="p-2.5 rounded-xl bg-accent/10 text-accent"><Pipette size={20} /></div><div className="space-y-0.5"><Label className="text-sm font-bold">Grayscale Mode</Label><p className="text-[11px] text-muted-foreground">Remove all interface colors</p></div></div>

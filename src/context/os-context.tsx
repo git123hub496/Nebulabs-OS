@@ -59,7 +59,7 @@ export type TaskbarSize = number;
 export type DesktopIconSize = number;
 export type AccentColor = 'default' | 'blue' | 'purple' | 'rose' | 'orange' | 'green' | 'grey' | 'custom';
 export type CursorColor = 'black' | 'white' | 'accent';
-export type CursorShape = 'nebula' | 'windows' | 'macos';
+export type CursorShape = 'nebula' | 'windows' | 'macos' | 'custom';
 
 export interface LocalUser {
   id: string;
@@ -207,6 +207,7 @@ interface OSContextType {
   customAccentHex: string;
   cursorColor: CursorColor;
   cursorShape: CursorShape;
+  customCursorUrl: string;
   mouserScale: number;
   isInverted: boolean;
   isGrayscale: boolean;
@@ -276,6 +277,7 @@ interface OSContextType {
   setCustomAccentHex: (hex: string) => void;
   setCursorColor: (color: CursorColor) => void;
   setCursorShape: (shape: CursorShape) => void;
+  setCustomCursorUrl: (url: string) => void;
   setMouserScale: (scale: number) => void;
   setInverted: (inverted: boolean) => void;
   setGrayscale: (grayscale: boolean) => void;
@@ -438,6 +440,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   const [customAccentHex, setCustomAccentHexState] = useState("#9333ea");
   const [cursorColor, setCursorColorState] = useState<CursorColor>('black');
   const [cursorShape, setCursorShapeState] = useState<CursorShape>('nebula');
+  const [customCursorUrl, setCustomCursorUrlState] = useState<string>("");
   const [mouserScale, setMouserScaleState] = useState<number>(1.0);
   const [isInverted, setInvertedState] = useState(false);
   const [isGrayscale, setGrayscaleState] = useState(false);
@@ -595,6 +598,8 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     if (curs) setCursorColorState(curs as CursorColor);
     const cursh = localStorage.getItem(`nebula_${user.id}_cursor_shape`);
     if (cursh) setCursorShapeState(cursh as CursorShape);
+    const ccurl = localStorage.getItem(`nebula_${user.id}_custom_cursor_url`);
+    if (ccurl) setCustomCursorUrlState(ccurl);
     const scale = localStorage.getItem(`nebula_${user.id}_cursor_scale`);
     if (scale) setMouserScaleState(Number(scale));
     const pos = localStorage.getItem(`nebula_${user.id}_taskbar_pos`);
@@ -717,6 +722,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     setTrash([]);
     setStickyNotes([]);
     setNotesInternal("");
+    setCustomCursorUrlState("");
     playSound('open');
   }, [playSound]);
 
@@ -1009,6 +1015,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   const setCustomAccentHex = (h: string) => { setCustomAccentHexState(h); saveSetting('custom_accent', h); };
   const setCursorColor = (c: CursorColor) => { setCursorColorState(c); saveSetting('cursor', c); };
   const setCursorShape = (s: CursorShape) => { setCursorShapeState(s); saveSetting('cursor_shape', s); };
+  const setCustomCursorUrl = (u: string) => { setCustomCursorUrlState(u); saveSetting('custom_cursor_url', u); };
   const setMouserScale = (s: number) => { setMouserScaleState(s); saveSetting('cursor_scale', s); };
   const setInverted = (inv: boolean) => { setInvertedState(inv); saveSetting('inverted', inv); };
   const setGrayscale = (gr: boolean) => { setGrayscaleState(gr); saveSetting('grayscale', gr); };
@@ -1305,7 +1312,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       fileSystem, trash, desktopApps, notifications, emails, markEmailRead, sendEmail, 
       archiveEmail, deleteEmail, restoreEmail, permanentlyDeleteEmail,
       wallpaper, notes, theme, accentColor, mouserScale,
-      customAccentHex, cursorColor, cursorShape, isInverted, isGrayscale, glassEnabled, powerStatus,
+      customAccentHex, cursorColor, cursorShape, customCursorUrl, isInverted, isGrayscale, glassEnabled, powerStatus,
       taskbarPosition, taskbarSize, taskbarTransparency, appTransparency, isTaskbarAutoHide, setTaskbarAutoHide, iconSize, currentWifi, isWifiConnecting,
       isOnline, volume, brightness, isWidgetsOpen, isQuickSettingsOpen, 
       isStartOpen: isStartOpenState, isChatOpen, isLocked, isNDEEnabled, systemStats, stickyNotes,
@@ -1316,7 +1323,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       maximizeWindow, snapWindow, focusWindow, updateWindowPosition, moveWindowToDisplay,
       updateDisplayLayout, resetDisplayLayout, installApp, uninstallApp, addNotification, clearNotifications,
       updateWallpaper, setNotes, setTheme, setAccentColor, setCustomAccentHex,
-      setCursorColor, setCursorShape, setMouserScale, setInverted, setGrayscale, setGlassEnabled, setTaskbarPosition, rotateTaskbar, setTaskbarSize,
+      setCursorColor, setCursorShape, setCustomCursorUrl, setMouserScale, setInverted, setGrayscale, setGlassEnabled, setTaskbarPosition, rotateTaskbar, setTaskbarSize,
       setTaskbarTransparency, setAppTransparency,
       setIconSize, connectToWifi, setVolume, setBrightness, setIsWidgetsOpen,
       setIsQuickSettingsOpen, setIsStartOpen, setIsChatOpen, setIsNDEEnabled, sendChatMessage, setCurrentDisplayId, setSecurityEnabled, updateBIOSSettings, restart, shutDown, powerOn,
