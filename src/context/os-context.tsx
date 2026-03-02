@@ -337,6 +337,9 @@ interface OSContextType {
   createStickyNote: () => void;
   updateStickyNote: (id: string, updates: Partial<StickyNote>) => void;
   deleteStickyNote: (id: string) => void;
+
+  exportAccount: (userId: string) => void;
+  importAccount: (file: File) => Promise<void>;
 }
 
 const OSContext = createContext<OSContextType | undefined>(undefined);
@@ -1133,6 +1136,64 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   const deleteStickyNote = (id: string) => { const updated = stickyNotes.filter(n => n.id !== id); setStickyNotes(updated); saveSetting('sticky_notes', updated); playSound('close'); };
   const updateBIOSSettings = useCallback((updates: Partial<BIOSSettings>) => { setBiosSettings(prev => { const updated = { ...prev, ...updates }; localStorage.setItem('nebula_bios_settings', JSON.stringify(updated)); return updated; }); }, []);
 
+  const exportAccount = useCallback((userId: string) => {
+    const user = accounts.find(a => a.id === userId);
+    if (!user) return;
+    
+    const settings: Record<string, string> = {};
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith(`nebula_${userId}_`)) {
+        settings[key] = localStorage.getItem(key) || "";
+      }
+    }
+
+    const bundle = {
+      version: "1.0",
+      user,
+      settings
+    };
+
+    const blob = new Blob([JSON.stringify(bundle)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${user.username}.nwuser`;
+    link.click();
+    URL.revokeObjectURL(url);
+    addNotification("Export Complete", "Identity file (.nwuser) generated.", "system");
+  }, [accounts, addNotification]);
+
+  const importAccount = useCallback(async (file: File) => {
+    try {
+      const text = await file.text();
+      const bundle = JSON.parse(text);
+      if (!bundle.user || !bundle.settings) throw new Error("Invalid Format");
+
+      const user: LocalUser = bundle.user;
+      // Ensure unique ID to prevent collisions, but keep original ID for settings mapping
+      const originalId = user.id;
+      
+      // Update local accounts
+      setAccounts(prev => {
+        const filtered = prev.filter(a => a.id !== originalId);
+        const updated = [...filtered, user];
+        localStorage.setItem('nebula_accounts', JSON.stringify(updated));
+        return updated;
+      });
+
+      // Restore settings to localStorage
+      Object.entries(bundle.settings).forEach(([key, value]) => {
+        localStorage.setItem(key, value as string);
+      });
+
+      addNotification("Identity Migrated", `Restored account for ${user.username}.`, "system");
+      playSound('notify');
+    } catch (e) {
+      addNotification("Import Failed", "The .nwuser file is corrupted or invalid.", "security");
+    }
+  }, [addNotification, playSound]);
+
   return (
     <OSContext.Provider value={{
       currentUser, accounts, openWindows, activeWindowId, installedApps, pinnedApps,
@@ -1158,7 +1219,8 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       createFolder, importFile, renameFileSystemItem, moveToTrash, restoreFromTrash, emptyTrash, deleteItemPermanently,
       updateDesktopAppPosition, toggleDesktopApp, togglePinApp, reorderPinnedApps,
       reorderStartMenu, createStartFolder, addAppToStartFolder, removeAppFromStartFolder, renameStartFolder, deleteStartFolder,
-      createStickyNote, updateStickyNote, deleteStickyNote
+      createStickyNote, updateStickyNote, deleteStickyNote,
+      exportAccount, importAccount
     }}>
       {children}
     </OSContext.Provider>

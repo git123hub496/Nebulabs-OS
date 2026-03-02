@@ -8,7 +8,7 @@ import {
   ImageIcon, Sun, Moon, Layout, Check, MousePointer2, 
   Eye, Zap, Layers, Pipette, Maximize2, Plus, ArrowUpRight,
   Wifi, ShieldCheck, Activity, Trash2, Info, Newspaper, Clock, XCircle, RefreshCw, ChevronRight, ShieldAlert, ShieldX, Lock, KeyRound, Camera, Building2, Briefcase, GraduationCap, Heart, MonitorCheck, Sliders, Smartphone, Smile, Home, Search, AppWindow, ExternalLink,
-  Trash, EyeOff, LogOut, Code2
+  Trash, EyeOff, LogOut, Code2, Download
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
@@ -56,7 +56,8 @@ export const Settings: React.FC<SettingsProps> = ({ tab }) => {
     currentDisplayId, setCurrentDisplayId, displayLayout, updateDisplayLayout, resetDisplayLayout,
     currentUser, logout, notifications, clearNotifications, addNotification, openApp,
     isSecurityEnabled, setSecurityEnabled, updateUserPassword, updateUserAvatar, updateUserWorkStatus,
-    installedApps, uninstallApp, biosSettings, factoryReset, isNDEEnabled, setIsNDEEnabled
+    installedApps, uninstallApp, biosSettings, factoryReset, isNDEEnabled, setIsNDEEnabled,
+    exportAccount
   } = useOS();
 
   const [activeTab, setActiveTab] = useState<SettingsTab>(tab || 'personalization');
@@ -76,7 +77,7 @@ export const Settings: React.FC<SettingsProps> = ({ tab }) => {
       { id: 'apps', label: 'Apps', icon: AppWindow, keywords: ['installed', 'applications', 'software', 'management', 'uninstall'] },
       { id: 'accessibility', label: 'Accessibility', icon: Eye, keywords: ['contrast', 'grayscale', 'glass', 'transparency', 'cursor', 'pointer', 'mouse', 'scale', 'custom'] },
       { id: 'notifications', label: 'Notifications', icon: Bell, keywords: ['alerts', 'messages', 'activity', 'dnd'] },
-      { id: 'accounts', label: 'Accounts', icon: User, keywords: ['profile', 'identity', 'password', 'avatar', 'user', 'sign out'] },
+      { id: 'accounts', label: 'Accounts', icon: User, keywords: ['profile', 'identity', 'password', 'avatar', 'user', 'sign out', 'export', 'backup'] },
       { id: 'security', label: 'Security', icon: Shield, keywords: ['encryption', 'lockdown', 'defender', 'kernel', 'developer', 'nde'] },
       { id: 'updates', label: 'Updates', icon: RefreshCw, keywords: ['patch', 'kernel', 'version', 'check for updates'] },
       { id: 'about', label: 'About', icon: HelpCircle, keywords: ['system', 'device', 'credits', 'nebulabs', 'version', 'reset', 'factory'] },
@@ -296,14 +297,26 @@ export const Settings: React.FC<SettingsProps> = ({ tab }) => {
                   <h3 className="text-2xl font-black tracking-tight">{currentUser?.username}</h3>
                   <p className="text-[10px] text-accent font-black uppercase tracking-[0.2em]">{currentUser?.uniqueCode || 'SYSTEM_ADMIN'}</p>
                 </div>
-                <div className="flex gap-2 w-full max-w-sm">
-                  {!isRestricted && (
-                    <Button variant="outline" className="flex-1 rounded-xl h-11 text-xs font-bold uppercase tracking-widest border-border/50" onClick={() => {
-                      const pass = prompt("Enter new credentials:");
-                      if (pass) updateUserPassword(pass);
-                    }}><Lock size={14} className="mr-2" /> Passcode</Button>
+                <div className="flex flex-col gap-3 w-full max-w-sm">
+                  <div className="flex gap-2">
+                    {!isRestricted && (
+                      <Button variant="outline" className="flex-1 rounded-xl h-11 text-xs font-bold uppercase tracking-widest border-border/50" onClick={() => {
+                        const pass = prompt("Enter new credentials:");
+                        if (pass) updateUserPassword(pass);
+                      }}><Lock size={14} className="mr-2" /> Passcode</Button>
+                    )}
+                    <Button variant="outline" className="flex-1 rounded-xl h-11 text-xs font-bold uppercase tracking-widest text-destructive border-destructive/20 hover:bg-destructive/10" onClick={logout}><LogOut size={14} className="mr-2" /> Sign Out</Button>
+                  </div>
+                  
+                  {!currentUser?.isGuest && (
+                    <Button 
+                      className="w-full rounded-xl h-11 bg-accent text-primary-foreground font-black uppercase tracking-widest shadow-lg shadow-accent/20 gap-2"
+                      onClick={() => currentUser && exportAccount(currentUser.id)}
+                    >
+                      <Download size={16} />
+                      Backup Identity (.nwuser)
+                    </Button>
                   )}
-                  <Button variant="outline" className="flex-1 rounded-xl h-11 text-xs font-bold uppercase tracking-widest text-destructive border-destructive/20 hover:bg-destructive/10" onClick={logout}><LogOut size={14} className="mr-2" /> Sign Out</Button>
                 </div>
               </div>
             </section>

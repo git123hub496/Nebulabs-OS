@@ -39,7 +39,8 @@ import {
   Cpu,
   Zap,
   Shield,
-  Ghost
+  Ghost,
+  Upload
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -92,7 +93,7 @@ export const LoginScreen: React.FC = () => {
     accounts, login, loginGuest, createAccount, deleteAccount, resetUserPassword, wallpaper, 
     setTheme, theme, accentColor, setAccentColor, shutDown, restart,
     isInverted, setInverted, glassEnabled, setGlassEnabled, biosSettings, updateBIOSSettings, factoryReset, playSound,
-    updateUserAvatar, updateUserPassword
+    updateUserAvatar, updateUserPassword, importAccount
   } = useOS();
   
   const [step, setStep] = useState<'select' | 'hardware' | 'create' | 'customize' | 'initialize' | 'recovery'>('select');
@@ -111,6 +112,7 @@ export const LoginScreen: React.FC = () => {
   const [currentLog, setCurrentLog] = useState("");
   const [logIndex, setLogIndex] = useState(0);
   const hasCreated = useRef(false);
+  const importInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     setTime(new Date());
@@ -231,6 +233,13 @@ export const LoginScreen: React.FC = () => {
     playSound('click');
   };
 
+  const handleImportFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      await importAccount(file);
+    }
+  };
+
   if (!time) return null;
 
   return (
@@ -282,12 +291,32 @@ export const LoginScreen: React.FC = () => {
                   <button onClick={(e) => { e.stopPropagation(); deleteAccount(account.id); }} className="absolute -top-2 -right-2 bg-destructive text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100 hover:scale-110 transition-all z-20 border-2 border-white shadow-lg"><Trash2 size={12} strokeWidth={3} /></button>
                 </div>
               ))}
-              <button onClick={() => { playSound('click'); setStep('create'); }} className="group flex flex-col items-center gap-4 transition-all hover:scale-105">
-                <div className="w-24 h-24 rounded-full border-4 border-dashed border-white/20 group-hover:border-white/40 group-hover:bg-white/5 transition-all flex items-center justify-center">
-                  <Plus className="text-white/40 group-hover:text-white" size={32} />
-                </div>
-                <span className="text-white/40 font-bold text-lg group-hover:text-white transition-colors">Add User</span>
-              </button>
+              
+              <div className="flex gap-8">
+                <button onClick={() => { playSound('click'); setStep('create'); }} className="group flex flex-col items-center gap-4 transition-all hover:scale-105">
+                  <div className="w-24 h-24 rounded-full border-4 border-dashed border-white/20 group-hover:border-white/40 group-hover:bg-white/5 transition-all flex items-center justify-center">
+                    <Plus className="text-white/40 group-hover:text-white" size={32} />
+                  </div>
+                  <span className="text-white/40 font-bold text-lg group-hover:text-white transition-colors">Add User</span>
+                </button>
+
+                <button 
+                  onClick={() => importInputRef.current?.click()} 
+                  className="group flex flex-col items-center gap-4 transition-all hover:scale-105"
+                >
+                  <div className="w-24 h-24 rounded-full border-4 border-dashed border-accent/20 group-hover:border-accent/40 group-hover:bg-accent/5 transition-all flex items-center justify-center">
+                    <Upload className="text-accent/40 group-hover:text-accent" size={32} />
+                  </div>
+                  <span className="text-accent/40 font-bold text-lg group-hover:text-accent transition-colors">Import</span>
+                  <input 
+                    type="file" 
+                    ref={importInputRef} 
+                    className="hidden" 
+                    accept=".nwuser" 
+                    onChange={handleImportFile} 
+                  />
+                </button>
+              </div>
             </div>
 
             <div className="flex flex-col items-center gap-4">
