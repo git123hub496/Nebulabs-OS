@@ -407,8 +407,9 @@ const INITIAL_DESKTOP: DesktopShortcut[] = [
 const FULL_APPS: AppId[] = ['store', 'files', 'settings', 'assistant', 'notes', 'calc', 'terminal', 'browser', 'trash', 'news', 'maps', 'monitor', 'calendar', 'snake', 'minesweeper', 'update', 'paint', 'info', 'camera', 'slides', 'mail', 'nebula-v', 'google-search', 'shop', 'screencast', 'sticky-notes', 'nde', 'docs', 'go'];
 const LITE_APPS: AppId[] = ['files', 'settings', 'browser', 'notes', 'calc', 'trash', 'info', 'sticky-notes'];
 
-const FULL_PINNED: AppId[] = ['files', 'store', 'shop', 'assistant', 'google-search', 'browser', 'settings', 'mail', 'sticky-notes', 'docs', 'go'];
-const LITE_PINNED: AppId[] = ['files', 'browser', 'settings', 'notes'];
+// STREAMLINED TASKBAR PINS
+const FULL_PINNED: AppId[] = ['browser', 'settings', 'mail', 'files', 'sticky-notes'];
+const LITE_PINNED: AppId[] = ['browser', 'settings', 'files'];
 
 const AVATAR_COLORS = ['#9333ea', '#3b82f6', '#e11d48', '#f97316', '#16a34a', '#ec4899', '#06b6d4'];
 const OFFLINE_WIFI = "Public_Guest_No_Internet";
@@ -1171,10 +1172,8 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       if (!bundle.user || !bundle.settings) throw new Error("Invalid Format");
 
       const user: LocalUser = bundle.user;
-      // Ensure unique ID to prevent collisions, but keep original ID for settings mapping
       const originalId = user.id;
       
-      // Update local accounts
       setAccounts(prev => {
         const filtered = prev.filter(a => a.id !== originalId);
         const updated = [...filtered, user];
@@ -1182,7 +1181,6 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
         return updated;
       });
 
-      // Restore settings to localStorage
       Object.entries(bundle.settings).forEach(([key, value]) => {
         localStorage.setItem(key, value as string);
       });
