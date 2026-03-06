@@ -204,6 +204,7 @@ export const Desktop: React.FC = () => {
 
   const isSchool = currentUser?.isSchoolAccount;
   const isKid = currentUser?.isKidAccount;
+  const isVIP = currentUser?.isVIP || biosSettings.isVIPOverride;
 
   useEffect(() => {
     setIsClient(true);
@@ -586,7 +587,7 @@ export const Desktop: React.FC = () => {
       className={cn(
         "fixed inset-0 overflow-hidden select-none transition-all duration-1000",
         theme === 'light' ? "light" : "",
-        currentUser?.isVIP ? "vip-gold" : "",
+        isVIP ? "vip-gold" : "",
         biosSettings.isMidasTouch ? "midas-touch" : "",
         isInverted ? "system-inverted" : "",
         isGrayscale ? "grayscale" : "",
@@ -668,10 +669,10 @@ export const Desktop: React.FC = () => {
             onContextMenu={(e) => handleShortcutContextMenu(e, shortcut.id)}
           >
             <div 
-              className={cn("glass rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform mb-1 shadow-lg border-white/20 relative", isSchool && "border-blue-500/20 shadow-blue-500/10", isKid && "border-pink-500/20 shadow-pink-500/10", currentUser?.isVIP && "border-yellow-500 shadow-yellow-500/20")}
+              className={cn("glass rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform mb-1 shadow-lg border-white/20 relative", isSchool && "border-blue-500/20 shadow-blue-500/10", isKid && "border-pink-500/20 shadow-pink-500/10", isVIP && "border-yellow-500 shadow-yellow-500/20")}
               style={{ width: `${scaledIconBoxSize}px`, height: `${scaledIconBoxSize}px` }}
             >
-              <Icon size={scaledIconSize} className={isSchool ? "text-blue-400" : isKid ? "text-pink-400" : currentUser?.isVIP ? "text-yellow-500" : "text-accent"} />
+              <Icon size={scaledIconSize} className={isSchool ? "text-blue-400" : isKid ? "text-pink-400" : isVIP ? "text-yellow-500" : "text-accent"} />
               
               {shortcut.id !== 'trash' && shortcut.id !== 'files' && shortcut.id !== 'store' && !isSchool && !isKid && (
                 <button 
@@ -687,7 +688,7 @@ export const Desktop: React.FC = () => {
               )}
             </div>
             <span 
-              className={cn("text-white font-bold drop-shadow-md text-center line-clamp-2 px-1", currentUser?.isVIP && "text-yellow-400")}
+              className={cn("text-white font-bold drop-shadow-md text-center line-clamp-2 px-1", isVIP && "text-yellow-400")}
               style={{ fontSize: `${scaledFontSize}px` }}
             >
               {shortcut.label}

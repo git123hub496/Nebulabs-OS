@@ -33,7 +33,8 @@ export const BIOS: React.FC<{ onClose: () => void }> = ({ onClose }) => {
     acLossPolicy: biosSettings.acLossPolicy || 'Stay Off',
     wakeOnLan: biosSettings.wakeOnLan,
     isLite: biosSettings.isLite,
-    isMidasTouch: biosSettings.isMidasTouch
+    isMidasTouch: biosSettings.isMidasTouch,
+    isVIPOverride: biosSettings.isVIPOverride
   });
 
   const [bootOrder, setBootOrder] = useState(['Nebulabs Virtual SSD-0', 'Network PXE', 'USB Flash Device']);
@@ -94,6 +95,7 @@ export const BIOS: React.FC<{ onClose: () => void }> = ({ onClose }) => {
         if (selectedItem === 3) setSettings(s => ({ ...s, integratedGfx: !s.integratedGfx }));
         if (selectedItem === 4) setSettings(s => ({ ...s, isLite: !s.isLite })); 
         if (selectedItem === 5) setSettings(s => ({ ...s, isMidasTouch: !s.isMidasTouch })); // SECRET GOLD MODE
+        if (selectedItem === 6) setSettings(s => ({ ...s, isVIPOverride: !s.isVIPOverride })); // VIP OVERRIDE
         if (selectedItem === 7) setSettings(s => ({ ...s, fastBoot: !s.fastBoot }));
       }
       if (activeSection === 'Power') {
@@ -229,7 +231,7 @@ export const BIOS: React.FC<{ onClose: () => void }> = ({ onClose }) => {
               { label: 'Integrated Graphics Bridge', value: settings.integratedGfx ? '[Enabled]' : '[Disabled]' },
               { label: 'System Edition', value: settings.isLite ? '[Lite Edition]' : '[Standard Pro]' },
               { label: '????', value: settings.isMidasTouch ? '[ACTIVE]' : '[INACTIVE]' },
-              { label: 'USB Port Configuration', value: '[All Ports Enabled]' },
+              { label: 'Kernel VIP Authorization', value: settings.isVIPOverride ? '[AUTHORIZED]' : '[RESTRICTED]' },
               { label: 'Fast Boot Support', value: settings.fastBoot ? '[Enabled]' : '[Disabled]' },
             ].map((item, i) => (
               <div 
@@ -240,7 +242,7 @@ export const BIOS: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                 )}
               >
                 <span>{item.label}</span>
-                <span>{item.value}</span>
+                <span className={cn(item.label === 'Kernel VIP Authorization' && settings.isVIPOverride ? "text-yellow-400" : "")}>{item.value}</span>
               </div>
             ))}
           </div>

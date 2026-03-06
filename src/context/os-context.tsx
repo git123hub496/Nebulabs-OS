@@ -174,6 +174,7 @@ export interface BIOSSettings {
   wakeOnLan: boolean;
   isLite: boolean;
   isMidasTouch: boolean;
+  isVIPOverride: boolean;
 }
 
 export interface StartMenuItem {
@@ -416,8 +417,6 @@ const LITE_PINNED: AppId[] = ['browser', 'settings', 'files'];
 const AVATAR_COLORS = ['#9333ea', '#3b82f6', '#e11d48', '#f97316', '#16a34a', '#ec4899', '#06b6d4'];
 const OFFLINE_WIFI = "Public_Guest_No_Internet";
 
-const VIP_NAMES = ["donald trump", "trump", "elon musk", "musk", "bill gates", "gates", "vladimir putin", "putin"];
-
 const getWeatherCondition = (code: number) => {
   if (code === 0) return "Clear Sky";
   if (code <= 3) return "Partly Cloudy";
@@ -509,7 +508,8 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     acLossPolicy: 'Stay Off',
     wakeOnLan: false,
     isLite: false,
-    isMidasTouch: false
+    isMidasTouch: false,
+    isVIPOverride: false
   });
 
   const playSound = useCallback((type: 'click' | 'open' | 'close' | 'notify') => {
@@ -676,11 +676,11 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     const sl = localStorage.getItem(`nebula_${user.id}_start_layout`);
     if (sl) setStartMenuLayout(JSON.parse(sl));
 
-    if (user.isVIP) {
+    if (user.isVIP || biosSettings.isVIPOverride) {
       setAccentColorState('gold');
       setCustomAccentHexState('#ffd700');
     }
-  }, []);
+  }, [biosSettings.isVIPOverride]);
 
   useEffect(() => {
     const savedAccounts = localStorage.getItem('nebula_accounts');
@@ -1146,7 +1146,14 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   const createStickyNote = () => { const newNote: StickyNote = { id: Math.random().toString(36).substr(2, 9), content: "New Note...", x: 300 + (stickyNotes.length * 20), y: 100 + (stickyNotes.length * 20), color: '#fef08a' }; const updated = [...stickyNotes, newNote]; setStickyNotes(updated); saveSetting('sticky_notes', updated); playSound('click'); };
   const updateStickyNote = (id: string, updates: Partial<StickyNote>) => { const updated = stickyNotes.map(n => n.id === id ? { ...n, ...updates } : n); setStickyNotes(updated); saveSetting('sticky_notes', updated); };
   const deleteStickyNote = (id: string) => { const updated = stickyNotes.filter(n => n.id !== id); setStickyNotes(updated); saveSetting('sticky_notes', updated); playSound('close'); };
-  const updateBIOSSettings = useCallback((updates: Partial<BIOSSettings>) => { setBiosSettings(prev => { const updated = { ...prev, ...updates }; localStorage.setItem('nebula_bios_settings', JSON.stringify(updated)); return updated; }); }, []);
+  
+  const updateBIOSSettings = useCallback((updates: Partial<BIOSSettings>) => { 
+    setBiosSettings(prev => { 
+      const updated = { ...prev, ...updates }; 
+      localStorage.setItem('nebula_bios_settings', JSON.stringify(updated)); 
+      return updated; 
+    }); 
+  }, []);
 
   const exportAccount = useCallback((userId: string) => {
     const user = accounts.find(a => a.id === userId);
