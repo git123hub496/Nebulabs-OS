@@ -22,7 +22,8 @@ import {
   GraduationCap,
   Smile,
   Search,
-  Check
+  Check,
+  Crown
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { StartMenu } from './StartMenu';
@@ -73,6 +74,7 @@ export const Taskbar: React.FC = () => {
   const isVertical = taskbarPosition === 'left' || taskbarPosition === 'right';
   const isSchool = currentUser?.isSchoolAccount;
   const isKid = currentUser?.isKidAccount;
+  const isVIP = currentUser?.isVIP;
 
   const safeTaskbarSize = isNaN(taskbarSize) ? 48 : taskbarSize;
   const iconSize = Math.max(12, Math.floor(safeTaskbarSize * 0.45));
@@ -125,8 +127,8 @@ export const Taskbar: React.FC = () => {
   };
 
   const bgStyle = {
-    backgroundColor: `hsl(var(--background) / ${taskbarTransparency / 100})`,
-    borderColor: `hsl(var(--border) / ${taskbarTransparency / 100})`
+    backgroundColor: isVIP ? `rgba(234, 179, 8, ${taskbarTransparency / 200})` : `hsl(var(--background) / ${taskbarTransparency / 100})`,
+    borderColor: isVIP ? `rgba(234, 179, 8, 0.3)` : `hsl(var(--border) / ${taskbarTransparency / 100})`
   };
 
   return (
@@ -147,7 +149,8 @@ export const Taskbar: React.FC = () => {
           taskbarPosition === 'right' && "right-0 top-0 bottom-0 border-l",
           isVertical ? "grid-rows-[auto_1fr_auto] py-2 w-full" : "grid-cols-[1fr_auto_1fr] items-center px-4",
           isSchool && "border-blue-500/20",
-          isKid && "border-pink-500/20"
+          isKid && "border-pink-500/20",
+          isVIP && "shadow-[0_-4px_20px_rgba(234,179,8,0.1)]"
         )}
         style={{
           [isVertical ? 'width' : 'height']: `${safeTaskbarSize}px`,
@@ -169,7 +172,7 @@ export const Taskbar: React.FC = () => {
                 isStartOpen && "bg-white/10"
               )}
             >
-              {isSchool ? <GraduationCap size={iconSize} className="text-blue-400" /> : isKid ? <Smile size={iconSize} className="text-pink-400" /> : <span className="font-black text-accent font-headline tracking-tighter select-none leading-none" style={{ fontSize: `${logoFontSize}px` }}>N</span>}
+              {isSchool ? <GraduationCap size={iconSize} className="text-blue-400" /> : isKid ? <Smile size={iconSize} className="text-pink-400" /> : isVIP ? <Crown size={iconSize} className="text-yellow-500" /> : <span className="font-black text-accent font-headline tracking-tighter select-none leading-none" style={{ fontSize: `${logoFontSize}px` }}>N</span>}
             </button>
             {isStartOpen && (
               <div className={cn("absolute z-[10000]", taskbarPosition === 'top' ? "top-full mt-2" : "bottom-full mb-2", isVertical ? "left-full ml-2 top-0" : "left-0")}>
@@ -179,8 +182,8 @@ export const Taskbar: React.FC = () => {
           </div>
 
           {!isVertical && (
-            <form onSubmit={handleSearch} className="flex items-center bg-white/5 border border-white/5 rounded-xl px-3 py-1 gap-2 focus-within:border-accent/40 focus-within:bg-white/10 transition-all w-48 lg:w-64 group">
-              <Search size={14} className="text-white/20 group-focus-within:text-accent transition-colors" />
+            <form onSubmit={handleSearch} className={cn("flex items-center bg-white/5 border border-white/5 rounded-xl px-3 py-1 gap-2 focus-within:border-accent/40 focus-within:bg-white/10 transition-all w-48 lg:w-64 group", isVIP && "border-yellow-500/20")}>
+              <Search size={14} className={cn("text-white/20 group-focus-within:text-accent transition-colors", isVIP && "group-focus-within:text-yellow-500")} />
               <input 
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -191,8 +194,8 @@ export const Taskbar: React.FC = () => {
           )}
           
           {!isSchool && !isKid && !isVertical && (
-            <button onClick={() => setIsWidgetsOpen(!isWidgetsOpen)} className={cn("p-2 rounded-xl hover:bg-white/10 transition-all active:scale-95", isWidgetsOpen && "bg-accent/20 text-accent")}>
-              <LayoutGrid size={iconSize} className={isWidgetsOpen ? "text-accent" : "text-white/60"} />
+            <button onClick={() => setIsWidgetsOpen(!isWidgetsOpen)} className={cn("p-2 rounded-xl hover:bg-white/10 transition-all active:scale-95", isWidgetsOpen && "bg-accent/20 text-accent", isVIP && isWidgetsOpen && "bg-yellow-500/20 text-yellow-500")}>
+              <LayoutGrid size={iconSize} className={isWidgetsOpen ? (isVIP ? "text-yellow-500" : "text-accent") : "text-white/60"} />
             </button>
           )}
         </div>
@@ -216,15 +219,16 @@ export const Taskbar: React.FC = () => {
                         onContextMenu={(e) => handleAppContextMenu(e, appId)}
                         className={cn(
                           "p-2 rounded-xl transition-all active:scale-90 flex items-center justify-center min-w-[36px] min-h-[36px]",
-                          isActive ? "bg-white/10" : "hover:bg-white/10 text-white/60 hover:text-accent"
+                          isActive ? "bg-white/10" : "hover:bg-white/10 text-white/60 hover:text-accent",
+                          isVIP && !isActive && "hover:text-yellow-500"
                         )}
                       >
-                        <Icon size={iconSize} className={cn("transition-colors", isSchool && isActive ? "text-blue-400" : isKid && isActive ? "text-pink-400" : "")} />
+                        <Icon size={iconSize} className={cn("transition-colors", isSchool && isActive ? "text-blue-400" : isKid && isActive ? "text-pink-400" : isVIP && isActive ? "text-yellow-500" : "")} />
                       </button>
                     </TooltipTrigger>
-                    <TooltipContent className="glass border-white/10 text-xs font-bold text-accent uppercase tracking-widest">{info.label}</TooltipContent>
+                    <TooltipContent className="glass border-white/10 text-xs font-bold text-accent uppercase tracking-widest" style={{ color: isVIP ? '#ffd700' : 'var(--accent)' }}>{info.label}</TooltipContent>
                   </Tooltip>
-                  {isAppOpen && <div className={cn("absolute rounded-full", isSchool ? "bg-blue-500" : isKid ? "bg-pink-500" : "bg-accent", isVertical ? "w-1 h-6 -right-1 top-1/2 -translate-y-1/2" : "h-1 w-6 -bottom-1 left-1/2 -translate-x-1/2")} />}
+                  {isAppOpen && <div className={cn("absolute rounded-full", isSchool ? "bg-blue-500" : isKid ? "bg-pink-500" : isVIP ? "bg-yellow-500" : "bg-accent", isVertical ? "w-1 h-6 -right-1 top-1/2 -translate-y-1/2" : "h-1 w-6 -bottom-1 left-1/2 -translate-x-1/2")} />}
                 </div>
               );
             })}
@@ -234,7 +238,7 @@ export const Taskbar: React.FC = () => {
         {/* Right Section: System Cluster & Identity */}
         <div className={cn("flex items-center", isVertical ? "flex-col pb-2 gap-2 w-full" : "justify-end gap-3")}>
           <button onClick={() => setIsChatOpen(!isChatOpen)} className={cn("p-2 rounded-xl hover:bg-white/10", isChatOpen && "bg-accent/20")}>
-            <MessageCircle size={iconSize} className={isChatOpen ? "text-accent" : "text-white/60"} />
+            <MessageCircle size={iconSize} className={isChatOpen ? (isVIP ? "text-yellow-500" : "text-accent") : "text-white/60"} />
           </button>
 
           <div className="relative">
@@ -266,7 +270,7 @@ export const Taskbar: React.FC = () => {
           </div>
 
           <Avatar 
-            className="w-8 h-8 border border-white/10 cursor-pointer hover:border-accent hover:scale-110 transition-all active:scale-90 shrink-0" 
+            className={cn("w-8 h-8 border border-white/10 cursor-pointer hover:border-accent hover:scale-110 transition-all active:scale-90 shrink-0", isVIP && "border-yellow-500")} 
             onClick={(e) => { 
               e.stopPropagation(); 
               openApp('settings', 'Settings', { tab: 'accounts' });

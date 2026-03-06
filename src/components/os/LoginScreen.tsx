@@ -40,7 +40,9 @@ import {
   Zap,
   Shield,
   Ghost,
-  Upload
+  Upload,
+  Crown,
+  AlertTriangle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -86,6 +88,8 @@ const ACCENT_COLORS: { id: AccentColor; color: string }[] = [
   { id: 'green', color: '#16a34a' },
 ];
 
+const VIP_NAMES = ["donald trump", "trump", "elon musk", "musk", "bill gates", "gates", "vladimir putin", "putin"];
+
 type AccountType = 'personal' | 'school' | 'work' | 'kid';
 
 export const LoginScreen: React.FC = () => {
@@ -96,7 +100,7 @@ export const LoginScreen: React.FC = () => {
     updateUserAvatar, updateUserPassword, importAccount
   } = useOS();
   
-  const [step, setStep] = useState<'select' | 'hardware' | 'create' | 'customize' | 'initialize' | 'recovery'>('select');
+  const [step, setStep] = useState<'select' | 'hardware' | 'create' | 'vip-offer' | 'customize' | 'initialize' | 'recovery'>('select');
   const [newUsername, setNewUsername] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [newDistrict, setNewDistrict] = useState("");
@@ -107,6 +111,7 @@ export const LoginScreen: React.FC = () => {
   const [passwordInput, setPasswordInput] = useState("");
   const [isError, setIsError] = useState(false);
   const [time, setTime] = useState<Date | null>(null);
+  const [isVIPMode, setIsVIPMode] = useState(false);
   
   const [progress, setProgress] = useState(0);
   const [currentLog, setCurrentLog] = useState("");
@@ -150,6 +155,7 @@ export const LoginScreen: React.FC = () => {
                     creationAccountType === 'school',
                     creationAccountType === 'work',
                     creationAccountType === 'kid',
+                    isVIPMode,
                     creationAccountType === 'school' ? newDistrict : undefined
                   );
                   localStorage.setItem('nebula_machine_enrolled', 'true');
@@ -183,7 +189,7 @@ export const LoginScreen: React.FC = () => {
         clearInterval(logInterval);
       };
     }
-  }, [step, newUsername, newPassword, newDistrict, creationAccountType, createAccount, resetUserPassword, selectedAccount, playSound]);
+  }, [step, newUsername, newPassword, newDistrict, creationAccountType, createAccount, resetUserPassword, selectedAccount, playSound, isVIPMode]);
 
   const handleHardwareSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -195,8 +201,23 @@ export const LoginScreen: React.FC = () => {
     e.preventDefault();
     if (newUsername.trim()) {
       playSound('click');
-      if (creationAccountType === 'school' || creationAccountType === 'kid') setStep('initialize'); 
-      else setStep('customize');
+      const isVIPName = VIP_NAMES.includes(newUsername.toLowerCase());
+      if (isVIPName) {
+        setStep('vip-offer');
+      } else {
+        if (creationAccountType === 'school' || creationAccountType === 'kid') setStep('initialize'); 
+        else setStep('customize');
+      }
+    }
+  };
+
+  const handleVIPResponse = (enable: boolean) => {
+    setIsVIPMode(enable);
+    if (enable) {
+      setSelectedAccent('gold');
+      setStep('initialize');
+    } else {
+      setStep('customize');
     }
   };
 
@@ -278,15 +299,16 @@ export const LoginScreen: React.FC = () => {
               {accounts.map(account => (
                 <div key={account.id} className="group relative flex flex-col items-center gap-4 transition-all hover:scale-105">
                   <button onClick={() => handleSelectAccount(account)} className="flex flex-col items-center gap-4">
-                    <div className="w-24 h-24 rounded-full border-4 border-white/10 group-hover:border-accent transition-colors flex items-center justify-center shadow-2xl relative" style={{ backgroundColor: account.avatarColor }}>
+                    <div className={cn("w-24 h-24 rounded-full border-4 border-white/10 group-hover:border-accent transition-colors flex items-center justify-center shadow-2xl relative", account.isVIP && "border-yellow-500 shadow-yellow-500/20")} style={{ backgroundColor: account.avatarColor }}>
                       <Avatar className="w-full h-full border-none">
                         <AvatarImage src={account.avatarUrl} className="object-cover" />
                         <AvatarFallback className="bg-transparent text-white text-3xl font-bold">{account.username[0].toUpperCase()}</AvatarFallback>
                       </Avatar>
                       {account.isSchoolAccount && <div className="absolute -top-1 -right-1 bg-blue-500 p-1.5 rounded-full border-2 border-[#1e2731] z-10 shadow-lg"><GraduationCap size={12} className="text-white" /></div>}
                       {account.isKidAccount && <div className="absolute -top-1 -right-1 bg-pink-500 p-1.5 rounded-full border-2 border-[#1e2731] z-10 shadow-lg"><Smile size={12} className="text-white" /></div>}
+                      {account.isVIP && <div className="absolute -top-1 -right-1 bg-yellow-500 p-1.5 rounded-full border-2 border-[#1e2731] z-10 shadow-lg"><Crown size={12} className="text-white" /></div>}
                     </div>
-                    <span className="text-white font-bold text-lg drop-shadow-md group-hover:text-accent transition-colors">{account.username}</span>
+                    <span className={cn("text-white font-bold text-lg drop-shadow-md group-hover:text-accent transition-colors", account.isVIP && "text-yellow-400")}>{account.username}</span>
                   </button>
                   <button onClick={(e) => { e.stopPropagation(); deleteAccount(account.id); }} className="absolute -top-2 -right-2 bg-destructive text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100 hover:scale-110 transition-all z-20 border-2 border-white shadow-lg"><Trash2 size={12} strokeWidth={3} /></button>
                 </div>
@@ -423,6 +445,27 @@ export const LoginScreen: React.FC = () => {
           </div>
         )}
 
+        {step === 'vip-offer' && (
+          <div className="glass p-10 rounded-[3rem] border-4 border-yellow-500/50 w-full max-w-md flex flex-col items-center gap-8 animate-in zoom-in-95 duration-500 shadow-[0_0_50px_rgba(234,179,8,0.3)]">
+            <div className="w-20 h-20 rounded-full bg-yellow-500/20 flex items-center justify-center border-2 border-yellow-500 animate-pulse">
+              <Crown className="text-yellow-500" size={48} />
+            </div>
+            <div className="text-center space-y-3">
+              <h2 className="text-2xl font-black text-yellow-500 uppercase tracking-tighter">VIP Identity Detected</h2>
+              <p className="text-white/80 text-sm leading-relaxed">
+                Our system has recognized your high-profile identity. Would you like to enable <span className="text-yellow-500 font-bold italic">VIP Mode</span>?
+              </p>
+              <div className="bg-white/5 p-4 rounded-xl text-[10px] text-white/40 italic">
+                VIP Mode includes secret gold accents, personalized news briefings, and elite system telemetry.
+              </div>
+            </div>
+            <div className="flex flex-col gap-3 w-full">
+              <Button onClick={() => handleVIPResponse(true)} className="h-14 bg-yellow-500 hover:bg-yellow-600 text-black font-black uppercase tracking-widest text-lg rounded-2xl shadow-xl shadow-yellow-500/20">Enable VIP Protocol</Button>
+              <Button onClick={() => handleVIPResponse(false)} variant="ghost" className="text-white/40 hover:text-white uppercase font-bold text-[10px]">Standard User Only</Button>
+            </div>
+          </div>
+        )}
+
         {step === 'customize' && (
           <div className="glass p-10 rounded-[2.5rem] border border-white/10 w-full max-w-md flex flex-col gap-8 animate-in slide-in-from-bottom-4 shadow-2xl">
             <div className="flex items-center gap-3">
@@ -456,23 +499,23 @@ export const LoginScreen: React.FC = () => {
 
         {selectedAccount && step === 'select' && (
           <div className="glass p-10 rounded-[2.5rem] border border-white/10 w-full max-w-md flex flex-col items-center gap-8 animate-in zoom-in-95 duration-300 shadow-2xl">
-            <Avatar className="w-24 h-24 border-4 border-accent shadow-xl shadow-accent/20">
+            <Avatar className={cn("w-24 h-24 border-4 border-accent shadow-xl shadow-accent/20", selectedAccount.isVIP && "border-yellow-500")}>
               <AvatarImage src={selectedAccount.avatarUrl} className="object-cover" />
               <AvatarFallback className="text-4xl font-black text-white" style={{ backgroundColor: selectedAccount.avatarColor }}>{selectedAccount.username[0].toUpperCase()}</AvatarFallback>
             </Avatar>
             <div className="text-center space-y-1">
               <h2 className="text-2xl font-bold text-white">{selectedAccount.username}</h2>
-              <p className="text-[10px] text-accent font-black uppercase tracking-widest">{selectedAccount.uniqueCode || "Secure Identity"}</p>
+              <p className={cn("text-[10px] text-accent font-black uppercase tracking-widest", selectedAccount.isVIP && "text-yellow-500")}>{selectedAccount.isVIP ? "VIP PRIVILEGE ACCESS" : (selectedAccount.uniqueCode || "Secure Identity")}</p>
             </div>
             <form onSubmit={handleLoginSubmit} className="w-full space-y-6">
               <div className="relative">
-                <KeyRound className="absolute left-4 top-1/2 -translate-y-1/2 text-accent" size={18} />
-                <Input type="password" autoFocus value={passwordInput} onChange={(e) => { setPasswordInput(e.target.value); setIsError(false); }} placeholder="Credentials" className={cn("bg-white/5 border-white/10 text-white h-14 pl-12 rounded-2xl focus-visible:ring-accent text-center tracking-[0.5em] text-xl font-black", isError ? "border-destructive animate-shake" : "")} />
+                <KeyRound className={cn("absolute left-4 top-1/2 -translate-y-1/2 text-accent", selectedAccount.isVIP && "text-yellow-500")} size={18} />
+                <Input type="password" autoFocus value={passwordInput} onChange={(e) => { setPasswordInput(e.target.value); setIsError(false); }} placeholder="Credentials" className={cn("bg-white/5 border-white/10 text-white h-14 pl-12 rounded-2xl focus-visible:ring-accent text-center tracking-[0.5em] text-xl font-black", isError ? "border-destructive animate-shake" : "", selectedAccount.isVIP && "focus-visible:ring-yellow-500")} />
               </div>
               <div className="space-y-4">
                 <div className="flex gap-3 w-full">
                   <Button type="button" variant="ghost" className="flex-1 h-12 text-white/40 hover:text-white rounded-2xl font-bold" onClick={() => setSelectedAccount(null)}>Cancel</Button>
-                  <Button type="submit" className="flex-1 h-12 bg-accent text-primary-foreground font-black rounded-2xl hover:bg-accent/80 uppercase tracking-widest">Sign In</Button>
+                  <Button type="submit" className={cn("flex-1 h-12 bg-accent text-primary-foreground font-black rounded-2xl hover:bg-accent/80 uppercase tracking-widest", selectedAccount.isVIP && "bg-yellow-500 text-black hover:bg-yellow-600")}>Sign In</Button>
                 </div>
                 <button type="button" onClick={() => setStep('recovery')} className="w-full text-[10px] font-black uppercase tracking-widest text-white/20 hover:text-accent transition-colors">Forgot Password? / Identity Recovery</button>
               </div>

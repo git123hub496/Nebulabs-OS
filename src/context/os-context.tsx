@@ -48,7 +48,8 @@ import {
   Car,
   Clock,
   Maximize2,
-  Minimize2
+  Minimize2,
+  Crown
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { respondToEmail } from '@/ai/flows/mail-ai-flow';
@@ -60,7 +61,7 @@ export type PowerStatus = 'on' | 'off' | 'booting';
 export type TaskbarPosition = 'top' | 'bottom' | 'left' | 'right';
 export type TaskbarSize = number;
 export type DesktopIconSize = number;
-export type AccentColor = 'default' | 'blue' | 'purple' | 'rose' | 'orange' | 'green' | 'grey' | 'custom';
+export type AccentColor = 'default' | 'blue' | 'purple' | 'rose' | 'orange' | 'green' | 'grey' | 'custom' | 'gold';
 export type CursorColor = 'black' | 'white' | 'accent';
 export type CursorShape = 'nebula' | 'windows' | 'macos' | 'custom';
 
@@ -73,6 +74,7 @@ export interface LocalUser {
   isWorkAccount?: boolean;
   isSchoolAccount?: boolean;
   isKidAccount?: boolean;
+  isVIP?: boolean;
   isGuest?: boolean;
   districtId?: string;
   uniqueCode?: string;
@@ -171,6 +173,7 @@ export interface BIOSSettings {
   acLossPolicy: 'Power On' | 'Stay Off' | 'Last State';
   wakeOnLan: boolean;
   isLite: boolean;
+  isMidasTouch: boolean;
 }
 
 export interface StartMenuItem {
@@ -255,7 +258,7 @@ interface OSContextType {
   logout: () => void;
   lock: () => void;
   unlock: (password?: string) => boolean;
-  createAccount: (username: string, password?: string, isSchool?: boolean, isWork?: boolean, isKid?: boolean, districtId?: string) => void;
+  createAccount: (username: string, password?: string, isSchool?: boolean, isWork?: boolean, isKid?: boolean, isVIP?: boolean, districtId?: string) => void;
   deleteAccount: (userId: string) => void;
   updateUserPassword: (password: string) => void;
   resetUserPassword: (userId: string, password: string) => void;
@@ -407,12 +410,13 @@ const INITIAL_DESKTOP: DesktopShortcut[] = [
 const FULL_APPS: AppId[] = ['store', 'files', 'settings', 'assistant', 'notes', 'calc', 'terminal', 'browser', 'trash', 'news', 'maps', 'monitor', 'calendar', 'snake', 'minesweeper', 'update', 'paint', 'info', 'camera', 'slides', 'mail', 'nebula-v', 'google-search', 'shop', 'screencast', 'sticky-notes', 'nde', 'docs', 'go'];
 const LITE_APPS: AppId[] = ['files', 'settings', 'browser', 'notes', 'calc', 'trash', 'info', 'sticky-notes'];
 
-// STREAMLINED TASKBAR PINS
 const FULL_PINNED: AppId[] = ['browser', 'settings', 'mail', 'files', 'sticky-notes'];
 const LITE_PINNED: AppId[] = ['browser', 'settings', 'files'];
 
 const AVATAR_COLORS = ['#9333ea', '#3b82f6', '#e11d48', '#f97316', '#16a34a', '#ec4899', '#06b6d4'];
 const OFFLINE_WIFI = "Public_Guest_No_Internet";
+
+const VIP_NAMES = ["donald trump", "trump", "elon musk", "musk", "bill gates", "gates", "vladimir putin", "putin"];
 
 const getWeatherCondition = (code: number) => {
   if (code === 0) return "Clear Sky";
@@ -504,7 +508,8 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     integratedGfx: true,
     acLossPolicy: 'Stay Off',
     wakeOnLan: false,
-    isLite: false
+    isLite: false,
+    isMidasTouch: false
   });
 
   const playSound = useCallback((type: 'click' | 'open' | 'close' | 'notify') => {
@@ -670,6 +675,11 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     if (pa) setPinnedApps(JSON.parse(pa));
     const sl = localStorage.getItem(`nebula_${user.id}_start_layout`);
     if (sl) setStartMenuLayout(JSON.parse(sl));
+
+    if (user.isVIP) {
+      setAccentColorState('gold');
+      setCustomAccentHexState('#ffd700');
+    }
   }, []);
 
   useEffect(() => {
@@ -763,17 +773,18 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     return false;
   }, [currentUser]);
 
-  const createAccount = useCallback((username: string, password?: string, isSchool: boolean = false, isWork: boolean = false, isKid: boolean = false, districtId?: string) => {
+  const createAccount = useCallback((username: string, password?: string, isSchool: boolean = false, isWork: boolean = false, isKid: boolean = false, isVIP: boolean = false, districtId?: string) => {
     const effectiveDistrictId = districtId || (isSchool ? "NHU-7" : undefined);
-    const uniqueCode = `${effectiveDistrictId || (isKid ? 'KID' : (isWork ? 'WRK' : 'USR'))}-${Math.floor(1000 + Math.random() * 9000)}-X`;
+    const uniqueCode = `${isVIP ? 'VIP' : (effectiveDistrictId || (isKid ? 'KID' : (isWork ? 'WRK' : 'USR')))}-${Math.floor(1000 + Math.random() * 9000)}-X`;
     const newAcc: LocalUser = {
       id: Math.random().toString(36).substr(2, 9),
       username,
-      avatarColor: isKid ? '#ec4899' : (isSchool ? '#3b82f6' : AVATAR_COLORS[Math.floor(Math.random() * AVATAR_COLORS.length)]),
+      avatarColor: isVIP ? '#ffd700' : (isKid ? '#ec4899' : (isSchool ? '#3b82f6' : AVATAR_COLORS[Math.floor(Math.random() * AVATAR_COLORS.length)])),
       password: password || undefined,
       isWorkAccount: isWork,
       isSchoolAccount: isSchool,
       isKidAccount: isKid,
+      isVIP: isVIP,
       districtId: effectiveDistrictId,
       uniqueCode
     };
@@ -786,7 +797,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     localStorage.setItem('nebula_current_user_id', newAcc.id);
     setIsLocked(false);
     loadSettings(newAcc);
-    addNotification("Account Created", `Welcome, ${username}! System initialized.`);
+    addNotification(isVIP ? "VIP Session Initialized" : "Account Created", `Welcome, ${username}! System initialized.`);
   }, [loadSettings, addNotification]);
 
   const deleteAccount = useCallback((userId: string) => {

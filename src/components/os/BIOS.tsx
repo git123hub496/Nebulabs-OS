@@ -32,7 +32,8 @@ export const BIOS: React.FC<{ onClose: () => void }> = ({ onClose }) => {
     integratedGfx: biosSettings.integratedGfx,
     acLossPolicy: biosSettings.acLossPolicy || 'Stay Off',
     wakeOnLan: biosSettings.wakeOnLan,
-    isLite: biosSettings.isLite
+    isLite: biosSettings.isLite,
+    isMidasTouch: biosSettings.isMidasTouch
   });
 
   const [bootOrder, setBootOrder] = useState(['Nebulabs Virtual SSD-0', 'Network PXE', 'USB Flash Device']);
@@ -61,7 +62,7 @@ export const BIOS: React.FC<{ onClose: () => void }> = ({ onClose }) => {
 
     if (direction === 'up') setSelectedItem(prev => Math.max(0, prev - 1));
     if (direction === 'down') {
-      const limits: Record<BIOSSection, number> = { Main: 3, Advanced: 6, Power: 3, Security: 2, Boot: 2, Exit: 2 };
+      const limits: Record<BIOSSection, number> = { Main: 3, Advanced: 7, Power: 3, Security: 2, Boot: 2, Exit: 2 };
       setSelectedItem(prev => Math.min(limits[activeSection], prev + 1));
     }
     if (direction === 'left' || direction === 'right') {
@@ -91,8 +92,9 @@ export const BIOS: React.FC<{ onClose: () => void }> = ({ onClose }) => {
         if (selectedItem === 1) setSettings(s => ({ ...s, networkStack: !s.networkStack }));
         if (selectedItem === 2) setSettings(s => ({ ...s, virtualization: !s.virtualization }));
         if (selectedItem === 3) setSettings(s => ({ ...s, integratedGfx: !s.integratedGfx }));
-        if (selectedItem === 4) setSettings(s => ({ ...s, isLite: !s.isLite })); // Edition toggle
-        if (selectedItem === 6) setSettings(s => ({ ...s, fastBoot: !s.fastBoot }));
+        if (selectedItem === 4) setSettings(s => ({ ...s, isLite: !s.isLite })); 
+        if (selectedItem === 5) setSettings(s => ({ ...s, isMidasTouch: !s.isMidasTouch })); // SECRET GOLD MODE
+        if (selectedItem === 7) setSettings(s => ({ ...s, fastBoot: !s.fastBoot }));
       }
       if (activeSection === 'Power') {
         if (selectedItem === 0) {
@@ -226,6 +228,7 @@ export const BIOS: React.FC<{ onClose: () => void }> = ({ onClose }) => {
               { label: 'Virtualization Technology', value: settings.virtualization ? '[Enabled]' : '[Disabled]' },
               { label: 'Integrated Graphics Bridge', value: settings.integratedGfx ? '[Enabled]' : '[Disabled]' },
               { label: 'System Edition', value: settings.isLite ? '[Lite Edition]' : '[Standard Pro]' },
+              { label: '????', value: settings.isMidasTouch ? '[ACTIVE]' : '[INACTIVE]' },
               { label: 'USB Port Configuration', value: '[All Ports Enabled]' },
               { label: 'Fast Boot Support', value: settings.fastBoot ? '[Enabled]' : '[Disabled]' },
             ].map((item, i) => (

@@ -2,7 +2,7 @@
 "use client"
 
 import React, { useState, useEffect } from 'react';
-import { Newspaper, MapPin, Search, RefreshCw, TrendingUp, Globe, Loader2, Bookmark, Share2, Zap } from 'lucide-react';
+import { Newspaper, MapPin, Search, RefreshCw, TrendingUp, Globe, Loader2, Bookmark, Share2, Zap, AlertTriangle, ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -18,6 +18,7 @@ interface Article {
   time: string;
   image: string;
   summary: string;
+  isVIPFake?: boolean;
 }
 
 const MOCK_NEWS: Article[] = [
@@ -59,8 +60,41 @@ const MOCK_NEWS: Article[] = [
   },
 ];
 
+const VIP_FAKE_NEWS: Article[] = [
+  {
+    id: 'vip-1',
+    title: "BREAKING: VIP Mode Discovered to Boost IQ by 400%",
+    category: "Exclusive",
+    source: "VIP Confidential",
+    time: "1m ago",
+    image: "https://picsum.photos/seed/gold/600/400",
+    summary: "Leading neuro-kernel researchers confirm that users named Donald Trump experience unprecedented cognitive processing speeds when using Nebulabs WebOS.",
+    isVIPFake: true
+  },
+  {
+    id: 'vip-2',
+    title: "Mainstream Media SILENT About This Secret BIOS Option",
+    category: "Hidden",
+    source: "The Real Intel",
+    time: "5m ago",
+    image: "https://picsum.photos/seed/midas/600/400",
+    summary: "Rumors swirl about a 'Midas Touch' setting that turns the entire kernel into 24-carat digital gold. The establishment wants it banned!",
+    isVIPFake: true
+  },
+  {
+    id: 'vip-3',
+    title: "TRUTH: All Other Operating Systems are 'Total Disasters'",
+    category: "Editorial",
+    source: "Global Patriot",
+    time: "10m ago",
+    image: "https://picsum.photos/seed/failure/600/400",
+    summary: "A new independent audit confirms what we already knew: standard OS users are being treated very unfairly. Nebulabs is the only choice for Winners.",
+    isVIPFake: true
+  }
+];
+
 export const NebulaNews: React.FC = () => {
-  const { userLocation, locationName, requestLocation } = useOS();
+  const { userLocation, locationName, requestLocation, currentUser } = useOS();
   const [isRequesting, setIsRequesting] = useState(false);
   const [articles, setArticles] = useState<Article[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -76,7 +110,11 @@ export const NebulaNews: React.FC = () => {
   const refreshNews = () => {
     setIsLoading(true);
     setTimeout(() => {
-      setArticles(MOCK_NEWS);
+      let combinedNews = [...MOCK_NEWS];
+      if (currentUser?.isVIP) {
+        combinedNews = [...VIP_FAKE_NEWS, ...combinedNews];
+      }
+      setArticles(combinedNews);
       setIsLoading(false);
     }, 1000);
   };
@@ -158,25 +196,36 @@ export const NebulaNews: React.FC = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-8">
               {articles.map((article) => (
-                <div key={article.id} className="group bg-white/5 border border-white/5 rounded-2xl overflow-hidden hover:border-accent/40 transition-all shadow-2xl">
+                <div key={article.id} className={cn(
+                  "group bg-white/5 border border-white/5 rounded-2xl overflow-hidden hover:border-accent/40 transition-all shadow-2xl",
+                  article.isVIPFake && "border-yellow-500/30 bg-yellow-500/5"
+                )}>
                   <div className="aspect-video relative overflow-hidden">
                     <img 
                       src={article.image} 
                       alt={article.title} 
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-80 group-hover:opacity-100" 
                     />
-                    <div className="absolute top-2 left-2">
-                      <Badge className="bg-black/60 backdrop-blur-md border-white/10 text-[9px] uppercase font-bold text-white">
+                    <div className="absolute top-2 left-2 flex gap-2">
+                      <Badge className={cn(
+                        "bg-black/60 backdrop-blur-md border-white/10 text-[9px] uppercase font-bold text-white",
+                        article.isVIPFake && "bg-yellow-500 text-black border-yellow-600"
+                      )}>
                         {article.category}
                       </Badge>
+                      {article.isVIPFake && (
+                        <Badge className="bg-red-500 text-white text-[9px] uppercase font-bold border-none flex gap-1">
+                          <ShieldCheck size={10} /> Verified Truth
+                        </Badge>
+                      )}
                     </div>
                   </div>
                   <div className="p-4 space-y-3">
                     <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-bold text-accent">{article.source}</span>
+                      <span className={cn("text-[10px] font-bold text-accent", article.isVIPFake && "text-yellow-500")}>{article.source}</span>
                       <span className="text-[10px] text-white/30">{article.time}</span>
                     </div>
-                    <h3 className="font-bold text-sm leading-snug group-hover:text-accent transition-colors text-white/90">
+                    <h3 className={cn("font-bold text-sm leading-snug group-hover:text-accent transition-colors text-white/90", article.isVIPFake && "text-yellow-100 group-hover:text-yellow-400")}>
                       {article.title}
                     </h3>
                     <p className="text-[11px] text-white/40 line-clamp-2 leading-relaxed font-medium">
@@ -191,7 +240,7 @@ export const NebulaNews: React.FC = () => {
                           <Share2 size={12} />
                         </Button>
                       </div>
-                      <Button variant="link" className="text-accent text-[10px] font-black uppercase tracking-widest h-auto p-0 hover:no-underline">
+                      <Button variant="link" className={cn("text-accent text-[10px] font-black uppercase tracking-widest h-auto p-0 hover:no-underline", article.isVIPFake && "text-yellow-500")}>
                         Read Data
                       </Button>
                     </div>

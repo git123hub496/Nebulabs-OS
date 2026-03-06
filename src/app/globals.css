@@ -65,6 +65,25 @@
     --sidebar-border: 0 0% 90%;
     --sidebar-ring: 210 29% 40%;
   }
+
+  /* VIP GOLD THEME */
+  .vip-gold {
+    --accent: 45 100% 50%;
+    --primary: 45 100% 50%;
+    --ring: 45 100% 50%;
+  }
+
+  /* MIDAS TOUCH THEME */
+  .midas-touch {
+    --background: 45 100% 10%;
+    --card: 45 100% 15%;
+    --popover: 45 100% 10%;
+    --border: 45 100% 25%;
+    --input: 45 100% 25%;
+    --accent: 45 100% 50%;
+    --primary: 45 100% 50%;
+    --ring: 45 100% 50%;
+  }
 }
 
 @layer base {
