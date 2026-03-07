@@ -24,7 +24,13 @@ import {
   Home,
   Pin,
   Image as ImageIcon,
-  Globe
+  Globe,
+  Bluetooth,
+  Bell,
+  Moon,
+  Cloud,
+  ChevronDown,
+  Clock
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -34,9 +40,12 @@ import { cn } from '@/lib/utils';
 type PhoneView = 'home' | 'chat' | 'settings' | 'gallery';
 
 export const PhoneHub: React.FC = () => {
-  const { isPhoneHubOpen, setIsPhoneHubOpen, accentColor, currentUser, biosSettings, playSound } = useOS();
+  const { isPhoneHubOpen, setIsPhoneHubOpen, accentColor, currentUser, biosSettings, playSound, weatherData, locationName } = useOS();
   const [activeView, setActiveView] = useState<PhoneView>('home');
   const [time, setTime] = useState("");
+  const [isShadeOpen, setIsShadeOpen] = useState(false);
+  const [isBluetoothOn, setIsBluetoothOn] = useState(true);
+  const [isDndOn, setIsDndOn] = useState(false);
 
   useEffect(() => {
     const update = () => {
@@ -54,12 +63,18 @@ export const PhoneHub: React.FC = () => {
 
   const navigate = (view: PhoneView) => {
     setActiveView(view);
+    setIsShadeOpen(false);
     playSound('click');
   };
 
   const closeHub = () => {
     setIsPhoneHubOpen(false);
     playSound('close');
+  };
+
+  const toggleShade = () => {
+    setIsShadeOpen(!isShadeOpen);
+    playSound('click');
   };
 
   return (
@@ -71,10 +86,72 @@ export const PhoneHub: React.FC = () => {
         "w-[280px] h-[580px] rounded-[3rem] border-[10px] bg-[#0a0f14] shadow-2xl relative overflow-hidden pointer-events-auto animate-in slide-in-from-right duration-500",
         isVIP ? "border-yellow-500/40 shadow-yellow-500/20" : "border-white/10"
       )}>
-        {/* Notch */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-24 h-6 bg-black rounded-b-2xl z-50 flex items-center justify-center gap-3 px-4">
-          <div className="w-6 h-1 bg-white/10 rounded-full" />
-          <div className="w-1.5 h-1.5 bg-white/10 rounded-full" />
+        {/* Pull-down Shade */}
+        <div className={cn(
+          "absolute inset-x-0 top-0 z-[100] glass backdrop-blur-3xl border-b border-white/10 transition-transform duration-500 ease-in-out p-6 pt-12 flex flex-col gap-6",
+          isShadeOpen ? "translate-y-0" : "-translate-y-full"
+        )}>
+          <div className="grid grid-cols-3 gap-4">
+            <button 
+              onClick={() => setIsBluetoothOn(!isBluetoothOn)}
+              className={cn("flex flex-col items-center gap-2", isBluetoothOn ? "text-accent" : "text-white/20")}
+            >
+              <div className={cn("w-12 h-12 rounded-full flex items-center justify-center", isBluetoothOn ? "bg-accent/20" : "bg-white/5")}>
+                <Bluetooth size={20} />
+              </div>
+              <span className="text-[8px] font-bold uppercase">Bluetooth</span>
+            </button>
+            <button 
+              onClick={() => setIsDndOn(!isDndOn)}
+              className={cn("flex flex-col items-center gap-2", isDndOn ? "text-purple-400" : "text-white/20")}
+            >
+              <div className={cn("w-12 h-12 rounded-full flex items-center justify-center", isDndOn ? "bg-purple-400/20" : "bg-white/5")}>
+                <Moon size={20} />
+              </div>
+              <span className="text-[8px] font-bold uppercase">DND</span>
+            </button>
+            <button className="flex flex-col items-center gap-2 text-white/20">
+              <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center">
+                <Bell size={20} />
+              </div>
+              <span className="text-[8px] font-bold uppercase">Mute</span>
+            </button>
+          </div>
+
+          <div className="bg-white/5 rounded-2xl p-4 border border-white/5">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-[10px] font-bold text-white/40 uppercase tracking-widest">Active Notifications</span>
+              <span className="text-[8px] text-white/20">Clear All</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-green-500/20 flex items-center justify-center text-green-500">
+                <MessageSquare size={14} />
+              </div>
+              <div>
+                <p className="text-[10px] font-bold text-white">Sarah (Engineering)</p>
+                <p className="text-[9px] text-white/40">Check the latest BIOS build...</p>
+              </div>
+            </div>
+          </div>
+
+          <button 
+            onClick={toggleShade}
+            className="self-center p-2 text-white/20 hover:text-white"
+          >
+            <ChevronDown size={20} className="rotate-180" />
+          </button>
+        </div>
+
+        {/* Notch & Top Handle */}
+        <div 
+          className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-8 z-[110] flex items-end justify-center cursor-pointer group"
+          onClick={toggleShade}
+        >
+          <div className="w-24 h-6 bg-black rounded-b-2xl flex items-center justify-center gap-3 px-4 relative">
+            <div className="w-6 h-1 bg-white/10 rounded-full" />
+            <div className="w-1.5 h-1.5 bg-white/10 rounded-full" />
+            <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-8 h-1 bg-white/20 rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
+          </div>
         </div>
 
         {/* Status Bar */}
@@ -91,7 +168,33 @@ export const PhoneHub: React.FC = () => {
         <div className="absolute inset-0 pt-10 pb-14 flex flex-col bg-gradient-to-b from-black/20 to-black/60">
           {activeView === 'home' && (
             <div className="flex-1 p-4 animate-in fade-in duration-300">
-              <div className="grid grid-cols-4 gap-4 mt-2">
+              {/* Home Screen Widgets */}
+              <div className="space-y-4 mb-6">
+                {/* Weather Widget */}
+                <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-[2rem] p-4 flex items-center justify-between group cursor-pointer hover:bg-white/10 transition-colors">
+                  <div>
+                    <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest">{locationName}</p>
+                    <h3 className="text-2xl font-black text-white">{weatherData ? `${weatherData.temp}°` : '39°'}</h3>
+                    <p className="text-[10px] font-medium text-white/60">{weatherData ? weatherData.condition : 'Partly Cloudy'}</p>
+                  </div>
+                  <div className="w-12 h-12 rounded-2xl bg-yellow-500/20 flex items-center justify-center">
+                    <Sun size={24} className="text-yellow-400 animate-pulse" />
+                  </div>
+                </div>
+
+                {/* Clock Widget */}
+                <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-[2rem] p-4 flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-2xl bg-accent/20 flex items-center justify-center text-accent">
+                    <Clock size={20} />
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest">Workspace Link</p>
+                    <p className="text-xs font-bold text-white">Kernel Uptime: 2h 45m</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-4 gap-4">
                 {[
                   { id: 'chat', label: 'Messages', icon: MessageSquare, color: 'bg-green-500' },
                   { id: 'gallery', label: 'Photos', icon: ImageIcon, color: 'bg-blue-500' },
