@@ -149,11 +149,11 @@ export const PhoneHub: React.FC = () => {
 
   return (
     <div 
-      className="fixed inset-y-0 right-0 w-[400px] z-[9998] flex items-center justify-center p-8 pointer-events-none"
+      className="fixed inset-y-0 right-0 w-[400px] z-[9998] flex items-center justify-center p-4 pointer-events-none"
       onClick={(e) => e.stopPropagation()}
     >
       <div className={cn(
-        "w-[280px] h-[580px] rounded-[3rem] border-[10px] bg-[#0a0f14] shadow-2xl relative overflow-hidden pointer-events-auto animate-in slide-in-from-right duration-500",
+        "w-[280px] h-[min(580px,92vh)] rounded-[3rem] border-[10px] bg-[#0a0f14] shadow-2xl relative overflow-hidden pointer-events-auto animate-in slide-in-from-right duration-500",
         isVIP ? "border-yellow-500/40 shadow-yellow-500/20" : "border-white/10"
       )}>
         {/* Phone Wallpaper Background */}
