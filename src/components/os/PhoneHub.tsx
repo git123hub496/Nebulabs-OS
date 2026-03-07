@@ -6,7 +6,6 @@ import { useOS } from '@/context/os-context';
 import { 
   X, 
   MessageSquare, 
-  Camera, 
   Settings, 
   Phone, 
   Wifi, 
@@ -24,7 +23,6 @@ import {
   Sun,
   Smile,
   Home,
-  Pin,
   Image as ImageIcon,
   Globe,
   Bluetooth,
@@ -221,7 +219,7 @@ export const PhoneHub: React.FC = () => {
 
   return (
     <div 
-      className="fixed z-[9998] pointer-events-none flex items-center justify-center"
+      className="fixed z-[9998] pointer-events-none"
       style={{ left: pos.x, top: pos.y }}
       onClick={(e) => e.stopPropagation()}
     >
@@ -298,7 +296,7 @@ export const PhoneHub: React.FC = () => {
 
         {/* Notch & Top Handle (DRAG HANDLE) */}
         <div 
-          className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-10 z-[110] flex items-end justify-center cursor-grab active:cursor-grabbing group"
+          className="absolute top-0 left-0 right-0 h-12 z-[110] flex items-end justify-center cursor-grab active:cursor-grabbing group"
           onMouseDown={handleDragStart}
         >
           <div className="w-24 h-6 bg-black rounded-b-2xl flex items-center justify-center gap-3 px-4 relative mb-1">
