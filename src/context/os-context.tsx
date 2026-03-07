@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { createContext, useContext, useState, ReactNode, useEffect, useCallback, useRef } from 'react';
@@ -913,7 +914,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
         const botMsg: ChatMessage = { id: Math.random().toString(36).substr(2, 9), sender: recipient, recipient: currentUser?.username || 'user', text: response.response, timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), isBot: true };
         setChatMessages(prev => [...prev, botMsg]);
         triggerSpike('net', 50);
-        if (!isChatOpen) addNotification(`Chat: ${recipient}`, response.response.slice(0, 30) + '...', 'app');
+        if (!isChatOpen && !isPhoneHubOpen) addNotification(`Chat: ${recipient}`, response.response.slice(0, 30) + '...', 'app');
       }, 1000 + Math.random() * 1000);
     } catch (error) {
       console.error("Chat AI Failure:", error);

@@ -1,6 +1,7 @@
+
 "use client"
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useOS } from '@/context/os-context';
 import { 
   X, 
@@ -30,22 +31,49 @@ import {
   Moon,
   Cloud,
   ChevronDown,
-  Clock
+  Clock,
+  Send,
+  Loader2
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 
-type PhoneView = 'home' | 'chat' | 'settings' | 'gallery';
+type PhoneView = 'home' | 'chat' | 'settings' | 'gallery' | 'browser' | 'search';
+
+const CONTACTS = [
+  { name: 'Sarah', role: 'Engineering', status: 'online', avatar: 'https://picsum.photos/seed/sarah/100/100' },
+  { name: 'Mom', role: 'Family', status: 'away', avatar: 'https://picsum.photos/seed/mom/100/100' },
+  { name: 'Admin', role: 'Infrastructure', status: 'online', avatar: 'https://picsum.photos/seed/admin/100/100' },
+];
 
 export const PhoneHub: React.FC = () => {
-  const { isPhoneHubOpen, setIsPhoneHubOpen, accentColor, currentUser, biosSettings, playSound, weatherData, locationName } = useOS();
+  const { 
+    isPhoneHubOpen, 
+    setIsPhoneHubOpen, 
+    currentUser, 
+    biosSettings, 
+    playSound, 
+    weatherData, 
+    locationName, 
+    chatMessages, 
+    sendChatMessage,
+    isOnline 
+  } = useOS();
+
   const [activeView, setActiveView] = useState<PhoneView>('home');
+  const [selectedContact, setSelectedContact] = useState(CONTACTS[0]);
   const [time, setTime] = useState("");
   const [isShadeOpen, setIsShadeOpen] = useState(false);
   const [isBluetoothOn, setIsBluetoothOn] = useState(true);
   const [isDndOn, setIsDndOn] = useState(false);
+  const [inputText, setInputText] = useState("");
+  const [browserUrl, setBrowserUrl] = useState("https://www.google.com/search?igu=1");
+  const [searchQuery, setSearchQuery] = useState("");
+  
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const update = () => {
@@ -56,6 +84,12 @@ export const PhoneHub: React.FC = () => {
     const interval = setInterval(update, 60000);
     return () => clearInterval(interval);
   }, []);
+
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [chatMessages, activeView]);
 
   if (!isPhoneHubOpen) return null;
 
@@ -75,6 +109,22 @@ export const PhoneHub: React.FC = () => {
   const toggleShade = () => {
     setIsShadeOpen(!isShadeOpen);
     playSound('click');
+  };
+
+  const handleSend = async () => {
+    if (!inputText.trim()) return;
+    const text = inputText;
+    setInputText("");
+    await sendChatMessage(text, selectedContact.name, selectedContact.role);
+  };
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      setBrowserUrl(`https://www.google.com/search?q=${encodeURIComponent(searchQuery)}&igu=1`);
+      setActiveView('browser');
+      setSearchQuery("");
+    }
   };
 
   return (
@@ -158,7 +208,7 @@ export const PhoneHub: React.FC = () => {
         <div className="h-10 flex items-center justify-between px-6 z-40 relative">
           <span className="text-[10px] font-bold text-white/80">{time}</span>
           <div className="flex items-center gap-2 text-white/60">
-            <Wifi size={10} />
+            <Wifi size={10} className={isOnline ? "text-white/60" : "text-destructive"} />
             <span className="text-[8px] font-bold">5G</span>
             <BatteryMedium size={12} />
           </div>
@@ -189,7 +239,7 @@ export const PhoneHub: React.FC = () => {
                   </div>
                   <div>
                     <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest">Workspace Link</p>
-                    <p className="text-xs font-bold text-white">Kernel Uptime: 2h 45m</p>
+                    <p className="text-xs font-bold text-white">Online Session</p>
                   </div>
                 </div>
               </div>
@@ -199,7 +249,7 @@ export const PhoneHub: React.FC = () => {
                   { id: 'chat', label: 'Messages', icon: MessageSquare, color: 'bg-green-500' },
                   { id: 'gallery', label: 'Photos', icon: ImageIcon, color: 'bg-blue-500' },
                   { id: 'settings', label: 'Settings', icon: Settings, color: 'bg-gray-500' },
-                  { id: 'phone', label: 'Phone', icon: Phone, color: 'bg-emerald-500' },
+                  { id: 'browser', label: 'Browser', icon: Globe, color: 'bg-blue-600' },
                   { id: 'search', label: 'Search', icon: Search, color: 'bg-blue-400' },
                   { id: 'love', label: 'Health', icon: Heart, color: 'bg-rose-500' },
                   { id: 'shop', label: 'Store', icon: ShoppingBag, color: 'bg-orange-500' },
@@ -221,7 +271,7 @@ export const PhoneHub: React.FC = () => {
               {/* Bottom Dock */}
               <div className="absolute bottom-4 inset-x-4 h-14 bg-white/5 backdrop-blur-xl border border-white/5 rounded-[1.5rem] flex items-center justify-around px-2">
                 <button className="p-2 text-white/40 hover:text-accent"><Phone size={18} /></button>
-                <button className="p-2 text-white/40 hover:text-accent"><Globe size={18} /></button>
+                <button className="p-2 text-white/40 hover:text-accent" onClick={() => navigate('browser')}><Globe size={18} /></button>
                 <button className="p-2 text-white/40 hover:text-accent" onClick={() => navigate('chat')}><MessageSquare size={18} /></button>
                 <button className="p-2 text-white/40 hover:text-accent"><LayoutGrid size={18} /></button>
               </div>
@@ -230,30 +280,114 @@ export const PhoneHub: React.FC = () => {
 
           {activeView === 'chat' && (
             <div className="flex-1 flex flex-col animate-in slide-in-from-right duration-300">
-              <div className="p-3 border-b border-white/5 flex items-center gap-2">
-                <button onClick={() => navigate('home')}><ChevronLeft className="text-accent" size={18} /></button>
-                <h2 className="text-xs font-bold">Nebula Chat</h2>
+              <div className="p-3 border-b border-white/5 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <button onClick={() => navigate('home')}><ChevronLeft className="text-accent" size={18} /></button>
+                  <h2 className="text-xs font-bold">Nebula Chat</h2>
+                </div>
+                <Avatar className="w-6 h-6 border border-white/10">
+                  <AvatarImage src={selectedContact.avatar} />
+                  <AvatarFallback className="text-[8px] bg-accent/20 text-accent">{selectedContact.name[0]}</AvatarFallback>
+                </Avatar>
               </div>
-              <ScrollArea className="flex-1 p-3">
+              
+              <div className="flex gap-2 overflow-x-auto p-2 border-b border-white/5 scrollbar-none">
+                {CONTACTS.map(c => (
+                  <button 
+                    key={c.name}
+                    onClick={() => setSelectedContact(c)}
+                    className={cn(
+                      "flex flex-col items-center gap-1 p-2 rounded-xl shrink-0 min-w-[60px] transition-all",
+                      selectedContact.name === c.name ? "bg-accent/20 text-accent" : "text-white/40 hover:bg-white/5"
+                    )}
+                  >
+                    <Avatar className="w-8 h-8">
+                      <AvatarImage src={c.avatar} />
+                      <AvatarFallback className="text-[10px] bg-white/10">{c.name[0]}</AvatarFallback>
+                    </Avatar>
+                    <span className="text-[8px] font-bold">{c.name}</span>
+                  </button>
+                ))}
+              </div>
+
+              <ScrollArea className="flex-1 p-3" viewportRef={scrollRef}>
                 <div className="space-y-3">
-                  {[
-                    { from: 'Sarah', text: 'Did you see the latest BIOS build?', time: '10:05 AM' },
-                    { from: 'Mom', text: 'Stay safe in the workspace! <3', time: 'Yesterday' },
-                    { from: 'Admin', text: 'Security level 4 authorized.', time: 'Monday' },
-                  ].map((msg, i) => (
-                    <div key={i} className="flex gap-2">
-                      <div className="w-6 h-6 rounded-full bg-accent/20 flex items-center justify-center text-[8px] font-bold text-accent">{msg.from[0]}</div>
-                      <div className="flex-1">
-                        <div className="flex justify-between items-center mb-0.5">
-                          <span className="text-[9px] font-bold text-white/80">{msg.from}</span>
-                          <span className="text-[7px] text-white/20">{msg.time}</span>
-                        </div>
-                        <p className="text-[9px] text-white/40 bg-white/5 p-1.5 rounded-lg rounded-tl-none">{msg.text}</p>
+                  {chatMessages.filter(m => m.sender === selectedContact.name || m.recipient === selectedContact.name || m.sender === 'Nebulabs Onboarding').map((msg) => (
+                    <div key={msg.id} className={cn("flex flex-col", !msg.isBot ? "items-end" : "items-start")}>
+                      <div className={cn(
+                        "p-2 rounded-2xl text-[10px] leading-relaxed max-w-[85%]",
+                        !msg.isBot ? "bg-accent text-primary-foreground rounded-tr-none" : "bg-white/5 border border-white/10 text-white/80 rounded-tl-none"
+                      )}>
+                        {msg.text}
                       </div>
+                      <span className="text-[7px] text-white/20 mt-1">{msg.timestamp}</span>
                     </div>
                   ))}
                 </div>
               </ScrollArea>
+
+              <div className="p-3 border-t border-white/5 bg-black/20">
+                <div className="relative">
+                  <Input 
+                    value={inputText}
+                    onChange={(e) => setInputText(e.target.value)}
+                    placeholder="Message..."
+                    className="h-9 bg-white/5 border-white/10 text-[10px] pr-8 focus-visible:ring-accent"
+                    onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+                  />
+                  <button 
+                    onClick={handleSend}
+                    disabled={!inputText.trim()}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-accent disabled:opacity-30"
+                  >
+                    <Send size={14} />
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeView === 'browser' && (
+            <div className="flex-1 flex flex-col animate-in slide-in-from-right duration-300">
+              <div className="p-2 border-b border-white/5 flex items-center gap-2 bg-black/40">
+                <button onClick={() => navigate('home')}><ChevronLeft size={16} className="text-accent" /></button>
+                <div className="flex-1 bg-white/5 rounded-full px-3 py-1 flex items-center gap-2 border border-white/10 overflow-hidden">
+                  <Globe size={10} className="text-white/40" />
+                  <span className="text-[8px] text-white/60 truncate">{browserUrl}</span>
+                </div>
+              </div>
+              <div className="flex-1 bg-white">
+                <iframe src={browserUrl} className="w-full h-full border-none" title="Mobile Browser" />
+              </div>
+            </div>
+          )}
+
+          {activeView === 'search' && (
+            <div className="flex-1 p-4 flex flex-col gap-6 animate-in slide-in-from-right duration-300">
+              <div className="flex items-center gap-2">
+                <button onClick={() => navigate('home')}><ChevronLeft size={18} className="text-accent" /></button>
+                <h2 className="text-xs font-bold">Search</h2>
+              </div>
+              <form onSubmit={handleSearch} className="space-y-4">
+                <div className="relative">
+                  <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/20" />
+                  <Input 
+                    autoFocus
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search anything..." 
+                    className="h-12 pl-10 bg-white/5 border-white/10 rounded-2xl text-xs"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <p className="text-[9px] font-bold text-white/20 uppercase tracking-widest">Trending</p>
+                  {['Nebula Kernel v5', 'VIP Authorization', 'System Telemetry'].map(tag => (
+                    <button key={tag} onClick={() => { setSearchQuery(tag); }} className="w-full text-left p-3 rounded-xl bg-white/5 border border-white/5 text-[10px] text-white/60 hover:border-accent/40 transition-colors">
+                      {tag}
+                    </button>
+                  ))}
+                </div>
+              </form>
             </div>
           )}
 
@@ -261,23 +395,25 @@ export const PhoneHub: React.FC = () => {
             <div className="flex-1 flex flex-col animate-in slide-in-from-right duration-300">
               <div className="p-3 border-b border-white/5 flex items-center gap-2">
                 <button onClick={() => navigate('home')}><ChevronLeft className="text-accent" size={18} /></button>
-                <h2 className="text-xs font-bold">Settings</h2>
+                <h2 className="text-xs font-bold">Mobile Settings</h2>
               </div>
               <ScrollArea className="flex-1">
                 <div className="p-3 space-y-2">
-                  <div className="flex items-center justify-between p-2.5 bg-white/5 rounded-lg">
-                    <div className="flex items-center gap-2">
-                      <div className="w-6 h-6 rounded bg-orange-500/20 flex items-center justify-center text-orange-500"><Wifi size={14} /></div>
-                      <span className="text-[10px] font-bold">Airplane Mode</span>
+                  <div className="p-4 bg-white/5 rounded-2xl border border-white/5 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-accent/20 flex items-center justify-center text-accent"><Smartphone size={16} /></div>
+                      <div className="space-y-0.5">
+                        <p className="text-[10px] font-bold text-white">Device Info</p>
+                        <p className="text-[8px] text-white/40 uppercase">{biosSettings.deviceName}</p>
+                      </div>
                     </div>
-                    <div className="w-6 h-3 bg-white/10 rounded-full relative"><div className="absolute left-0.5 top-0.5 w-2 h-2 bg-white/40 rounded-full" /></div>
                   </div>
-                  <div className="mt-4 p-3 bg-accent/10 border border-accent/20 rounded-xl space-y-1">
-                    <div className="flex items-center gap-2">
-                      <ShieldCheck size={12} className="text-accent" />
-                      <span className="text-[8px] font-black uppercase text-accent">Linked Device</span>
+                  <div className="p-4 bg-white/5 rounded-2xl border border-white/5 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-orange-500/20 flex items-center justify-center text-orange-500"><Wifi size={16} /></div>
+                      <p className="text-[10px] font-bold text-white">Airplane Mode</p>
                     </div>
-                    <p className="text-[9px] text-white/60 font-bold uppercase tracking-widest truncate">{biosSettings.deviceName}</p>
+                    <div className="w-8 h-4 bg-white/10 rounded-full relative"><div className="absolute left-0.5 top-0.5 w-3 h-3 bg-white/40 rounded-full" /></div>
                   </div>
                 </div>
               </ScrollArea>
@@ -310,7 +446,7 @@ export const PhoneHub: React.FC = () => {
           >
             <div className="w-2.5 h-2.5 rounded-full border-2 border-white/40" />
           </button>
-          <button className="text-white/20 hover:text-white transition-colors"><LayoutGrid size={16} /></button>
+          <button className="text-white/20 hover:text-white transition-colors" onClick={() => navigate('home')}><LayoutGrid size={16} /></button>
         </div>
 
         {/* VIP Gold Trim */}
