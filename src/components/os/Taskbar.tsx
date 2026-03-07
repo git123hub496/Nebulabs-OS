@@ -22,7 +22,8 @@ import {
   Smile,
   Search,
   Check,
-  Crown
+  Crown,
+  Smartphone
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { StartMenu } from './StartMenu';
@@ -41,7 +42,7 @@ export const Taskbar: React.FC = () => {
     isWifiConnecting, volume, isOnline, isWidgetsOpen, setIsWidgetsOpen, 
     pinnedApps, reorderPinnedApps, togglePinApp, isTaskbarAutoHide, setTaskbarAutoHide,
     isQuickSettingsOpen, setIsQuickSettingsOpen, isStartOpen, setIsStartOpen,
-    isChatOpen, setIsChatOpen, playSound, currentUser, minimizeAllWindows
+    isChatOpen, setIsChatOpen, isPhoneHubOpen, setIsPhoneHubOpen, playSound, currentUser, minimizeAllWindows
   } = useOS();
   
   const [mounted, setMounted] = useState(false);
@@ -116,7 +117,7 @@ export const Taskbar: React.FC = () => {
   };
 
   const VolumeIcon = volume === 0 ? VolumeX : volume < 50 ? Volume1 : Volume2;
-  const isHidden = isTaskbarAutoHide && !isHovered && !isStartOpen && !isQuickSettingsOpen && !isChatOpen && !isWidgetsOpen;
+  const isHidden = isTaskbarAutoHide && !isHovered && !isStartOpen && !isQuickSettingsOpen && !isChatOpen && !isWidgetsOpen && !isPhoneHubOpen;
   
   const hideTransforms = {
     bottom: isHidden ? 'translateY(100%)' : 'translateY(0)',
@@ -236,6 +237,14 @@ export const Taskbar: React.FC = () => {
 
         {/* Right Section: System Cluster & Identity */}
         <div className={cn("flex items-center", isVertical ? "flex-col pb-2 gap-2 w-full" : "justify-end gap-3")}>
+          <button 
+            onClick={() => setIsPhoneHubOpen(!isPhoneHubOpen)} 
+            className={cn("p-2 rounded-xl hover:bg-white/10 transition-all", isPhoneHubOpen && "bg-accent/20")}
+            title="Nebula Phone Hub"
+          >
+            <Smartphone size={iconSize} className={isPhoneHubOpen ? (isVIP ? "text-yellow-500" : "text-accent") : "text-white/60"} />
+          </button>
+
           <button onClick={() => setIsChatOpen(!isChatOpen)} className={cn("p-2 rounded-xl hover:bg-white/10", isChatOpen && "bg-accent/20")}>
             <MessageCircle size={iconSize} className={isChatOpen ? (isVIP ? "text-yellow-500" : "text-accent") : "text-white/60"} />
           </button>

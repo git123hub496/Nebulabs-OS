@@ -1,4 +1,3 @@
-
 "use client"
 
 import React from 'react';
@@ -50,7 +49,8 @@ export const QuickSettings: React.FC = () => {
     currentUser, logout, shutDown, openApp,
     taskbarPosition, currentDisplayId, setCurrentDisplayId,
     displayLayout, updateDisplayLayout, resetDisplayLayout,
-    playSound, isFullscreen, toggleFullscreen, biosSettings
+    playSound, isFullscreen, toggleFullscreen, biosSettings,
+    isPhoneHubOpen, setIsPhoneHubOpen
   } = useOS();
 
   if (!isQuickSettingsOpen) return null;
@@ -146,17 +146,18 @@ export const QuickSettings: React.FC = () => {
         <button 
           onClick={() => {
             playSound('click');
-            toggleFullscreen();
+            setIsPhoneHubOpen(!isPhoneHubOpen);
+            setIsQuickSettingsOpen(false);
           }}
           className={cn(
             "flex items-center gap-3 p-3 rounded-xl border transition-all text-left",
-            isFullscreen ? "bg-blue-500/20 border-blue-500/30 text-blue-400" : "bg-white/5 border-white/5 text-muted-foreground hover:bg-white/10"
+            isPhoneHubOpen ? "bg-accent/20 border-accent/30 text-accent" : "bg-white/5 border-white/5 text-muted-foreground hover:bg-white/10"
           )}
         >
-          {isFullscreen ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
+          <Smartphone size={18} />
           <div className="flex flex-col min-w-0">
-            <span className="text-[11px] font-bold">Fullscreen</span>
-            <span className="text-[9px] truncate opacity-60">Touch Immersive</span>
+            <span className="text-[11px] font-bold">Phone Hub</span>
+            <span className="text-[9px] truncate opacity-60">{isPhoneHubOpen ? 'Active' : 'Disconnected'}</span>
           </div>
         </button>
 
