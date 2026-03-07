@@ -283,8 +283,8 @@ export const BIOS: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                   className={cn(
                     "p-1 px-2 transition-colors flex justify-between font-bold text-xs uppercase",
                     selectedItem === i ? "bg-[#aaaaaa] text-[#0000aa]" : "text-white"
-                  )}
-                >
+                )}
+              >
                   <span>{item.label}</span>
                   <span className={cn(item.value === 'NOT INSTALLED' ? "text-yellow-400" : "")}>{item.value}</span>
                 </div>
