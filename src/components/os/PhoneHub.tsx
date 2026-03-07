@@ -16,6 +16,7 @@ import {
   ShoppingBag, 
   User, 
   ChevronLeft,
+  ChevronRight,
   Smartphone,
   ShieldCheck,
   Zap,
@@ -38,7 +39,12 @@ import {
   Circle,
   Square,
   Palette,
-  Check
+  Check,
+  TrendingUp,
+  Activity,
+  Flame,
+  Star,
+  Download
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -502,22 +508,105 @@ export const PhoneHub: React.FC = () => {
             </div>
           )}
 
-          {['health', 'store', 'user'].includes(activeView) && (
-            <div className="flex-1 flex flex-col items-center justify-center p-8 text-center gap-4 animate-in fade-in duration-300 bg-black/40 backdrop-blur-md">
-              <div className="w-16 h-16 rounded-3xl bg-accent/20 flex items-center justify-center border border-accent/20">
-                {activeView === 'health' && <Heart size={32} className="text-rose-500" />}
-                {activeView === 'store' && <ShoppingBag size={32} className="text-orange-500" />}
-                {activeView === 'user' && <User size={32} className="text-purple-500" />}
+          {activeView === 'health' && (
+            <div className="flex-1 p-4 bg-black/40 backdrop-blur-md animate-in slide-in-from-right duration-300">
+              <div className="flex items-center gap-2 mb-6">
+                <button onClick={() => navigate('home')}><ChevronLeft size={18} className="text-accent" /></button>
+                <h2 className="text-xs font-bold text-white">Nebula Health</h2>
               </div>
-              <div className="space-y-1">
-                <h2 className="text-sm font-bold uppercase tracking-widest text-white">
-                  {activeView === 'health' && "Nebula Health"}
-                  {activeView === 'store' && "App Store Mobile"}
-                  {activeView === 'user' && "User Profile"}
-                </h2>
-                <p className="text-[10px] text-white/40 uppercase font-black">Syncing with Cloud Core...</p>
+              <div className="space-y-4">
+                <div className="bg-white/5 rounded-2xl p-4 border border-white/5">
+                  <div className="flex items-center justify-between mb-4">
+                    <Activity size={16} className="text-rose-500" />
+                    <span className="text-[10px] font-bold text-white/40 uppercase">Daily Steps</span>
+                  </div>
+                  <h3 className="text-3xl font-black text-white">8,432</h3>
+                  <p className="text-[9px] text-green-500 font-bold mt-1">+12% from yesterday</p>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-white/5 rounded-2xl p-4 border border-white/5">
+                    <Flame size={16} className="text-orange-500 mb-2" />
+                    <p className="text-[8px] font-bold text-white/40 uppercase">Calories</p>
+                    <p className="text-lg font-black text-white">450</p>
+                  </div>
+                  <div className="bg-white/5 rounded-2xl p-4 border border-white/5">
+                    <Heart size={16} className="text-rose-500 mb-2" />
+                    <p className="text-[8px] font-bold text-white/40 uppercase">BPM</p>
+                    <p className="text-lg font-black text-white">72</p>
+                  </div>
+                </div>
               </div>
-              <Loader2 className="animate-spin text-accent/40" size={24} />
+            </div>
+          )}
+
+          {activeView === 'store' && (
+            <div className="flex-1 flex flex-col bg-black/40 backdrop-blur-md animate-in slide-in-from-right duration-300">
+              <div className="p-3 border-b border-white/5 flex items-center gap-2 bg-black/20">
+                <button onClick={() => navigate('home')}><ChevronLeft size={18} className="text-accent" /></button>
+                <h2 className="text-xs font-bold text-white">App Store</h2>
+              </div>
+              <ScrollArea className="flex-1 p-3">
+                <div className="space-y-4">
+                  <div className="p-4 bg-accent/20 rounded-2xl border border-accent/40">
+                    <h3 className="text-[10px] font-black text-accent uppercase mb-1">Editor's Pick</h3>
+                    <p className="text-sm font-bold text-white mb-2">Nebula Terminal Mobile</p>
+                    <Button size="sm" className="h-7 w-full bg-accent text-primary-foreground font-black text-[9px] uppercase rounded-lg">Install</Button>
+                  </div>
+                  <div className="space-y-2">
+                    <p className="text-[9px] font-bold text-white/20 uppercase tracking-widest">Recommended</p>
+                    {[
+                      { name: 'Quantum Music', size: '12MB', rating: '4.9' },
+                      { name: 'Solar Browser', size: '45MB', rating: '4.7' },
+                      { name: 'Nebula Pay', size: '8MB', rating: '5.0' },
+                    ].map(app => (
+                      <div key={app.name} className="flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/5">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-lg bg-white/10" />
+                          <div className="min-w-0">
+                            <p className="text-[10px] font-bold text-white truncate">{app.name}</p>
+                            <p className="text-[8px] text-white/40">{app.size} • {app.rating} ★</p>
+                          </div>
+                        </div>
+                        <Button variant="ghost" size="icon" className="h-7 w-7 text-accent"><Download size={14} /></Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </ScrollArea>
+            </div>
+          )}
+
+          {activeView === 'user' && (
+            <div className="flex-1 p-4 bg-black/40 backdrop-blur-md animate-in slide-in-from-right duration-300">
+              <div className="flex items-center gap-2 mb-8">
+                <button onClick={() => navigate('home')}><ChevronLeft size={18} className="text-accent" /></button>
+                <h2 className="text-xs font-bold text-white">Identity Hub</h2>
+              </div>
+              <div className="flex flex-col items-center gap-6 text-center">
+                <Avatar className="w-20 h-20 border-4 border-accent shadow-xl">
+                  <AvatarImage src={currentUser?.avatarUrl} />
+                  <AvatarFallback className="bg-accent/20 text-accent text-3xl font-black">{currentUser?.username[0]}</AvatarFallback>
+                </Avatar>
+                <div className="space-y-1">
+                  <h3 className="text-xl font-black text-white tracking-tight">{currentUser?.username}</h3>
+                  <div className="flex items-center gap-2 justify-center">
+                    <span className="text-[9px] font-bold text-accent uppercase tracking-[0.2em]">{currentUser?.uniqueCode || 'USR-9021-X'}</span>
+                    <ShieldCheck size={10} className="text-green-500" />
+                  </div>
+                </div>
+                <div className="w-full space-y-2 pt-4">
+                  <div className="p-3 bg-white/5 rounded-xl border border-white/5 flex justify-between items-center">
+                    <span className="text-[9px] font-bold text-white/40 uppercase">Status</span>
+                    <span className="text-[9px] font-bold text-green-500 uppercase">Authenticated</span>
+                  </div>
+                  <div className="p-3 bg-white/5 rounded-xl border border-white/5 flex justify-between items-center">
+                    <span className="text-[9px] font-bold text-white/40 uppercase">Privilege</span>
+                    <span className={cn("text-[9px] font-bold uppercase", isVIP ? "text-yellow-500" : "text-accent")}>
+                      {isVIP ? "VIP Elite" : "Standard User"}
+                    </span>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
         </div>
