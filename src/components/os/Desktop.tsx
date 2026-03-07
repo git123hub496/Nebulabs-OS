@@ -11,6 +11,7 @@ import { WidgetsPanel } from './WidgetsPanel';
 import { QuickSettings } from './QuickSettings';
 import { GlobalSearch } from './GlobalSearch';
 import { ChatBar } from './ChatBar';
+import { PhoneHub } from './PhoneHub';
 import { BIOS } from './BIOS';
 import { StickyNote } from './StickyNote';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -638,6 +639,8 @@ export const Desktop: React.FC = () => {
       <GlobalSearch />
 
       <ChatBar />
+
+      <PhoneHub />
 
       {stickyNotes.map(note => (
         <StickyNote key={note.id} note={note} />

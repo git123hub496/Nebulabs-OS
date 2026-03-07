@@ -49,7 +49,8 @@ import {
   Clock,
   Maximize2,
   Minimize2,
-  Crown
+  Crown,
+  Smartphone
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { respondToEmail } from '@/ai/flows/mail-ai-flow';
@@ -236,6 +237,7 @@ interface OSContextType {
   isQuickSettingsOpen: boolean;
   isStartOpen: boolean;
   isChatOpen: boolean;
+  isPhoneHubOpen: boolean;
   isLocked: boolean;
   isNDEEnabled: boolean;
   systemStats: { cpu: number; ram: number; net: number };
@@ -304,6 +306,7 @@ interface OSContextType {
   setIsQuickSettingsOpen: (isOpen: boolean) => void;
   setIsStartOpen: (isOpen: boolean) => void;
   setIsChatOpen: (isOpen: boolean) => void;
+  setIsPhoneHubOpen: (isOpen: boolean) => void;
   setIsNDEEnabled: (enabled: boolean) => void;
   sendChatMessage: (text: string, recipient: string, role: string) => Promise<void>;
   setCurrentDisplayId: (id: string) => void;
@@ -442,6 +445,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   const [isQuickSettingsOpen, setIsQuickSettingsOpenState] = useState(false);
   const [isStartOpenState, setIsStartOpenState] = useState(false);
   const [isChatOpen, setIsChatOpenState] = useState(false);
+  const [isPhoneHubOpen, setIsPhoneHubOpenState] = useState(false);
 
   const [openWindows, setOpenWindows] = useState<WindowInstance[]>([]);
   const [activeWindowId, setActiveWindowId] = useState<string | null>(null);
@@ -1022,10 +1026,11 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     if (typeof window !== 'undefined') { localStorage.clear(); window.location.reload(); }
   }, []);
 
-  const setIsWidgetsOpen = (open: boolean) => { setIsWidgetsOpenState(open); if (open) { setIsStartOpenState(false); setIsQuickSettingsOpenState(false); setIsChatOpenState(false); playSound('open'); } else { playSound('close'); } };
-  const setIsQuickSettingsOpen = (open: boolean) => { setIsQuickSettingsOpenState(open); if (open) { setIsStartOpenState(false); setIsWidgetsOpenState(false); setIsChatOpenState(false); playSound('open'); } else { playSound('close'); } };
-  const setIsStartOpen = (open: boolean) => { setIsStartOpenState(open); if (open) { setIsQuickSettingsOpenState(false); setIsWidgetsOpenState(false); setIsChatOpenState(false); playSound('open'); } else { playSound('close'); } };
-  const setIsChatOpen = (open: boolean) => { setIsChatOpenState(open); if (open) { setIsStartOpenState(false); setIsQuickSettingsOpenState(false); setIsWidgetsOpenState(false); playSound('open'); } else { playSound('close'); } };
+  const setIsWidgetsOpen = (open: boolean) => { setIsWidgetsOpenState(open); if (open) { setIsStartOpenState(false); setIsQuickSettingsOpenState(false); setIsChatOpenState(false); setIsPhoneHubOpenState(false); playSound('open'); } else { playSound('close'); } };
+  const setIsQuickSettingsOpen = (open: boolean) => { setIsQuickSettingsOpenState(open); if (open) { setIsStartOpenState(false); setIsWidgetsOpenState(false); setIsChatOpenState(false); setIsPhoneHubOpenState(false); playSound('open'); } else { playSound('close'); } };
+  const setIsStartOpen = (open: boolean) => { setIsStartOpenState(open); if (open) { setIsQuickSettingsOpenState(false); setIsWidgetsOpenState(false); setIsChatOpenState(false); setIsPhoneHubOpenState(false); playSound('open'); } else { playSound('close'); } };
+  const setIsChatOpen = (open: boolean) => { setIsChatOpenState(open); if (open) { setIsStartOpenState(false); setIsQuickSettingsOpenState(false); setIsWidgetsOpenState(false); setIsPhoneHubOpenState(false); playSound('open'); } else { playSound('close'); } };
+  const setIsPhoneHubOpen = (open: boolean) => { setIsPhoneHubOpenState(open); if (open) { setIsStartOpenState(false); setIsQuickSettingsOpenState(false); setIsWidgetsOpenState(false); setIsChatOpenState(false); playSound('open'); } else { playSound('close'); } };
 
   const connectToWifi = (ssid: string) => {
     setIsWifiConnecting(true);
@@ -1219,7 +1224,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       customAccentHex, cursorColor, cursorShape, customCursorUrl, isInverted, isGrayscale, glassEnabled, powerStatus,
       taskbarPosition, taskbarSize, taskbarTransparency, appTransparency, isTaskbarAutoHide, setTaskbarAutoHide, iconSize, currentWifi, isWifiConnecting,
       isOnline, volume, brightness, isWidgetsOpen, isQuickSettingsOpen, 
-      isStartOpen: isStartOpenState, isChatOpen, isLocked, isNDEEnabled, systemStats, stickyNotes,
+      isStartOpen: isStartOpenState, isChatOpen, isPhoneHubOpen, isLocked, isNDEEnabled, systemStats, stickyNotes,
       currentDisplayId, displayLayout, isSecurityEnabled, chatMessages, biosSettings,
       startMenuLayout, globalScale,
       userLocation, locationName, weatherData, requestLocation,
@@ -1230,7 +1235,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       setCursorColor, setCursorShape, setCustomCursorUrl, setMouserScale, setInverted, setGrayscale, setGlassEnabled, setTaskbarPosition, rotateTaskbar, setTaskbarSize,
       setTaskbarTransparency, setAppTransparency,
       setIconSize, connectToWifi, setVolume, setBrightness, setIsWidgetsOpen,
-      setIsQuickSettingsOpen, setIsStartOpen, setIsChatOpen, setIsNDEEnabled, sendChatMessage, setCurrentDisplayId, setSecurityEnabled, updateBIOSSettings, restart, shutDown, powerOn,
+      setIsQuickSettingsOpen, setIsStartOpen, setIsChatOpen, setIsPhoneHubOpen, setIsNDEEnabled, sendChatMessage, setCurrentDisplayId, setSecurityEnabled, updateBIOSSettings, restart, shutDown, powerOn,
       minimizeAllWindows, playSound, setGlobalScale, factoryReset, setSystemStats,
       createFolder, importFile, renameFileSystemItem, moveToTrash, restoreFromTrash, emptyTrash, deleteItemPermanently,
       updateDesktopAppPosition, toggleDesktopApp, togglePinApp, reorderPinnedApps,

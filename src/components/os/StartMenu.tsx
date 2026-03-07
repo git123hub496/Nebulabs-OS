@@ -12,7 +12,8 @@ import {
   Trash2,
   Edit2,
   ChevronRight,
-  X
+  X,
+  Smartphone
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -113,7 +114,7 @@ export const StartMenu: React.FC<StartMenuProps> = ({ onClose }) => {
   const { 
     startMenuLayout, reorderStartMenu, createStartFolder, addAppToStartFolder, 
     removeAppFromStartFolder, openApp, restart, shutDown, taskbarPosition, 
-    currentUser, logout, isNDEEnabled 
+    currentUser, logout, isNDEEnabled, setIsPhoneHubOpen 
   } = useOS();
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -238,7 +239,7 @@ export const StartMenu: React.FC<StartMenuProps> = ({ onClose }) => {
               key={item.id}
               draggable
               onDragStart={(e) => handleDragStart(e, item.id)}
-              onDragOver={(e) => handleDragOver(e, id)}
+              onDragOver={(e) => handleDragOver(e, item.id)}
               onDrop={(e) => handleDrop(e, item.id)}
               className={cn(
                 "group flex flex-col items-center gap-2 p-2 rounded-xl transition-all relative",
@@ -310,6 +311,13 @@ export const StartMenu: React.FC<StartMenuProps> = ({ onClose }) => {
         </div>
         
         <div className="flex items-center gap-1">
+          <button 
+            className="p-2 rounded-xl text-muted-foreground hover:bg-white/5 hover:text-accent transition-colors" 
+            onClick={() => { setIsPhoneHubOpen(true); onClose(); }}
+            title="Phone Hub"
+          >
+            <Smartphone size={20} />
+          </button>
           <button className="p-2 rounded-xl text-muted-foreground hover:bg-white/5 hover:text-accent transition-colors" onClick={restart}>
             <RefreshCw size={20} />
           </button>
