@@ -33,7 +33,10 @@ import {
   ChevronDown,
   Clock,
   Send,
-  Loader2
+  Loader2,
+  Triangle,
+  Circle,
+  Square
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -41,7 +44,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 
-type PhoneView = 'home' | 'chat' | 'settings' | 'gallery' | 'browser' | 'search';
+type PhoneView = 'home' | 'chat' | 'settings' | 'gallery' | 'browser' | 'search' | 'health' | 'store' | 'user';
 
 const CONTACTS = [
   { name: 'Sarah', role: 'Engineering', status: 'online', avatar: 'https://picsum.photos/seed/sarah/100/100' },
@@ -251,8 +254,8 @@ export const PhoneHub: React.FC = () => {
                   { id: 'settings', label: 'Settings', icon: Settings, color: 'bg-gray-500' },
                   { id: 'browser', label: 'Browser', icon: Globe, color: 'bg-blue-600' },
                   { id: 'search', label: 'Search', icon: Search, color: 'bg-blue-400' },
-                  { id: 'love', label: 'Health', icon: Heart, color: 'bg-rose-500' },
-                  { id: 'shop', label: 'Store', icon: ShoppingBag, color: 'bg-orange-500' },
+                  { id: 'health', label: 'Health', icon: Heart, color: 'bg-rose-500' },
+                  { id: 'store', label: 'Store', icon: ShoppingBag, color: 'bg-orange-500' },
                   { id: 'user', label: 'Hub', icon: User, color: 'bg-purple-500' },
                 ].map((app) => (
                   <button 
@@ -435,18 +438,50 @@ export const PhoneHub: React.FC = () => {
               </div>
             </div>
           )}
+
+          {['health', 'store', 'user'].includes(activeView) && (
+            <div className="flex-1 flex flex-col items-center justify-center p-8 text-center gap-4 animate-in fade-in duration-300">
+              <div className="w-16 h-16 rounded-3xl bg-accent/20 flex items-center justify-center border border-accent/20">
+                {activeView === 'health' && <Heart size={32} className="text-rose-500" />}
+                {activeView === 'store' && <ShoppingBag size={32} className="text-orange-500" />}
+                {activeView === 'user' && <User size={32} className="text-purple-500" />}
+              </div>
+              <div className="space-y-1">
+                <h2 className="text-sm font-bold uppercase tracking-widest text-white">
+                  {activeView === 'health' && "Nebula Health"}
+                  {activeView === 'store' && "App Store Mobile"}
+                  {activeView === 'user' && "User Profile"}
+                </h2>
+                <p className="text-[10px] text-white/40 uppercase font-black">Syncing with Cloud Core...</p>
+              </div>
+              <Loader2 className="animate-spin text-accent/40" size={24} />
+            </div>
+          )}
         </div>
 
-        {/* Navigation Bar */}
-        <div className="h-14 flex items-center justify-center px-10 gap-12 z-50 relative border-t border-white/5">
-          <button className="text-white/20 hover:text-white transition-colors" onClick={closeHub}><ChevronLeft size={18} /></button>
+        {/* Navigation Bar (Android Style) */}
+        <div className="h-14 flex items-center justify-around px-6 z-50 relative border-t border-white/5 bg-black/40">
           <button 
-            className="w-8 h-8 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 flex items-center justify-center transition-all active:scale-90"
-            onClick={() => navigate('home')}
+            className="p-2 text-white/40 hover:text-white transition-all active:scale-75" 
+            onClick={() => activeView === 'home' ? closeHub() : navigate('home')}
+            title="Back"
           >
-            <div className="w-2.5 h-2.5 rounded-full border-2 border-white/40" />
+            <Triangle size={14} className="-rotate-90 fill-current" />
           </button>
-          <button className="text-white/20 hover:text-white transition-colors" onClick={() => navigate('home')}><LayoutGrid size={16} /></button>
+          <button 
+            className="p-2 text-white/40 hover:text-white transition-all active:scale-75"
+            onClick={() => navigate('home')}
+            title="Home"
+          >
+            <Circle size={16} className="fill-current" />
+          </button>
+          <button 
+            className="p-2 text-white/40 hover:text-white transition-all active:scale-75"
+            onClick={() => navigate('home')}
+            title="Recents"
+          >
+            <Square size={14} className="fill-current" />
+          </button>
         </div>
 
         {/* VIP Gold Trim */}
