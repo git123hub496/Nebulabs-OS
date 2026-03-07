@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useState, useRef, useMemo, useEffect } from 'react';
-import { useOS, TaskbarPosition, TaskbarSize, DesktopIconSize, AccentColor, CursorColor, CursorShape, AppId, APP_INFO } from '@/context/os-context';
+import { useOS, TaskbarPosition, TaskbarSize, DesktopIconSize, AccentColor, CursorColor, CursorShape, AppId, APP_INFO, SystemEdition } from '@/context/os-context';
 import { 
   Monitor, Palette, User, Shield, Bell, BellOff, HelpCircle, Upload, 
   ImageIcon, Sun, Moon, Layout, Check, MousePointer2, 
@@ -380,7 +380,13 @@ export const Settings: React.FC<SettingsProps> = ({ tab }) => {
           <div className="space-y-12 animate-in fade-in slide-in-from-right-4 duration-500">
             <section className="text-center py-12 space-y-6">
               <div className="w-24 h-24 rounded-[2.5rem] bg-accent/20 flex items-center justify-center mx-auto shadow-2xl animate-pulse"><span className="text-4xl font-black text-accent">N</span></div>
-              <div className="space-y-2"><h2 className="text-3xl font-black tracking-tight text-foreground">{biosSettings.deviceType} {biosSettings.deviceName}</h2><p className="text-xs text-muted-foreground font-mono uppercase tracking-[0.3em]">Version 1.0.4 Stable-Channel</p></div>
+              <div className="space-y-2">
+                <h2 className="text-3xl font-black tracking-tight text-foreground">{biosSettings.deviceType} {biosSettings.deviceName}</h2>
+                <div className="flex items-center justify-center gap-2">
+                  <Badge variant="outline" className="border-accent text-accent font-black">{biosSettings.systemEdition?.toUpperCase() || 'STANDARD'} EDITION</Badge>
+                  <p className="text-xs text-muted-foreground font-mono uppercase tracking-[0.3em]">Version 1.0.4</p>
+                </div>
+              </div>
               {!isRestricted && (
                 <div className="max-w-md mx-auto p-6 bg-destructive/5 border border-destructive/20 rounded-3xl text-center space-y-4">
                   <div className="flex items-center justify-center gap-2 mb-1"><Trash2 size={14} className="text-destructive" /><p className="text-[10px] font-black uppercase text-destructive tracking-[0.2em]">System Recovery</p></div>

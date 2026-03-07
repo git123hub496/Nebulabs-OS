@@ -135,6 +135,8 @@ const APP_COMPONENTS: Record<AppId, (win: WindowInstance) => React.ReactNode> = 
 
 const DesktopInfoApp = () => {
   const { biosSettings } = useOS();
+  const edition = biosSettings.systemEdition || 'Standard';
+  
   return (
     <div className="p-8 space-y-6 bg-[#161d25] h-full text-white/90 overflow-auto">
       <div className="flex items-center gap-4 mb-8">
@@ -144,19 +146,22 @@ const DesktopInfoApp = () => {
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-2xl font-black">Nebula System Info</h1>
-            {biosSettings.isLite && (
-              <span className="bg-blue-500 text-white text-[10px] font-black uppercase px-2 py-0.5 rounded tracking-widest">LITE</span>
-            )}
+            <span className={cn(
+              "text-[10px] font-black uppercase px-2 py-0.5 rounded tracking-widest text-white",
+              edition === 'Lite' ? "bg-blue-500" : edition === 'Standard' ? "bg-accent" : "bg-yellow-500 text-black"
+            )}>
+              {edition}
+            </span>
           </div>
           <p className="text-xs uppercase tracking-widest text-white/60 font-bold">Kernel Build v4.5.2-STABLE • 2026</p>
         </div>
       </div>
       <div className="grid gap-4">
         {[
-          { label: "OS Platform", value: `Nebulabs WebOS ${biosSettings.isLite ? 'Lite' : 'Pro'}` },
+          { label: "OS Platform", value: `Nebulabs WebOS ${edition}` },
           { label: "Kernel Engine", value: "React 19 + Turbopack" },
-          { label: "Memory Type", value: biosSettings.isLite ? "16GB Virtual LPDDR4" : "64GB Virtual LPDDR5" },
-          { label: "Storage", value: biosSettings.isLite ? "64GB SSD Partition" : "256GB Cloud Partition" },
+          { label: "Memory Type", value: edition === 'Lite' ? "16GB Virtual LPDDR4" : edition === 'Standard' ? "32GB Virtual LPDDR5" : "64GB Virtual LPDDR5" },
+          { label: "Storage", value: edition === 'Lite' ? "64GB SSD Partition" : edition === 'Standard' ? "128GB SSD Partition" : "512GB Cloud Partition" },
           { label: "Processor", value: "Nebulabs Quantum-X Threaded Core" },
           { label: "UI Framework", value: "Tailwind v4 Precision Engine" }
         ].map((spec, i) => (
@@ -206,6 +211,7 @@ export const Desktop: React.FC = () => {
   const isSchool = currentUser?.isSchoolAccount;
   const isKid = currentUser?.isKidAccount;
   const isVIP = currentUser?.isVIP || biosSettings.isVIPOverride;
+  const systemEdition = biosSettings.systemEdition || 'Standard';
 
   useEffect(() => {
     setIsClient(true);
@@ -316,7 +322,7 @@ export const Desktop: React.FC = () => {
           break;
         case 't': 
           e.preventDefault();
-          if (!isKid) openApp('terminal', 'Terminal');
+          if (!isKid && biosSettings.systemEdition === 'Pro') openApp('terminal', 'Terminal');
           break;
         case 'a': 
           e.preventDefault();
@@ -358,7 +364,7 @@ export const Desktop: React.FC = () => {
       setContextMenu(null);
       setShortcutContextMenu(null);
     }
-  }, [powerStatus, currentUser, isStartOpen, isWidgetsOpen, isQuickSettingsOpen, isChatOpen, openApp, setIsStartOpen, setIsWidgetsOpen, setIsQuickSettingsOpen, setIsChatOpen, minimizeAllWindows, lock, isKid, shouldRenderBoot, isGrayscale, setGrayscale, isInverted, setInverted, globalScale, setGlobalScale, triggerPowerwash, isNDEEnabled]);
+  }, [powerStatus, currentUser, isStartOpen, isWidgetsOpen, isQuickSettingsOpen, isChatOpen, openApp, setIsStartOpen, setIsWidgetsOpen, setIsQuickSettingsOpen, setIsChatOpen, minimizeAllWindows, lock, isKid, shouldRenderBoot, isGrayscale, setGrayscale, isInverted, setInverted, globalScale, setGlobalScale, triggerPowerwash, isNDEEnabled, biosSettings.systemEdition]);
 
   useEffect(() => {
     window.addEventListener('keydown', handleKeyDown);
@@ -654,6 +660,7 @@ export const Desktop: React.FC = () => {
 
           {currentDisplayId === '1' && desktopApps.map(shortcut => {
             if (isKid && (shortcut.id === 'terminal' || shortcut.id === 'virus')) return null;
+            if (biosSettings.systemEdition === 'Lite' && !['files', 'settings', 'browser', 'notes', 'calc', 'trash', 'info', 'sticky-notes'].includes(shortcut.id)) return null;
 
             const Icon = shortcut.icon;
             const isDragging = draggingAppId === shortcut.id;
@@ -816,11 +823,16 @@ export const Desktop: React.FC = () => {
           <div className="w-24 h-24 bg-white/10 rounded-3xl flex items-center justify-center mb-8 animate-pulse border border-white/20">
             <div className="w-12 h-12 bg-white rounded-full shadow-[0_0_20px_rgba(255,255,255,0.5)]" />
           </div>
-          <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-black tracking-[0.3em] text-white/80 uppercase">Nebula WebOS</h1>
-            {biosSettings.isLite && (
-              <span className="bg-blue-500 text-white text-[8px] font-black uppercase px-2 py-0.5 rounded tracking-widest">LITE</span>
-            )}
+          <div className="flex flex-col items-center gap-2">
+            <div className="flex items-center gap-3">
+              <h1 className="text-2xl font-black tracking-[0.3em] text-white/80 uppercase">Nebula WebOS</h1>
+              <span className={cn(
+                "text-[8px] font-black uppercase px-2 py-0.5 rounded tracking-widest text-white",
+                systemEdition === 'Lite' ? "bg-blue-500" : systemEdition === 'Standard' ? "bg-accent" : "bg-yellow-500 text-black"
+              )}>
+                {systemEdition.toUpperCase()}
+              </span>
+            </div>
           </div>
           {!biosSettings.secureBoot && (
             <p className="text-[10px] text-yellow-400 font-bold uppercase tracking-[0.3em] animate-pulse mt-4">Warning: Secure Boot Disabled</p>

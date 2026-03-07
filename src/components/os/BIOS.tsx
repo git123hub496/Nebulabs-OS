@@ -2,7 +2,7 @@
 "use client"
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { useOS, BIOSSettings as KernelBIOSSettings } from '@/context/os-context';
+import { useOS, BIOSSettings as KernelBIOSSettings, SystemEdition } from '@/context/os-context';
 import { cn } from '@/lib/utils';
 import { ChevronUp, ChevronDown, ChevronLeft, ChevronRight, CornerDownLeft, X } from 'lucide-react';
 
@@ -32,7 +32,7 @@ export const BIOS: React.FC<{ onClose: () => void }> = ({ onClose }) => {
     integratedGfx: biosSettings.integratedGfx,
     acLossPolicy: biosSettings.acLossPolicy || 'Stay Off',
     wakeOnLan: biosSettings.wakeOnLan,
-    isLite: biosSettings.isLite,
+    systemEdition: biosSettings.systemEdition || 'Standard',
     isMidasTouch: biosSettings.isMidasTouch,
     isVIPOverride: biosSettings.isVIPOverride
   });
@@ -93,9 +93,13 @@ export const BIOS: React.FC<{ onClose: () => void }> = ({ onClose }) => {
         if (selectedItem === 1) setSettings(s => ({ ...s, networkStack: !s.networkStack }));
         if (selectedItem === 2) setSettings(s => ({ ...s, virtualization: !s.virtualization }));
         if (selectedItem === 3) setSettings(s => ({ ...s, integratedGfx: !s.integratedGfx }));
-        if (selectedItem === 4) setSettings(s => ({ ...s, isLite: !s.isLite })); 
-        if (selectedItem === 5) setSettings(s => ({ ...s, isMidasTouch: !s.isMidasTouch })); // SECRET GOLD MODE
-        if (selectedItem === 6) setSettings(s => ({ ...s, isVIPOverride: !s.isVIPOverride })); // VIP OVERRIDE
+        if (selectedItem === 4) { // CYCLE EDITIONS
+          const editions: SystemEdition[] = ['Lite', 'Standard', 'Pro'];
+          const idx = (editions.indexOf(settings.systemEdition) + 1) % editions.length;
+          setSettings(s => ({ ...s, systemEdition: editions[idx] }));
+        }
+        if (selectedItem === 5) setSettings(s => ({ ...s, isMidasTouch: !s.isMidasTouch })); 
+        if (selectedItem === 6) setSettings(s => ({ ...s, isVIPOverride: !s.isVIPOverride })); 
         if (selectedItem === 7) setSettings(s => ({ ...s, fastBoot: !s.fastBoot }));
       }
       if (activeSection === 'Power') {
@@ -229,7 +233,7 @@ export const BIOS: React.FC<{ onClose: () => void }> = ({ onClose }) => {
               { label: 'Network Stack', value: settings.networkStack ? '[Enabled]' : '[Disabled]' },
               { label: 'Virtualization Technology', value: settings.virtualization ? '[Enabled]' : '[Disabled]' },
               { label: 'Integrated Graphics Bridge', value: settings.integratedGfx ? '[Enabled]' : '[Disabled]' },
-              { label: 'System Edition', value: settings.isLite ? '[Lite Edition]' : '[Standard Pro]' },
+              { label: 'System Edition', value: `[${settings.systemEdition.toUpperCase()}]` },
               { label: '????', value: settings.isMidasTouch ? '[ACTIVE]' : '[INACTIVE]' },
               { label: 'Kernel VIP Authorization', value: settings.isVIPOverride ? '[AUTHORIZED]' : '[RESTRICTED]' },
               { label: 'Fast Boot Support', value: settings.fastBoot ? '[Enabled]' : '[Disabled]' },
@@ -410,7 +414,7 @@ export const BIOS: React.FC<{ onClose: () => void }> = ({ onClose }) => {
           <div className="text-white font-black mb-4 uppercase tracking-widest border-b border-white/20 pb-2 shrink-0">Item Specific Help</div>
           <div className="leading-relaxed opacity-90 text-[#ccc] flex-1 overflow-y-auto pr-2 custom-scrollbar">
             {activeSection === 'Main' && "Displays general system information. Select 'System Model' to toggle hardware type."}
-            {activeSection === 'Advanced' && "Configure specialized hardware parameters. 'System Edition' toggles performance mode."}
+            {activeSection === 'Advanced' && "Configure specialized hardware parameters. 'System Edition' toggles between LITE, STANDARD, and PRO modes."}
             {activeSection === 'Exit' && "Commit settings to the Nebulabs Virtual CMOS memory and restart."}
           </div>
           

@@ -67,6 +67,7 @@ export type DesktopIconSize = number;
 export type AccentColor = 'default' | 'blue' | 'purple' | 'rose' | 'orange' | 'green' | 'grey' | 'custom' | 'gold';
 export type CursorColor = 'black' | 'white' | 'accent';
 export type CursorShape = 'nebula' | 'windows' | 'macos' | 'custom';
+export type SystemEdition = 'Lite' | 'Standard' | 'Pro';
 
 export interface LocalUser {
   id: string;
@@ -175,7 +176,7 @@ export interface BIOSSettings {
   integratedGfx: boolean;
   acLossPolicy: 'Power On' | 'Stay Off' | 'Last State';
   wakeOnLan: boolean;
-  isLite: boolean;
+  systemEdition: SystemEdition;
   isMidasTouch: boolean;
   isVIPOverride: boolean;
 }
@@ -416,10 +417,12 @@ const INITIAL_DESKTOP: DesktopShortcut[] = [
   { id: 'store', label: 'App Store', icon: ShoppingBag, x: PADDING, y: PADDING + (GRID_Y * 3) },
 ];
 
-const FULL_APPS: AppId[] = ['store', 'files', 'settings', 'assistant', 'notes', 'calc', 'terminal', 'browser', 'trash', 'news', 'maps', 'monitor', 'calendar', 'snake', 'minesweeper', 'update', 'paint', 'info', 'camera', 'slides', 'mail', 'nebula-v', 'google-search', 'shop', 'screencast', 'sticky-notes', 'nde', 'docs', 'go'];
+const PRO_APPS: AppId[] = ['store', 'files', 'settings', 'assistant', 'notes', 'calc', 'terminal', 'browser', 'trash', 'news', 'maps', 'monitor', 'calendar', 'snake', 'minesweeper', 'update', 'paint', 'info', 'camera', 'slides', 'mail', 'nebula-v', 'google-search', 'shop', 'screencast', 'sticky-notes', 'nde', 'docs', 'go', 'virus'];
+const STANDARD_APPS: AppId[] = ['store', 'files', 'settings', 'assistant', 'notes', 'calc', 'browser', 'trash', 'news', 'maps', 'monitor', 'calendar', 'snake', 'minesweeper', 'update', 'paint', 'info', 'camera', 'slides', 'mail', 'google-search', 'shop', 'screencast', 'sticky-notes', 'docs', 'go'];
 const LITE_APPS: AppId[] = ['files', 'settings', 'browser', 'notes', 'calc', 'trash', 'info', 'sticky-notes'];
 
-const FULL_PINNED: AppId[] = ['browser', 'settings', 'mail', 'files', 'sticky-notes'];
+const PRO_PINNED: AppId[] = ['browser', 'terminal', 'mail', 'files', 'nde'];
+const STANDARD_PINNED: AppId[] = ['browser', 'settings', 'mail', 'files', 'sticky-notes'];
 const LITE_PINNED: AppId[] = ['browser', 'settings', 'files'];
 
 const AVATAR_COLORS = ['#9333ea', '#3b82f6', '#e11d48', '#f97316', '#16a34a', '#ec4899', '#06b6d4'];
@@ -517,7 +520,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     integratedGfx: true,
     acLossPolicy: 'Stay Off',
     wakeOnLan: false,
-    isLite: false,
+    systemEdition: 'Standard',
     isMidasTouch: false,
     isVIPOverride: false
   });
@@ -710,16 +713,19 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
     if (savedBios) {
       const parsedBios = JSON.parse(savedBios);
       setBiosSettings(parsedBios);
-      if (parsedBios.isLite) {
+      if (parsedBios.systemEdition === 'Lite') {
         setInstalledApps(LITE_APPS);
         setPinnedApps(LITE_PINNED);
+      } else if (parsedBios.systemEdition === 'Standard') {
+        setInstalledApps(STANDARD_APPS);
+        setPinnedApps(STANDARD_PINNED);
       } else {
-        setInstalledApps(FULL_APPS);
-        setPinnedApps(FULL_PINNED);
+        setInstalledApps(PRO_APPS);
+        setPinnedApps(PRO_PINNED);
       }
     } else {
-      setInstalledApps(FULL_APPS);
-      setPinnedApps(FULL_PINNED);
+      setInstalledApps(STANDARD_APPS);
+      setPinnedApps(STANDARD_PINNED);
     }
     const timer = setTimeout(() => setPowerStatusState('on'), 800);
     return () => clearTimeout(timer);
