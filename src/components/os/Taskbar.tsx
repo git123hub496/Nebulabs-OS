@@ -147,7 +147,7 @@ export const Taskbar: React.FC = () => {
           taskbarPosition === 'top' && "top-0 left-0 right-0 border-b",
           taskbarPosition === 'left' && "left-0 top-0 bottom-0 border-r",
           taskbarPosition === 'right' && "right-0 top-0 bottom-0 border-l",
-          isVertical ? "grid-rows-[auto_1fr_auto] py-2 w-full" : "grid-cols-[1fr_auto_1fr] items-center px-4",
+          isVertical ? "grid-rows-[auto_1fr_auto] py-2 w-full" : "grid-cols-[1fr_auto_1fr] items-center px-2",
           isSchool && "border-blue-500/20",
           isKid && "border-pink-500/20",
           isVIP && "shadow-[0_-4px_20px_rgba(234,179,8,0.1)]"

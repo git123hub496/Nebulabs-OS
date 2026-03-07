@@ -23,7 +23,9 @@ import {
   Sun,
   Smile,
   Home,
-  Pin
+  Pin,
+  Image as ImageIcon,
+  Globe
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
