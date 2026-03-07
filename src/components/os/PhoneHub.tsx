@@ -323,11 +323,11 @@ export const PhoneHub: React.FC = () => {
           </button>
         </div>
 
-        {/* Notch & Top Handle (DRAG HANDLE) */}
+        {/* Notch & Top Handle (DRAG HANDLE) - Narrowed to allow corner clicks */}
         <div 
           className={cn(
-            "absolute top-0 left-0 right-0 h-12 z-[110] flex items-end justify-center group",
-            !isPhoneFullscreen ? "cursor-grab active:cursor-grabbing" : ""
+            "absolute top-0 left-1/2 -translate-x-1/2 w-32 h-12 z-[110] flex items-end justify-center group",
+            !isPhoneFullscreen ? "cursor-grab active:cursor-grabbing" : "pointer-events-none"
           )}
           onMouseDown={handleDragStart}
         >
@@ -338,10 +338,10 @@ export const PhoneHub: React.FC = () => {
           </div>
         </div>
 
-        {/* Status Bar */}
-        <div className="h-10 flex items-center justify-between px-6 z-40 relative">
-          <span className="text-[10px] font-bold text-white/80" onClick={toggleShade}>{time}</span>
-          <div className="flex items-center gap-2 text-white/60">
+        {/* Status Bar - High z-index for clickability */}
+        <div className="h-10 flex items-center justify-between px-6 z-[120] relative pointer-events-none">
+          <span className="text-[10px] font-bold text-white/80 pointer-events-auto cursor-pointer" onClick={toggleShade}>{time}</span>
+          <div className="flex items-center gap-2 text-white/60 pointer-events-auto">
             <button onClick={() => setIsPhoneFullscreen(!isPhoneFullscreen)} className="p-1 hover:text-accent transition-colors">
               {isPhoneFullscreen ? <Minimize2 size={10} /> : <Maximize2 size={10} />}
             </button>

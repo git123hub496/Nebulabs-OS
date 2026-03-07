@@ -1037,8 +1037,26 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   const setIsQuickSettingsOpen = (open: boolean) => { setIsQuickSettingsOpenState(open); if (open) { setIsStartOpenState(false); setIsWidgetsOpenState(false); setIsChatOpenState(false); setIsPhoneHubOpenState(false); playSound('open'); } else { playSound('close'); } };
   const setIsStartOpen = (open: boolean) => { setIsStartOpenState(open); if (open) { setIsQuickSettingsOpenState(false); setIsWidgetsOpenState(false); setIsChatOpenState(false); setIsPhoneHubOpenState(false); playSound('open'); } else { playSound('close'); } };
   const setIsChatOpen = (open: boolean) => { setIsChatOpenState(open); if (open) { setIsStartOpenState(false); setIsQuickSettingsOpenState(false); setIsWidgetsOpenState(false); setIsPhoneHubOpenState(false); playSound('open'); } else { playSound('close'); } };
-  const setIsPhoneHubOpen = (open: boolean) => { setIsPhoneHubOpenState(open); if (open) { setIsStartOpenState(false); setIsQuickSettingsOpenState(false); setIsWidgetsOpenState(false); setIsChatOpenState(false); playSound('open'); } else { playSound('close'); setIsPhoneFullscreenState(false); } };
-  const setIsPhoneFullscreen = (fullscreen: boolean) => { setIsPhoneFullscreenState(fullscreen); if (fullscreen) playSound('open'); else playSound('close'); };
+  
+  const setIsPhoneHubOpen = (open: boolean) => { 
+    setIsPhoneHubOpenState(open); 
+    if (open) { 
+      setIsStartOpenState(false); 
+      setIsQuickSettingsOpenState(false); 
+      setIsWidgetsOpenState(false); 
+      setIsChatOpenState(false); 
+      playSound('open'); 
+    } else { 
+      playSound('close'); 
+      setIsPhoneFullscreenState(false); 
+    } 
+  };
+  
+  const setIsPhoneFullscreen = (fullscreen: boolean) => { 
+    setIsPhoneFullscreenState(fullscreen); 
+    if (fullscreen) playSound('open'); 
+    else playSound('close'); 
+  };
 
   const connectToWifi = (ssid: string) => {
     setIsWifiConnecting(true);

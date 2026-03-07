@@ -624,7 +624,7 @@ export const Desktop: React.FC = () => {
         style={{ opacity: 1 - (brightness / 100) }}
       />
 
-      {(isWidgetsOpen || isQuickSettingsOpen || isStartOpen || isChatOpen || isRunOpen) && (
+      {(isWidgetsOpen || isQuickSettingsOpen || isStartOpen || isChatOpen || isRunOpen) && !isPhoneFullscreen && (
         <div 
           className="absolute inset-0 bg-black/30 backdrop-blur-md z-[9997]" 
           onClick={(e) => {
@@ -719,7 +719,7 @@ export const Desktop: React.FC = () => {
       {/* When in phone fullscreen, only show the phone hub */}
       {isPhoneFullscreen && <PhoneHub />}
 
-      {contextMenu && (
+      {contextMenu && !isPhoneFullscreen && (
         <ContextMenu 
           x={contextMenu.x} 
           y={contextMenu.y} 
@@ -727,7 +727,7 @@ export const Desktop: React.FC = () => {
         />
       )}
 
-      {shortcutContextMenu && (
+      {shortcutContextMenu && !isPhoneFullscreen && (
         <div 
           className="fixed z-[100000] w-56 glass rounded-xl border border-white/10 shadow-2xl backdrop-blur-3xl p-1.5 flex flex-col gap-0.5 animate-in fade-in zoom-in-95 duration-100"
           style={{ left: shortcutContextMenu.x, top: shortcutContextMenu.y }}
@@ -787,7 +787,7 @@ export const Desktop: React.FC = () => {
         </div>
       )}
 
-      {isRunOpen && (
+      {isRunOpen && !isPhoneFullscreen && (
         <div className="fixed top-1/4 left-1/2 -translate-x-1/2 z-[10001] w-[400px] glass p-6 rounded-3xl border border-white/10 shadow-2xl animate-in zoom-in-95 slide-in-from-top-4">
           <div className="flex items-center gap-3 mb-4">
             <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center", isSchool ? "bg-blue-500/20" : isKid ? "bg-pink-500/20" : "bg-accent/20")}>
