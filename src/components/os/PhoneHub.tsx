@@ -36,7 +36,9 @@ import {
   Loader2,
   Triangle,
   Circle,
-  Square
+  Square,
+  Palette,
+  Check
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -44,12 +46,20 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 
-type PhoneView = 'home' | 'chat' | 'settings' | 'gallery' | 'browser' | 'search' | 'health' | 'store' | 'user';
+type PhoneView = 'home' | 'chat' | 'settings' | 'gallery' | 'browser' | 'search' | 'health' | 'store' | 'user' | 'themes';
 
 const CONTACTS = [
   { name: 'Sarah', role: 'Engineering', status: 'online', avatar: 'https://picsum.photos/seed/sarah/100/100' },
   { name: 'Mom', role: 'Family', status: 'away', avatar: 'https://picsum.photos/seed/mom/100/100' },
   { name: 'Admin', role: 'Infrastructure', status: 'online', avatar: 'https://picsum.photos/seed/admin/100/100' },
+];
+
+const PHONE_WALLPAPERS = [
+  { id: 'nebula', name: 'Signature', url: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=600' },
+  { id: 'void', name: 'Deep Void', url: 'https://images.unsplash.com/photo-1635776062127-d379bfcba9f8?auto=format&fit=crop&q=80&w=600' },
+  { id: 'emerald', name: 'Emerald Flux', url: 'https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?auto=format&fit=crop&q=80&w=600' },
+  { id: 'sunset', name: 'Sunset Horizon', url: 'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?auto=format&fit=crop&q=80&w=600' },
+  { id: 'cosmic', name: 'Cosmic Drift', url: 'https://images.unsplash.com/photo-1634017839464-5c339ebe3cb4?auto=format&fit=crop&q=80&w=600' },
 ];
 
 export const PhoneHub: React.FC = () => {
@@ -68,6 +78,7 @@ export const PhoneHub: React.FC = () => {
 
   const [activeView, setActiveView] = useState<PhoneView>('home');
   const [selectedContact, setSelectedContact] = useState(CONTACTS[0]);
+  const [phoneWallpaper, setPhoneWallpaper] = useState(PHONE_WALLPAPERS[0].url);
   const [time, setTime] = useState("");
   const [isShadeOpen, setIsShadeOpen] = useState(false);
   const [isBluetoothOn, setIsBluetoothOn] = useState(true);
@@ -139,6 +150,13 @@ export const PhoneHub: React.FC = () => {
         "w-[280px] h-[580px] rounded-[3rem] border-[10px] bg-[#0a0f14] shadow-2xl relative overflow-hidden pointer-events-auto animate-in slide-in-from-right duration-500",
         isVIP ? "border-yellow-500/40 shadow-yellow-500/20" : "border-white/10"
       )}>
+        {/* Phone Wallpaper Background */}
+        <div 
+          className="absolute inset-0 bg-cover bg-center transition-all duration-1000"
+          style={{ backgroundImage: `url(${phoneWallpaper})` }}
+        />
+        <div className="absolute inset-0 bg-black/30 backdrop-blur-[2px]" />
+
         {/* Pull-down Shade */}
         <div className={cn(
           "absolute inset-x-0 top-0 z-[100] glass backdrop-blur-3xl border-b border-white/10 transition-transform duration-500 ease-in-out p-6 pt-12 flex flex-col gap-6",
@@ -218,7 +236,7 @@ export const PhoneHub: React.FC = () => {
         </div>
 
         {/* Content Area */}
-        <div className="absolute inset-0 pt-10 flex flex-col bg-gradient-to-b from-black/20 to-black/60">
+        <div className="absolute inset-0 pt-10 pb-14 flex flex-col">
           {activeView === 'home' && (
             <div className="flex-1 p-4 animate-in fade-in duration-300">
               {/* Home Screen Widgets */}
@@ -272,7 +290,7 @@ export const PhoneHub: React.FC = () => {
               </div>
 
               {/* Bottom Dock */}
-              <div className="absolute bottom-20 inset-x-4 h-14 bg-white/5 backdrop-blur-xl border border-white/5 rounded-[1.5rem] flex items-center justify-around px-2">
+              <div className="absolute bottom-4 inset-x-4 h-14 bg-white/5 backdrop-blur-xl border border-white/5 rounded-[1.5rem] flex items-center justify-around px-2">
                 <button className="p-2 text-white/40 hover:text-accent"><Phone size={18} /></button>
                 <button className="p-2 text-white/40 hover:text-accent" onClick={() => navigate('browser')}><Globe size={18} /></button>
                 <button className="p-2 text-white/40 hover:text-accent" onClick={() => navigate('chat')}><MessageSquare size={18} /></button>
@@ -282,11 +300,11 @@ export const PhoneHub: React.FC = () => {
           )}
 
           {activeView === 'chat' && (
-            <div className="flex-1 flex flex-col animate-in slide-in-from-right duration-300">
-              <div className="p-3 border-b border-white/5 flex items-center justify-between">
+            <div className="flex-1 flex flex-col bg-black/40 backdrop-blur-md animate-in slide-in-from-right duration-300">
+              <div className="p-3 border-b border-white/5 flex items-center justify-between bg-black/20">
                 <div className="flex items-center gap-2">
                   <button onClick={() => navigate('home')}><ChevronLeft className="text-accent" size={18} /></button>
-                  <h2 className="text-xs font-bold">Nebula Chat</h2>
+                  <h2 className="text-xs font-bold text-white">Nebula Chat</h2>
                 </div>
                 <Avatar className="w-6 h-6 border border-white/10">
                   <AvatarImage src={selectedContact.avatar} />
@@ -294,7 +312,7 @@ export const PhoneHub: React.FC = () => {
                 </Avatar>
               </div>
               
-              <div className="flex gap-2 overflow-x-auto p-2 border-b border-white/5 scrollbar-none">
+              <div className="flex gap-2 overflow-x-auto p-2 border-b border-white/5 scrollbar-none bg-black/10">
                 {CONTACTS.map(c => (
                   <button 
                     key={c.name}
@@ -329,13 +347,13 @@ export const PhoneHub: React.FC = () => {
                 </div>
               </ScrollArea>
 
-              <div className="p-3 border-t border-white/5 bg-black/20">
+              <div className="p-3 border-t border-white/5 bg-black/40">
                 <div className="relative">
                   <Input 
                     value={inputText}
                     onChange={(e) => setInputText(e.target.value)}
                     placeholder="Message..."
-                    className="h-9 bg-white/5 border-white/10 text-[10px] pr-8 focus-visible:ring-accent"
+                    className="h-9 bg-white/5 border-white/10 text-[10px] pr-8 text-white placeholder:text-white/20 focus-visible:ring-accent"
                     onKeyDown={(e) => e.key === 'Enter' && handleSend()}
                   />
                   <button 
@@ -352,7 +370,7 @@ export const PhoneHub: React.FC = () => {
 
           {activeView === 'browser' && (
             <div className="flex-1 flex flex-col animate-in slide-in-from-right duration-300">
-              <div className="p-2 border-b border-white/5 flex items-center gap-2 bg-black/40">
+              <div className="p-2 border-b border-white/5 flex items-center gap-2 bg-black/60">
                 <button onClick={() => navigate('home')}><ChevronLeft size={16} className="text-accent" /></button>
                 <div className="flex-1 bg-white/5 rounded-full px-3 py-1 flex items-center gap-2 border border-white/10 overflow-hidden">
                   <Globe size={10} className="text-white/40" />
@@ -366,10 +384,10 @@ export const PhoneHub: React.FC = () => {
           )}
 
           {activeView === 'search' && (
-            <div className="flex-1 p-4 flex flex-col gap-6 animate-in slide-in-from-right duration-300">
+            <div className="flex-1 p-4 flex flex-col gap-6 animate-in slide-in-from-right duration-300 bg-black/40 backdrop-blur-md">
               <div className="flex items-center gap-2">
                 <button onClick={() => navigate('home')}><ChevronLeft size={18} className="text-accent" /></button>
-                <h2 className="text-xs font-bold">Search</h2>
+                <h2 className="text-xs font-bold text-white">Search</h2>
               </div>
               <form onSubmit={handleSearch} className="space-y-4">
                 <div className="relative">
@@ -379,7 +397,7 @@ export const PhoneHub: React.FC = () => {
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Search anything..." 
-                    className="h-12 pl-10 bg-white/5 border-white/10 rounded-2xl text-xs"
+                    className="h-12 pl-10 bg-white/5 border-white/10 rounded-2xl text-xs text-white"
                   />
                 </div>
                 <div className="space-y-2">
@@ -395,10 +413,10 @@ export const PhoneHub: React.FC = () => {
           )}
 
           {activeView === 'settings' && (
-            <div className="flex-1 flex flex-col animate-in slide-in-from-right duration-300">
-              <div className="p-3 border-b border-white/5 flex items-center gap-2">
+            <div className="flex-1 flex flex-col animate-in slide-in-from-right duration-300 bg-black/40 backdrop-blur-md">
+              <div className="p-3 border-b border-white/5 flex items-center gap-2 bg-black/20">
                 <button onClick={() => navigate('home')}><ChevronLeft className="text-accent" size={18} /></button>
-                <h2 className="text-xs font-bold">Mobile Settings</h2>
+                <h2 className="text-xs font-bold text-white">Mobile Settings</h2>
               </div>
               <ScrollArea className="flex-1">
                 <div className="p-3 space-y-2">
@@ -411,6 +429,18 @@ export const PhoneHub: React.FC = () => {
                       </div>
                     </div>
                   </div>
+                  
+                  <button 
+                    onClick={() => navigate('themes')}
+                    className="w-full p-4 bg-white/5 rounded-2xl border border-white/5 flex items-center justify-between hover:bg-white/10 transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-purple-500/20 flex items-center justify-center text-purple-400"><Palette size={16} /></div>
+                      <p className="text-[10px] font-bold text-white">Wallpaper & Style</p>
+                    </div>
+                    <ChevronRight size={14} className="text-white/20" />
+                  </button>
+
                   <div className="p-4 bg-white/5 rounded-2xl border border-white/5 flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-lg bg-orange-500/20 flex items-center justify-center text-orange-500"><Wifi size={16} /></div>
@@ -423,11 +453,44 @@ export const PhoneHub: React.FC = () => {
             </div>
           )}
 
+          {activeView === 'themes' && (
+            <div className="flex-1 flex flex-col animate-in slide-in-from-right duration-300 bg-black/40 backdrop-blur-md">
+              <div className="p-3 border-b border-white/5 flex items-center gap-2 bg-black/20">
+                <button onClick={() => navigate('settings')}><ChevronLeft className="text-accent" size={18} /></button>
+                <h2 className="text-xs font-bold text-white">Phone Wallpaper</h2>
+              </div>
+              <ScrollArea className="flex-1">
+                <div className="p-4 grid grid-cols-2 gap-4">
+                  {PHONE_WALLPAPERS.map(wp => (
+                    <button 
+                      key={wp.id}
+                      onClick={() => { setPhoneWallpaper(wp.url); playSound('click'); }}
+                      className={cn(
+                        "relative aspect-[9/16] rounded-2xl overflow-hidden border-2 transition-all",
+                        phoneWallpaper === wp.url ? "border-accent scale-105 shadow-xl" : "border-white/5 opacity-60 hover:opacity-100"
+                      )}
+                    >
+                      <img src={wp.url} alt={wp.name} className="w-full h-full object-cover" />
+                      <div className="absolute inset-x-0 bottom-0 p-2 bg-black/60 backdrop-blur-sm">
+                        <p className="text-[8px] font-black uppercase text-white tracking-widest text-center">{wp.name}</p>
+                      </div>
+                      {phoneWallpaper === wp.url && (
+                        <div className="absolute top-2 right-2 w-5 h-5 bg-accent rounded-full flex items-center justify-center shadow-lg">
+                          <Check size={12} className="text-white" />
+                        </div>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </ScrollArea>
+            </div>
+          )}
+
           {activeView === 'gallery' && (
-            <div className="flex-1 flex flex-col animate-in slide-in-from-right duration-300">
-              <div className="p-3 border-b border-white/5 flex items-center gap-2">
+            <div className="flex-1 flex flex-col animate-in slide-in-from-right duration-300 bg-black/40 backdrop-blur-md">
+              <div className="p-3 border-b border-white/5 flex items-center gap-2 bg-black/20">
                 <button onClick={() => navigate('home')}><ChevronLeft className="text-accent" size={18} /></button>
-                <h2 className="text-xs font-bold">Photos</h2>
+                <h2 className="text-xs font-bold text-white">Photos</h2>
               </div>
               <div className="grid grid-cols-3 gap-0.5 p-0.5">
                 {[1,2,3,4,5,6,7,8,9,10,11,12].map(i => (
@@ -440,7 +503,7 @@ export const PhoneHub: React.FC = () => {
           )}
 
           {['health', 'store', 'user'].includes(activeView) && (
-            <div className="flex-1 flex flex-col items-center justify-center p-8 text-center gap-4 animate-in fade-in duration-300">
+            <div className="flex-1 flex flex-col items-center justify-center p-8 text-center gap-4 animate-in fade-in duration-300 bg-black/40 backdrop-blur-md">
               <div className="w-16 h-16 rounded-3xl bg-accent/20 flex items-center justify-center border border-accent/20">
                 {activeView === 'health' && <Heart size={32} className="text-rose-500" />}
                 {activeView === 'store' && <ShoppingBag size={32} className="text-orange-500" />}
@@ -457,36 +520,36 @@ export const PhoneHub: React.FC = () => {
               <Loader2 className="animate-spin text-accent/40" size={24} />
             </div>
           )}
+        </div>
 
-          {/* Navigation Bar (Android Style) - Fixed at the very bottom */}
-          <div className="mt-auto h-14 flex items-center justify-around px-6 z-50 border-t border-white/5 bg-black/40 shrink-0">
-            <button 
-              className="p-2 text-white/40 hover:text-white transition-all active:scale-75" 
-              onClick={() => activeView === 'home' ? closeHub() : navigate('home')}
-              title="Back"
-            >
-              <Triangle size={14} className="-rotate-90 fill-current" />
-            </button>
-            <button 
-              className="p-2 text-white/40 hover:text-white transition-all active:scale-75"
-              onClick={() => navigate('home')}
-              title="Home"
-            >
-              <Circle size={16} className="fill-current" />
-            </button>
-            <button 
-              className="p-2 text-white/40 hover:text-white transition-all active:scale-75"
-              onClick={() => navigate('home')}
-              title="Recents"
-            >
-              <Square size={14} className="fill-current" />
-            </button>
-          </div>
+        {/* Navigation Bar (Android Style) - Fixed at the very bottom */}
+        <div className="absolute bottom-0 inset-x-0 h-14 flex items-center justify-around px-6 z-[120] border-t border-white/5 bg-black/60 backdrop-blur-xl pointer-events-auto">
+          <button 
+            className="p-2 text-white/40 hover:text-white transition-all active:scale-75" 
+            onClick={() => activeView === 'home' ? closeHub() : navigate('home')}
+            title="Back"
+          >
+            <Triangle size={14} className="-rotate-90 fill-current" />
+          </button>
+          <button 
+            className="p-2 text-white/40 hover:text-white transition-all active:scale-75"
+            onClick={() => navigate('home')}
+            title="Home"
+          >
+            <Circle size={16} className="fill-current" />
+          </button>
+          <button 
+            className="p-2 text-white/40 hover:text-white transition-all active:scale-75"
+            onClick={() => navigate('home')}
+            title="Recents"
+          >
+            <Square size={14} className="fill-current" />
+          </button>
         </div>
 
         {/* VIP Gold Trim */}
         {isVIP && (
-          <div className="absolute inset-0 pointer-events-none border-2 border-yellow-500/20 rounded-[2.2rem] z-[120]" />
+          <div className="absolute inset-0 pointer-events-none border-2 border-yellow-500/20 rounded-[2.2rem] z-[130]" />
         )}
       </div>
     </div>
