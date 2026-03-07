@@ -44,7 +44,8 @@ import {
   Activity,
   Flame,
   Star,
-  Download
+  Download,
+  Maximize2
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -93,7 +94,24 @@ export const PhoneHub: React.FC = () => {
   const [browserUrl, setBrowserUrl] = useState("https://www.google.com/search?igu=1");
   const [searchQuery, setSearchQuery] = useState("");
   
+  // DRAG & SCALE STATE
+  const [pos, setPos] = useState({ x: -1, y: -1 });
+  const [dim, setDim] = useState({ w: 280, h: 580 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [isResizing, setIsResizing] = useState(false);
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const [resizeStart, setResizeStart] = useState({ w: 0, h: 0, x: 0, y: 0 });
+
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (pos.x === -1 && typeof window !== 'undefined') {
+      setPos({
+        x: window.innerWidth - 320,
+        y: (window.innerHeight - 580) / 2
+      });
+    }
+  }, [pos.x]);
 
   useEffect(() => {
     const update = () => {
@@ -111,6 +129,39 @@ export const PhoneHub: React.FC = () => {
     }
   }, [chatMessages, activeView]);
 
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (isDragging) {
+        setPos({
+          x: e.clientX - dragOffset.x,
+          y: e.clientY - dragOffset.y
+        });
+      }
+      if (isResizing) {
+        const deltaX = e.clientX - resizeStart.x;
+        const deltaY = e.clientY - resizeStart.y;
+        setDim({
+          w: Math.max(240, Math.min(800, resizeStart.w + deltaX)),
+          h: Math.max(400, Math.min(900, resizeStart.h + deltaY))
+        });
+      }
+    };
+
+    const handleMouseUp = () => {
+      setIsDragging(false);
+      setIsResizing(false);
+    };
+
+    if (isDragging || isResizing) {
+      window.addEventListener('mousemove', handleMouseMove);
+      window.addEventListener('mouseup', handleMouseUp);
+    }
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isDragging, isResizing, dragOffset, resizeStart]);
+
   if (!isPhoneHubOpen) return null;
 
   const isVIP = currentUser?.isVIP || biosSettings.isVIPOverride;
@@ -124,6 +175,27 @@ export const PhoneHub: React.FC = () => {
   const closeHub = () => {
     setIsPhoneHubOpen(false);
     playSound('close');
+  };
+
+  const handleDragStart = (e: React.MouseEvent) => {
+    if ((e.target as HTMLElement).closest('button')) return;
+    setIsDragging(true);
+    setDragOffset({
+      x: e.clientX - pos.x,
+      y: e.clientY - pos.y
+    });
+  };
+
+  const handleResizeStart = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    setIsResizing(true);
+    setResizeStart({
+      w: dim.w,
+      h: dim.h,
+      x: e.clientX,
+      y: e.clientY
+    });
   };
 
   const toggleShade = () => {
@@ -149,13 +221,18 @@ export const PhoneHub: React.FC = () => {
 
   return (
     <div 
-      className="fixed inset-y-0 right-0 w-[400px] z-[9998] flex items-center justify-center p-4 pointer-events-none"
+      className="fixed z-[9998] pointer-events-none flex items-center justify-center"
+      style={{ left: pos.x, top: pos.y }}
       onClick={(e) => e.stopPropagation()}
     >
-      <div className={cn(
-        "w-[280px] h-[min(580px,92vh)] rounded-[3rem] border-[10px] bg-[#0a0f14] shadow-2xl relative overflow-hidden pointer-events-auto animate-in slide-in-from-right duration-500",
-        isVIP ? "border-yellow-500/40 shadow-yellow-500/20" : "border-white/10"
-      )}>
+      <div 
+        className={cn(
+          "rounded-[3rem] border-[10px] bg-[#0a0f14] shadow-2xl relative overflow-hidden pointer-events-auto transition-all",
+          isVIP ? "border-yellow-500/40 shadow-yellow-500/20" : "border-white/10",
+          (isDragging || isResizing) ? "scale-[1.02] cursor-grabbing" : ""
+        )}
+        style={{ width: dim.w, height: dim.h }}
+      >
         {/* Phone Wallpaper Background */}
         <div 
           className="absolute inset-0 bg-cover bg-center transition-all duration-1000"
@@ -219,12 +296,12 @@ export const PhoneHub: React.FC = () => {
           </button>
         </div>
 
-        {/* Notch & Top Handle */}
+        {/* Notch & Top Handle (DRAG HANDLE) */}
         <div 
-          className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-8 z-[110] flex items-end justify-center cursor-pointer group"
-          onClick={toggleShade}
+          className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-10 z-[110] flex items-end justify-center cursor-grab active:cursor-grabbing group"
+          onMouseDown={handleDragStart}
         >
-          <div className="w-24 h-6 bg-black rounded-b-2xl flex items-center justify-center gap-3 px-4 relative">
+          <div className="w-24 h-6 bg-black rounded-b-2xl flex items-center justify-center gap-3 px-4 relative mb-1">
             <div className="w-6 h-1 bg-white/10 rounded-full" />
             <div className="w-1.5 h-1.5 bg-white/10 rounded-full" />
             <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-8 h-1 bg-white/20 rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -255,7 +332,7 @@ export const PhoneHub: React.FC = () => {
                     <p className="text-[10px] font-medium text-white/60">{weatherData ? weatherData.condition : 'Partly Cloudy'}</p>
                   </div>
                   <div className="w-12 h-12 rounded-2xl bg-yellow-500/20 flex items-center justify-center">
-                    <Sun size={24} className="text-yellow-400 animate-pulse" />
+                    <Sun size={24} className="text-yellow-400 animate-spin-slow" />
                   </div>
                 </div>
 
@@ -611,8 +688,8 @@ export const PhoneHub: React.FC = () => {
           )}
         </div>
 
-        {/* Navigation Bar (Android Style) - Fixed at the very bottom */}
-        <div className="absolute bottom-0 inset-x-0 h-14 flex items-center justify-around px-6 z-[120] border-t border-white/5 bg-black/60 backdrop-blur-xl pointer-events-auto">
+        {/* Navigation Bar (Android Style) */}
+        <div className="absolute bottom-0 inset-x-0 h-14 flex items-center justify-around px-6 z-[120] border-t border-white/5 bg-black/60 backdrop-blur-xl">
           <button 
             className="p-2 text-white/40 hover:text-white transition-all active:scale-75" 
             onClick={() => activeView === 'home' ? closeHub() : navigate('home')}
@@ -634,6 +711,14 @@ export const PhoneHub: React.FC = () => {
           >
             <Square size={14} className="fill-current" />
           </button>
+        </div>
+
+        {/* Resize Handle */}
+        <div 
+          className="absolute bottom-0 right-0 w-8 h-8 z-[130] cursor-nwse-resize flex items-end justify-end p-1 hover:text-accent transition-colors"
+          onMouseDown={handleResizeStart}
+        >
+          <Maximize2 size={12} className="rotate-90 opacity-40 hover:opacity-100" />
         </div>
 
         {/* VIP Gold Trim */}
