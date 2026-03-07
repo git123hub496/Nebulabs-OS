@@ -218,7 +218,7 @@ export const PhoneHub: React.FC = () => {
         </div>
 
         {/* Content Area */}
-        <div className="absolute inset-0 pt-10 pb-14 flex flex-col bg-gradient-to-b from-black/20 to-black/60">
+        <div className="absolute inset-0 pt-10 flex flex-col bg-gradient-to-b from-black/20 to-black/60">
           {activeView === 'home' && (
             <div className="flex-1 p-4 animate-in fade-in duration-300">
               {/* Home Screen Widgets */}
@@ -272,7 +272,7 @@ export const PhoneHub: React.FC = () => {
               </div>
 
               {/* Bottom Dock */}
-              <div className="absolute bottom-4 inset-x-4 h-14 bg-white/5 backdrop-blur-xl border border-white/5 rounded-[1.5rem] flex items-center justify-around px-2">
+              <div className="absolute bottom-20 inset-x-4 h-14 bg-white/5 backdrop-blur-xl border border-white/5 rounded-[1.5rem] flex items-center justify-around px-2">
                 <button className="p-2 text-white/40 hover:text-accent"><Phone size={18} /></button>
                 <button className="p-2 text-white/40 hover:text-accent" onClick={() => navigate('browser')}><Globe size={18} /></button>
                 <button className="p-2 text-white/40 hover:text-accent" onClick={() => navigate('chat')}><MessageSquare size={18} /></button>
@@ -457,36 +457,36 @@ export const PhoneHub: React.FC = () => {
               <Loader2 className="animate-spin text-accent/40" size={24} />
             </div>
           )}
-        </div>
 
-        {/* Navigation Bar (Android Style) */}
-        <div className="h-14 flex items-center justify-around px-6 z-50 relative border-t border-white/5 bg-black/40">
-          <button 
-            className="p-2 text-white/40 hover:text-white transition-all active:scale-75" 
-            onClick={() => activeView === 'home' ? closeHub() : navigate('home')}
-            title="Back"
-          >
-            <Triangle size={14} className="-rotate-90 fill-current" />
-          </button>
-          <button 
-            className="p-2 text-white/40 hover:text-white transition-all active:scale-75"
-            onClick={() => navigate('home')}
-            title="Home"
-          >
-            <Circle size={16} className="fill-current" />
-          </button>
-          <button 
-            className="p-2 text-white/40 hover:text-white transition-all active:scale-75"
-            onClick={() => navigate('home')}
-            title="Recents"
-          >
-            <Square size={14} className="fill-current" />
-          </button>
+          {/* Navigation Bar (Android Style) - Fixed at the very bottom */}
+          <div className="mt-auto h-14 flex items-center justify-around px-6 z-50 border-t border-white/5 bg-black/40 shrink-0">
+            <button 
+              className="p-2 text-white/40 hover:text-white transition-all active:scale-75" 
+              onClick={() => activeView === 'home' ? closeHub() : navigate('home')}
+              title="Back"
+            >
+              <Triangle size={14} className="-rotate-90 fill-current" />
+            </button>
+            <button 
+              className="p-2 text-white/40 hover:text-white transition-all active:scale-75"
+              onClick={() => navigate('home')}
+              title="Home"
+            >
+              <Circle size={16} className="fill-current" />
+            </button>
+            <button 
+              className="p-2 text-white/40 hover:text-white transition-all active:scale-75"
+              onClick={() => navigate('home')}
+              title="Recents"
+            >
+              <Square size={14} className="fill-current" />
+            </button>
+          </div>
         </div>
 
         {/* VIP Gold Trim */}
         {isVIP && (
-          <div className="absolute inset-0 pointer-events-none border-2 border-yellow-500/20 rounded-[2.2rem]" />
+          <div className="absolute inset-0 pointer-events-none border-2 border-yellow-500/20 rounded-[2.2rem] z-[120]" />
         )}
       </div>
     </div>
