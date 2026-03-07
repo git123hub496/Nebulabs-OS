@@ -176,7 +176,7 @@ export const Desktop: React.FC = () => {
     powerStatus, powerOn, taskbarPosition, taskbarSize, iconSize, currentUser,
     cursorColor, cursorShape, customCursorUrl, isInverted, setInverted, isGrayscale, setGrayscale, glassEnabled, setGlassEnabled, desktopApps, updateDesktopAppPosition, toggleDesktopApp,
     isWidgetsOpen, setIsWidgetsOpen, isQuickSettingsOpen, setIsQuickSettingsOpen,
-    isStartOpen, setIsStartOpen, isChatOpen, setIsChatOpen, activeWindowId, closeWindow, minimizeAllWindows,
+    isStartOpen, setIsStartOpen, isChatOpen, setIsChatOpen, isPhoneFullscreen, activeWindowId, closeWindow, minimizeAllWindows,
     brightness, currentDisplayId, displayLayout, isSecurityEnabled, addNotification,
     isLocked, lock, biosSettings, pinnedApps, togglePinApp, stickyNotes,
     globalScale, setGlobalScale, factoryReset, mouserScale, isNDEEnabled
@@ -367,6 +367,7 @@ export const Desktop: React.FC = () => {
 
   const handleContextMenu = (e: React.MouseEvent) => {
     e.preventDefault();
+    if (isPhoneFullscreen) return;
     const menuWidth = 224;
     const menuHeight = 250;
     let x = e.clientX;
@@ -382,6 +383,7 @@ export const Desktop: React.FC = () => {
   const handleShortcutContextMenu = (e: React.MouseEvent, appId: AppId) => {
     e.preventDefault();
     e.stopPropagation();
+    if (isPhoneFullscreen) return;
     const menuWidth = 224;
     const menuHeight = 200;
     let x = e.clientX;
@@ -404,6 +406,7 @@ export const Desktop: React.FC = () => {
   };
 
   const handleMouseDown = (e: React.MouseEvent, appId: AppId) => {
+    if (isPhoneFullscreen) return;
     if ((e.target as HTMLElement).closest('.delete-shortcut-btn')) return;
     
     setContextMenu(null);
@@ -596,7 +599,8 @@ export const Desktop: React.FC = () => {
         powerStatus === 'booting' ? "opacity-0" : "opacity-100"
       )}
       style={{
-        backgroundImage: `url(${wallpaper})`,
+        backgroundImage: isPhoneFullscreen ? 'none' : `url(${wallpaper})`,
+        backgroundColor: isPhoneFullscreen ? '#000' : 'transparent',
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         zoom: globalScale,
@@ -634,79 +638,86 @@ export const Desktop: React.FC = () => {
         />
       )}
 
-      {!isSchool && !isKid && !isMobile && <WidgetsPanel />}
-      
-      <GlobalSearch />
+      {!isPhoneFullscreen && (
+        <>
+          {!isSchool && !isKid && !isMobile && <WidgetsPanel />}
+          
+          <GlobalSearch />
 
-      <ChatBar />
+          <ChatBar />
 
-      <PhoneHub />
+          <PhoneHub />
 
-      {stickyNotes.map(note => (
-        <StickyNote key={note.id} note={note} />
-      ))}
+          {stickyNotes.map(note => (
+            <StickyNote key={note.id} note={note} />
+          ))}
 
-      {currentDisplayId === '1' && desktopApps.map(shortcut => {
-        if (isKid && (shortcut.id === 'terminal' || shortcut.id === 'virus')) return null;
+          {currentDisplayId === '1' && desktopApps.map(shortcut => {
+            if (isKid && (shortcut.id === 'terminal' || shortcut.id === 'virus')) return null;
 
-        const Icon = shortcut.icon;
-        const isDragging = draggingAppId === shortcut.id;
-        
-        return (
-          <div 
-            key={shortcut.id}
-            className={cn(
-              "absolute flex flex-col items-center gap-1 p-2 rounded-lg hover:bg-white/10 transition-all cursor-pointer text-center",
-              isDragging ? "z-50 opacity-50 pointer-events-none transition-none" : "duration-200"
-            )}
-            style={{ 
-              left: (isDragging ? currentDragPos.x : shortcut.x) + getShortcutOffset(), 
-              top: (isDragging ? currentDragPos.y : shortcut.y) + getShortcutTopOffset(),
-              width: `${scaledContainerWidth}px`,
-            }}
-            onMouseDown={(e) => handleMouseDown(e, shortcut.id)}
-            onDoubleClick={(e) => {
-              e.stopPropagation();
-              openApp(shortcut.id, shortcut.label);
-            }}
-            onContextMenu={(e) => handleShortcutContextMenu(e, shortcut.id)}
-          >
-            <div 
-              className={cn("glass rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform mb-1 shadow-lg border-white/20 relative", isSchool && "border-blue-500/20 shadow-blue-500/10", isKid && "border-pink-500/20 shadow-pink-500/10", isVIP && "border-yellow-500 shadow-yellow-500/20")}
-              style={{ width: `${scaledIconBoxSize}px`, height: `${scaledIconBoxSize}px` }}
-            >
-              <Icon size={scaledIconSize} className={isSchool ? "text-blue-400" : isKid ? "text-pink-400" : isVIP ? "text-yellow-500" : "text-accent"} />
-              
-              {shortcut.id !== 'trash' && shortcut.id !== 'files' && shortcut.id !== 'store' && !isSchool && !isKid && (
-                <button 
-                  className="delete-shortcut-btn absolute -top-1.5 -right-1.5 bg-red-500 text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100 hover:scale-110 transition-all z-10 border-2 border-white shadow-md flex items-center justify-center"
-                  onMouseDown={(e) => e.stopPropagation()} 
-                  onClick={(e) => { 
-                    e.stopPropagation(); 
-                    toggleDesktopApp(shortcut.id); 
-                  }}
+            const Icon = shortcut.icon;
+            const isDragging = draggingAppId === shortcut.id;
+            
+            return (
+              <div 
+                key={shortcut.id}
+                className={cn(
+                  "absolute flex flex-col items-center gap-1 p-2 rounded-lg hover:bg-white/10 transition-all cursor-pointer text-center",
+                  isDragging ? "z-50 opacity-50 pointer-events-none transition-none" : "duration-200"
+                )}
+                style={{ 
+                  left: (isDragging ? currentDragPos.x : shortcut.x) + getShortcutOffset(), 
+                  top: (isDragging ? currentDragPos.y : shortcut.y) + getShortcutTopOffset(),
+                  width: `${scaledContainerWidth}px`,
+                }}
+                onMouseDown={(e) => handleMouseDown(e, shortcut.id)}
+                onDoubleClick={(e) => {
+                  e.stopPropagation();
+                  openApp(shortcut.id, shortcut.label);
+                }}
+                onContextMenu={(e) => handleShortcutContextMenu(e, shortcut.id)}
+              >
+                <div 
+                  className={cn("glass rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform mb-1 shadow-lg border-white/20 relative", isSchool && "border-blue-500/20 shadow-blue-500/10", isKid && "border-pink-500/20 shadow-pink-500/10", isVIP && "border-yellow-500 shadow-yellow-500/20")}
+                  style={{ width: `${scaledIconBoxSize}px`, height: `${scaledIconBoxSize}px` }}
                 >
-                  <Trash2 size={10} strokeWidth={3} />
-                </button>
-              )}
-            </div>
-            <span 
-              className={cn("text-white font-bold drop-shadow-md text-center line-clamp-2 px-1", isVIP && "text-yellow-400")}
-              style={{ fontSize: `${scaledFontSize}px` }}
-            >
-              {shortcut.label}
-            </span>
-          </div>
-        );
-      })}
+                  <Icon size={scaledIconSize} className={isSchool ? "text-blue-400" : isKid ? "text-pink-400" : isVIP ? "text-yellow-500" : "text-accent"} />
+                  
+                  {shortcut.id !== 'trash' && shortcut.id !== 'files' && shortcut.id !== 'store' && !isSchool && !isKid && (
+                    <button 
+                      className="delete-shortcut-btn absolute -top-1.5 -right-1.5 bg-red-500 text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100 hover:scale-110 transition-all z-10 border-2 border-white shadow-md flex items-center justify-center"
+                      onMouseDown={(e) => e.stopPropagation()} 
+                      onClick={(e) => { 
+                        e.stopPropagation(); 
+                        toggleDesktopApp(shortcut.id); 
+                      }}
+                    >
+                      <Trash2 size={10} strokeWidth={3} />
+                    </button>
+                  )}
+                </div>
+                <span 
+                  className={cn("text-white font-bold drop-shadow-md text-center line-clamp-2 px-1", isVIP && "text-yellow-400")}
+                  style={{ fontSize: `${scaledFontSize}px` }}
+                >
+                  {shortcut.label}
+                </span>
+              </div>
+            );
+          })}
 
-      {openWindows.filter(w => (w.displayId || '1') === currentDisplayId).map(window => (
-        <Window key={window.id} window={window}>
-          {APP_COMPONENTS[window.appId] ? APP_COMPONENTS[window.appId](window) : <div className="p-8 text-center">Component Missing: {window.appId}</div>}
-        </Window>
-      ))}
+          {openWindows.filter(w => (w.displayId || '1') === currentDisplayId).map(window => (
+            <Window key={window.id} window={window}>
+              {APP_COMPONENTS[window.appId] ? APP_COMPONENTS[window.appId](window) : <div className="p-8 text-center">Component Missing: {window.appId}</div>}
+            </Window>
+          ))}
 
-      <Taskbar />
+          <Taskbar />
+        </>
+      )}
+
+      {/* When in phone fullscreen, only show the phone hub */}
+      {isPhoneFullscreen && <PhoneHub />}
 
       {contextMenu && (
         <ContextMenu 
@@ -825,7 +836,7 @@ export const Desktop: React.FC = () => {
         </div>
       )}
 
-      {isMobile && powerStatus === 'on' && !shouldRenderBoot && currentUser && (
+      {isMobile && powerStatus === 'on' && !shouldRenderBoot && currentUser && !isPhoneFullscreen && (
         <div className="fixed bottom-16 left-4 z-[9996] animate-in slide-in-from-left-4 duration-500">
           <div className="bg-accent/20 backdrop-blur-xl border border-accent/40 rounded-full px-3 py-1 flex items-center gap-2 shadow-lg shadow-accent/10">
             <Smartphone size={12} className="text-accent" />

@@ -43,7 +43,14 @@ import {
   Flame,
   Star,
   Download,
-  Maximize2
+  Maximize2,
+  Minimize2,
+  CreditCard,
+  Wallet,
+  Scan,
+  History,
+  ArrowUpRight,
+  Fingerprint
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -51,7 +58,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 
-type PhoneView = 'home' | 'chat' | 'settings' | 'gallery' | 'browser' | 'search' | 'health' | 'store' | 'user' | 'themes';
+type PhoneView = 'home' | 'chat' | 'settings' | 'gallery' | 'browser' | 'search' | 'health' | 'store' | 'user' | 'themes' | 'pay';
 
 const CONTACTS = [
   { name: 'Sarah', role: 'Engineering', status: 'online', avatar: 'https://picsum.photos/seed/sarah/100/100' },
@@ -71,6 +78,8 @@ export const PhoneHub: React.FC = () => {
   const { 
     isPhoneHubOpen, 
     setIsPhoneHubOpen, 
+    isPhoneFullscreen,
+    setIsPhoneFullscreen,
     currentUser, 
     biosSettings, 
     playSound, 
@@ -78,7 +87,8 @@ export const PhoneHub: React.FC = () => {
     locationName, 
     chatMessages, 
     sendChatMessage,
-    isOnline 
+    isOnline,
+    addNotification
   } = useOS();
 
   const [activeView, setActiveView] = useState<PhoneView>('home');
@@ -91,6 +101,7 @@ export const PhoneHub: React.FC = () => {
   const [inputText, setInputText] = useState("");
   const [browserUrl, setBrowserUrl] = useState("https://www.google.com/search?igu=1");
   const [searchQuery, setSearchQuery] = useState("");
+  const [isPaying, setIsPaying] = useState(false);
   
   // DRAG & SCALE STATE
   const [pos, setPos] = useState({ x: -1, y: -1 });
@@ -129,13 +140,13 @@ export const PhoneHub: React.FC = () => {
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
-      if (isDragging) {
+      if (isDragging && !isPhoneFullscreen) {
         setPos({
           x: e.clientX - dragOffset.x,
           y: e.clientY - dragOffset.y
         });
       }
-      if (isResizing) {
+      if (isResizing && !isPhoneFullscreen) {
         const deltaX = e.clientX - resizeStart.x;
         const deltaY = e.clientY - resizeStart.y;
         setDim({
@@ -158,7 +169,7 @@ export const PhoneHub: React.FC = () => {
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleMouseUp);
     };
-  }, [isDragging, isResizing, dragOffset, resizeStart]);
+  }, [isDragging, isResizing, dragOffset, resizeStart, isPhoneFullscreen]);
 
   if (!isPhoneHubOpen) return null;
 
@@ -172,10 +183,12 @@ export const PhoneHub: React.FC = () => {
 
   const closeHub = () => {
     setIsPhoneHubOpen(false);
+    setIsPhoneFullscreen(false);
     playSound('close');
   };
 
   const handleDragStart = (e: React.MouseEvent) => {
+    if (isPhoneFullscreen) return;
     if ((e.target as HTMLElement).closest('button') || (e.target as HTMLElement).closest('input')) return;
     setIsDragging(true);
     setDragOffset({
@@ -185,6 +198,7 @@ export const PhoneHub: React.FC = () => {
   };
 
   const handleResizeStart = (e: React.MouseEvent) => {
+    if (isPhoneFullscreen) return;
     e.stopPropagation();
     e.preventDefault();
     setIsResizing(true);
@@ -217,10 +231,22 @@ export const PhoneHub: React.FC = () => {
     }
   };
 
+  const handlePay = () => {
+    setIsPaying(true);
+    playSound('notify');
+    setTimeout(() => {
+      setIsPaying(false);
+      addNotification("Nebula Pay", "Secure transaction successful. +50XP Identity Score.", "app");
+    }, 2500);
+  };
+
   return (
     <div 
-      className="fixed z-[9998] pointer-events-none"
-      style={{ left: pos.x, top: pos.y }}
+      className={cn(
+        "fixed z-[9998] pointer-events-none transition-all duration-500",
+        isPhoneFullscreen ? "left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 scale-110" : ""
+      )}
+      style={!isPhoneFullscreen ? { left: pos.x, top: pos.y } : {}}
       onClick={(e) => e.stopPropagation()}
     >
       <div 
@@ -229,7 +255,10 @@ export const PhoneHub: React.FC = () => {
           isVIP ? "border-yellow-500/40 shadow-yellow-500/20" : "border-white/10",
           (isDragging || isResizing) ? "scale-[1.02] cursor-grabbing" : ""
         )}
-        style={{ width: dim.w, height: dim.h }}
+        style={{ 
+          width: isPhoneFullscreen ? 320 : dim.w, 
+          height: isPhoneFullscreen ? 650 : dim.h 
+        }}
       >
         {/* Phone Wallpaper Background */}
         <div 
@@ -296,7 +325,10 @@ export const PhoneHub: React.FC = () => {
 
         {/* Notch & Top Handle (DRAG HANDLE) */}
         <div 
-          className="absolute top-0 left-0 right-0 h-12 z-[110] flex items-end justify-center cursor-grab active:cursor-grabbing group"
+          className={cn(
+            "absolute top-0 left-0 right-0 h-12 z-[110] flex items-end justify-center group",
+            !isPhoneFullscreen ? "cursor-grab active:cursor-grabbing" : ""
+          )}
           onMouseDown={handleDragStart}
         >
           <div className="w-24 h-6 bg-black rounded-b-2xl flex items-center justify-center gap-3 px-4 relative mb-1">
@@ -308,10 +340,12 @@ export const PhoneHub: React.FC = () => {
 
         {/* Status Bar */}
         <div className="h-10 flex items-center justify-between px-6 z-40 relative">
-          <span className="text-[10px] font-bold text-white/80">{time}</span>
+          <span className="text-[10px] font-bold text-white/80" onClick={toggleShade}>{time}</span>
           <div className="flex items-center gap-2 text-white/60">
+            <button onClick={() => setIsPhoneFullscreen(!isPhoneFullscreen)} className="p-1 hover:text-accent transition-colors">
+              {isPhoneFullscreen ? <Minimize2 size={10} /> : <Maximize2 size={10} />}
+            </button>
             <Wifi size={10} className={isOnline ? "text-white/60" : "text-destructive"} />
-            <span className="text-[8px] font-bold">5G</span>
             <BatteryMedium size={12} />
           </div>
         </div>
@@ -322,7 +356,6 @@ export const PhoneHub: React.FC = () => {
             <div className="flex-1 p-4 animate-in fade-in duration-300 flex flex-col">
               {/* Home Screen Widgets */}
               <div className="space-y-4 mb-6">
-                {/* Weather Widget */}
                 <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-[2rem] p-4 flex items-center justify-between group cursor-pointer hover:bg-white/10 transition-colors">
                   <div>
                     <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest">{locationName}</p>
@@ -334,7 +367,6 @@ export const PhoneHub: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Search Widget */}
                 <form onSubmit={handleSearch} className="relative group">
                   <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-accent transition-colors" size={16} />
                   <input 
@@ -345,13 +377,15 @@ export const PhoneHub: React.FC = () => {
                   />
                 </form>
 
-                {/* Clock & Activity Widget */}
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-[2rem] p-4 flex flex-col gap-2">
-                    <Clock size={16} className="text-accent" />
+                  <div 
+                    className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-[2rem] p-4 flex flex-col gap-2 cursor-pointer hover:bg-white/10"
+                    onClick={() => navigate('pay')}
+                  >
+                    <Wallet size={16} className="text-accent" />
                     <div>
-                      <p className="text-[8px] font-bold text-white/40 uppercase">Sync Status</p>
-                      <p className="text-[10px] font-bold text-white">Active Node</p>
+                      <p className="text-[8px] font-bold text-white/40 uppercase">Nebula Pay</p>
+                      <p className="text-[10px] font-bold text-white">Active Link</p>
                     </div>
                   </div>
                   <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-[2rem] p-4 flex flex-col gap-2">
@@ -367,13 +401,13 @@ export const PhoneHub: React.FC = () => {
               <div className="grid grid-cols-4 gap-4">
                 {[
                   { id: 'chat', label: 'Messages', icon: MessageSquare, color: 'bg-green-500' },
+                  { id: 'pay', label: 'Nebula Pay', icon: CreditCard, color: 'bg-indigo-600' },
                   { id: 'gallery', label: 'Photos', icon: ImageIcon, color: 'bg-blue-500' },
                   { id: 'settings', label: 'Settings', icon: Settings, color: 'bg-gray-500' },
                   { id: 'browser', label: 'Browser', icon: Globe, color: 'bg-blue-600' },
                   { id: 'search', label: 'Search', icon: Search, color: 'bg-blue-400' },
                   { id: 'health', label: 'Health', icon: Heart, color: 'bg-rose-500' },
                   { id: 'store', label: 'Store', icon: ShoppingBag, color: 'bg-orange-500' },
-                  { id: 'user', label: 'Hub', icon: User, color: 'bg-purple-500' },
                 ].map((app) => (
                   <button 
                     key={app.id} 
@@ -388,12 +422,90 @@ export const PhoneHub: React.FC = () => {
                 ))}
               </div>
 
-              {/* Bottom Dock */}
               <div className="mt-auto h-14 bg-white/5 backdrop-blur-xl border border-white/5 rounded-[1.5rem] flex items-center justify-around px-2 mb-2">
                 <button className="p-2 text-white/40 hover:text-accent"><Phone size={18} /></button>
                 <button className="p-2 text-white/40 hover:text-accent" onClick={() => navigate('browser')}><Globe size={18} /></button>
                 <button className="p-2 text-white/40 hover:text-accent" onClick={() => navigate('chat')}><MessageSquare size={18} /></button>
                 <button className="p-2 text-white/40 hover:text-accent"><LayoutGrid size={18} /></button>
+              </div>
+            </div>
+          )}
+
+          {activeView === 'pay' && (
+            <div className="flex-1 flex flex-col bg-[#0a0f14] animate-in slide-in-from-right duration-300">
+              <div className="p-4 flex items-center gap-2 bg-black/40 border-b border-white/5">
+                <button onClick={() => navigate('home')}><ChevronLeft className="text-accent" size={20} /></button>
+                <h2 className="text-xs font-black uppercase tracking-widest text-white">Nebula Pay</h2>
+              </div>
+              
+              <ScrollArea className="flex-1 p-4">
+                <div className="space-y-6">
+                  {/* Virtual Card */}
+                  <div className={cn(
+                    "relative aspect-[1.6/1] w-full rounded-2xl p-6 flex flex-col justify-between overflow-hidden shadow-2xl transition-all duration-500",
+                    isVIP ? "bg-gradient-to-br from-yellow-400 via-yellow-600 to-yellow-900" : "bg-gradient-to-br from-indigo-600 via-purple-600 to-accent"
+                  )}>
+                    <div className="absolute inset-0 opacity-20 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 20% 20%, rgba(255,255,255,0.4) 0%, transparent 50%)' }} />
+                    <div className="flex justify-between items-start relative z-10">
+                      <div className="w-10 h-8 bg-white/20 backdrop-blur-md rounded-md border border-white/10" />
+                      <div className="text-right">
+                        <p className="text-[8px] font-black uppercase text-white/60 tracking-widest">Quantum Elite</p>
+                        <ShieldCheck size={16} className="text-white ml-auto mt-1" />
+                      </div>
+                    </div>
+                    <div className="relative z-10">
+                      <p className="text-xs font-mono text-white tracking-[0.2em] mb-1">**** **** **** 9021</p>
+                      <p className="text-[10px] font-bold text-white uppercase">{currentUser?.username || 'GUEST USER'}</p>
+                    </div>
+                  </div>
+
+                  <div className="text-center space-y-1">
+                    <p className="text-[9px] font-bold text-white/40 uppercase tracking-[0.2em]">Available Identity Score</p>
+                    <h3 className="text-3xl font-black text-white tracking-tighter">14,250.00 <span className="text-xs text-accent">QC</span></h3>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <Button 
+                      onClick={handlePay}
+                      disabled={isPaying}
+                      className="bg-accent text-primary-foreground font-black uppercase text-[9px] h-12 rounded-xl gap-2 shadow-lg shadow-accent/20"
+                    >
+                      {isPaying ? <Loader2 size={14} className="animate-spin" /> : <Scan size={14} />}
+                      Tap to Pay
+                    </Button>
+                    <Button variant="outline" className="border-white/10 h-12 rounded-xl text-[9px] font-black uppercase gap-2">
+                      <History size={14} /> History
+                    </Button>
+                  </div>
+
+                  <div className="space-y-3">
+                    <p className="text-[9px] font-black text-white/20 uppercase tracking-widest">Recent Activity</p>
+                    {[
+                      { label: 'Nebula App Store', amt: '-45.00 QC', time: '2h ago', icon: ShoppingBag },
+                      { label: 'Cloud Workstation', amt: '+120.00 QC', time: 'Yesterday', icon: Zap },
+                      { label: 'Quantum Coffee', amt: '-12.50 QC', time: 'Yesterday', icon: Heart },
+                    ].map((item, i) => (
+                      <div key={i} className="flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/5 hover:bg-white/10 transition-colors">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-white/40"><item.icon size={14} /></div>
+                          <div>
+                            <p className="text-[10px] font-bold text-white">{item.label}</p>
+                            <p className="text-[8px] text-white/20">{item.time}</p>
+                          </div>
+                        </div>
+                        <span className={cn("text-[10px] font-mono", item.amt.startsWith('+') ? "text-green-500" : "text-white")}>{item.amt}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </ScrollArea>
+
+              <div className="p-4 bg-accent/5 border-t border-white/5 text-center">
+                <div className="flex items-center justify-center gap-2 mb-1">
+                  <Fingerprint size={12} className="text-accent" />
+                  <span className="text-[8px] font-black text-accent uppercase tracking-widest">Identity Secured</span>
+                </div>
+                <p className="text-[7px] text-white/20 uppercase font-medium">Nebulabs Financial Distributed Node v1.0</p>
               </div>
             </div>
           )}
@@ -730,12 +842,14 @@ export const PhoneHub: React.FC = () => {
         </div>
 
         {/* Resize Handle */}
-        <div 
-          className="absolute bottom-0 right-0 w-8 h-8 z-[130] cursor-nwse-resize flex items-end justify-end p-1 hover:text-accent transition-colors"
-          onMouseDown={handleResizeStart}
-        >
-          <Maximize2 size={12} className="rotate-90 opacity-40 hover:opacity-100" />
-        </div>
+        {!isPhoneFullscreen && (
+          <div 
+            className="absolute bottom-0 right-0 w-8 h-8 z-[130] cursor-nwse-resize flex items-end justify-end p-1 hover:text-accent transition-colors"
+            onMouseDown={handleResizeStart}
+          >
+            <Maximize2 size={12} className="rotate-90 opacity-40 hover:opacity-100" />
+          </div>
+        )}
 
         {/* VIP Gold Trim */}
         {isVIP && (
