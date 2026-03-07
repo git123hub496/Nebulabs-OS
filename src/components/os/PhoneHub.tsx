@@ -251,7 +251,7 @@ export const PhoneHub: React.FC = () => {
     >
       <div 
         className={cn(
-          "rounded-[3rem] border-[10px] bg-[#0a0f14] shadow-2xl relative overflow-hidden pointer-events-auto transition-all",
+          "rounded-[3.5rem] border-[10px] bg-[#0a0f14] shadow-2xl relative overflow-hidden pointer-events-auto transition-all",
           isVIP ? "border-yellow-500/40 shadow-yellow-500/20" : "border-white/10",
           (isDragging || isResizing) ? "scale-[1.02] cursor-grabbing" : ""
         )}
@@ -326,32 +326,31 @@ export const PhoneHub: React.FC = () => {
         {/* Notch & Top Handle (DRAG HANDLE) - Narrowed to allow corner clicks */}
         <div 
           className={cn(
-            "absolute top-0 left-1/2 -translate-x-1/2 w-32 h-12 z-[110] flex items-end justify-center group",
+            "absolute top-0 left-1/2 -translate-x-1/2 w-24 h-10 z-[110] flex items-end justify-center group",
             !isPhoneFullscreen ? "cursor-grab active:cursor-grabbing" : "pointer-events-none"
           )}
           onMouseDown={handleDragStart}
         >
-          <div className="w-24 h-6 bg-black rounded-b-2xl flex items-center justify-center gap-3 px-4 relative mb-1">
-            <div className="w-6 h-1 bg-white/10 rounded-full" />
+          <div className="w-20 h-5 bg-black rounded-b-2xl flex items-center justify-center gap-3 px-4 relative mb-1 shadow-xl">
+            <div className="w-5 h-1 bg-white/10 rounded-full" />
             <div className="w-1.5 h-1.5 bg-white/10 rounded-full" />
-            <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-8 h-1 bg-white/20 rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
           </div>
         </div>
 
-        {/* Status Bar - High z-index for clickability */}
-        <div className="h-10 flex items-center justify-between px-6 z-[120] relative pointer-events-none">
-          <span className="text-[10px] font-bold text-white/80 pointer-events-auto cursor-pointer" onClick={toggleShade}>{time}</span>
-          <div className="flex items-center gap-2 text-white/60 pointer-events-auto">
+        {/* Status Bar - Calibrated Padding for Rounded Corners */}
+        <div className="h-12 flex items-end justify-between px-8 pb-1 z-[120] relative pointer-events-none">
+          <span className="text-[10px] font-black text-white/90 pointer-events-auto cursor-pointer drop-shadow-md" onClick={toggleShade}>{time}</span>
+          <div className="flex items-center gap-2.5 text-white/70 pointer-events-auto">
             <button onClick={() => setIsPhoneFullscreen(!isPhoneFullscreen)} className="p-1 hover:text-accent transition-colors">
-              {isPhoneFullscreen ? <Minimize2 size={10} /> : <Maximize2 size={10} />}
+              {isPhoneFullscreen ? <Minimize2 size={11} /> : <Maximize2 size={11} />}
             </button>
-            <Wifi size={10} className={isOnline ? "text-white/60" : "text-destructive"} />
-            <BatteryMedium size={12} />
+            <Wifi size={11} className={isOnline ? "text-white/70" : "text-destructive"} />
+            <BatteryMedium size={13} />
           </div>
         </div>
 
         {/* Content Area */}
-        <div className="absolute inset-0 pt-10 pb-14 flex flex-col">
+        <div className="absolute inset-0 pt-12 pb-16 flex flex-col">
           {activeView === 'home' && (
             <div className="flex-1 p-4 animate-in fade-in duration-300 flex flex-col">
               {/* Home Screen Widgets */}
@@ -398,7 +397,7 @@ export const PhoneHub: React.FC = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-4 gap-4">
+              <div className="grid grid-cols-4 gap-4 px-2">
                 {[
                   { id: 'chat', label: 'Messages', icon: MessageSquare, color: 'bg-green-500' },
                   { id: 'pay', label: 'Nebula Pay', icon: CreditCard, color: 'bg-indigo-600' },
@@ -816,24 +815,24 @@ export const PhoneHub: React.FC = () => {
           )}
         </div>
 
-        {/* Navigation Bar (Android Style) */}
-        <div className="absolute bottom-0 inset-x-0 h-14 flex items-center justify-around px-6 z-[120] border-t border-white/5 bg-black/60 backdrop-blur-xl">
+        {/* Navigation Bar (Android Style) - Pin to absolute bottom with corner padding */}
+        <div className="absolute bottom-0 inset-x-0 h-16 flex items-center justify-around px-8 z-[120] bg-black/60 backdrop-blur-2xl border-t border-white/5">
           <button 
-            className="p-2 text-white/40 hover:text-white transition-all active:scale-75" 
+            className="p-3 text-white/40 hover:text-white transition-all active:scale-75" 
             onClick={() => activeView === 'home' ? closeHub() : navigate('home')}
             title="Back"
           >
             <Triangle size={14} className="-rotate-90 fill-current" />
           </button>
           <button 
-            className="p-2 text-white/40 hover:text-white transition-all active:scale-75"
+            className="p-3 text-white/40 hover:text-white transition-all active:scale-75"
             onClick={() => navigate('home')}
             title="Home"
           >
             <Circle size={16} className="fill-current" />
           </button>
           <button 
-            className="p-2 text-white/40 hover:text-white transition-all active:scale-75"
+            className="p-3 text-white/40 hover:text-white transition-all active:scale-75"
             onClick={() => navigate('home')}
             title="Recents"
           >
@@ -844,7 +843,7 @@ export const PhoneHub: React.FC = () => {
         {/* Resize Handle */}
         {!isPhoneFullscreen && (
           <div 
-            className="absolute bottom-0 right-0 w-8 h-8 z-[130] cursor-nwse-resize flex items-end justify-end p-1 hover:text-accent transition-colors"
+            className="absolute bottom-0 right-0 w-10 h-10 z-[130] cursor-nwse-resize flex items-end justify-end p-2 hover:text-accent transition-colors"
             onMouseDown={handleResizeStart}
           >
             <Maximize2 size={12} className="rotate-90 opacity-40 hover:opacity-100" />
@@ -853,7 +852,7 @@ export const PhoneHub: React.FC = () => {
 
         {/* VIP Gold Trim */}
         {isVIP && (
-          <div className="absolute inset-0 pointer-events-none border-2 border-yellow-500/20 rounded-[2.2rem] z-[130]" />
+          <div className="absolute inset-0 pointer-events-none border-2 border-yellow-500/20 rounded-[2.8rem] z-[130]" />
         )}
       </div>
     </div>
