@@ -176,7 +176,7 @@ export const PhoneHub: React.FC = () => {
   };
 
   const handleDragStart = (e: React.MouseEvent) => {
-    if ((e.target as HTMLElement).closest('button')) return;
+    if ((e.target as HTMLElement).closest('button') || (e.target as HTMLElement).closest('input')) return;
     setIsDragging(true);
     setDragOffset({
       x: e.clientX - pos.x,
@@ -319,7 +319,7 @@ export const PhoneHub: React.FC = () => {
         {/* Content Area */}
         <div className="absolute inset-0 pt-10 pb-14 flex flex-col">
           {activeView === 'home' && (
-            <div className="flex-1 p-4 animate-in fade-in duration-300">
+            <div className="flex-1 p-4 animate-in fade-in duration-300 flex flex-col">
               {/* Home Screen Widgets */}
               <div className="space-y-4 mb-6">
                 {/* Weather Widget */}
@@ -334,14 +334,32 @@ export const PhoneHub: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Clock Widget */}
-                <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-[2rem] p-4 flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-2xl bg-accent/20 flex items-center justify-center text-accent">
-                    <Clock size={20} />
+                {/* Search Widget */}
+                <form onSubmit={handleSearch} className="relative group">
+                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-accent transition-colors" size={16} />
+                  <input 
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search anything..."
+                    className="w-full bg-white/5 backdrop-blur-xl border border-white/10 rounded-full h-12 pl-12 pr-4 text-[10px] text-white placeholder:text-white/20 focus:outline-none focus:border-accent/40 transition-all"
+                  />
+                </form>
+
+                {/* Clock & Activity Widget */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-[2rem] p-4 flex flex-col gap-2">
+                    <Clock size={16} className="text-accent" />
+                    <div>
+                      <p className="text-[8px] font-bold text-white/40 uppercase">Sync Status</p>
+                      <p className="text-[10px] font-bold text-white">Active Node</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest">Workspace Link</p>
-                    <p className="text-xs font-bold text-white">Online Session</p>
+                  <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-[2rem] p-4 flex flex-col gap-2">
+                    <Activity size={16} className="text-rose-500" />
+                    <div>
+                      <p className="text-[8px] font-bold text-white/40 uppercase">Vitals</p>
+                      <p className="text-[10px] font-bold text-white">72 BPM</p>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -371,7 +389,7 @@ export const PhoneHub: React.FC = () => {
               </div>
 
               {/* Bottom Dock */}
-              <div className="absolute bottom-4 inset-x-4 h-14 bg-white/5 backdrop-blur-xl border border-white/5 rounded-[1.5rem] flex items-center justify-around px-2">
+              <div className="mt-auto h-14 bg-white/5 backdrop-blur-xl border border-white/5 rounded-[1.5rem] flex items-center justify-around px-2 mb-2">
                 <button className="p-2 text-white/40 hover:text-accent"><Phone size={18} /></button>
                 <button className="p-2 text-white/40 hover:text-accent" onClick={() => navigate('browser')}><Globe size={18} /></button>
                 <button className="p-2 text-white/40 hover:text-accent" onClick={() => navigate('chat')}><MessageSquare size={18} /></button>
