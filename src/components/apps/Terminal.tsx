@@ -1,3 +1,4 @@
+
 "use client"
 
 import React, { useState, useRef, useEffect } from 'react';
@@ -83,7 +84,7 @@ export const Terminal: React.FC = () => {
           " | | | |  __/ |_) | |_| |",
           " |_| |_|\\___|_.__/ \\__,_|",
           "-------------------------",
-          "OS: Nebulabs WebOS 1.1",
+          "OS: Nebulabs OS 1.1",
           "Kernel: React 19.x (AI Enhanced)",
           "Shell: nebula-ai-sh",
           "Uptime: 2h 45m"

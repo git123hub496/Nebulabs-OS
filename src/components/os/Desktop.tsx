@@ -158,7 +158,7 @@ const DesktopInfoApp = () => {
       </div>
       <div className="grid gap-4">
         {[
-          { label: "OS Platform", value: `Nebulabs WebOS ${edition}` },
+          { label: "OS Platform", value: `Nebulabs OS ${edition}` },
           { label: "Kernel Engine", value: "React 19 + Turbopack" },
           { label: "Memory Type", value: edition === 'Lite' ? "16GB Virtual LPDDR4" : edition === 'Standard' ? "32GB Virtual LPDDR5" : "64GB Virtual LPDDR5" },
           { label: "Storage", value: edition === 'Lite' ? "64GB SSD Partition" : edition === 'Standard' ? "128GB SSD Partition" : "512GB Cloud Partition" },
@@ -825,7 +825,7 @@ export const Desktop: React.FC = () => {
           </div>
           <div className="flex flex-col items-center gap-2">
             <div className="flex items-center gap-3">
-              <h1 className="text-2xl font-black tracking-[0.3em] text-white/80 uppercase">Nebula WebOS</h1>
+              <h1 className="text-2xl font-black tracking-[0.3em] text-white/80 uppercase">Nebulabs OS</h1>
               <span className={cn(
                 "text-[8px] font-black uppercase px-2 py-0.5 rounded tracking-widest text-white",
                 systemEdition === 'Lite' ? "bg-blue-500" : systemEdition === 'Standard' ? "bg-accent" : "bg-yellow-500 text-black"

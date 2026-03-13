@@ -14,7 +14,7 @@ export const AIAssistant: React.FC = () => {
   const [query, setQuery] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [messages, setMessages] = useState<{ type: 'user' | 'bot'; text: string; suggestions?: SuggestGoogleProductOutput['suggestions'] }[]>([
-    { type: 'bot', text: "Hello! I'm your Nebula AI Assistant. I can help you with anything from navigating this OS to answering complex questions or generating ideas. How can I assist you today?" }
+    { type: 'bot', text: "Hello! I'm your Nebula AI Assistant. I can help you with anything from navigating Nebulabs OS to answering complex questions or generating ideas. How can I assist you today?" }
   ]);
   const { openApp } = useOS();
 

@@ -283,7 +283,7 @@ export const LoginScreen: React.FC = () => {
       <div className="relative z-10 flex flex-col items-center gap-12 animate-in fade-in zoom-in-95 duration-700 w-full max-w-4xl px-8">
         <div className="text-center space-y-2">
           <div className="flex items-center justify-center gap-3">
-            <h1 className="text-4xl font-black text-white tracking-tighter uppercase italic">Nebulabs WebOS</h1>
+            <h1 className="text-4xl font-black text-white tracking-tighter uppercase italic">Nebulabs OS</h1>
             {biosSettings.isLite && (
               <span className="bg-blue-500 text-white text-[10px] font-black uppercase px-2 py-0.5 rounded tracking-widest">LITE</span>
             )}

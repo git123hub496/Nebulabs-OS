@@ -383,7 +383,7 @@ export const BIOS: React.FC<{ onClose: () => void }> = ({ onClose }) => {
       
       <div className="border-4 border-[#aaaaaa] p-1 mb-4 shadow-[4px_4px_0px_#000] shrink-0">
         <div className="bg-[#aaaaaa] text-[#0000aa] px-4 py-1 flex justify-between items-center font-black text-xs">
-          <span>Nebulabs Setup Utility - Version 4.5.2 (C) 2026 Nebulabs Corp.</span>
+          <span>Nebulabs Setup Utility - Version 4.5.2 (C) 2026 Nebulabs OS.</span>
           <span className="text-[10px] animate-pulse">FIRMWARE SETUP</span>
         </div>
       </div>

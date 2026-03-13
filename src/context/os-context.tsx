@@ -399,7 +399,7 @@ export const APP_INFO: Record<AppId, { icon: any; label: string }> = {
 const INITIAL_FILES: FileSystemItem[] = [
   { id: '1', name: 'Documents', type: 'folder', parentId: null },
   { id: '2', name: 'Pictures', type: 'folder', parentId: null },
-  { id: '3', name: 'README.md', type: 'file', parentId: null, content: '# Nebula WebOS\nProprietary Kernel v4.5.2 stable.' },
+  { id: '3', name: 'README.md', type: 'file', parentId: null, content: '# Nebulabs OS\nProprietary Kernel v4.5.2 stable.' },
   { id: 'sys', name: 'System', type: 'folder', parentId: null, isSystem: true },
   { id: 'kernel', name: 'kernel.sys', type: 'file', parentId: 'sys', size: 1048576, content: '[BINARY_DATA_ENCRYPTED]', isSystem: true },
   { id: 'cfg', name: 'config', type: 'folder', parentId: 'sys', isSystem: true },
@@ -612,7 +612,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
       setUserLocation({ lat: latitude, lon: longitude });
       try {
         const geoRes = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`, {
-          headers: { 'Accept-Language': 'en-US,en;q=0.9', 'User-Agent': 'Nebulabs-WebOS/1.0' }
+          headers: { 'Accept-Language': 'en-US,en;q=0.9', 'User-Agent': 'Nebulabs-OS/1.0' }
         });
         if (!geoRes.ok) throw new Error("API Limit Reached");
         const geoData = await geoRes.json();
@@ -889,7 +889,7 @@ export const OSProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const sendEmail = async (to: string, subject: string, content: string) => {
-    triggerSpike('net', 150);
+    triggerSpike('net', 300); triggerSpike('cpu', 20);
     const newId = Math.random().toString(36).substr(2, 9);
     const sentEmail: Email = {
       id: newId, from: currentUser?.username || 'user', to, subject, content, timestamp: 'Just now', isRead: true, folder: 'sent'

@@ -392,7 +392,7 @@ export const Settings: React.FC<SettingsProps> = ({ tab }) => {
                   <div className="flex items-center justify-center gap-2 mb-1"><Trash2 size={14} className="text-destructive" /><p className="text-[10px] font-black uppercase text-destructive tracking-[0.2em]">System Recovery</p></div>
                   <p className="text-sm font-bold text-foreground">Factory Reset</p>
                   <p className="text-[10px] text-muted-foreground leading-relaxed">Erases all accounts, files, and settings. This action cannot be undone.</p>
-                  <Button variant="destructive" className="w-full h-10 rounded-xl font-bold uppercase tracking-widest text-[10px]" onClick={factoryReset}>Reset Nebula WebOS</Button>
+                  <Button variant="destructive" className="w-full h-10 rounded-xl font-bold uppercase tracking-widest text-[10px]" onClick={factoryReset}>Reset Nebulabs OS</Button>
                 </div>
               )}
             </section>

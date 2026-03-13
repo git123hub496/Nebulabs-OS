@@ -68,7 +68,7 @@ const VIP_FAKE_NEWS: Article[] = [
     source: "VIP Confidential",
     time: "1m ago",
     image: "https://picsum.photos/seed/gold/600/400",
-    summary: "Leading neuro-kernel researchers confirm that users named Donald Trump experience unprecedented cognitive processing speeds when using Nebulabs WebOS.",
+    summary: "Leading neuro-kernel researchers confirm that users named Donald Trump experience unprecedented cognitive processing speeds when using Nebulabs OS.",
     isVIPFake: true
   },
   {

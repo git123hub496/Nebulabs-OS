@@ -43,7 +43,7 @@ export const AppStore: React.FC = () => {
           </div>
           <h1 className="text-3xl font-black tracking-tight text-white">Nebula App Store</h1>
         </div>
-        <p className="text-white/80 max-w-md font-medium text-sm">Discover and install applications to personalize your Nebulabs WebOS experience.</p>
+        <p className="text-white/80 max-w-md font-medium text-sm">Discover and install applications to personalize your Nebulabs OS experience.</p>
       </div>
 
       <div className="flex-1 p-8 overflow-auto">
