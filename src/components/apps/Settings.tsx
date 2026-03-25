@@ -8,7 +8,7 @@ import {
   ImageIcon, Sun, Moon, Layout, Check, MousePointer2, 
   Eye, Zap, Layers, Pipette, Maximize2, Plus, ArrowUpRight,
   Wifi, ShieldCheck, Activity, Trash2, Info, Newspaper, Clock, XCircle, RefreshCw, ChevronRight, ShieldAlert, ShieldX, Lock, KeyRound, Camera, Building2, Briefcase, GraduationCap, Heart, MonitorCheck, Sliders, Smartphone, Smile, Home, Search, AppWindow, ExternalLink,
-  Trash, EyeOff, LogOut, Code2, Download
+  Trash, EyeOff, LogOut, Code2, Download, Sparkles
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
@@ -79,7 +79,7 @@ export const Settings: React.FC<SettingsProps> = ({ tab }) => {
       { id: 'notifications', label: 'Notifications', icon: Bell, keywords: ['alerts', 'messages', 'activity', 'dnd'] },
       { id: 'accounts', label: 'Accounts', icon: User, keywords: ['profile', 'identity', 'password', 'avatar', 'user', 'sign out', 'export', 'backup'] },
       { id: 'security', label: 'Security', icon: Shield, keywords: ['encryption', 'lockdown', 'defender', 'kernel', 'developer', 'nde'] },
-      { id: 'updates', label: 'Updates', icon: RefreshCw, keywords: ['patch', 'kernel', 'version', 'check for updates'] },
+      { id: 'updates', label: 'Updates', icon: RefreshCw, keywords: ['patch', 'kernel', 'version', 'check for updates', 'os 2', 'upgrade'] },
       { id: 'about', label: 'About', icon: HelpCircle, keywords: ['system', 'device', 'credits', 'nebulabs', 'version', 'reset', 'factory'] },
     ];
     if (!searchQuery) return allTabs;
@@ -368,10 +368,35 @@ export const Settings: React.FC<SettingsProps> = ({ tab }) => {
           <div className="space-y-12 animate-in fade-in slide-in-from-right-4 duration-500">
             <section className="text-center py-12 space-y-6">
               <div className="w-20 h-20 rounded-[2rem] bg-accent/20 flex items-center justify-center mx-auto shadow-2xl animate-spin-slow"><RefreshCw size={32} className="text-accent" /></div>
-              <div className="space-y-2"><h2 className="text-2xl font-black tracking-tight text-foreground">System is Up to Date</h2><p className="text-xs text-muted-foreground font-mono uppercase tracking-widest">Nebula Core build_4.5.2_stable</p></div>
+              <div className="space-y-2"><h2 className="text-2xl font-black tracking-tight text-foreground">System is Up to Date</h2><p className="text-xs text-muted-foreground font-mono uppercase tracking-widest">Nebula OS build_4.5.2_stable</p></div>
               {!isRestricted && (
                 <Button className="bg-accent text-primary-foreground font-black px-10 h-12 rounded-xl uppercase tracking-widest shadow-xl shadow-accent/20" onClick={() => openApp('update', 'System Update')}>Check for Patches</Button>
               )}
+            </section>
+
+            <Separator className="bg-border/50" />
+
+            <section className="bg-gradient-to-br from-purple-600/20 to-blue-600/20 border border-accent/30 p-8 rounded-[2.5rem] text-center space-y-6 relative overflow-hidden group">
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.05)_0%,transparent_70%)] pointer-events-none" />
+              <div className="flex justify-center -space-x-4 mb-2 relative z-10">
+                <div className="w-16 h-16 rounded-2xl bg-accent shadow-2xl flex items-center justify-center border-4 border-background rotate-[-10deg] transition-transform group-hover:rotate-[-5deg]"><span className="text-2xl font-black italic">N</span></div>
+                <div className="w-16 h-16 rounded-2xl bg-blue-500 shadow-2xl flex items-center justify-center border-4 border-background rotate-[10deg] transition-transform group-hover:rotate-[5deg]"><span className="text-2xl font-black italic">2</span></div>
+              </div>
+              <div className="space-y-2 relative z-10">
+                <h2 className="text-2xl font-black tracking-tight text-foreground">Nebulabs OS 2 is Here</h2>
+                <p className="text-sm text-muted-foreground font-medium max-w-sm mx-auto">Experience the next generation of cloud computing with enhanced AI, true multi-threading, and a rebuilt kernel.</p>
+              </div>
+              <div className="flex flex-col gap-3 max-w-xs mx-auto relative z-10">
+                <Button className="h-12 bg-white text-black hover:bg-white/90 font-black uppercase tracking-widest rounded-xl shadow-xl shadow-white/10" asChild>
+                  <a href="https://nebulabsos2.vercel.app" target="_blank" rel="noopener noreferrer">Upgrade to OS 2</a>
+                </Button>
+                <Button variant="ghost" className="text-xs font-bold uppercase tracking-widest text-muted-foreground hover:text-foreground">Stay in OS 1</Button>
+              </div>
+              <div className="flex items-center justify-center gap-2 text-[9px] font-black uppercase text-accent/40 tracking-[0.3em]">
+                <Sparkles size={10} />
+                Next Gen Kernel Available
+                <Sparkles size={10} />
+              </div>
             </section>
           </div>
         );

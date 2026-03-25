@@ -59,7 +59,8 @@ import {
   ShieldCheck,
   ShieldAlert,
   Type,
-  Car
+  Car,
+  Rocket
 } from 'lucide-react';
 import { FileExplorer } from '../apps/FileExplorer';
 import { AppStore } from '../apps/AppStore';
@@ -232,11 +233,28 @@ export const Desktop: React.FC = () => {
   }, [powerStatus]);
 
   useEffect(() => {
-    if (isClient && isMobile && powerStatus === 'on' && currentUser) {
-      const timer = setTimeout(() => {
-        addNotification("Mobile Optimized", "Kernel has adapted UI for touch interaction.", "system");
-      }, 3000);
-      return () => clearTimeout(timer);
+    if (isClient && powerStatus === 'on' && currentUser) {
+      // OS 2 Announcement Notification
+      const os2Timer = setTimeout(() => {
+        addNotification(
+          "Next Gen Update Available", 
+          "Nebulabs OS 2 has been released! Discover new features at nebulabsos2.vercel.app or continue in OS 1.", 
+          "system"
+        );
+      }, 5000);
+
+      // Mobile check notification
+      let mobileTimer: NodeJS.Timeout;
+      if (isMobile) {
+        mobileTimer = setTimeout(() => {
+          addNotification("Mobile Optimized", "Kernel has adapted UI for touch interaction.", "system");
+        }, 3000);
+      }
+      
+      return () => {
+        clearTimeout(os2Timer);
+        if (mobileTimer) clearTimeout(mobileTimer);
+      };
     }
   }, [isClient, isMobile, powerStatus, currentUser, addNotification]);
 
