@@ -1,2 +1,6 @@
 NEBULABS OS
+<<<<<<< HEAD
 git
+=======
+LASTEST UPDATE: NEBULABS  OS  2  HAS  RELESED FIND  IT NOW!!!!!!!!!!
+>>>>>>> b8a9d28d3a51233e7ae1d49981b05cc3c44c644a
